@@ -25,7 +25,7 @@
                             <menuItem isSeparatorItem="YES" id="236">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Preferences…" keyEquivalent="," id="129" userLabel="Preferences">
+                            <menuItem title="Settings…" keyEquivalent="," id="129" userLabel="Settings">
                                 <connections>
                                     <action selector="showPreferencePanel:" target="450" id="475"/>
                                 </connections>
@@ -146,19 +146,17 @@
                     <menu key="submenu" title="Call" id="498">
                         <items>
                             <menuItem title="Mute" keyEquivalent="m" id="499">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
                                 <connections>
                                     <action selector="toggleMicrophoneMute:" target="-1" id="501"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Hold" keyEquivalent="h" id="500">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                            <menuItem title="Hold" id="500">
                                 <connections>
                                     <action selector="toggleCallHold:" target="-1" id="502"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Transfer" keyEquivalent="t" id="510">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                            <menuItem title="Transfer" id="510">
                                 <connections>
                                     <action selector="showCallTransferSheet:" target="-1" id="512"/>
                                 </connections>

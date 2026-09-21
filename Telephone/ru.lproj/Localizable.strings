@@ -197,3 +197,6 @@
 
 /* Product name. */
 "Yearly" = "Ежегодно";
+
+/* Call history search field placeholder. */
+"Search Call History" = "Поиск в истории звонков";

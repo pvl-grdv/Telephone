@@ -133,14 +133,14 @@
                     </connections>
                 </textField>
                 <button translatesAutoresizingMaskIntoConstraints="NO" id="9cR-ug-aVH">
-                    <rect key="frame" x="433" y="77.5" width="13" height="18"/>
+                    <rect key="frame" x="426" y="76.5" width="20" height="20"/>
                     <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSStopProgressFreestandingTemplate" imagePosition="only" alignment="center" controlSize="small" imageScaling="proportionallyUpOrDown" inset="2" id="HfD-MN-Ug9">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu" size="11"/>
                     </buttonCell>
                     <constraints>
-                        <constraint firstAttribute="height" constant="13" id="fls-J2-fl6"/>
-                        <constraint firstAttribute="width" constant="13" id="vse-EP-jhR"/>
+                        <constraint firstAttribute="height" constant="20" id="fls-J2-fl6"/>
+                        <constraint firstAttribute="width" constant="20" id="vse-EP-jhR"/>
                     </constraints>
                     <connections>
                         <action selector="deleteOutboundProxy:" target="-2" id="aGO-F9-GJ7"/>

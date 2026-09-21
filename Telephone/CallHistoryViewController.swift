@@ -74,18 +74,17 @@ final class CallHistoryViewController: NSViewController {
     }
 
     @IBAction func makeCall(_ sender: Any) {
-        guard clickedOrSelectedRow() != -1 else { return }
         pickRecord(at: clickedOrSelectedRow())
     }
 
     @IBAction func copy(_ sender: Any) {
-        guard clickedOrSelectedRow() != -1 else { return }
+        let row = clickedOrSelectedRow()
+        guard records.indices.contains(row) else { return }
         pasteboard.clearContents()
-        pasteboard.writeObjects([records[clickedOrSelectedRow()]])
+        pasteboard.writeObjects([records[row]])
     }
 
     @IBAction func delete(_ sender: Any) {
-        guard clickedOrSelectedRow() != -1 else { return }
         removeRecord(at: clickedOrSelectedRow())
     }
 
@@ -136,12 +135,12 @@ private extension CallHistoryViewController {
     }
 
     func pickRecord(at index: Int) {
-        guard !records.isEmpty else { return }
+        guard records.indices.contains(index) else { return }
         target?.didPickRecord(withIdentifier: records[index].identifier)
     }
 
     func removeRecord(at index: Int) {
-        guard !records.isEmpty else { return }
+        guard records.indices.contains(index) else { return }
         let record = records[index]
         Task {
             if await makeDeleteRecordAlert(recordName: record.name).beginSheetModal(for: view.window!) == .alertFirstButtonReturn {
@@ -159,8 +158,10 @@ private extension CallHistoryViewController {
     }
 
     func removeTableViewRow(_ row: Int, andRecordWithIdentifier identifier: String) {
+        guard records.indices.contains(row) else { return }
         tableView.removeRows(at: IndexSet(integer: row), withAnimation: .slideUp)
         records.remove(at: row)
+        allRecords.removeAll { $0.identifier == identifier }
         target?.shouldRemoveRecord(withIdentifier: identifier)
     }
 
@@ -245,6 +246,7 @@ extension CallHistoryViewController: NSTableViewDelegate {
     }
 
     private func removeRowAndRecord(action: NSTableViewRowAction, row: Int) {
+        guard records.indices.contains(row) else { return }
         removeTableViewRow(row, andRecordWithIdentifier: records[row].identifier)
     }
 }
@@ -252,8 +254,10 @@ extension CallHistoryViewController: NSTableViewDelegate {
 extension CallHistoryViewController: NSMenuItemValidation {
     func validateMenuItem(_ item: NSMenuItem) -> Bool {
         switch item.action {
-        case #selector(copy(_:)), #selector(makeCall), #selector(delete), #selector(deleteAll):
-            return !records.isEmpty
+        case #selector(copy(_:)), #selector(makeCall), #selector(delete):
+            return records.indices.contains(clickedOrSelectedRow())
+        case #selector(deleteAll):
+            return !allRecords.isEmpty
         default:
             return false
         }

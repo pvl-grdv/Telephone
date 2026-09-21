@@ -197,3 +197,6 @@
 
 /* Product name. */
 "Yearly" = "Jährlich";
+
+/* Call history search field placeholder. */
+"Search Call History" = "Anrufliste durchsuchen";

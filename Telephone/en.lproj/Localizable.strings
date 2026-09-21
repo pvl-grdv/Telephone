@@ -198,3 +198,6 @@
 /* Product name. */
 "Yearly" = "Yearly";
 
+
+/* Call history search field placeholder. */
+"Search Call History" = "Search Call History";

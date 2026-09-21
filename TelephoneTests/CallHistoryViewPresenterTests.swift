@@ -107,6 +107,28 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         XCTAssertEqual(invokedRecords![1].contact.title, number)
         XCTAssertTrue(invokedRecords![1].contact.tooltip.isEmpty)
     }
+
+    func testCallHistorySearchIgnoresPhoneNumberFormatting() {
+        let contact = PresentationContact(
+            title: "Alice",
+            tooltip: "+1 (555) 123-4567",
+            label: "Mobile",
+            color: .controlTextColor,
+            address: "+1 (555) 123-4567"
+        )
+        let record = PresentationCallHistoryRecord(
+            identifier: "any",
+            contact: contact,
+            date: "Today, 12:00",
+            duration: "1 min",
+            isIncoming: true
+        )
+
+        XCTAssertTrue(record.matchesSearch("5551234567"))
+        XCTAssertTrue(record.matchesSearch("+1 555 123"))
+        XCTAssertFalse(record.matchesSearch("Alice 555"))
+    }
+
 }
 
 private func makeContact(number: Int) -> MatchedContact {

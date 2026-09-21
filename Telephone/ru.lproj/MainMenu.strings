@@ -39,7 +39,7 @@
 "106.title" = "Справка";
 
 /* Class = "NSMenuItem"; title = "Preferences…"; ObjectID = "129"; */
-"129.title" = "Настройка…";
+"129.title" = "Настройки…";
 
 /* Class = "NSMenu"; title = "Services"; ObjectID = "130"; */
 "130.title" = "Службы";

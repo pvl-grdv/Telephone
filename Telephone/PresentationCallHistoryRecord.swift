@@ -88,8 +88,16 @@ extension PresentationCallHistoryRecord {
             duration
         ]
 
-        return haystacks.contains {
+        if haystacks.contains(where: {
             $0.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+        }) {
+            return true
         }
+
+        guard !query.contains(where: \.isLetter) else { return false }
+        let queryDigits = query.filter(\.isNumber)
+        guard !queryDigits.isEmpty else { return false }
+
+        return contact.address.filter(\.isNumber).contains(queryDigits)
     }
 }

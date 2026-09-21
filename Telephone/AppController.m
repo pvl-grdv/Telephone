@@ -18,6 +18,7 @@
 
 #import "AppController.h"
 
+@import UserNotifications;
 @import UseCases;
 
 #import "AKNetworkReachability.h"
@@ -39,7 +40,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface AppController () <AKSIPUserAgentDelegate, NSUserNotificationCenterDelegate, NameServersChangeEventTarget, PreferencesControllerDelegate, ObjCStoreEventTarget>
+@interface AppController () <AKSIPUserAgentDelegate, UNUserNotificationCenterDelegate, NameServersChangeEventTarget, PreferencesControllerDelegate, ObjCStoreEventTarget>
 
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) AccountControllers *accountControllers;
@@ -500,7 +501,7 @@ NS_ASSUME_NONNULL_END
     self.helpMenuActionRedirect.target = self.compositionRoot.helpMenuActionTarget;
     [self configureUserAgent];
     self.accountsMenuItems = [[AccountsMenuItems alloc] initWithMenu:self.windowMenu controllers:self.accountControllers];
-    NSUserNotificationCenter.defaultUserNotificationCenter.delegate = self;
+    [self configureUserNotifications];
     NSApp.servicesProvider = self;
     NSArray *accounts = [NSUserDefaults.standardUserDefaults arrayForKey:UserDefaultsKeys.accounts];
     if (accounts.count == 0) {
@@ -574,7 +575,7 @@ NS_ASSUME_NONNULL_END
 }
 
 - (void)applicationDidBecomeActive:(NSNotification *)aNotification {
-    [NSUserNotificationCenter.defaultUserNotificationCenter removeAllDeliveredNotifications];
+    [[UNUserNotificationCenter currentNotificationCenter] removeAllDeliveredNotifications];
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender {
@@ -652,24 +653,56 @@ NS_ASSUME_NONNULL_END
     }
 }
 
-#pragma mark - NSUserNotificationCenterDelegate
+#pragma mark - UNUserNotificationCenterDelegate
 
-- (void)userNotificationCenter:(NSUserNotificationCenter *)center didActivateNotification:(NSUserNotification *)notification {
-    CallController *controller = [self.accountControllers callControllerByIdentifier:notification.identifier];
-    switch (notification.activationType) {
-        case NSUserNotificationActivationTypeContentsClicked:
-            [controller showWindow:self];
-            [center removeDeliveredNotification:notification];
-            break;
-        case NSUserNotificationActivationTypeActionButtonClicked:
-            [controller acceptCall];
-            break;
-        case NSUserNotificationActivationTypeAdditionalActionClicked:
-            [controller hangUpCall];
-            break;
-        default:
-            break;
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+ didReceiveNotificationResponse:(UNNotificationResponse *)response
+          withCompletionHandler:(void (^)(void))completionHandler {
+    NSString *identifier = response.notification.request.identifier;
+    CallController *controller = [self.accountControllers callControllerByIdentifier:identifier];
+
+    if ([response.actionIdentifier isEqualToString:UNNotificationDefaultActionIdentifier]) {
+        [controller showWindow:self];
+        [center removeDeliveredNotificationsWithIdentifiers:@[identifier]];
+    } else if ([response.actionIdentifier isEqualToString:@"answer"]) {
+        [controller acceptCall];
+    } else if ([response.actionIdentifier isEqualToString:@"decline"]) {
+        [controller hangUpCall];
     }
+
+    completionHandler();
+}
+
+- (void)configureUserNotifications {
+    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+    center.delegate = self;
+
+    UNNotificationAction *answer =
+        [UNNotificationAction actionWithIdentifier:@"answer"
+                                             title:NSLocalizedString(@"Answer", @"Call answer button.")
+                                           options:UNNotificationActionOptionForeground];
+    UNNotificationAction *decline =
+        [UNNotificationAction actionWithIdentifier:@"decline"
+                                             title:NSLocalizedString(@"Decline", @"Call decline button.")
+                                           options:UNNotificationActionOptionDestructive];
+    UNNotificationCategory *incomingCall =
+        [UNNotificationCategory categoryWithIdentifier:@"incoming-call"
+                                               actions:@[answer, decline]
+                                     intentIdentifiers:@[]
+                                               options:UNNotificationCategoryOptionCustomDismissAction];
+    [center setNotificationCategories:[NSSet setWithObject:incomingCall]];
+
+    [center getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings *settings) {
+        if (settings.authorizationStatus != UNAuthorizationStatusNotDetermined) {
+            return;
+        }
+        [center requestAuthorizationWithOptions:UNAuthorizationOptionAlert
+                              completionHandler:^(BOOL granted, NSError *error) {
+            if (error != nil) {
+                NSLog(@"Could not request notification authorization: %@", error);
+            }
+        }];
+    }];
 }
 
 

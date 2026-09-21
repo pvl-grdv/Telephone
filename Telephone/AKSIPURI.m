@@ -80,6 +80,29 @@
                            transport:TransportUDP].stringValue;
 }
 
+- (BOOL)isEqual:(id)object {
+    if (self == object) {
+        return YES;
+    }
+    if (![object isKindOfClass:[AKSIPURI class]]) {
+        return NO;
+    }
+
+    AKSIPURI *other = object;
+    return self.port == other.port &&
+           [self.user isEqualToString:other.user] &&
+           [self.host isEqualToString:other.host] &&
+           [self.displayName isEqualToString:other.displayName];
+}
+
+- (NSUInteger)hash {
+    NSUInteger result = self.user.hash;
+    result = result * 31u + self.host.hash;
+    result = result * 31u + self.displayName.hash;
+    result = result * 31u + (NSUInteger)self.port;
+    return result;
+}
+
 
 #pragma mark -
 #pragma mark NSCopying protocol

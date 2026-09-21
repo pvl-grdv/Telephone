@@ -159,8 +159,8 @@
 /* Sound preferences window title. */
 "Sound" = "Ton";
 
-/* Preferences default window title. */
-"Telephone Preferences" = "Telefon Einstellungen";
+/* Settings default window title. */
+"Telephone Settings" = "Telefon-Einstellungen";
 
 /* Registrar authentication failed. */
 "Telephone was unable to login to %@. Change user name or password and try again." = "Telefon konnte sich nicht in %@ anmelden. Ändern Sie Benutzername oder Passwort und versuchen Sie es erneut.";
@@ -212,3 +212,12 @@
 
 /* Outgoing call history filter. */
 "Outgoing" = "Ausgehend";
+
+/* Add account button. */
+"Add Account" = "Account hinzufügen";
+
+/* Remove account button. */
+"Remove Account" = "Account entfernen";
+
+/* Clear outbound proxy button. */
+"Clear Outbound Proxy" = "Outbound-Proxy löschen";

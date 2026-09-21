@@ -170,7 +170,7 @@
         firstResponder = nil;
     } else {
         controller = nil;
-        title = NSLocalizedString(@"Telephone Preferences", @"Preferences default window title.");
+        title = NSLocalizedString(@"Telephone Settings", @"Settings default window title.");
         firstResponder = nil;
     }
 

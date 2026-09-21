@@ -55,10 +55,23 @@ static const NSUInteger kAccountsMax = 32;
 }
 
 - (void)awakeFromNib {
+    NSString *addTitle = NSLocalizedString(@"Add Account", @"Add account button.");
+    self.addAccountButton.image = [NSImage imageWithSystemSymbolName:@"plus" accessibilityDescription:addTitle];
+    self.addAccountButton.imagePosition = NSImageOnly;
+    self.addAccountButton.toolTip = addTitle;
+    self.addAccountButton.accessibilityLabel = addTitle;
+
+    NSString *removeTitle = NSLocalizedString(@"Remove Account", @"Remove account button.");
+    self.removeAccountButton.image = [NSImage imageWithSystemSymbolName:@"minus" accessibilityDescription:removeTitle];
+    self.removeAccountButton.imagePosition = NSImageOnly;
+    self.removeAccountButton.toolTip = removeTitle;
+    self.removeAccountButton.accessibilityLabel = removeTitle;
+
     // Register a pasteboard type to rearrange accounts with drag and drop.
     [[self accountsTable] registerForDraggedTypes:@[kAKSIPAccountPboardType]];
     
     NSInteger row = [[self accountsTable] selectedRow];
+    self.removeAccountButton.enabled = row != -1;
     if (row != -1) {
         [self populateFieldsForAccountAtIndex:row];
     }
@@ -148,6 +161,7 @@ static const NSUInteger kAccountsMax = 32;
     
     // Select none, last or previous account.
     if ([savedAccounts count] == 0) {
+        self.removeAccountButton.enabled = NO;
         return;
         
     } else if (index >= ([savedAccounts count] - 1)) {
@@ -737,6 +751,7 @@ static const NSUInteger kAccountsMax = 32;
 
 - (void)tableViewSelectionDidChange:(NSNotification *)aNotification {
     NSInteger row = [[self accountsTable] selectedRow];
+    self.removeAccountButton.enabled = row != -1;
     [self populateFieldsForAccountAtIndex:row];
 }
 
@@ -754,6 +769,7 @@ static const NSUInteger kAccountsMax = 32;
     if (index != 0) {
         [[self accountsTable] selectRowIndexes:[NSIndexSet indexSetWithIndex:index] byExtendingSelection:NO];
     }
+    self.removeAccountButton.enabled = accountsCount > 0;
     
     if (accountsCount >= kAccountsMax) {
         [[self addAccountButton] setEnabled:NO];

@@ -17,6 +17,7 @@
                 <outlet property="accountEnabledCheckBox" destination="93" id="188"/>
                 <outlet property="accountsTable" destination="82" id="124"/>
                 <outlet property="addAccountButton" destination="118" id="551"/>
+                <outlet property="removeAccountButton" destination="120" id="rmv-acc-btn"/>
                 <outlet property="cantEditAccountLabel" destination="548" id="550"/>
                 <outlet property="domainField" destination="528" id="543"/>
                 <outlet property="fullNameField" destination="95" id="511"/>

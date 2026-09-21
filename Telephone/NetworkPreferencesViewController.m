@@ -37,6 +37,13 @@
 }
 
 - (void)awakeFromNib {
+    NSString *clearTitle = NSLocalizedString(@"Clear Outbound Proxy", @"Clear outbound proxy button.");
+    self.deleteOutboundProxyButton.image =
+        [NSImage imageWithSystemSymbolName:@"xmark.circle.fill" accessibilityDescription:clearTitle];
+    self.deleteOutboundProxyButton.imagePosition = NSImageOnly;
+    self.deleteOutboundProxyButton.toolTip = clearTitle;
+    self.deleteOutboundProxyButton.accessibilityLabel = clearTitle;
+
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
     
     // Subscribe to User Agent start events.

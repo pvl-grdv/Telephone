@@ -33,6 +33,7 @@
 // Outlets.
 @property(nonatomic, weak) IBOutlet NSTableView *accountsTable;
 @property(nonatomic, weak) IBOutlet NSButton *addAccountButton;
+@property(nonatomic, weak) IBOutlet NSButton *removeAccountButton;
 @property(nonatomic, weak) IBOutlet NSButton *accountEnabledCheckBox;
 @property(nonatomic, weak) IBOutlet NSTextField *accountDescriptionField;
 @property(nonatomic, weak) IBOutlet NSTextField *fullNameField;

@@ -75,7 +75,9 @@ final class CompositionRoot: NSObject {
             delegate: userAgent
         )
 
-        userAgentStart = UserAgentStartUseCase(agent: userAgent)\n\n        let userAgentEventsUserAgentSoundIOSelection = UserAgentEventsUserAgentSoundIOSelectionUseCase(
+        userAgentStart = UserAgentStartUseCase(agent: userAgent)
+
+        let userAgentEventsUserAgentSoundIOSelection = UserAgentEventsUserAgentSoundIOSelectionUseCase(
             useCase: UserAgentSoundIOSelectionUseCase(
                 devicesFactory: systemAudioDevicesFactory, soundIOFactory: soundIOFactory, agent: userAgent
             ),

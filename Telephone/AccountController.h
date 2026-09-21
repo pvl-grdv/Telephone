@@ -22,12 +22,9 @@
 
 #import "CallController.h"
 
-// Address Book label for SIP address in the email field.
-extern NSString * const kEmailSIPLabel;
-
 @class AKSIPURI, AKNetworkReachability;
 @class AsyncCallHistoryPurchaseCheckUseCaseFactory, AsyncCallHistoryViewEventTargetFactory;
-@class CallTransferController, SanitizedCallDestination, StoreWindowPresenter, WorkspaceSleepStatus;
+@class CallTransferController, IncomingCallContactResolver, SanitizedCallDestination, StoreWindowPresenter, WorkspaceSleepStatus;
 @protocol RingtonePlaybackUseCase;
 
 @interface AccountController : NSObject <AKSIPAccountDelegate, CallControllerDelegate>
@@ -55,6 +52,7 @@ extern NSString * const kEmailSIPLabel;
                          userAgent:(AKSIPUserAgent *)userAgent
                   ringtonePlayback:(id<RingtonePlaybackUseCase>)ringtonePlayback
                        sleepStatus:(WorkspaceSleepStatus *)sleepStatus
+       incomingCallContactResolver:(IncomingCallContactResolver *)incomingCallContactResolver
  callHistoryViewEventTargetFactory:(AsyncCallHistoryViewEventTargetFactory *)callHistoryViewEventTargetFactory
        purchaseCheckUseCaseFactory:(AsyncCallHistoryPurchaseCheckUseCaseFactory *)purchaseCheckUseCaseFactory
               storeWindowPresenter:(StoreWindowPresenter *)storeWindowPresenter;

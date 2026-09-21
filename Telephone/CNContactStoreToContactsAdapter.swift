@@ -49,3 +49,67 @@ private let keys = [
     CNContactEmailAddressesKey as CNKeyDescriptor,
     CNContactPhoneNumbersKey as CNKeyDescriptor
 ]
+
+
+@objcMembers
+final class IncomingCallContact: NSObject, @unchecked Sendable {
+    let name: String
+    let label: String
+
+    init(name: String, label: String) {
+        self.name = name
+        self.label = label
+    }
+}
+
+@objcMembers
+final class IncomingCallContactResolver: NSObject {
+    private let index: ContactMatchingIndex
+    private let settings: ContactMatchingSettings
+
+    init(index: ContactMatchingIndex, settings: ContactMatchingSettings) {
+        self.index = index
+        self.settings = settings
+    }
+
+    func resolve(
+        user: String,
+        host: String,
+        displayName: String,
+        domain: String,
+        completion: @escaping @MainActor @Sendable (IncomingCallContact?) -> Void
+    ) {
+        Task { @ContactsActor [index, settings] in
+            let matching = IndexedContactMatching(
+                index: index,
+                significantPhoneNumberLength: await settings.significantPhoneNumberLength,
+                domain: domain
+            )
+
+            var match = await matching.match(
+                for: URI(user: user, host: host, displayName: displayName)
+            )
+
+            // Some SIP trunks put the PSTN number into the display-name
+            // while the URI user contains an internal routing value.
+            if match == nil, !displayName.isEmpty, displayName != user {
+                match = await matching.match(
+                    for: URI(user: displayName, host: "", displayName: "")
+                )
+            }
+
+            let result = match.map { contact -> IncomingCallContact in
+                let label: String
+                switch contact.address {
+                case let .phone(_, value), let .email(_, value):
+                    label = value
+                }
+                return IncomingCallContact(name: contact.name, label: label)
+            }
+
+            await MainActor.run {
+                completion(result)
+            }
+        }
+    }
+}

@@ -18,10 +18,9 @@
 
 #import "AccountController.h"
 
-@import AddressBook;
+@import UserNotifications;
 @import UseCases;
 
-#import "AKABAddressBook+Localizing.h"
 #import "AKKeychain.h"
 #import "AKNetworkReachability.h"
 #import "AKNSString+Scanning.h"
@@ -38,7 +37,6 @@
 
 #import "Telephone-Swift.h"
 
-NSString * const kEmailSIPLabel = @"sip";
 static NSString * const kRussian = @"ru";
 
 @interface AccountController () <AccountWindowControllerDelegate>
@@ -47,6 +45,7 @@ static NSString * const kRussian = @"ru";
 
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) WorkspaceSleepStatus *sleepStatus;
+@property(nonatomic, readonly) IncomingCallContactResolver *incomingCallContactResolver;
 
 @property(nonatomic, readonly) AuthenticationFailureController *authenticationFailureController;
 
@@ -181,6 +180,7 @@ static NSString * const kRussian = @"ru";
                          userAgent:(AKSIPUserAgent *)userAgent
                   ringtonePlayback:(id<RingtonePlaybackUseCase>)ringtonePlayback
                        sleepStatus:(WorkspaceSleepStatus *)sleepStatus
+       incomingCallContactResolver:(IncomingCallContactResolver *)incomingCallContactResolver
  callHistoryViewEventTargetFactory:(AsyncCallHistoryViewEventTargetFactory *)callHistoryViewEventTargetFactory
        purchaseCheckUseCaseFactory:(AsyncCallHistoryPurchaseCheckUseCaseFactory *)purchaseCheckUseCaseFactory
               storeWindowPresenter:(StoreWindowPresenter *)storeWindowPresenter{
@@ -195,6 +195,7 @@ static NSString * const kRussian = @"ru";
     _userAgent = userAgent;
     _ringtonePlayback = ringtonePlayback;
     _sleepStatus = sleepStatus;
+    _incomingCallContactResolver = incomingCallContactResolver;
 
     _callControllers = [[NSMutableArray alloc] init];
     _accountDescription = [accountDescription copy];
@@ -601,214 +602,82 @@ static NSString * const kRussian = @"ru";
 
 - (void)SIPAccount:(AKSIPAccount *)account didReceiveCall:(AKSIPCall *)aCall {
     if ([self isAccountUnavailable]) {
-        // Reply with 480 Temporarily Unavailable if the user selected Unavailable account state.
         [aCall replyWithTemporarilyUnavailable];
-        
         return;
-        
     } else if (![[NSUserDefaults standardUserDefaults] boolForKey:UserDefaultsKeys.callWaiting]) {
-        // Reply with 486 Busy Here if needed.
         for (CallController *callController in [self callControllers]) {
             if ([callController isCallActive]) {
                 [aCall replyWithBusyHere];
-                
                 return;
             }
         }
     }
-    
+
     CallController *aCallController = [[CallController alloc] initWithWindowNibName:@"Call"
                                                                   accountController:self
                                                                           userAgent:self.userAgent
                                                                            delegate:self];
-    
+
     [aCallController setCall:aCall];
     [aCallController setCallActive:YES];
     [[self callControllers] addObject:aCallController];
-    
+
     AKSIPURIFormatter *SIPURIFormatter = [[AKSIPURIFormatter alloc] init];
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [SIPURIFormatter setFormatsTelephoneNumbers:[defaults boolForKey:UserDefaultsKeys.formatTelephoneNumbers]];
     [SIPURIFormatter setTelephoneNumberFormatterSplitsLastFourDigits:
      [defaults boolForKey:UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits]];
-    
-    // These variables will be changed during the Address Book search if the record is found.
-    NSString *finalDisplayedName = [SIPURIFormatter stringForObjectValue:[aCall remoteURI]];
-    NSString *finalStatus = NSLocalizedString(@"calling",
-                                              @"John Smith calling. Somebody is calling us right "
-                                               "now. Call status string. Deliberately in lower case, "
-                                               "translators should do the same, if possible.");
 
-    // Search Address Book for caller's name.
-    
-    ABAddressBook *AB = [ABAddressBook sharedAddressBook];
-    NSArray *records = nil;
-    
-    ABSearchElement *SIPAddressMatch
-        = [ABPerson searchElementForProperty:kABEmailProperty
-                                       label:nil
-                                         key:nil
-                                       value:[[aCall  remoteURI] SIPAddress]
-                                  comparison:kABEqualCaseInsensitive];
-    
-    records = [AB recordsMatchingSearchElement:SIPAddressMatch];
-    
-    if ([records count] > 0) {
-        id theRecord = records[0];
-        
-        finalDisplayedName = [theRecord ak_fullName];
-        [aCallController setNameFromAddressBook:[theRecord ak_fullName]];
-        
-        NSString *localizedLabel = [AB ak_localizedLabel:kEmailSIPLabel];
-        finalStatus = localizedLabel;
-        [aCallController setPhoneLabelFromAddressBook:localizedLabel];
+    NSString *displayedName = [SIPURIFormatter stringForObjectValue:[aCall remoteURI]];
+    NSString *callingStatus = NSLocalizedString(@"calling",
+                                                @"John Smith calling. Somebody is calling us right "
+                                                 "now. Call status string. Deliberately in lower case, "
+                                                 "translators should do the same, if possible.");
 
-    } else if ([[[aCall remoteURI] displayName] ak_isTelephoneNumber] ||
-               ([[[aCall remoteURI] displayName] length] == 0 &&
-                [[[aCall remoteURI] user] ak_isTelephoneNumber]))
-    {  // No SIP Address found, search for the phone number.
-        NSString *phoneNumberToSearch;
-        if ([[[aCall remoteURI] displayName] length] > 0) {
-            phoneNumberToSearch = [[aCall remoteURI] displayName];
-        } else {
-            phoneNumberToSearch = [[aCall remoteURI] user];
-        }
-        
-        BOOL recordFound = NO;
-        
-        // Look for the whole phone number match first.
-        ABSearchElement *phoneNumberMatch
-            = [ABPerson searchElementForProperty:kABPhoneProperty
-                                           label:nil
-                                             key:nil
-                                           value:phoneNumberToSearch
-                                      comparison:kABEqual];
-        
-        records = [AB recordsMatchingSearchElement:phoneNumberMatch];
-        if ([records count] > 0) {
-            recordFound = YES;
-            id theRecord = records[0];
-            finalDisplayedName = [theRecord ak_fullName];
-            [aCallController setNameFromAddressBook:[theRecord ak_fullName]];
-            
-            // Find the exact phone number match.
-            ABMultiValue *phones = [theRecord valueForProperty:kABPhoneProperty];
-            for (NSUInteger i = 0; i < [phones count]; ++i) {
-                if ([[phones valueAtIndex:i] isEqualToString:phoneNumberToSearch]) {
-                    NSString *localizedLabel = [AB ak_localizedLabel:[phones labelAtIndex:i]];
-                    finalStatus = localizedLabel;
-                    [aCallController setPhoneLabelFromAddressBook:localizedLabel];
-                    break;
-                }
-            }
-        }
-        
-        NSUInteger significantPhoneNumberLength = [defaults integerForKey:UserDefaultsKeys.significantPhoneNumberLength];
-        
-        // Get the significant phone suffix if the phone number length is greater
-        // than we defined.
-        NSString *significantPhoneSuffix;
-        if ([phoneNumberToSearch length] >= significantPhoneNumberLength) {
-            significantPhoneSuffix = [phoneNumberToSearch substringFromIndex:
-                                      ([phoneNumberToSearch length] - significantPhoneNumberLength)];
-            
-            // If the the record hasn't been found with the whole number, look for
-            // significant suffix match.
-            if (!recordFound) {
-                ABSearchElement *phoneNumberSuffixMatch
-                    = [ABPerson searchElementForProperty:kABPhoneProperty
-                                                   label:nil
-                                                     key:nil
-                                                   value:significantPhoneSuffix
-                                              comparison:kABSuffixMatch];
-                
-                records = [AB recordsMatchingSearchElement:phoneNumberSuffixMatch];
-                if ([records count] > 0) {
-                    recordFound = YES;
-                    id theRecord = records[0];
-                    finalDisplayedName = [theRecord ak_fullName];
-                    [aCallController setNameFromAddressBook:[theRecord ak_fullName]];
-                    
-                    // Find the exact phone number match.
-                    ABMultiValue *phones = [theRecord valueForProperty:kABPhoneProperty];
-                    for (NSUInteger i = 0; i < [phones count]; ++i) {
-                        if ([[phones valueAtIndex:i] hasSuffix:significantPhoneSuffix]) {
-                            NSString *localizedLabel = [AB ak_localizedLabel:[phones labelAtIndex:i]];
-                            finalStatus = localizedLabel;
-                            [aCallController setPhoneLabelFromAddressBook:localizedLabel];
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        
-        // If still not found, search phone numbers that contain spaces, dashes, etc.
-        if (!recordFound) {
-            NSArray *allPeople = [AB people];
-            
-            AKTelephoneNumberFormatter *telephoneNumberFormatter = [[AKTelephoneNumberFormatter alloc] init];
-            for (id theRecord in allPeople) {
-                ABMultiValue *phones = [theRecord valueForProperty:kABPhoneProperty];
-                
-                for (NSUInteger i = 0; i < [phones count]; ++i) {
-                    NSString *phoneNumber = [phones valueAtIndex:i];
-                    
-                    // Don't bother if the phone number contains only contiguous
-                    // digits, we should have covered such numbers in previous search.
-                    if ([phoneNumber ak_isTelephoneNumber]) {
-                        continue;
-                    }
-                    
-                    // Don't bother if the phone number has letters.
-                    if ([phoneNumber ak_hasLetters]) {
-                        continue;
-                    }
-                    
-                    // Here phone number probably includes spaces or other dividers.
-                    // Scan valid phone characters to compare with a given string.
-                    NSString *scannedPhoneNumber = [telephoneNumberFormatter telephoneNumberFromString:phoneNumber];
-                    if ([scannedPhoneNumber isEqualToString:phoneNumberToSearch]) {
-                        recordFound = YES;
-                    } else if (([phoneNumberToSearch length] >= significantPhoneNumberLength) &&
-                               [scannedPhoneNumber hasSuffix:significantPhoneSuffix]) {
-                        
-                        recordFound = YES;
-                    }
-                    
-                    if (recordFound) {
-                        NSString *localizedLabel = [AB ak_localizedLabel:[phones labelAtIndex:i]];
-                        finalStatus = localizedLabel;
-                        [aCallController setPhoneLabelFromAddressBook:localizedLabel];
-                        break;
-                    }
-                }
-                
-                if (recordFound) {
-                    finalDisplayedName = [theRecord ak_fullName];
-                    [aCallController setNameFromAddressBook:[theRecord ak_fullName]];
-                    break;
-                }
-            }
-        }
-    }
-    
-    // Address Book search ends here.
-    
     [aCallController setTitle:([[aCall remoteURI] SIPAddress] ?: @"")];
-    [aCallController setDisplayedName:finalDisplayedName];
-    [aCallController setStatus:finalStatus];
+    [aCallController setDisplayedName:displayedName];
+    [aCallController setStatus:callingStatus];
     [aCallController setRedialURI:[aCall remoteURI]];
-    
     [aCallController showIncomingCallView];
-    
     [aCallController showWindow:nil];
-    
-    // Show user notification.
+
+    // Do not make an incoming SIP call wait for Contacts I/O. Ring and present
+    // immediately, then enrich the window/notification from the shared modern
+    // Contacts index when the asynchronous lookup completes.
+    [self startPlayingRingtoneOrLogError];
+    [aCall sendRingingNotification];
+
+    NSString *domain = self.account.uri.host ?: @"";
+    AKSIPURI *remoteURI = aCall.remoteURI;
+    [self.incomingCallContactResolver resolveWithUser:remoteURI.user
+                                                  host:remoteURI.host
+                                           displayName:remoteURI.displayName
+                                                domain:domain
+                                            completion:^(IncomingCallContact *contact) {
+        if (contact != nil) {
+            [aCallController setNameFromAddressBook:contact.name];
+            [aCallController setPhoneLabelFromAddressBook:contact.label];
+
+            if (contact.name.length > 0) {
+                [aCallController setDisplayedName:contact.name];
+            }
+            if (contact.label.length > 0) {
+                [aCallController setStatus:contact.label];
+            }
+        }
+
+        [self deliverIncomingCallNotificationForController:aCallController call:aCall defaults:defaults];
+    }];
+}
+
+- (void)deliverIncomingCallNotificationForController:(CallController *)aCallController
+                                                call:(AKSIPCall *)aCall
+                                            defaults:(NSUserDefaults *)defaults {
     NSString *callSource;
     AKTelephoneNumberFormatter *telephoneNumberFormatter = [[AKTelephoneNumberFormatter alloc] init];
     [telephoneNumberFormatter setSplitsLastFourDigits:
      [defaults boolForKey:UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits]];
+
     if ([[aCallController phoneLabelFromAddressBook] length] > 0) {
         callSource = [aCallController phoneLabelFromAddressBook];
     } else if ([[[aCall remoteURI] user] length] > 0) {
@@ -824,45 +693,42 @@ static NSString * const kRussian = @"ru";
     } else {
         callSource = [[aCall remoteURI] host];
     }
-    
-    NSString *notificationTitle, *notificationDescription;
+
+    NSString *notificationTitle;
+    NSString *notificationDescription;
     if ([[aCallController nameFromAddressBook] length] > 0) {
         notificationTitle = [aCallController nameFromAddressBook];
         notificationDescription = callSource;
-        
     } else if ([[[aCall remoteURI] displayName] length] > 0) {
         notificationTitle = [[aCall remoteURI] displayName];
-        notificationDescription
-            = [NSString stringWithFormat:
-               NSLocalizedString(@"calling from %@",
-                                 @"John Smith calling from 1234567. "
-                                  "Somebody is calling us right now from some source. "
-                                  "User notification description. Deliberately in "
-                                  "lower case, translators should do the same, if "
-                                  "possible."),
-               callSource];
+        notificationDescription = [NSString stringWithFormat:
+            NSLocalizedString(@"calling from %@",
+                              @"John Smith calling from 1234567. Somebody is calling us right now "
+                               "from some source. User notification description."),
+            callSource];
     } else {
         notificationTitle = callSource;
-        notificationDescription
-            = NSLocalizedString(@"calling",
-                                @"John Smith calling. Somebody is calling us right "
-                                 "now. User notification description. "
-                                 "Deliberately in lower case, translators should do "
-                                 "the same, if possible.");
+        notificationDescription = NSLocalizedString(@"calling",
+                                                     @"Somebody is calling us right now. "
+                                                      "User notification description.");
     }
-    
-    NSUserNotification *userNotification = [[NSUserNotification alloc] init];
-    userNotification.identifier = aCallController.identifier;
-    userNotification.title = notificationTitle;
-    userNotification.informativeText = notificationDescription;
-    userNotification.actionButtonTitle = NSLocalizedString(@"Answer", @"Call answer button.");
-    NSString *decline = NSLocalizedString(@"Decline", @"Call decline button.");
-    userNotification.additionalActions = @[[NSUserNotificationAction actionWithIdentifier:@"decline" title:decline]];
-    [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNotification];
 
-    [self startPlayingRingtoneOrLogError];
-    
-    [aCall sendRingingNotification];
+    UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+    content.title = notificationTitle ?: @"";
+    content.body = notificationDescription ?: @"";
+    content.categoryIdentifier = @"incoming-call";
+
+    UNNotificationRequest *request =
+        [UNNotificationRequest requestWithIdentifier:aCallController.identifier
+                                             content:content
+                                             trigger:nil];
+    [[UNUserNotificationCenter currentNotificationCenter]
+        addNotificationRequest:request
+         withCompletionHandler:^(NSError *error) {
+            if (error != nil) {
+                NSLog(@"Could not deliver incoming-call notification: %@", error);
+            }
+        }];
 }
 
 - (void)startPlayingRingtoneOrLogError {

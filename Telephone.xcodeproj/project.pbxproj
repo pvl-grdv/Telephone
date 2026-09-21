@@ -188,6 +188,8 @@
 		8A769CFB2825A43400BC57CB /* ClipboardSpy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A769CFA2825A43400BC57CB /* ClipboardSpy.swift */; };
 		8A769CFD282997E200BC57CB /* NSPasteboard+Clipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A769CFC282997E200BC57CB /* NSPasteboard+Clipboard.swift */; };
 		8A778C031E095B5D004B00B8 /* CallHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A778C011E095B5D004B00B8 /* CallHistoryViewController.swift */; };
+		7C26000131A0000100C0FFEE /* SQLiteCallHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C26000331A0000100C0FFEE /* SQLiteCallHistory.swift */; };
+		7C26000231A0000100C0FFEE /* SQLiteCallHistoryFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C26000431A0000100C0FFEE /* SQLiteCallHistoryFactory.swift */; };
 		8A778C061E0AE5C3004B00B8 /* PresentationCallHistoryRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A778C051E0AE5C3004B00B8 /* PresentationCallHistoryRecord.swift */; };
 		8A778C081E0AE98F004B00B8 /* CallHistoryViewPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A778C071E0AE98F004B00B8 /* CallHistoryViewPresenter.swift */; };
 		8A778C0A1E0AE9C7004B00B8 /* CallHistoryViewPresenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A778C091E0AE9C7004B00B8 /* CallHistoryViewPresenterTests.swift */; };
@@ -909,6 +911,8 @@
 		8A769CFA2825A43400BC57CB /* ClipboardSpy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardSpy.swift; sourceTree = "<group>"; };
 		8A769CFC282997E200BC57CB /* NSPasteboard+Clipboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSPasteboard+Clipboard.swift"; sourceTree = "<group>"; };
 		8A778C011E095B5D004B00B8 /* CallHistoryViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallHistoryViewController.swift; sourceTree = "<group>"; };
+		7C26000331A0000100C0FFEE /* SQLiteCallHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteCallHistory.swift; sourceTree = "<group>"; };
+		7C26000431A0000100C0FFEE /* SQLiteCallHistoryFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteCallHistoryFactory.swift; sourceTree = "<group>"; };
 		8A778C051E0AE5C3004B00B8 /* PresentationCallHistoryRecord.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PresentationCallHistoryRecord.swift; sourceTree = "<group>"; };
 		8A778C071E0AE98F004B00B8 /* CallHistoryViewPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallHistoryViewPresenter.swift; sourceTree = "<group>"; };
 		8A778C091E0AE9C7004B00B8 /* CallHistoryViewPresenterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CallHistoryViewPresenterTests.swift; path = TelephoneTests/CallHistoryViewPresenterTests.swift; sourceTree = SOURCE_ROOT; };
@@ -2076,6 +2080,8 @@
 				8A42E0C71E168F4F00CE09B8 /* DurationFormatter.swift */,
 				8AD9A0D91DE34B83000BB2F2 /* NotifyingCallHistoryFactory.swift */,
 				8AD9A0DB1DE34CC1000BB2F2 /* PersistentCallHistoryFactory.swift */,
+				7C26000331A0000100C0FFEE /* SQLiteCallHistory.swift */,
+				7C26000431A0000100C0FFEE /* SQLiteCallHistoryFactory.swift */,
 				8A778C051E0AE5C3004B00B8 /* PresentationCallHistoryRecord.swift */,
 				8ACB9C801E13F8F50081A0A5 /* PresentationContact.swift */,
 				8A4236491E79AA0900BF189D /* ReversedCallHistoryFactory.swift */,
@@ -3105,6 +3111,8 @@
 				8A97060320FFAD2500984D39 /* PresentationSoundIO.swift in Sources */,
 				AAFA9B1D0EE1D8FC009A45CB /* AKSIPURIFormatter.m in Sources */,
 				8A778C031E095B5D004B00B8 /* CallHistoryViewController.swift in Sources */,
+				7C26000131A0000100C0FFEE /* SQLiteCallHistory.swift in Sources */,
+				7C26000231A0000100C0FFEE /* SQLiteCallHistoryFactory.swift in Sources */,
 				8A9175A21CA5A02500354E26 /* PJSUAOnCallTransferStatus.m in Sources */,
 				AA1019841C490BD300869D01 /* RepeatingSoundFactory.swift in Sources */,
 				AA19CFF51BED148A00991CAA /* DefaultUseCaseFactory.swift in Sources */,
@@ -4378,6 +4386,7 @@
 					"-lcrypto",
 					"-lssl",
 					"-lopus",
+					"-lsqlite3",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.tlphn.Telephone;
 				PRODUCT_NAME = Telephone;
@@ -4450,6 +4459,7 @@
 					"-lcrypto",
 					"-lssl",
 					"-lopus",
+					"-lsqlite3",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.tlphn.Telephone;
 				PRODUCT_NAME = Telephone;

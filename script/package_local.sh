@@ -6,7 +6,7 @@ VERSION="${1:-local}"
 BUILD_DIR="${BUILD_DIR:-$ROOT_DIR/build}"
 DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$BUILD_DIR/Release/Telephone.app"
-ENTITLEMENTS="$ROOT_DIR/Telephone/Telephone.entitlements"
+ENTITLEMENTS="$ROOT_DIR/Telephone/Telephone.local.entitlements"
 ARCHIVE="$DIST_DIR/Telephone-$VERSION-local.zip"
 
 "$ROOT_DIR/script/build.sh" Release
@@ -16,7 +16,17 @@ if [[ ! -d "$APP_BUNDLE" ]]; then
   exit 1
 fi
 
-/usr/bin/codesign   --force   --deep   --sign -   --entitlements "$ENTITLEMENTS"   "$APP_BUNDLE"
+/usr/bin/codesign \
+  --force \
+  --deep \
+  --sign - \
+  --entitlements "$ENTITLEMENTS" \
+  "$APP_BUNDLE"
+
+SIGNED_ENTITLEMENTS="$(/usr/bin/codesign -d --entitlements :- "$APP_BUNDLE" 2>&1)"
+grep -q "com.apple.security.app-sandbox" <<<"$SIGNED_ENTITLEMENTS"
+grep -q "com.apple.security.network.client" <<<"$SIGNED_ENTITLEMENTS"
+grep -q "com.apple.security.device.microphone" <<<"$SIGNED_ENTITLEMENTS"
 
 /usr/bin/codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 

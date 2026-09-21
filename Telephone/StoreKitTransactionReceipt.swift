@@ -16,17 +16,11 @@
 //  GNU General Public License for more details.
 //
 
-import StoreKit
 import UseCases
 
+/// Personal/local builds of this fork do not use Mac App Store purchase gating.
 final class StoreKitTransactionReceipt: Receipt {
     func isValid() async -> Bool {
-        await Transaction.currentEntitlements.reduce(false) { partial, result in
-            if case .verified(_) = result {
-                return true
-            } else {
-                return partial
-            }
-        }
+        true
     }
 }

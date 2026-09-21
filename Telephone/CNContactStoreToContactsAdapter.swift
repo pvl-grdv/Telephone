@@ -30,7 +30,7 @@ final class CNContactStoreToContactsAdapter {
 extension CNContactStoreToContactsAdapter: Contacts {
     func enumerate(_ body: @escaping (Contact) -> Void) {
         let status = CNContactStore.authorizationStatus(for: .contacts)
-        guard status == .authorized || status == .limited else {
+        guard status == .authorized else {
             return
         }
 

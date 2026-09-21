@@ -1522,12 +1522,6 @@
 			name = "Contact Matching";
 			sourceTree = "<group>";
 		};
-			isa = PBXGroup;
-			children = (
-			);
-			name = Store;
-			sourceTree = "<group>";
-		};
 		8A11B3C81DDB443A002EDA93 /* Calls */ = {
 			isa = PBXGroup;
 			children = (
@@ -1565,12 +1559,6 @@
 			name = CallEventTarget;
 			sourceTree = "<group>";
 		};
-			isa = PBXGroup;
-			children = (
-			);
-			name = CallHistoryPurchaseCheckUseCaseFactory;
-			sourceTree = "<group>";
-		};
 		8A1AF2601F02B71500B9999D /* ContactMatchingIndexFactory */ = {
 			isa = PBXGroup;
 			children = (
@@ -1587,18 +1575,6 @@
 				8A25C2791F00F83A00C91D55 /* ContactMatchingSettingsSpy.swift */,
 			);
 			name = ContactMatchingSettings;
-			sourceTree = "<group>";
-		};
-			isa = PBXGroup;
-			children = (
-			);
-			name = PurchaseCheckUseCase;
-			sourceTree = "<group>";
-		};
-			isa = PBXGroup;
-			children = (
-			);
-			name = PurchaseCheckUseCaseOutputSpy;
 			sourceTree = "<group>";
 		};
 		8A1BCFFA1ED3460900628062 /* Contacts */ = {
@@ -1622,18 +1598,6 @@
 			name = Contacts;
 			sourceTree = "<group>";
 		};
-			isa = PBXGroup;
-			children = (
-			);
-			name = StoreEventTarget;
-			sourceTree = "<group>";
-		};
-			isa = PBXGroup;
-			children = (
-			);
-			name = Store;
-			sourceTree = "<group>";
-		};
 		8A7292281EDDD72100338592 /* ContactCallHistoryRecordGetAllUseCaseOutput */ = {
 			isa = PBXGroup;
 			children = (
@@ -1649,12 +1613,6 @@
 				8A78F32C2124543900B64867 /* SoundIOFactory.swift */,
 			);
 			name = SoundIOFactory;
-			sourceTree = "<group>";
-		};
-			isa = PBXGroup;
-			children = (
-			);
-			name = Receipt;
 			sourceTree = "<group>";
 		};
 		8A859A0A1D2EC82B00118A66 /* UserAgentSoundIOSelectionUseCase */ = {
@@ -1701,12 +1659,6 @@
 			name = SoundEventTarget;
 			sourceTree = "<group>";
 		};
-			isa = PBXGroup;
-			children = (
-			);
-			name = StoreEventTarget;
-			sourceTree = "<group>";
-		};
 		8A859A101D2EC98300118A66 /* SoundIO */ = {
 			isa = PBXGroup;
 			children = (
@@ -1745,12 +1697,6 @@
 				8AAACA041CAE9F81001930C4 /* SystemSoundIO.swift */,
 			);
 			name = SystemSoundIO;
-			sourceTree = "<group>";
-		};
-			isa = PBXGroup;
-			children = (
-			);
-			name = PurchaseCheckUseCaseOutput;
 			sourceTree = "<group>";
 		};
 		8A9084A91EC6167C002B273A /* ContactMatching */ = {

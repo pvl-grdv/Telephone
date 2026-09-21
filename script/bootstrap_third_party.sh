@@ -86,7 +86,7 @@ build_opus() {
   echo "Building Opus $OPUS_VERSION"
   cd "$TMP_DIR"
   curl -fsSL --retry 3 -o "opus-$OPUS_VERSION.tar.gz" \
-    "https://archive.mozilla.org/pub/opus/opus-$OPUS_VERSION.tar.gz"
+    "https://github.com/xiph/opus/releases/download/v$OPUS_VERSION/opus-$OPUS_VERSION.tar.gz"
   tar xzf "opus-$OPUS_VERSION.tar.gz"
   cd "opus-$OPUS_VERSION"
   ./configure \

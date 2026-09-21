@@ -8,13 +8,18 @@ BUNDLE_ID="com.tlphn.Telephone"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_BUNDLE="$ROOT_DIR/build/Debug/$APP_NAME.app"
 APP_BINARY="$APP_BUNDLE/Contents/MacOS/$APP_NAME"
-ENTITLEMENTS="$ROOT_DIR/Telephone/Telephone.entitlements"
+ENTITLEMENTS="$ROOT_DIR/Telephone/Telephone.local.entitlements"
 
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 
 "$ROOT_DIR/script/build.sh" Debug
 
-/usr/bin/codesign   --force   --deep   --sign -   --entitlements "$ENTITLEMENTS"   "$APP_BUNDLE"
+/usr/bin/codesign \
+  --force \
+  --deep \
+  --sign - \
+  --entitlements "$ENTITLEMENTS" \
+  "$APP_BUNDLE"
 
 /usr/bin/codesign --verify --deep --strict "$APP_BUNDLE"
 

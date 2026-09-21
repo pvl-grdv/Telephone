@@ -254,6 +254,7 @@ NS_ASSUME_NONNULL_END
                                                                         userAgent:self.userAgent
                                                                  ringtonePlayback:self.ringtonePlayback
                                                                       sleepStatus:self.sleepStatus
+                                                      incomingCallContactResolver:self.compositionRoot.incomingCallContactResolver
                                                 callHistoryViewEventTargetFactory:self.callHistoryViewEventTargetFactory
                                                       purchaseCheckUseCaseFactory:self.purchaseCheckUseCaseFactory
                                                              storeWindowPresenter:self.storeWindowPresenter];

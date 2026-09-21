@@ -515,7 +515,6 @@
 		AA3905461BFFDE7C005A8AA3 /* UserAgentEventTargetsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA25AB4F1BE0F7B600E677A4 /* UserAgentEventTargetsTests.swift */; };
 		AA3905471BFFDE9A005A8AA3 /* KeyValueSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA32F7FD1BC6908300FAC228 /* KeyValueSettings.swift */; };
 		AA39054A1BFFE125005A8AA3 /* DomainUserAgentAudioDeviceExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3905491BFFE125005A8AA3 /* DomainUserAgentAudioDeviceExtension.swift */; };
-		AA3A14FB0F309C7C00C45739 /* AKABAddressBook+Localizing.m in Sources */ = {isa = PBXBuildFile; fileRef = AA3A14FA0F309C7C00C45739 /* AKABAddressBook+Localizing.m */; };
 		AA3A15400F30A49C00C45739 /* AddressBookLabels.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA3A153E0F30A49C00C45739 /* AddressBookLabels.strings */; };
 		AA3B6E801C46B40C0030D410 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3B6E7F1C46B40C0030D410 /* Sound.swift */; };
 		AA3B6E821C46B55C0030D410 /* RepeatingSound.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3B6E811C46B55C0030D410 /* RepeatingSound.swift */; };
@@ -567,7 +566,6 @@
 		AA97B47610D3A2CA00FC65DA /* CallTransferController.m in Sources */ = {isa = PBXBuildFile; fileRef = AA97B47510D3A2CA00FC65DA /* CallTransferController.m */; };
 		AAA810B41115D7F9008CA945 /* EndedCallTransferViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AAA810B31115D7F9008CA945 /* EndedCallTransferViewController.m */; };
 		AAAC618C0FE6A42900FBE053 /* AKNetworkReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = AAAC618B0FE6A42900FBE053 /* AKNetworkReachability.m */; };
-		AAB5AAC20F2E7A7D00A57531 /* AKABRecord+Querying.m in Sources */ = {isa = PBXBuildFile; fileRef = AAB5AAC10F2E7A7D00A57531 /* AKABRecord+Querying.m */; };
 		AABA3A740F8A2B93009E1005 /* AKSIPAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = AA4BD4DD0E07C51E005A71B2 /* AKSIPAccount.m */; };
 		AABAD7ED0E0C171A00CB5930 /* PreferencesController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABAD7EC0E0C171A00CB5930 /* PreferencesController.m */; };
 		AAC0FFBC1BE38ADE00A5C7E5 /* AKSIPUserAgentEventSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC0FFBB1BE38ADE00A5C7E5 /* AKSIPUserAgentEventSourceTests.swift */; };
@@ -1252,8 +1250,6 @@
 		AA3578B50E4070AD00021989 /* CallController.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.objc; path = CallController.m; sourceTree = "<group>"; tabWidth = 4; };
 		AA3905221BFFA1C8005A8AA3 /* UserAgentAudioDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserAgentAudioDevice.swift; sourceTree = "<group>"; };
 		AA3905491BFFE125005A8AA3 /* DomainUserAgentAudioDeviceExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DomainUserAgentAudioDeviceExtension.swift; sourceTree = "<group>"; };
-		AA3A14F90F309C7C00C45739 /* AKABAddressBook+Localizing.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = "AKABAddressBook+Localizing.h"; sourceTree = "<group>"; tabWidth = 4; };
-		AA3A14FA0F309C7C00C45739 /* AKABAddressBook+Localizing.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.objc; path = "AKABAddressBook+Localizing.m"; sourceTree = "<group>"; tabWidth = 4; };
 		AA3A153F0F30A49C00C45739 /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/AddressBookLabels.strings; sourceTree = "<group>"; };
 		AA3A15470F30A4C200C45739 /* ru */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/AddressBookLabels.strings; sourceTree = "<group>"; };
 		AA3A15480F30A4C700C45739 /* de */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/AddressBookLabels.strings; sourceTree = "<group>"; };
@@ -1328,8 +1324,6 @@
 		AAB32A111BEBA4BA0016C8E6 /* UseCaseFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UseCaseFactory.swift; sourceTree = "<group>"; };
 		AAB32A141BEBAD9C0016C8E6 /* UseCaseFactorySpy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UseCaseFactorySpy.swift; sourceTree = "<group>"; };
 		AAB3F5761C189C4700973BE5 /* SoundPreferencesView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SoundPreferencesView.h; sourceTree = "<group>"; };
-		AAB5AAC00F2E7A7D00A57531 /* AKABRecord+Querying.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = "AKABRecord+Querying.h"; sourceTree = "<group>"; tabWidth = 4; };
-		AAB5AAC10F2E7A7D00A57531 /* AKABRecord+Querying.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.objc; path = "AKABRecord+Querying.m"; sourceTree = "<group>"; tabWidth = 4; };
 		AABAD7EB0E0C171A00CB5930 /* PreferencesController.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = PreferencesController.h; sourceTree = "<group>"; tabWidth = 4; };
 		AABAD7EC0E0C171A00CB5930 /* PreferencesController.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.objc; path = PreferencesController.m; sourceTree = "<group>"; tabWidth = 4; };
 		AABBB39A1BFA1ABC004A65B5 /* UseCaseSpy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UseCaseSpy.swift; sourceTree = "<group>"; };
@@ -2638,10 +2632,6 @@
 				AA16CC9D0F857009000CAFD1 /* AKNSString+Escaping.m */,
 				AAEE7C2F0ECD953200A7DEB4 /* AKNSWindow+Resizing.h */,
 				AAEE7C300ECD953200A7DEB4 /* AKNSWindow+Resizing.m */,
-				AAB5AAC00F2E7A7D00A57531 /* AKABRecord+Querying.h */,
-				AAB5AAC10F2E7A7D00A57531 /* AKABRecord+Querying.m */,
-				AA3A14F90F309C7C00C45739 /* AKABAddressBook+Localizing.h */,
-				AA3A14FA0F309C7C00C45739 /* AKABAddressBook+Localizing.m */,
 				8AFC630D1D8C6F490022470D /* Array+Creating.swift */,
 				8A4B65A51EAF9F8900F13654 /* URI+AKSIPURI.swift */,
 			);
@@ -3109,10 +3099,8 @@
 				AA1019841C490BD300869D01 /* RepeatingSoundFactory.swift in Sources */,
 				AA19CFF51BED148A00991CAA /* DefaultUseCaseFactory.swift in Sources */,
 				AAFA9C3D0EE411BA009A45CB /* AKTelephoneNumberFormatter.m in Sources */,
-				AAB5AAC20F2E7A7D00A57531 /* AKABRecord+Querying.m in Sources */,
 				8A57AEA61CBEAF1200A36200 /* AKSIPCallNotifications.m in Sources */,
 				8ADA10A61DC8D6E90038E0A5 /* SettingsMigrationFactory.swift in Sources */,
-				AA3A14FB0F309C7C00C45739 /* AKABAddressBook+Localizing.m in Sources */,
 				AA16CBE60F856ACD000CAFD1 /* AKNSString+PJSUA.m in Sources */,
 				8ADA109F1DC8D3460038E0A5 /* ProgressiveSettingsMigration.swift in Sources */,
 				8ACD2AE01DD200D700E81984 /* SimplePropertyListStorage.swift in Sources */,

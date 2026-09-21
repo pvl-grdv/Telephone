@@ -37,6 +37,7 @@
 @property(nonatomic) IBOutlet NSButton *hangUpButton;
 @property(nonatomic) NSButton *muteButton;
 @property(nonatomic) NSButton *holdButton;
+@property(nonatomic) NSButton *transferButton;
 
 @end
 
@@ -102,16 +103,26 @@
                                                           accessibilityDescription:nil]
                                          target:self
                                          action:@selector(toggleCallHold:)];
+    self.transferButton = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"arrow.right"
+                                                              accessibilityDescription:nil]
+                                             target:self
+                                             action:@selector(showCallTransferSheet:)];
 
-    for (NSButton *button in @[self.muteButton, self.holdButton]) {
+    for (NSButton *button in @[self.muteButton, self.holdButton, self.transferButton]) {
         button.translatesAutoresizingMaskIntoConstraints = NO;
         button.bezelStyle = NSBezelStyleTexturedRounded;
         button.imagePosition = NSImageOnly;
         [self.view addSubview:button];
     }
+    self.muteButton.buttonType = NSButtonTypeToggle;
+    self.holdButton.buttonType = NSButtonTypeToggle;
 
     [NSLayoutConstraint activateConstraints:@[
-        [self.holdButton.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-20],
+        [self.transferButton.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-20],
+        [self.transferButton.centerYAnchor constraintEqualToAnchor:self.statusField.centerYAnchor],
+        [self.transferButton.widthAnchor constraintEqualToConstant:28],
+        [self.transferButton.heightAnchor constraintEqualToConstant:28],
+        [self.holdButton.trailingAnchor constraintEqualToAnchor:self.transferButton.leadingAnchor constant:-8],
         [self.holdButton.centerYAnchor constraintEqualToAnchor:self.statusField.centerYAnchor],
         [self.holdButton.widthAnchor constraintEqualToConstant:28],
         [self.holdButton.heightAnchor constraintEqualToConstant:28],
@@ -241,6 +252,12 @@
         : NSLocalizedString(@"Hold", @"Hold. Call menu item.");
     self.holdButton.toolTip = holdTitle;
     self.holdButton.accessibilityLabel = holdTitle;
+
+    BOOL transferEnabled = confirmed && !call.isOnRemoteHold;
+    NSString *transferTitle = NSLocalizedString(@"Transfer", @"Transfer. Call menu item.");
+    self.transferButton.enabled = transferEnabled;
+    self.transferButton.toolTip = transferTitle;
+    self.transferButton.accessibilityLabel = transferTitle;
 }
 
 

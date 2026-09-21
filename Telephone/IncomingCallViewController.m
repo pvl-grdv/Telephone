@@ -48,6 +48,26 @@
     return nil;
 }
 
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    NSString *answerTitle = NSLocalizedString(@"Answer", @"Call answer button.");
+    self.acceptCallButton.image = [NSImage imageWithSystemSymbolName:@"phone.fill"
+                                             accessibilityDescription:answerTitle];
+    self.acceptCallButton.imagePosition = NSImageLeading;
+    self.acceptCallButton.toolTip = answerTitle;
+    self.acceptCallButton.accessibilityLabel = answerTitle;
+    self.acceptCallButton.keyEquivalent = @"\r";
+
+    NSString *declineTitle = NSLocalizedString(@"Decline", @"Call decline button.");
+    self.declineCallButton.image = [NSImage imageWithSystemSymbolName:@"phone.down.fill"
+                                              accessibilityDescription:declineTitle];
+    self.declineCallButton.imagePosition = NSImageLeading;
+    self.declineCallButton.toolTip = declineTitle;
+    self.declineCallButton.accessibilityLabel = declineTitle;
+    self.declineCallButton.keyEquivalent = @"\033";
+}
+
 - (void)removeObservations {
     [[self displayedNameField] unbind:NSValueBinding];
     [[self statusField] unbind:NSValueBinding];

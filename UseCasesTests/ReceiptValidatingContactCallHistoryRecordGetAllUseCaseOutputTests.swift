@@ -32,14 +32,14 @@ struct ReceiptValidatingContactCallHistoryRecordGetAllUseCaseOutputTests {
         #expect(origin.invokedRecords == records)
     }
 
-    @Test func callsUpdateOnOriginWithFirstThreeRecordsWhenReceiptIsInvalid() async {
+    @Test func callsUpdateOnOriginWithAllRecordsWhenReceiptIsInvalid() async {
         let origin = ContactCallHistoryRecordGetAllUseCaseOutputSpy()
         let sut = ReceiptValidatingContactCallHistoryRecordGetAllUseCaseOutput(origin: origin, receipt: InvalidReceipt())
         let records = makeFourRecords()
 
         await sut.update(records: records)
 
-        #expect(origin.invokedRecords == Array(records.prefix(3)))
+        #expect(origin.invokedRecords == records)
     }
 }
 

@@ -24,7 +24,7 @@ import UseCasesTestDoubles
 final class CallHistoryRecordGetUseCaseTests: XCTestCase {
     func testCallsUpdateWithRecordWithIdentifierFromHistoryOnExecute() async {
         let factory = CallHistoryRecordTestFactory()
-        let history = TruncatingCallHistory()
+        let history = CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})
         history.add(factory.makeRecord(number: 1))
         history.add(factory.makeRecord(number: 2))
         history.add(factory.makeRecord(number: 3))
@@ -48,7 +48,7 @@ final class CallHistoryRecordGetUseCaseTests: XCTestCase {
         let didNotCallUpdate = expectation(description: "Does not call update on output")
         didNotCallUpdate.isInverted = true
         let output = CallHistoryRecordGetUseCaseOutputSpy { _ in didNotCallUpdate.fulfill() }
-        let sut = CallHistoryRecordGetUseCase(identifier: "nonexistent", history: TruncatingCallHistory(), output: output)
+        let sut = CallHistoryRecordGetUseCase(identifier: "nonexistent", history: CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {}), output: output)
 
         sut.execute()
 

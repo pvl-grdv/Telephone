@@ -24,7 +24,7 @@ import XCTest
 final class CallHistoryRecordGetAllUseCaseTests: XCTestCase {
     func testCallsUpdateWithRecordsFromHistoryOnExecute() async {
         let factory = CallHistoryRecordTestFactory()
-        let history = TruncatingCallHistory()
+        let history = CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})
         history.add(factory.makeRecord(number: 1))
         history.add(factory.makeRecord(number: 2))
         let didCallUpdate = expectation(description: "Calls update on output")

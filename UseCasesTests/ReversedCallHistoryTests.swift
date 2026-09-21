@@ -27,7 +27,7 @@ struct ReversedCallHistoryTests {
         let record1 = factory.makeRecord(number: 1)
         let record2 = factory.makeRecord(number: 2)
         let record3 = factory.makeRecord(number: 3)
-        let sut = ReversedCallHistory(origin: TruncatingCallHistory())
+        let sut = ReversedCallHistory(origin: CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {}))
         sut.add(record1)
         sut.add(record2)
         sut.add(record3)
@@ -39,7 +39,7 @@ struct ReversedCallHistoryTests {
         let factory = CallHistoryRecordTestFactory()
         let record1 = factory.makeRecord(number: 1)
         let record2 = factory.makeRecord(number: 2)
-        let origin = TruncatingCallHistory()
+        let origin = CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})
         let sut = ReversedCallHistory(origin: origin)
 
         sut.add(record1)
@@ -52,7 +52,7 @@ struct ReversedCallHistoryTests {
         let factory = CallHistoryRecordTestFactory()
         let record1 = factory.makeRecord(number: 1)
         let record2 = factory.makeRecord(number: 2)
-        let origin = TruncatingCallHistory()
+        let origin = CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})
         let sut = ReversedCallHistory(origin: origin)
         sut.add(record1)
         sut.add(record2)
@@ -66,7 +66,7 @@ struct ReversedCallHistoryTests {
         let factory = CallHistoryRecordTestFactory()
         let record1 = factory.makeRecord(number: 1)
         let record2 = factory.makeRecord(number: 2)
-        let origin = TruncatingCallHistory()
+        let origin = CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})
         let sut = ReversedCallHistory(origin: origin)
         sut.add(record1)
         sut.add(record2)
@@ -77,7 +77,7 @@ struct ReversedCallHistoryTests {
     }
 
     @Test func updatesTargetOnOriginOnUpdateTarget() {
-        let sut = ReversedCallHistory(origin: NotifyingCallHistory(origin: TruncatingCallHistory()))
+        let sut = ReversedCallHistory(origin: NotifyingCallHistory(origin: CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})))
         let target = CallHistoryEventTargetSpy()
 
         sut.updateTarget(target)

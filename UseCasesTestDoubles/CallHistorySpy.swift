@@ -18,8 +18,7 @@
 
 import UseCases
 
-@CallHistoryActor
-public final class CallHistorySpy {
+public final class CallHistorySpy: @unchecked Sendable {
     private let addCallback: () -> Void
     private let removeCallback: () -> Void
     private let removeAllCallback: () -> Void
@@ -33,6 +32,7 @@ public final class CallHistorySpy {
     }
 }
 
+@CallHistoryActor
 extension CallHistorySpy: CallHistory {
     public var allRecords: [CallHistoryRecord] {
         records

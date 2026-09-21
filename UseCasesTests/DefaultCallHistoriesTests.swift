@@ -23,7 +23,7 @@ import UseCasesTestDoubles
 @CallHistoryActor
 struct DefaultCallHistoriesTests {
     @Test func createsHistoryOnFirstGet() {
-        let history = TruncatingCallHistory()
+        let history = CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})
         let sut = DefaultCallHistories(factory: CallHistoryFactorySpy(history: history))
 
         let result = sut.history(withUUID: "any-uuid")
@@ -33,7 +33,7 @@ struct DefaultCallHistoriesTests {
     }
 
     @Test func usesExpectedUUIDOnHistoryCreation() {
-        let factory = CallHistoryFactorySpy(history: TruncatingCallHistory())
+        let factory = CallHistoryFactorySpy(history: CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {}))
         let sut = DefaultCallHistories(factory: factory)
         let uuid = "any-uuid"
 
@@ -43,7 +43,7 @@ struct DefaultCallHistoriesTests {
     }
 
     @Test func removesHistoryOnRemove() {
-        let sut = DefaultCallHistories(factory: CallHistoryFactorySpy(history: TruncatingCallHistory()))
+        let sut = DefaultCallHistories(factory: CallHistoryFactorySpy(history: CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})))
         let uuid1 = "uuid1"
         let uuid2 = "uuid2"
         _ = sut.history(withUUID: uuid1)

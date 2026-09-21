@@ -10,11 +10,6 @@
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
 import UseCases
 import UseCasesTestDoubles
@@ -22,25 +17,14 @@ import XCTest
 
 @MainActor
 final class UserAgentStartUseCaseTests: XCTestCase {
-    func testSetsMaxCallsToThirtyAndStartsUserAgentWhenReceiptIsValid() {
+    func testSetsFullCallLimitAndStartsUserAgent() {
         let didCallStart = expectation(description: "Calls start on agent")
         let agent = UserAgentSpy(startCallback: didCallStart.fulfill)
-        let sut = UserAgentStartUseCase(agent: agent, factory: PurchaseCheckUseCaseFactory(receipt: ValidReceipt()))
+        let sut = UserAgentStartUseCase(agent: agent)
 
         sut.execute()
 
         wait(for: [didCallStart], timeout: 1)
         XCTAssertEqual(agent.maxCalls, 30)
-    }
-
-    func testSetsMaxCallsToThreeAndStartsUserAgentWhenReceiptIsInvalid() {
-        let didCallStart = expectation(description: "Calls start on agent")
-        let agent = UserAgentSpy(startCallback: didCallStart.fulfill)
-        let sut = UserAgentStartUseCase(agent: agent, factory: PurchaseCheckUseCaseFactory(receipt: InvalidReceipt()))
-
-        sut.execute()
-
-        wait(for: [didCallStart], timeout: 1)
-        XCTAssertEqual(agent.maxCalls, 3)
     }
 }

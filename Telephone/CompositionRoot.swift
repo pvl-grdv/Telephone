@@ -40,6 +40,7 @@ final class CompositionRoot: NSObject {
     @objc let helpMenuActionTarget: HelpMenuActionTarget
     @objc let accountControllers: AccountControllers
     @objc let nameServers: NameServers
+    @objc let incomingCallContactResolver: IncomingCallContactResolver
     private let defaults: UserDefaults
 
     private let storeEventSource: StoreKitTransactionStoreEventSource
@@ -212,6 +213,9 @@ final class CompositionRoot: NSObject {
             factory: SimpleContactMatchingIndexFactory(
                 contacts: CNContactStoreToContactsAdapter(store: CNContactStore()), settings: contactMatchingSettings
             )
+        )
+        incomingCallContactResolver = IncomingCallContactResolver(
+            index: contactMatchingIndex, settings: contactMatchingSettings
         )
 
         contactsChangeEventSource = CNContactStoreContactsChangeEventSource(

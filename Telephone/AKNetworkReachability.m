@@ -4,127 +4,77 @@
 //
 //  Copyright © 2008-2016 Alexey Kuznetsov
 //  Copyright © 2016-2022 64 Characters
+//  Modifications © 2026 Pavel Gordeev
 //
 //  Telephone is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
 #import "AKNetworkReachability.h"
 
-#import <netinet/in.h>
-#import <arpa/inet.h>
-
-@import UseCases;
-
+@import Network;
 
 NSString * const AKNetworkReachabilityDidBecomeReachableNotification = @"AKNetworkReachabilityDidBecomeReachable";
 NSString * const AKNetworkReachabilityDidBecomeUnreachableNotification = @"AKNetworkReachabilityDidBecomeUnreachable";
 
-// SCNetworkReachability callback.
-static void AKReachabilityChanged(SCNetworkReachabilityRef target, SCNetworkConnectionFlags flags, void *info);
-
-
 @interface AKNetworkReachability ()
 
 @property(nonatomic, copy) NSString *host;
+@property(nonatomic, getter=isReachable) BOOL reachable;
+@property(nonatomic) nw_path_monitor_t monitor;
+@property(nonatomic) dispatch_queue_t monitorQueue;
 
 @end
 
-
 @implementation AKNetworkReachability
 
-- (BOOL)isReachable {
-    SCNetworkConnectionFlags flags;
-    Boolean flagsValid = SCNetworkReachabilityGetFlags(_reachability, &flags);
-    
-    return (flagsValid && (flags & kSCNetworkFlagsReachable)) ? YES : NO;
-}
-
-+ (AKNetworkReachability *)networkReachabilityWithHost:(NSString *)nameOrAddress {
++ (nullable AKNetworkReachability *)networkReachabilityWithHost:(NSString *)nameOrAddress {
     return [[self alloc] initWithHost:nameOrAddress];
 }
 
-- (instancetype)initWithHost:(NSString *)nameOrAddress {
+- (nullable instancetype)initWithHost:(NSString *)nameOrAddress {
     self = [super init];
-    if (self == nil) {
+    if (self == nil || nameOrAddress.length == 0) {
         return nil;
     }
-    
-    if ([nameOrAddress length] == 0) {
-        return nil;
-    }
-    
-    if ([nameOrAddress ak_isIP4Address]) {
-        struct sockaddr_in sin;
-        bzero(&sin, sizeof(sin));
-        sin.sin_len = sizeof(sin);
-        sin.sin_family = AF_INET;
-        inet_pton(AF_INET, [nameOrAddress UTF8String], &sin.sin_addr);
-        _reachability = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, (struct sockaddr *)&sin);
-    } else if ([nameOrAddress ak_isIP6Address]) {
-        struct sockaddr_in6 sin;
-        bzero(&sin, sizeof(sin));
-        sin.sin6_len = sizeof(sin);
-        sin.sin6_family = AF_INET6;
-        inet_pton(AF_INET6, [nameOrAddress UTF8String], &sin.sin6_addr);
-        _reachability = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, (struct sockaddr *)&sin);
-    } else {
-        _reachability = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, [nameOrAddress UTF8String]);
-    }
-    
-    _context.info = (__bridge void *)(self);
-    Boolean callbackSet = SCNetworkReachabilitySetCallback(_reachability, &AKReachabilityChanged, &_context);
-    if (!callbackSet) {
-        if (_reachability) {
-            CFRelease(_reachability);
-        }
-        return nil;
-    }
-    
-    Boolean scheduled = SCNetworkReachabilityScheduleWithRunLoop(_reachability,
-                                                                 CFRunLoopGetMain(),
-                                                                 kCFRunLoopDefaultMode);
-    if (!scheduled) {
-        if (_reachability) {
-            CFRelease(_reachability);
-        }
-        return nil;
-    }
-    
-    [self setHost:nameOrAddress];
-    
+
+    _host = [nameOrAddress copy];
+    _reachable = NO;
+    _monitor = nw_path_monitor_create();
+    _monitorQueue = dispatch_queue_create("com.tlphn.Telephone.network-path", DISPATCH_QUEUE_SERIAL);
+
+    __weak typeof(self) weakSelf = self;
+    nw_path_monitor_set_update_handler(_monitor, ^(nw_path_t path) {
+        BOOL reachable = nw_path_get_status(path) == nw_path_status_satisfied;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            typeof(self) strongSelf = weakSelf;
+            if (strongSelf == nil || strongSelf.reachable == reachable) {
+                return;
+            }
+
+            strongSelf.reachable = reachable;
+            NSString *name = reachable
+                ? AKNetworkReachabilityDidBecomeReachableNotification
+                : AKNetworkReachabilityDidBecomeUnreachableNotification;
+            [[NSNotificationCenter defaultCenter] postNotificationName:name object:strongSelf];
+        });
+    });
+    nw_path_monitor_set_queue(_monitor, _monitorQueue);
+    nw_path_monitor_start(_monitor);
+
     return self;
 }
 
 - (void)dealloc {
-    SCNetworkReachabilityUnscheduleFromRunLoop(_reachability, CFRunLoopGetMain(), kCFRunLoopDefaultMode);
-    if (_reachability) {
-        CFRelease(_reachability);
+    if (_monitor != nil) {
+        nw_path_monitor_cancel(_monitor);
     }
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"%@ reachability", [self host]];
+    return [NSString stringWithFormat:@"%@ network path", self.host];
 }
 
 @end
-
-
-static void AKReachabilityChanged(SCNetworkReachabilityRef target, SCNetworkConnectionFlags flags, void *info) {
-    AKNetworkReachability *networkReachability = (__bridge AKNetworkReachability *)info;
-    
-    if (flags & kSCNetworkFlagsReachable) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:AKNetworkReachabilityDidBecomeReachableNotification
-                                                            object:networkReachability];
-    } else {
-        [[NSNotificationCenter defaultCenter] postNotificationName:AKNetworkReachabilityDidBecomeUnreachableNotification
-                                                            object:networkReachability];
-    }
-}

@@ -1,0 +1,76 @@
+name: Local release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version label for the downloadable artifact
+        required: true
+        default: dev
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package local build
+    runs-on: xcode-27
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Restore third-party libraries
+        uses: actions/cache@v5
+        with:
+          path: |
+            ThirdParty/Opus
+            ThirdParty/LibreSSL
+            ThirdParty/PJSIP
+          key: telephone-third-party-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('README.md', 'ThirdParty/PJSIP/patches/**', 'script/bootstrap_third_party.sh') }}
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="${{ inputs.version }}"
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build and package
+        run: ./script/package_local.sh "${{ steps.version.outputs.value }}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Telephone-${{ steps.version.outputs.value }}-local
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+
+      - name: Create GitHub release for tag
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME"             dist/*.zip             dist/*.sha256             --verify-tag             --generate-notes             --title "Telephone $GITHUB_REF_NAME"
+
+      - name: Explain distribution
+        run: |
+          {
+            echo "### Distribution notes"
+            echo ""
+            echo "This build is ad-hoc signed and intentionally not notarized."
+            echo "It is intended for the personal/local fork workflow and uses no Apple signing secrets."
+          } >> "$GITHUB_STEP_SUMMARY"

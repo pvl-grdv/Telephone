@@ -23,7 +23,7 @@ import XCTest
 final class CallHistoryCallEventTargetTests: XCTestCase {
     func testCreatesUseCaseWithExpectedArgumentsOnDidDisconnect() {
         let account = SimpleAccount(uuid: "any-id", domain: "any-domain")
-        let history: CallHistory = TruncatingCallHistory()
+        let history: CallHistory = CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})
         let didCallMake = expectation(description: "Calls make on factory")
         var invokedHistory: CallHistory?
         var invokedRecord: CallHistoryRecord?
@@ -51,7 +51,7 @@ final class CallHistoryCallEventTargetTests: XCTestCase {
     }
 
     func testExecutesUseCaseOnDidDisconnect() {
-        let histories = DefaultCallHistories(factory: CallHistoryFactorySpy(history: TruncatingCallHistory()))
+        let histories = DefaultCallHistories(factory: CallHistoryFactorySpy(history: CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})))
         let didCallExecute = expectation(description: "Calls execute on add")
         let sut = CallHistoryCallEventTarget(
             histories: histories,

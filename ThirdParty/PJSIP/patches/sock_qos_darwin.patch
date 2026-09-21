@@ -1,8 +1,6 @@
-Index: pjlib/src/pj/sock_qos_darwin.c
-===================================================================
---- pjlib/src/pj/sock_qos_darwin.c	(revision 5900)
-+++ pjlib/src/pj/sock_qos_darwin.c	(working copy)
-@@ -30,6 +30,8 @@
+--- pjlib/src/pj/sock_qos_darwin.c
++++ pjlib/src/pj/sock_qos_darwin.c
+@@ -28,6 +28,8 @@
  
  #include <sys/socket.h>
  

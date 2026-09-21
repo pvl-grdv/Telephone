@@ -19,7 +19,7 @@ import UseCases
 @CallHistoryActor
 final class SQLiteCallHistory {
     private let accountUUID: String
-    private var database: OpaquePointer?
+    private nonisolated(unsafe) var database: OpaquePointer?
 
     init(databaseURL: URL, accountUUID: String) {
         self.accountUUID = accountUUID

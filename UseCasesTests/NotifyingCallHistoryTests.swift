@@ -24,7 +24,7 @@ import UseCasesTestDoubles
 struct NotifyingCallHistoryTests {
     @Test func notifiesTargetAfterAdding() {
         let target = CallHistoryEventTargetSpy()
-        let sut = NotifyingCallHistory(origin: TruncatingCallHistory())
+        let sut = NotifyingCallHistory(origin: CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {}))
         sut.updateTarget(target)
         let factory = CallHistoryRecordTestFactory()
 
@@ -35,7 +35,7 @@ struct NotifyingCallHistoryTests {
 
     @Test func notifiesTargetAfterRemovingIndividual() {
         let target = CallHistoryEventTargetSpy()
-        let sut = NotifyingCallHistory(origin: TruncatingCallHistory())
+        let sut = NotifyingCallHistory(origin: CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {}))
         sut.updateTarget(target)
         let record = CallHistoryRecordTestFactory().makeRecord(number: 1)
 
@@ -47,7 +47,7 @@ struct NotifyingCallHistoryTests {
 
     @Test func notifiesTargetAfterRemovingAll() {
         let target = CallHistoryEventTargetSpy()
-        let sut = NotifyingCallHistory(origin: TruncatingCallHistory())
+        let sut = NotifyingCallHistory(origin: CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {}))
         sut.updateTarget(target)
         let factory = CallHistoryRecordTestFactory()
 

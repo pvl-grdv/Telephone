@@ -40,7 +40,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface AppController () <AKSIPUserAgentDelegate, UNUserNotificationCenterDelegate, NameServersChangeEventTarget, PreferencesControllerDelegate, ObjCStoreEventTarget>
+@interface AppController () <AKSIPUserAgentDelegate, UNUserNotificationCenterDelegate, NameServersChangeEventTarget, PreferencesControllerDelegate>
 
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) AccountControllers *accountControllers;
@@ -56,12 +56,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, readonly) CompositionRoot *compositionRoot;
 @property(nonatomic, readonly) PreferencesController *preferencesController;
-@property(nonatomic, readonly) StoreWindowPresenter *storeWindowPresenter;
 @property(nonatomic, readonly) id<RingtonePlaybackUseCase> ringtonePlayback;
 @property(nonatomic, readonly) id<UseCase> userAgentStart;
 @property(nonatomic, readonly) WorkspaceSleepStatus *sleepStatus;
 @property(nonatomic, readonly) AsyncCallHistoryViewEventTargetFactory *callHistoryViewEventTargetFactory;
-@property(nonatomic, readonly) AsyncCallHistoryPurchaseCheckUseCaseFactory *purchaseCheckUseCaseFactory;
 @property(nonatomic, getter=isFinishedLaunching) BOOL finishedLaunching;
 @property(nonatomic, copy) NSString *destinationToCall;
 @property(nonatomic, getter=isUserSessionActive) BOOL userSessionActive;
@@ -90,18 +88,15 @@ NS_ASSUME_NONNULL_END
     }
 
     _compositionRoot = [[CompositionRoot alloc] initWithPreferencesControllerDelegate:self
-                                                         nameServersChangeEventTarget:self
-                                                                     storeEventTarget:self];
+                                                         nameServersChangeEventTarget:self];
     
     _userAgent = _compositionRoot.userAgent;
     [[self userAgent] setDelegate:self];
     _preferencesController = _compositionRoot.preferencesController;
-    _storeWindowPresenter = _compositionRoot.storeWindowPresenter;
     _ringtonePlayback = _compositionRoot.ringtonePlayback;
     _userAgentStart = _compositionRoot.userAgentStart;
     _sleepStatus = _compositionRoot.workstationSleepStatus;
     _callHistoryViewEventTargetFactory = _compositionRoot.callHistoryViewEventTargetFactory;
-    _purchaseCheckUseCaseFactory = _compositionRoot.callHistoryPurchaseCheckUseCaseFactory;
     _destinationToCall = @"";
     _userSessionActive = YES;
     _accountControllers = _compositionRoot.accountControllers;
@@ -191,10 +186,6 @@ NS_ASSUME_NONNULL_END
     }
 }
 
-- (IBAction)showStoreWindow:(id)sender {
-    [self.storeWindowPresenter present];
-}
-
 - (IBAction)showPreferencePanel:(id)sender {
     [self.preferencesController showWindowCentered];
 }
@@ -229,12 +220,6 @@ NS_ASSUME_NONNULL_END
     [[NSApp dockTile] setBadgeLabel:badgeString];
 }
 
-- (void)remindAboutPurchasingAfterDelay {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self.compositionRoot.purchaseReminder execute];
-    });
-}
-
 - (void)showAccountPreferencesIfNeeded {
     if (self.accountControllers.enabled.count == 0)  {
         [self.preferencesController showWindowCentered];
@@ -256,9 +241,7 @@ NS_ASSUME_NONNULL_END
                                                                  ringtonePlayback:self.ringtonePlayback
                                                                       sleepStatus:self.sleepStatus
                                                       incomingCallContactResolver:self.compositionRoot.incomingCallContactResolver
-                                                callHistoryViewEventTargetFactory:self.callHistoryViewEventTargetFactory
-                                                      purchaseCheckUseCaseFactory:self.purchaseCheckUseCaseFactory
-                                                             storeWindowPresenter:self.storeWindowPresenter];
+                                                callHistoryViewEventTargetFactory:self.callHistoryViewEventTargetFactory];
 
     [controller setEnabled:[dict[UserDefaultsKeys.accountEnabled] boolValue]];
     [controller setSubstitutesPlusCharacter:[dict[UserDefaultsKeys.substitutePlusCharacter] boolValue]];
@@ -534,7 +517,6 @@ NS_ASSUME_NONNULL_END
     [self.accountControllers updateCallsShouldDisplayAccountInfo];
     [self.accountsMenuItems update];
     [self setShouldPresentUserAgentLaunchError:YES];
-    [self remindAboutPurchasingAfterDelay];
     [self.accountControllers registerAllAccountsWhereManualRegistrationRequired];
     [self makeCallAfterLaunchIfNeeded];
     [self.compositionRoot.orphanLogFileRemoval performSelector:@selector(execute) withObject:nil afterDelay:0];
@@ -790,12 +772,6 @@ NS_ASSUME_NONNULL_END
         self.userAgent.nameServers = servers;
         [self restartUserAgentAfterDelayOrMarkForRestart];
     }
-}
-
-#pragma mark - ObjCStoreEventTarget
-
-- (void)didPurchase {
-    [self restartUserAgentAfterDelayOrMarkForRestart];
 }
 
 @end

@@ -1,0 +1,73 @@
+name: macOS CI
+
+on:
+  push:
+    branches:
+      - master
+      - "personal/**"
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: xcode-27
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Run unit tests
+        run: ./script/test.sh
+
+  app-build:
+    name: Build local app
+    runs-on: xcode-27
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Restore third-party libraries
+        uses: actions/cache@v5
+        with:
+          path: |
+            ThirdParty/Opus
+            ThirdParty/LibreSSL
+            ThirdParty/PJSIP
+          key: telephone-third-party-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('README.md', 'ThirdParty/PJSIP/patches/**', 'script/bootstrap_third_party.sh') }}
+
+      - name: Build and package
+        run: ./script/package_local.sh "${{ github.sha }}"
+
+      - name: Explain signing
+        run: |
+          {
+            echo "### Telephone.app"
+            echo ""
+            echo "The CI artifact is ad-hoc signed for local use and is not notarized."
+            echo "No paid Apple Developer account or signing secrets are used."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Telephone-local-${{ github.sha }}
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 14

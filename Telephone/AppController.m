@@ -38,6 +38,8 @@
 
 #import "Telephone-Swift.h"
 
+static const NSTimeInterval kNetworkPathChangeCoalescingDelay = 0.5;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface AppController () <AKSIPUserAgentDelegate, UNUserNotificationCenterDelegate, NameServersChangeEventTarget, PreferencesControllerDelegate>
@@ -157,6 +159,9 @@ NS_ASSUME_NONNULL_END
 }
 
 - (void)dealloc {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self
+                                             selector:@selector(handleNetworkPathChange)
+                                               object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
     [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
@@ -207,6 +212,13 @@ NS_ASSUME_NONNULL_END
         [[[self accountSetupController] defaultButton] setAction:@selector(addAccount:)];
         [[[self accountSetupController] otherButton] setTarget:[self accountSetupController]];
         [[[self accountSetupController] otherButton] setAction:@selector(closeSheet:)];
+
+        [self setFinishedLaunching:YES];
+        if (self.networkReachability.isReachable) {
+            [self setShouldPresentUserAgentLaunchError:YES];
+            [self.accountControllers registerAllAccounts];
+        }
+        [self makeCallAfterLaunchIfNeeded];
     }
 }
 
@@ -265,7 +277,9 @@ NS_ASSUME_NONNULL_END
     
     [controller showWindowWithoutMakingKey];
 
-    [self.accountControllers registerAccountIfManualRegistrationRequired:controller];
+    if (controller.isEnabled) {
+        [controller registerAccount];
+    }
 }
 
 
@@ -298,7 +312,7 @@ NS_ASSUME_NONNULL_END
         
         [controller showWindowWithoutMakingKey];
 
-        [self.accountControllers registerAccountIfManualRegistrationRequired:controller];
+        [controller registerAccount];
         
     } else {
         AccountController *controller = self.accountControllers[index];
@@ -533,12 +547,14 @@ NS_ASSUME_NONNULL_END
     }
     [self.accountControllers updateCallsShouldDisplayAccountInfo];
     [self.accountsMenuItems update];
-    [self setShouldPresentUserAgentLaunchError:YES];
-    [self.accountControllers registerAllAccountsWhereManualRegistrationRequired];
+    [self setFinishedLaunching:YES];
+    if (self.networkReachability.isReachable) {
+        [self setShouldPresentUserAgentLaunchError:YES];
+        [self.accountControllers registerAllAccounts];
+    }
     [self makeCallAfterLaunchIfNeeded];
     [self.compositionRoot.orphanLogFileRemoval performSelector:@selector(execute) withObject:nil afterDelay:0];
     [self showAccountPreferencesIfNeeded];
-    [self setFinishedLaunching:YES];
 }
 
 - (void)configureUserAgent {
@@ -709,31 +725,57 @@ NS_ASSUME_NONNULL_END
 #pragma mark NSWorkspace notifications
 
 - (void)workspaceWillSleep:(NSNotification *)notification {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self
+                                             selector:@selector(handleNetworkPathChange)
+                                               object:nil];
     if (self.userAgent.isStarted) {
         [self stopUserAgentAndWait];
     }
 }
 
 - (void)workspaceDidWake:(NSNotification *)notification {
-    if (self.isUserSessionActive) {
+    if (self.isUserSessionActive && self.networkReachability.isReachable) {
         [self.accountControllers registerAllAccounts];
     }
 }
 
 - (void)workspaceSessionDidResignActive:(NSNotification *)notification {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self
+                                             selector:@selector(handleNetworkPathChange)
+                                               object:nil];
     self.userSessionActive = NO;
     [self.accountControllers unregisterAllAccounts];
 }
 
 - (void)workspaceSessionDidBecomeActive:(NSNotification *)notification {
     self.userSessionActive = YES;
-    [self.accountControllers registerAllAccounts];
+    if (self.networkReachability.isReachable) {
+        [self.accountControllers registerAllAccounts];
+    }
 }
 
 
 #pragma mark - Network path changes
 
 - (void)networkPathDidChange:(NSNotification *)notification {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self
+                                             selector:@selector(handleNetworkPathChange)
+                                               object:nil];
+
+    if (!self.networkReachability.isReachable ||
+        !self.isFinishedLaunching ||
+        !self.isUserSessionActive) {
+        return;
+    }
+
+    // NWPathMonitor can emit several updates for one Wi-Fi, Ethernet, or VPN
+    // transition. Coalesce the burst so PJSIP handles one stable path change.
+    [self performSelector:@selector(handleNetworkPathChange)
+               withObject:nil
+               afterDelay:kNetworkPathChangeCoalescingDelay];
+}
+
+- (void)handleNetworkPathChange {
     if (!self.networkReachability.isReachable ||
         !self.isFinishedLaunching ||
         !self.isUserSessionActive) {

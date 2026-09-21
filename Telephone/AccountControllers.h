@@ -45,8 +45,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)hangUpCallsAndRemoveAccountsFromUserAgent;
 
 - (void)registerAllAccounts;
-- (void)registerAllAccountsWhereManualRegistrationRequired;
-- (void)registerAccountIfManualRegistrationRequired:(AccountController *)controller;
 - (void)unregisterAllAccounts;
 
 @end

@@ -140,18 +140,6 @@
     }
 }
 
-- (void)registerAllAccountsWhereManualRegistrationRequired {
-    for (AccountController *controller in self.enabled) {
-        [self registerAccountIfManualRegistrationRequired:controller];
-    }
-}
-
-- (void)registerAccountIfManualRegistrationRequired:(AccountController *)controller {
-    if (controller.account.registrar.host.ak_isIPAddress) {
-        [controller registerAccount];
-    }
-}
-
 - (void)unregisterAllAccounts {
     for (AccountController *controller in self.enabled) {
         if (controller.isAccountRegistered) {

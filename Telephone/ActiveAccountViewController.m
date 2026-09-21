@@ -215,7 +215,7 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
                                                object:nil];
 
     CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
-    if (status == CNAuthorizationStatusAuthorized || status == CNAuthorizationStatusLimited) {
+    if (status == CNAuthorizationStatusAuthorized) {
         [self refreshContactsCache];
     }
 }
@@ -230,7 +230,7 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
 - (void)requestContactsAccessIfNeeded {
     CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
 
-    if (status == CNAuthorizationStatusAuthorized || status == CNAuthorizationStatusLimited) {
+    if (status == CNAuthorizationStatusAuthorized) {
         if (self.contactsCache == nil) {
             [self refreshContactsCache];
         }
@@ -273,7 +273,7 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
 - (void)contactsDidChange:(NSNotification *)notification {
     dispatch_async(dispatch_get_main_queue(), ^{
         CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
-        if (status == CNAuthorizationStatusAuthorized || status == CNAuthorizationStatusLimited) {
+        if (status == CNAuthorizationStatusAuthorized) {
             [self refreshContactsCache];
         } else {
             self.contactsCache = @[];

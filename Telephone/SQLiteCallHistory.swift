@@ -40,7 +40,9 @@ final class SQLiteCallHistory {
         do {
             try execute("PRAGMA foreign_keys = ON")
             try execute("PRAGMA journal_mode = WAL")
-            try createSchema()
+            try execute("PRAGMA synchronous = NORMAL")
+            try execute("PRAGMA busy_timeout = 2000")
+            try migrateSchema()
         } catch {
             NSLog("Could not initialize call history database: %@", String(describing: error))
         }
@@ -150,7 +152,32 @@ extension SQLiteCallHistory: CallHistory {
 }
 
 private extension SQLiteCallHistory {
-    func createSchema() throws {
+    static let schemaVersion = 1
+
+    func migrateSchema() throws {
+        let version = try userVersion()
+        guard version <= Self.schemaVersion else {
+            throw SQLiteCallHistoryError.unsupportedSchema(version)
+        }
+
+        if version == 0 {
+            try transaction {
+                try createSchemaVersion1()
+                try execute("PRAGMA user_version = \(Self.schemaVersion)")
+            }
+        }
+    }
+
+    func userVersion() throws -> Int {
+        let statement = try prepare("PRAGMA user_version")
+        defer { sqlite3_finalize(statement) }
+        guard sqlite3_step(statement) == SQLITE_ROW else {
+            throw SQLiteCallHistoryError.sqlite("Could not read SQLite schema version")
+        }
+        return Int(sqlite3_column_int(statement, 0))
+    }
+
+    func createSchemaVersion1() throws {
         try execute(
             """
             CREATE TABLE IF NOT EXISTS calls (
@@ -365,12 +392,15 @@ private extension SQLiteCallHistory {
 
 private enum SQLiteCallHistoryError: Error, CustomStringConvertible {
     case databaseUnavailable
+    case unsupportedSchema(Int)
     case sqlite(String)
 
     var description: String {
         switch self {
         case .databaseUnavailable:
             return "SQLite database is unavailable"
+        case let .unsupportedSchema(version):
+            return "SQLite schema version \(version) is newer than this Telephone build supports"
         case let .sqlite(message):
             return message
         }

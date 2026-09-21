@@ -9,15 +9,18 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_BUNDLE="$ROOT_DIR/build/Debug/$APP_NAME.app"
 APP_BINARY="$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 ENTITLEMENTS="$ROOT_DIR/Telephone/Telephone.local.entitlements"
+SIGN_IDENTITY="${TELEPHONE_CODE_SIGN_IDENTITY:--}"
 
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+
+echo "Signing Telephone with identity: $SIGN_IDENTITY"
 
 "$ROOT_DIR/script/build.sh" Debug
 
 /usr/bin/codesign \
   --force \
   --deep \
-  --sign - \
+  --sign "$SIGN_IDENTITY" \
   --entitlements "$ENTITLEMENTS" \
   "$APP_BUNDLE"
 

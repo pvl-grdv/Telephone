@@ -29,17 +29,12 @@ static NSArray<NSLayoutConstraint *> *FullSizeConstraintsForView(NSView *view);
 @property(nonatomic, readonly) ActiveAccountViewController *activeAccountViewController;
 @property(nonatomic, readonly) CallHistoryViewController *callHistoryViewController;
 @property(nonatomic, readonly) AsyncCallHistoryViewEventTargetFactory *callHistoryViewEventTargetFactory;
-@property(nonatomic, readonly) AsyncCallHistoryPurchaseCheckUseCaseFactory *purchaseCheckUseCaseFactory;
 @property(nonatomic, readonly) id<Account> account;
-@property(nonatomic, readonly) StoreWindowPresenter *storeWindowPresenter;
 
 @property(nonatomic) CallHistoryViewEventTarget *callHistoryViewEventTarget;
-@property(nonatomic) AccountViewBottomViewPresenter *bottomViewPresenter;
 
 @property(nonatomic, weak) IBOutlet NSView *activeAccountView;
 @property(nonatomic, weak) IBOutlet NSView *callHistoryView;
-@property(nonatomic, weak) IBOutlet NSLayoutConstraint *bottomViewHeightConstraint;
-@property(nonatomic, weak) IBOutlet NSButton *showMoreButton;
 
 @property(nonatomic, weak) IBOutlet NSLayoutConstraint *activeAccountViewHeightConstraint;
 @property(nonatomic, weak) IBOutlet NSLayoutConstraint *horizontalLineHeightConstraint;
@@ -57,22 +52,16 @@ static NSArray<NSLayoutConstraint *> *FullSizeConstraintsForView(NSView *view);
 - (instancetype)initWithActiveAccountViewController:(ActiveAccountViewController *)activeAccountViewController
                           callHistoryViewController:(CallHistoryViewController *)callHistoryViewController
                   callHistoryViewEventTargetFactory:(AsyncCallHistoryViewEventTargetFactory *)callHistoryViewEventTargetFactory
-                        purchaseCheckUseCaseFactory:(AsyncCallHistoryPurchaseCheckUseCaseFactory *)purchaseCheckUseCaseFactory
-                                            account:(id<Account>)account
-                               storeWindowPresenter:(StoreWindowPresenter *)storeWindowPresenter {
+                                            account:(id<Account>)account {
     NSParameterAssert(activeAccountViewController);
     NSParameterAssert(callHistoryViewController);
     NSParameterAssert(callHistoryViewEventTargetFactory);
-    NSParameterAssert(purchaseCheckUseCaseFactory);
     NSParameterAssert(account);
-    NSParameterAssert(storeWindowPresenter);
     if ((self = [super initWithNibName:@"AccountView" bundle:nil])) {
         _activeAccountViewController = activeAccountViewController;
         _callHistoryViewController = callHistoryViewController;
         _callHistoryViewEventTargetFactory = callHistoryViewEventTargetFactory;
-        _purchaseCheckUseCaseFactory = purchaseCheckUseCaseFactory;
         _account = account;
-        _storeWindowPresenter = storeWindowPresenter;
     }
     return self;
 }
@@ -92,22 +81,12 @@ static NSArray<NSLayoutConstraint *> *FullSizeConstraintsForView(NSView *view);
     [self.activeAccountViewController updateNextKeyView:self.callHistoryViewController.keyView];
     [self.callHistoryViewController updateNextKeyView:self.activeAccountViewController.keyView];
 
-    self.bottomViewPresenter
-    = [[AccountViewBottomViewPresenter alloc] initWithConstraint:self.bottomViewHeightConstraint
-                                                          height:self.bottomViewHeightConstraint.constant
-                                                          button:self.showMoreButton
-                                                      controller:self.callHistoryViewController];
-    [self.bottomViewPresenter hideWithoutAnimation];
-
-    [self.purchaseCheckUseCaseFactory makeWithAccount:self.account output:self.bottomViewPresenter completion:^(id<UseCase> _Nonnull useCase) {
-        [self.callHistoryViewEventTargetFactory makeWithAccount:self.account
-                                                           view:self.callHistoryViewController
-                                                  purchaseCheck:useCase
-                                                     completion:^(CallHistoryViewEventTarget * _Nonnull target) {
-                                                         self.callHistoryViewEventTarget = target;
-                                                         self.callHistoryViewController.target = self.callHistoryViewEventTarget;
-                                                     }];
-    }];
+    [self.callHistoryViewEventTargetFactory makeWithAccount:self.account
+                                                       view:self.callHistoryViewController
+                                                 completion:^(CallHistoryViewEventTarget * _Nonnull target) {
+                                                     self.callHistoryViewEventTarget = target;
+                                                     self.callHistoryViewController.target = self.callHistoryViewEventTarget;
+                                                 }];
 }
 
 #pragma mark -
@@ -136,10 +115,6 @@ static NSArray<NSLayoutConstraint *> *FullSizeConstraintsForView(NSView *view);
     self.activeAccountViewController.callDestinationField.tokenStyle = NSTokenStyleRounded;
     self.activeAccountViewController.callDestinationField.stringValue = destination;
     [self.activeAccountViewController makeCall:self];
-}
-
-- (IBAction)showStoreWindow:(id)sender {
-    [self.storeWindowPresenter present];
 }
 
 @end

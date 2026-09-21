@@ -23,8 +23,8 @@
 #import "CallController.h"
 
 @class AKSIPURI, AKNetworkReachability;
-@class AsyncCallHistoryPurchaseCheckUseCaseFactory, AsyncCallHistoryViewEventTargetFactory;
-@class CallTransferController, IncomingCallContactResolver, SanitizedCallDestination, StoreWindowPresenter, WorkspaceSleepStatus;
+@class AsyncCallHistoryViewEventTargetFactory;
+@class CallTransferController, IncomingCallContactResolver, SanitizedCallDestination, WorkspaceSleepStatus;
 @protocol RingtonePlaybackUseCase;
 
 @interface AccountController : NSObject <AKSIPAccountDelegate, CallControllerDelegate>
@@ -53,9 +53,7 @@
                   ringtonePlayback:(id<RingtonePlaybackUseCase>)ringtonePlayback
                        sleepStatus:(WorkspaceSleepStatus *)sleepStatus
        incomingCallContactResolver:(IncomingCallContactResolver *)incomingCallContactResolver
- callHistoryViewEventTargetFactory:(AsyncCallHistoryViewEventTargetFactory *)callHistoryViewEventTargetFactory
-       purchaseCheckUseCaseFactory:(AsyncCallHistoryPurchaseCheckUseCaseFactory *)purchaseCheckUseCaseFactory
-              storeWindowPresenter:(StoreWindowPresenter *)storeWindowPresenter;
+ callHistoryViewEventTargetFactory:(AsyncCallHistoryViewEventTargetFactory *)callHistoryViewEventTargetFactory;
 
 - (void)registerAccount;
 - (void)unregisterAccount;

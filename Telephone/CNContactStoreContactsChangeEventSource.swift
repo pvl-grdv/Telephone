@@ -28,10 +28,19 @@ final class CNContactStoreContactsChangeEventSource {
         self.center = center
         self.target = target
         center.addObserver(self, selector: #selector(contactsDidChange), name: .CNContactStoreDidChange, object: nil)
+        center.addObserver(
+            self,
+            selector: #selector(contactsDidChange),
+            name: Notification.Name("TelephoneContactsAuthorizationDidChange"),
+            object: nil
+        )
     }
 
     deinit {
         center.removeObserver(self, name: .CNContactStoreDidChange, object: nil)
+        center.removeObserver(
+            self, name: Notification.Name("TelephoneContactsAuthorizationDidChange"), object: nil
+        )
     }
 
     @objc private func contactsDidChange(_ notification: Notification) {

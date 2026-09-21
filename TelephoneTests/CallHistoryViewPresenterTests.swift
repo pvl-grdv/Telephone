@@ -74,6 +74,7 @@ final class CallHistoryViewPresenterTests: XCTestCase {
 
         await fulfillment(of: [didCallShow], timeout: 1)
         XCTAssertEqual(invokedRecords!.first!.contact.color, NSColor.systemRed)
+        XCTAssertTrue(invokedRecords!.first!.isMissed)
     }
 
     func testTitleIsEmailAddressOrPhoneNumberAndTooltipIsEmptyWhenNameIsEmpty() async {
@@ -121,13 +122,57 @@ final class CallHistoryViewPresenterTests: XCTestCase {
             contact: contact,
             date: "Today, 12:00",
             duration: "1 min",
-            isIncoming: true
+            isIncoming: true,
+            isMissed: false
         )
 
         XCTAssertTrue(record.matchesSearch("5551234567"))
         XCTAssertTrue(record.matchesSearch("+1 555 123"))
         XCTAssertFalse(record.matchesSearch("Alice 555"))
     }
+
+    func testCallHistoryFiltersMatchExpectedRecords() {
+        let contact = PresentationContact(
+            title: "Any",
+            tooltip: "",
+            label: "",
+            color: .controlTextColor,
+            address: "123"
+        )
+        let missed = PresentationCallHistoryRecord(
+            identifier: "missed",
+            contact: contact,
+            date: "",
+            duration: "",
+            isIncoming: true,
+            isMissed: true
+        )
+        let incoming = PresentationCallHistoryRecord(
+            identifier: "incoming",
+            contact: contact,
+            date: "",
+            duration: "",
+            isIncoming: true,
+            isMissed: false
+        )
+        let outgoing = PresentationCallHistoryRecord(
+            identifier: "outgoing",
+            contact: contact,
+            date: "",
+            duration: "",
+            isIncoming: false,
+            isMissed: false
+        )
+
+        XCTAssertTrue(CallHistoryFilter.all.matches(missed))
+        XCTAssertTrue(CallHistoryFilter.missed.matches(missed))
+        XCTAssertTrue(CallHistoryFilter.incoming.matches(missed))
+        XCTAssertTrue(CallHistoryFilter.incoming.matches(incoming))
+        XCTAssertTrue(CallHistoryFilter.outgoing.matches(outgoing))
+        XCTAssertFalse(CallHistoryFilter.missed.matches(incoming))
+        XCTAssertFalse(CallHistoryFilter.outgoing.matches(incoming))
+    }
+
 
 }
 
@@ -143,7 +188,8 @@ private func makePresentationCallHistoryRecord(contact: MatchedContact, record: 
         contact: makePresentationContact(contact: contact, color: contactColor(for: record)),
         date: ShortRelativeDateTimeFormatter().string(from: record.date),
         duration: DurationFormatter().string(from: TimeInterval(record.duration))!,
-        isIncoming: record.isIncoming
+        isIncoming: record.isIncoming,
+        isMissed: record.isMissed
     )
 }
 

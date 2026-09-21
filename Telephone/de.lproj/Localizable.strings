@@ -200,3 +200,15 @@
 
 /* Call history search field placeholder. */
 "Search Call History" = "Anrufliste durchsuchen";
+
+/* All call history filter. */
+"All" = "Alle";
+
+/* Missed call history filter. */
+"Missed" = "Verpasst";
+
+/* Incoming call history filter. */
+"Incoming" = "Eingehend";
+
+/* Outgoing call history filter. */
+"Outgoing" = "Ausgehend";

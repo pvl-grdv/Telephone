@@ -18,6 +18,39 @@
 
 import Cocoa
 
+enum CallHistoryFilter: Int, CaseIterable {
+    case all
+    case missed
+    case incoming
+    case outgoing
+
+    var title: String {
+        switch self {
+        case .all:
+            return NSLocalizedString("All", comment: "All call history filter.")
+        case .missed:
+            return NSLocalizedString("Missed", comment: "Missed call history filter.")
+        case .incoming:
+            return NSLocalizedString("Incoming", comment: "Incoming call history filter.")
+        case .outgoing:
+            return NSLocalizedString("Outgoing", comment: "Outgoing call history filter.")
+        }
+    }
+
+    func matches(_ record: PresentationCallHistoryRecord) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .missed:
+            return record.isMissed
+        case .incoming:
+            return record.isIncoming
+        case .outgoing:
+            return !record.isIncoming
+        }
+    }
+}
+
 final class CallHistoryViewController: NSViewController {
     @objc var keyView: NSView {
         return tableView
@@ -34,6 +67,7 @@ final class CallHistoryViewController: NSViewController {
     private var records: [PresentationCallHistoryRecord] = []
     private let pasteboard = NSPasteboard.general
     private let searchField = NSSearchField()
+    private let filterButton = NSPopUpButton(frame: .zero, pullsDown: false)
     @IBOutlet private weak var tableView: NSTableView!
 
     init() {
@@ -65,6 +99,10 @@ final class CallHistoryViewController: NSViewController {
     }
 
     @objc private func searchHistory(_ sender: NSSearchField) {
+        updateDisplayedRecords(allRecords)
+    }
+
+    @objc private func filterHistory(_ sender: NSPopUpButton) {
         updateDisplayedRecords(allRecords)
     }
 
@@ -105,6 +143,12 @@ private extension CallHistoryViewController {
     func installSearchField() {
         guard let scrollView = tableView.enclosingScrollView else { return }
 
+        filterButton.addItems(withTitles: CallHistoryFilter.allCases.map(\.title))
+        filterButton.selectItem(at: CallHistoryFilter.all.rawValue)
+        filterButton.target = self
+        filterButton.action = #selector(filterHistory(_:))
+        filterButton.translatesAutoresizingMaskIntoConstraints = false
+
         searchField.placeholderString = NSLocalizedString("Search Call History", comment: "Call history search field placeholder.")
         searchField.sendsSearchStringImmediately = true
         searchField.delegate = self
@@ -113,11 +157,15 @@ private extension CallHistoryViewController {
         searchField.translatesAutoresizingMaskIntoConstraints = false
 
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(filterButton)
         view.addSubview(searchField)
 
         NSLayoutConstraint.activate([
+            filterButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            filterButton.centerYAnchor.constraint(equalTo: searchField.centerYAnchor),
+            filterButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 96),
             searchField.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
-            searchField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            searchField.leadingAnchor.constraint(equalTo: filterButton.trailingAnchor, constant: 6),
             searchField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
             scrollView.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 6),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -127,8 +175,10 @@ private extension CallHistoryViewController {
     }
 
     func updateDisplayedRecords(_ source: [PresentationCallHistoryRecord]) {
+        let filter = CallHistoryFilter(rawValue: filterButton.indexOfSelectedItem) ?? .all
+        let filteredByKind = source.filter(filter.matches)
         let query = searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        let filtered = query.isEmpty ? source : source.filter { record in
+        let filtered = query.isEmpty ? filteredByKind : filteredByKind.filter { record in
             record.matchesSearch(query)
         }
 

@@ -201,3 +201,15 @@
 
 /* Call history search field placeholder. */
 "Search Call History" = "Search Call History";
+
+/* All call history filter. */
+"All" = "All";
+
+/* Missed call history filter. */
+"Missed" = "Missed";
+
+/* Incoming call history filter. */
+"Incoming" = "Incoming";
+
+/* Outgoing call history filter. */
+"Outgoing" = "Outgoing";

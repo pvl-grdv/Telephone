@@ -200,3 +200,15 @@
 
 /* Call history search field placeholder. */
 "Search Call History" = "Поиск в истории звонков";
+
+/* All call history filter. */
+"All" = "Все";
+
+/* Missed call history filter. */
+"Missed" = "Пропущенные";
+
+/* Incoming call history filter. */
+"Incoming" = "Входящие";
+
+/* Outgoing call history filter. */
+"Outgoing" = "Исходящие";

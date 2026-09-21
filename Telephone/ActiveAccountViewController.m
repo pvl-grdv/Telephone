@@ -38,6 +38,7 @@ NSString * const kPhoneLabel = @"PhoneLabel";
 @property(nonatomic) CNContactStore *contactStore;
 @property(nonatomic, copy) NSArray<CNContact *> *contactsCache;
 @property(nonatomic) BOOL contactsCacheLoading;
+@property(nonatomic) BOOL contactsPermissionRequestInFlight;
 
 @end
 
@@ -214,11 +215,42 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
                                                object:nil];
 
     CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
-    if (status == CNAuthorizationStatusAuthorized) {
+    if (status == CNAuthorizationStatusAuthorized || status == CNAuthorizationStatusLimited) {
         [self refreshContactsCache];
-    } else if (status == CNAuthorizationStatusNotDetermined) {
-        __weak typeof(self) weakSelf = self;
-        [self.contactStore requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError *error) {
+    }
+}
+
+- (void)controlTextDidBeginEditing:(NSNotification *)notification {
+    if (notification.object != self.callDestinationField) {
+        return;
+    }
+    [self requestContactsAccessIfNeeded];
+}
+
+- (void)requestContactsAccessIfNeeded {
+    CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+
+    if (status == CNAuthorizationStatusAuthorized || status == CNAuthorizationStatusLimited) {
+        if (self.contactsCache == nil) {
+            [self refreshContactsCache];
+        }
+        return;
+    }
+
+    if (status != CNAuthorizationStatusNotDetermined || self.contactsPermissionRequestInFlight) {
+        return;
+    }
+
+    self.contactsPermissionRequestInFlight = YES;
+    __weak typeof(self) weakSelf = self;
+    [self.contactStore requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError *error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            typeof(self) strongSelf = weakSelf;
+            if (strongSelf == nil) {
+                return;
+            }
+
+            strongSelf.contactsPermissionRequestInFlight = NO;
             if (!granted) {
                 if (error != nil) {
                     NSLog(@"Could not get Contacts access: %@", error);
@@ -226,11 +258,12 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
                 return;
             }
 
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [weakSelf refreshContactsCache];
-            });
-        }];
-    }
+            [strongSelf refreshContactsCache];
+            [[NSNotificationCenter defaultCenter]
+                postNotificationName:@"TelephoneContactsAuthorizationDidChange"
+                              object:nil];
+        });
+    }];
 }
 
 - (void)dealloc {
@@ -239,7 +272,12 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
 
 - (void)contactsDidChange:(NSNotification *)notification {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self refreshContactsCache];
+        CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+        if (status == CNAuthorizationStatusAuthorized || status == CNAuthorizationStatusLimited) {
+            [self refreshContactsCache];
+        } else {
+            self.contactsCache = @[];
+        }
     });
 }
 

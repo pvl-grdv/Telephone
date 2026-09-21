@@ -18,10 +18,9 @@
 
 #import "AccountController.h"
 
-@import AddressBook;
+@import UserNotifications;
 @import UseCases;
 
-#import "AKABAddressBook+Localizing.h"
 #import "AKKeychain.h"
 #import "AKNetworkReachability.h"
 #import "AKNSString+Scanning.h"
@@ -38,7 +37,6 @@
 
 #import "Telephone-Swift.h"
 
-NSString * const kEmailSIPLabel = @"sip";
 static NSString * const kRussian = @"ru";
 
 @interface AccountController () <AccountWindowControllerDelegate>
@@ -47,6 +45,7 @@ static NSString * const kRussian = @"ru";
 
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) WorkspaceSleepStatus *sleepStatus;
+@property(nonatomic, readonly) IncomingCallContactResolver *incomingCallContactResolver;
 
 @property(nonatomic, readonly) AuthenticationFailureController *authenticationFailureController;
 
@@ -181,6 +180,7 @@ static NSString * const kRussian = @"ru";
                          userAgent:(AKSIPUserAgent *)userAgent
                   ringtonePlayback:(id<RingtonePlaybackUseCase>)ringtonePlayback
                        sleepStatus:(WorkspaceSleepStatus *)sleepStatus
+       incomingCallContactResolver:(IncomingCallContactResolver *)incomingCallContactResolver
  callHistoryViewEventTargetFactory:(AsyncCallHistoryViewEventTargetFactory *)callHistoryViewEventTargetFactory
        purchaseCheckUseCaseFactory:(AsyncCallHistoryPurchaseCheckUseCaseFactory *)purchaseCheckUseCaseFactory
               storeWindowPresenter:(StoreWindowPresenter *)storeWindowPresenter{
@@ -195,6 +195,7 @@ static NSString * const kRussian = @"ru";
     _userAgent = userAgent;
     _ringtonePlayback = ringtonePlayback;
     _sleepStatus = sleepStatus;
+    _incomingCallContactResolver = incomingCallContactResolver;
 
     _callControllers = [[NSMutableArray alloc] init];
     _accountDescription = [accountDescription copy];

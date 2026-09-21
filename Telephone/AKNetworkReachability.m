@@ -23,8 +23,8 @@ NSString * const AKNetworkReachabilityDidBecomeUnreachableNotification = @"AKNet
 
 @property(nonatomic, copy) NSString *host;
 @property(nonatomic, getter=isReachable) BOOL reachable;
-@property(nonatomic) nw_path_monitor_t monitor;
-@property(nonatomic) dispatch_queue_t monitorQueue;
+@property(nonatomic, strong) nw_path_monitor_t monitor;
+@property(nonatomic, strong) dispatch_queue_t monitorQueue;
 
 @end
 

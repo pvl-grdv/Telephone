@@ -142,6 +142,11 @@ build_pjsip() {
 #define PJSIP_MAX_RESOLVED_ADDRESSES 32
 #define PJ_HAS_IPV6 1
 
+/* Prefer portable BSD DSCP/TCLASS QoS on Darwin. PJSIP has supported this
+ * configuration directly since ticket #2044, so no source patch is needed.
+ */
+#define PJ_QOS_IMPLEMENTATION PJ_QOS_BSD
+
 /* Modern PJSIP already contains the dispatch-semaphore implementation.
  * Select it on Darwin instead of carrying Telephone's old source patch.
  */

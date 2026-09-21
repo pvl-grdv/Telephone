@@ -28,10 +28,12 @@ final class CallHistoryViewController: NSViewController {
         }
     }
     var recordCount: Int {
-        return records.count
+        return allRecords.count
     }
+    private var allRecords: [PresentationCallHistoryRecord] = []
     private var records: [PresentationCallHistoryRecord] = []
     private let pasteboard = NSPasteboard.general
+    private let searchField = NSSearchField()
     @IBOutlet private weak var tableView: NSTableView!
 
     init() {
@@ -43,6 +45,8 @@ final class CallHistoryViewController: NSViewController {
     }
 
     override func viewDidLoad() {
+        super.viewDidLoad()
+        installSearchField()
         target?.shouldReloadData()
     }
 
@@ -58,6 +62,10 @@ final class CallHistoryViewController: NSViewController {
 
     @objc func updateNextKeyView(_ view: NSView) {
         keyView.nextKeyView = view
+    }
+
+    @objc private func searchHistory(_ sender: NSSearchField) {
+        updateDisplayedRecords(allRecords)
     }
 
     @IBAction func didDoubleClick(_ sender: NSTableView) {
@@ -91,6 +99,42 @@ final class CallHistoryViewController: NSViewController {
 }
 
 private extension CallHistoryViewController {
+    func installSearchField() {
+        guard let scrollView = tableView.enclosingScrollView else { return }
+
+        searchField.placeholderString = NSLocalizedString("Search Call History", comment: "Call history search field placeholder.")
+        searchField.sendsSearchStringImmediately = true
+        searchField.target = self
+        searchField.action = #selector(searchHistory(_:))
+        searchField.translatesAutoresizingMaskIntoConstraints = false
+
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(searchField)
+
+        NSLayoutConstraint.activate([
+            searchField.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
+            searchField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            searchField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            scrollView.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 6),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    func updateDisplayedRecords(_ source: [PresentationCallHistoryRecord]) {
+        let query = searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let filtered = query.isEmpty ? source : source.filter { record in
+            record.matchesSearch(query)
+        }
+
+        let oldRecords = records
+        let oldIndex = tableView.selectedRow
+        records = filtered
+        reloadTableView(old: oldRecords, new: filtered)
+        restoreSelection(oldIndex: oldIndex, old: oldRecords, new: filtered)
+    }
+
     func pickRecord(at index: Int) {
         guard !records.isEmpty else { return }
         target?.didPickRecord(withIdentifier: records[index].identifier)
@@ -127,11 +171,8 @@ private extension CallHistoryViewController {
 
 extension CallHistoryViewController: CallHistoryView {
     func show(_ records: [PresentationCallHistoryRecord]) {
-        let oldRecords = self.records
-        let oldIndex = tableView.selectedRow
-        self.records = records
-        reloadTableView(old: oldRecords, new: records)
-        restoreSelection(oldIndex: oldIndex, old: oldRecords, new: records)
+        allRecords = records
+        updateDisplayedRecords(records)
     }
 
     private func reloadTableView(old: [PresentationCallHistoryRecord], new: [PresentationCallHistoryRecord]) {

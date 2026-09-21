@@ -52,7 +52,7 @@ private let keys = [
 
 
 @objcMembers
-final class IncomingCallContact: NSObject {
+final class IncomingCallContact: NSObject, @unchecked Sendable {
     let name: String
     let label: String
 
@@ -77,7 +77,7 @@ final class IncomingCallContactResolver: NSObject {
         host: String,
         displayName: String,
         domain: String,
-        completion: @escaping (IncomingCallContact?) -> Void
+        completion: @escaping @MainActor @Sendable (IncomingCallContact?) -> Void
     ) {
         Task { @ContactsActor [index, settings] in
             let matching = IndexedContactMatching(

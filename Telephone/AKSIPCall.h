@@ -87,6 +87,13 @@ typedef NS_ENUM(NSUInteger, AKSIPCallState) {
 - (void)replyWithBusyHere;
 
 - (void)sendDTMFDigits:(NSString *)digits;
+
+// Sets explicit media state. These calls are idempotent when the call is
+// already in the requested state.
+- (void)setMuted:(BOOL)muted;
+- (void)setHeld:(BOOL)held;
+
+// Compatibility helpers for responder/menu actions.
 - (void)toggleMicrophoneMute;
 - (void)toggleHold;
 

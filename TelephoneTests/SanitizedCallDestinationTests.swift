@@ -58,4 +58,17 @@ final class SanitizedCallDestinationTests: XCTestCase {
     func testRemovesSlashesRemovesHeadersRemovesEscapedSpacesUnescapesPlusCharacter() {
         XCTAssertEqual(SanitizedCallDestination("tel://%2B1%20234%2056789?header=value").value, "tel:+123456789")
     }
+
+
+    func testInitializesFromSupportedURL() {
+        let url = URL(string: "sip://user@example.com?header=value")!
+
+        XCTAssertEqual(SanitizedCallDestination(url: url)?.value, "sip:user@example.com")
+    }
+
+    func testRejectsUnsupportedURLScheme() {
+        let url = URL(string: "https://example.com")!
+
+        XCTAssertNil(SanitizedCallDestination(url: url))
+    }
 }

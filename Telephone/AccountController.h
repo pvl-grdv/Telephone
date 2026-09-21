@@ -22,7 +22,7 @@
 
 #import "CallController.h"
 
-@class AKSIPURI, AKNetworkReachability;
+@class AKSIPURI;
 @class AsyncCallHistoryViewEventTargetFactory;
 @class CallTransferController, IncomingCallContactResolver, SanitizedCallDestination, WorkspaceSleepStatus;
 @protocol RingtonePlaybackUseCase;
@@ -40,7 +40,6 @@
 @property(nonatomic) BOOL attemptingToUnregisterAccount;
 @property(nonatomic) BOOL shouldPresentRegistrationError;
 @property(nonatomic, getter=isAccountUnavailable) BOOL accountUnavailable;
-@property(nonatomic, readonly) AKNetworkReachability *registrarReachability;
 @property(nonatomic) BOOL substitutesPlusCharacter;
 @property(nonatomic, copy) NSString *plusCharacterSubstitution;
 @property(nonatomic) BOOL callsShouldDisplayAccountInfo;

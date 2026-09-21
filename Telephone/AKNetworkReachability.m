@@ -16,12 +16,10 @@
 
 @import Network;
 
-NSString * const AKNetworkReachabilityDidBecomeReachableNotification = @"AKNetworkReachabilityDidBecomeReachable";
-NSString * const AKNetworkReachabilityDidBecomeUnreachableNotification = @"AKNetworkReachabilityDidBecomeUnreachable";
+NSString * const AKNetworkReachabilityDidChangeNotification = @"AKNetworkReachabilityDidChange";
 
 @interface AKNetworkReachability ()
 
-@property(nonatomic, copy) NSString *host;
 @property(nonatomic, getter=isReachable) BOOL reachable;
 @property(nonatomic, strong) nw_path_monitor_t monitor;
 @property(nonatomic, strong) dispatch_queue_t monitorQueue;
@@ -30,17 +28,16 @@ NSString * const AKNetworkReachabilityDidBecomeUnreachableNotification = @"AKNet
 
 @implementation AKNetworkReachability
 
-+ (nullable AKNetworkReachability *)networkReachabilityWithHost:(NSString *)nameOrAddress {
-    return [[self alloc] initWithHost:nameOrAddress];
++ (instancetype)networkReachability {
+    return [[self alloc] init];
 }
 
-- (nullable instancetype)initWithHost:(NSString *)nameOrAddress {
+- (instancetype)init {
     self = [super init];
-    if (self == nil || nameOrAddress.length == 0) {
+    if (self == nil) {
         return nil;
     }
 
-    _host = [nameOrAddress copy];
     _reachable = NO;
     _monitor = nw_path_monitor_create();
     _monitorQueue = dispatch_queue_create("com.tlphn.Telephone.network-path", DISPATCH_QUEUE_SERIAL);
@@ -50,15 +47,14 @@ NSString * const AKNetworkReachabilityDidBecomeUnreachableNotification = @"AKNet
         BOOL reachable = nw_path_get_status(path) == nw_path_status_satisfied;
         dispatch_async(dispatch_get_main_queue(), ^{
             typeof(self) strongSelf = weakSelf;
-            if (strongSelf == nil || strongSelf.reachable == reachable) {
+            if (strongSelf == nil) {
                 return;
             }
 
             strongSelf.reachable = reachable;
-            NSString *name = reachable
-                ? AKNetworkReachabilityDidBecomeReachableNotification
-                : AKNetworkReachabilityDidBecomeUnreachableNotification;
-            [[NSNotificationCenter defaultCenter] postNotificationName:name object:strongSelf];
+            [[NSNotificationCenter defaultCenter]
+                postNotificationName:AKNetworkReachabilityDidChangeNotification
+                              object:strongSelf];
         });
     });
     nw_path_monitor_set_queue(_monitor, _monitorQueue);
@@ -71,10 +67,6 @@ NSString * const AKNetworkReachabilityDidBecomeUnreachableNotification = @"AKNet
     if (_monitor != nil) {
         nw_path_monitor_cancel(_monitor);
     }
-}
-
-- (NSString *)description {
-    return [NSString stringWithFormat:@"%@ network path", self.host];
 }
 
 @end

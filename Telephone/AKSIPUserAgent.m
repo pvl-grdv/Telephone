@@ -56,6 +56,15 @@ static const NSInteger kAKSIPUserAgentDefaultTransportPort = 0;
 static const BOOL kAKSIPUserAgentDefaultUsesG711Only = NO;
 static const BOOL kAKSIPUserAgentDefaultLocksCodec = YES;
 
+static void AKSIPUserAgentOnIPChangeProgress(
+    pjsua_ip_change_op operation,
+    pj_status_t status,
+    const pjsua_ip_change_op_info *info
+) {
+    (void)info;
+    PJ_LOG(3, (THIS_FILE, "SIP_IP_CHANGE op=%d status=%d", (int)operation, status));
+}
+
 
 @interface AKSIPUserAgent ()
 
@@ -389,6 +398,7 @@ static const BOOL kAKSIPUserAgentDefaultLocksCodec = YES;
     userAgentConfig.cb.on_reg_state = &PJSUAOnAccountRegistrationState;
     userAgentConfig.cb.on_nat_detect = &PJSUAOnNATDetect;
     userAgentConfig.cb.on_acc_find_for_incoming = &PJSUAOnAccountFindForIncoming;
+    userAgentConfig.cb.on_ip_change_progress = &AKSIPUserAgentOnIPChangeProgress;
 
     // Initialize PJSUA.
     status = pjsua_init(&userAgentConfig, &loggingConfig, &mediaConfig);
@@ -534,6 +544,29 @@ static const BOOL kAKSIPUserAgentDefaultLocksCodec = YES;
 
 - (void)thread_callOnMain:(void (^ _Nonnull)(BOOL))block withFlag:(BOOL)flag {
     dispatch_async(dispatch_get_main_queue(), ^{ block(flag); });
+}
+
+- (void)handleIPAddressChange {
+    if (self.state != AKSIPUserAgentStateStarted) {
+        return;
+    }
+
+    [self performSelector:@selector(thread_handleIPAddressChange)
+                 onThread:self.thread
+               withObject:nil
+            waitUntilDone:NO];
+}
+
+- (void)thread_handleIPAddressChange {
+    @autoreleasepool {
+        pjsua_ip_change_param parameters;
+        pjsua_ip_change_param_default(&parameters);
+
+        pj_status_t status = pjsua_handle_ip_change(&parameters);
+        if (status != PJ_SUCCESS) {
+            NSLog(@"Error handling SIP IP address change: %d", status);
+        }
+    }
 }
 
 - (void)stop {

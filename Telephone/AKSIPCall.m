@@ -314,12 +314,16 @@
     }
 }
 
-- (void)toggleMicrophoneMute {
-    if ([self isMicrophoneMuted]) {
-        [self unmuteMicrophone];
-    } else {
+- (void)setMuted:(BOOL)muted {
+    if (muted) {
         [self muteMicrophone];
+    } else {
+        [self unmuteMicrophone];
     }
+}
+
+- (void)toggleMicrophoneMute {
+    [self setMuted:![self isMicrophoneMuted]];
 }
 
 - (void)hold {
@@ -334,12 +338,16 @@
     }
 }
 
-- (void)toggleHold {
-    if ([self isOnLocalHold]) {
-        [self unhold];
-    } else {
+- (void)setHeld:(BOOL)held {
+    if (held) {
         [self hold];
+    } else {
+        [self unhold];
     }
+}
+
+- (void)toggleHold {
+    [self setHeld:![self isOnLocalHold]];
 }
 
 @end

@@ -25,7 +25,18 @@ final class SanitizedCallDestination: NSObject {
     init(_ string: String) {
         value = unescapingPlusCharacter(strippingEscapedSpaces(strippingSlashes(strippingHeaders(string))))
     }
+
+    @objc(initWithURL:)
+    convenience init?(url: URL) {
+        guard let scheme = url.scheme?.lowercased(),
+              supportedURLSchemes.contains(scheme) else {
+            return nil
+        }
+        self.init(url.absoluteString)
+    }
 }
+
+private let supportedURLSchemes: Set<String> = ["sip", "tel"]
 
 private func strippingSlashes(_ string: String) -> String {
     if let range = string.range(of: "sip://") {

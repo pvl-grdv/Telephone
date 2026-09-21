@@ -16,21 +16,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern NSString * const AKNetworkReachabilityDidBecomeReachableNotification;
-extern NSString * const AKNetworkReachabilityDidBecomeUnreachableNotification;
+extern NSString * const AKNetworkReachabilityDidChangeNotification;
 
-/// Network.framework-backed path availability.
+/// Network.framework-backed default path availability.
 ///
-/// The host value is retained for diagnostics/API compatibility. Actual SIP
-/// endpoint reachability is determined by PJSIP; this object only gates work
-/// on whether macOS currently has a usable network path.
+/// This object observes macOS network path changes. It does not probe or
+/// determine reachability of a SIP registrar; PJSIP remains the source of
+/// truth for SIP registration and call connectivity.
 @interface AKNetworkReachability : NSObject
 
-@property(nonatomic, readonly, copy) NSString *host;
 @property(nonatomic, readonly, getter=isReachable) BOOL reachable;
 
-+ (nullable AKNetworkReachability *)networkReachabilityWithHost:(NSString *)nameOrAddress;
-- (nullable instancetype)initWithHost:(NSString *)nameOrAddress;
++ (instancetype)networkReachability;
 
 @end
 

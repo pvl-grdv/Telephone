@@ -109,10 +109,12 @@
 // Redials a call.
 - (void)redial;
 
-// Toggles call hold.
+// Sets and toggles call hold.
+- (void)setCallHeld:(BOOL)held;
 - (void)toggleCallHold;
 
-// Toggles microphone mute.
+// Sets and toggles microphone mute.
+- (void)setMicrophoneMuted:(BOOL)muted;
 - (void)toggleMicrophoneMute;
 
 // Sets intermediate call status. This status appears for the short period of time and then is being replaced with the

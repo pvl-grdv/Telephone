@@ -142,3 +142,6 @@
 
 /* Class = "NSMenuItem"; title = "Keep on Top"; ObjectID = "vyI-5q-SG2"; */
 "vyI-5q-SG2.title" = "Immer im Vordergrund halten";
+
+/* Class = "NSMenuItem"; title = "Find…"; ObjectID = "fnd-Hs-tRy"; */
+"fnd-Hs-tRy.title" = "Suchen …";

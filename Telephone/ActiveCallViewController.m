@@ -29,13 +29,14 @@
 @interface ActiveCallViewController () <NSMenuItemValidation>
 
 @property(nonatomic, getter=isShowingProgress) BOOL showingProgress;
-@property(nonatomic) NSTrackingArea *trackingArea;
 
 @property(nonatomic, weak) IBOutlet NSTextField *displayedNameField;
 @property(nonatomic, weak) IBOutlet NSTextField *statusField;
 
 @property(nonatomic) IBOutlet NSProgressIndicator *callProgressIndicator;
 @property(nonatomic) IBOutlet NSButton *hangUpButton;
+@property(nonatomic) NSButton *muteButton;
+@property(nonatomic) NSButton *holdButton;
 
 @end
 
@@ -57,6 +58,71 @@
     return nil;
 }
 
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self configureCallControls];
+    [self updateCallControls];
+}
+
+- (void)configureCallControls {
+    self.hangUpButton.hidden = NO;
+    self.hangUpButton.image = [NSImage imageWithSystemSymbolName:@"phone.down.fill"
+                                        accessibilityDescription:NSLocalizedString(@"End Call", @"End call button.")];
+    self.hangUpButton.imagePosition = NSImageOnly;
+    self.hangUpButton.toolTip = NSLocalizedString(@"End Call", @"End call button.");
+
+    for (NSLayoutConstraint *constraint in self.hangUpButton.constraints) {
+        if (constraint.firstAttribute == NSLayoutAttributeWidth ||
+            constraint.firstAttribute == NSLayoutAttributeHeight) {
+            constraint.constant = 28;
+        }
+    }
+
+    NSLayoutConstraint *progressTrailingConstraint = nil;
+    for (NSLayoutConstraint *constraint in self.view.constraints) {
+        if (constraint.firstItem == self.view &&
+            constraint.firstAttribute == NSLayoutAttributeTrailing &&
+            constraint.secondItem == self.callProgressIndicator &&
+            constraint.secondAttribute == NSLayoutAttributeTrailing) {
+            progressTrailingConstraint = constraint;
+            break;
+        }
+    }
+    progressTrailingConstraint.active = NO;
+
+    [self.callProgressIndicator.trailingAnchor
+        constraintEqualToAnchor:self.hangUpButton.leadingAnchor
+                       constant:-8].active = YES;
+
+    self.muteButton = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"mic.fill"
+                                                          accessibilityDescription:nil]
+                                         target:self
+                                         action:@selector(toggleMicrophoneMute:)];
+    self.holdButton = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"pause.fill"
+                                                          accessibilityDescription:nil]
+                                         target:self
+                                         action:@selector(toggleCallHold:)];
+
+    for (NSButton *button in @[self.muteButton, self.holdButton]) {
+        button.translatesAutoresizingMaskIntoConstraints = NO;
+        button.bezelStyle = NSBezelStyleTexturedRounded;
+        button.imagePosition = NSImageOnly;
+        [self.view addSubview:button];
+    }
+
+    [NSLayoutConstraint activateConstraints:@[
+        [self.holdButton.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-20],
+        [self.holdButton.centerYAnchor constraintEqualToAnchor:self.statusField.centerYAnchor],
+        [self.holdButton.widthAnchor constraintEqualToConstant:28],
+        [self.holdButton.heightAnchor constraintEqualToConstant:28],
+        [self.muteButton.trailingAnchor constraintEqualToAnchor:self.holdButton.leadingAnchor constant:-8],
+        [self.muteButton.centerYAnchor constraintEqualToAnchor:self.statusField.centerYAnchor],
+        [self.muteButton.widthAnchor constraintEqualToConstant:28],
+        [self.muteButton.heightAnchor constraintEqualToConstant:28],
+        [self.muteButton.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.statusField.trailingAnchor constant:8]
+    ]];
+}
+
 - (void)removeObservations {
     [[self displayedNameField] unbind:NSValueBinding];
     [[self statusField] unbind:NSValueBinding];
@@ -67,16 +133,20 @@
 }
 
 - (IBAction)toggleCallHold:(id)sender {
-    [[self callController] toggleCallHold];
+    BOOL held = self.callController.call.isOnLocalHold;
+    [self.callController setCallHeld:!held];
+    [self updateCallControls];
 }
 
 - (IBAction)toggleMicrophoneMute:(id)sender {
-    [[self callController] toggleMicrophoneMute];
+    BOOL muted = self.callController.call.isMicrophoneMuted;
+    [self.callController setMicrophoneMuted:!muted];
+    [self updateCallControls];
 }
 
 - (IBAction)showCallTransferSheet:(id)sender {
     if (![[self callController] isCallOnHold]) {
-        [[self callController] toggleCallHold];
+        [[self callController] setCallHeld:YES];
     }
     
     CallTransferController *callTransferController = [[self callController] callTransferController];
@@ -121,42 +191,21 @@
 - (void)showProgress {
     if (!self.isShowingProgress) {
         [self.callProgressIndicator startAnimation:self];
-        [self addTrackingArea];
         self.showingProgress = YES;
     }
-    [self showCallProgressIndicator];
+    self.callProgressIndicator.hidden = NO;
+    self.hangUpButton.hidden = NO;
+    [self updateCallControls];
 }
 
 - (void)showHangUp {
     if (self.isShowingProgress) {
         [self.callProgressIndicator stopAnimation:nil];
-        [self removeTrackingArea];
         self.showingProgress = NO;
     }
-    [self showHangUpButton];
-}
-
-- (void)showCallProgressIndicator {
-    self.hangUpButton.hidden = YES;
-    self.callProgressIndicator.hidden = NO;
-}
-
-- (void)showHangUpButton {
     self.callProgressIndicator.hidden = YES;
     self.hangUpButton.hidden = NO;
-}
-
-- (void)addTrackingArea {
-    self.trackingArea = [[NSTrackingArea alloc] initWithRect:self.callProgressIndicator.frame
-                                                     options:(NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways)
-                                                       owner:self
-                                                    userInfo:nil];
-    [self.view addTrackingArea:self.trackingArea];
-}
-
-- (void)removeTrackingArea {
-    [self.view removeTrackingArea:self.trackingArea];
-    self.trackingArea = nil;
+    [self updateCallControls];
 }
 
 - (void)allowHangUp {
@@ -167,16 +216,31 @@
     self.hangUpButton.enabled = NO;
 }
 
+- (void)updateCallControls {
+    AKSIPCall *call = self.callController.call;
+    BOOL confirmed = call.state == kAKSIPCallConfirmedState;
 
-#pragma mark -
-#pragma mark NSResponder overrides
+    BOOL muted = call.isMicrophoneMuted;
+    self.muteButton.enabled = confirmed;
+    self.muteButton.state = muted ? NSControlStateValueOn : NSControlStateValueOff;
+    self.muteButton.image = [NSImage imageWithSystemSymbolName:(muted ? @"mic.slash.fill" : @"mic.fill")
+                                      accessibilityDescription:nil];
+    NSString *muteTitle = muted
+        ? NSLocalizedString(@"Unmute", @"Unmute. Call menu item.")
+        : NSLocalizedString(@"Mute", @"Mute. Call menu item.");
+    self.muteButton.toolTip = muteTitle;
+    self.muteButton.accessibilityLabel = muteTitle;
 
-- (void)mouseEntered:(NSEvent *)theEvent {
-    [self showHangUpButton];
-}
-
-- (void)mouseExited:(NSEvent *)theEvent {
-    [self showCallProgressIndicator];
+    BOOL held = call.isOnLocalHold;
+    self.holdButton.enabled = confirmed && !call.isOnRemoteHold;
+    self.holdButton.state = held ? NSControlStateValueOn : NSControlStateValueOff;
+    self.holdButton.image = [NSImage imageWithSystemSymbolName:(held ? @"play.fill" : @"pause.fill")
+                                      accessibilityDescription:nil];
+    NSString *holdTitle = held
+        ? NSLocalizedString(@"Resume", @"Resume. Call menu item.")
+        : NSLocalizedString(@"Hold", @"Hold. Call menu item.");
+    self.holdButton.toolTip = holdTitle;
+    self.holdButton.accessibilityLabel = holdTitle;
 }
 
 

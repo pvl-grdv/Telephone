@@ -291,19 +291,23 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     }];
 }
 
-- (void)toggleCallHold {
+- (void)setCallHeld:(BOOL)held {
     if ([[self call] state] == kAKSIPCallConfirmedState && ![[self call] isOnRemoteHold]) {
-        [[self call] toggleHold];
+        [[self call] setHeld:held];
     }
 }
 
-- (void)toggleMicrophoneMute {
+- (void)toggleCallHold {
+    [self setCallHeld:![[self call] isOnLocalHold]];
+}
+
+- (void)setMicrophoneMuted:(BOOL)muted {
     if ([[self call] state] != kAKSIPCallConfirmedState) {
         return;
     }
-    
-    [[self call] toggleMicrophoneMute];
-    
+
+    [[self call] setMuted:muted];
+
     if ([[self call] isMicrophoneMuted]) {
         if (![self isCallOnHold]) {
             [[self activeCallViewController] stopCallTimer];
@@ -314,6 +318,10 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     } else {
         [self setIntermediateStatus:NSLocalizedString(@"mic unmuted", @"Microphone unmuted status text.")];
     }
+}
+
+- (void)toggleMicrophoneMute {
+    [self setMicrophoneMuted:![[self call] isMicrophoneMuted]];
 }
 
 - (void)setIntermediateStatus:(NSString *)newIntermediateStatus {
@@ -485,6 +493,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     [self setCallStartTime:[NSDate timeIntervalSinceReferenceDate]];
     [self showActiveCallView];
     [self.activeCallViewController showHangUp];
+    [self.activeCallViewController updateCallControls];
     [self setStatus:@"00:00"];
     [[self activeCallViewController] startCallTimer];
 }
@@ -564,6 +573,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 }
 
 - (void)SIPCallMediaDidBecomeActive:(NSNotification *)notification {
+    [self.activeCallViewController updateCallControls];
     if ([self isCallOnHold]) {  // Call is being taken off hold.
         [self setCallOnHold:NO];
         
@@ -573,12 +583,14 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
 - (void)SIPCallDidLocalHold:(NSNotification *)notification {
     [self setCallOnHold:YES];
+    [self.activeCallViewController updateCallControls];
     [[self activeCallViewController] stopCallTimer];
     [self setStatus:NSLocalizedString(@"on hold", @"Call on local hold status text.")];
 }
 
 - (void)SIPCallDidRemoteHold:(NSNotification *)notification {
     [self setCallOnHold:YES];
+    [self.activeCallViewController updateCallControls];
     [[self activeCallViewController] stopCallTimer];
     [self setStatus:NSLocalizedString(@"on remote hold", @"Call on remote hold status text.")];
 }

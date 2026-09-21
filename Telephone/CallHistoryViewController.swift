@@ -68,6 +68,10 @@ final class CallHistoryViewController: NSViewController {
         updateDisplayedRecords(allRecords)
     }
 
+    @objc func focusCallHistorySearch(_ sender: Any?) {
+        view.window?.makeFirstResponder(searchField)
+    }
+
     @IBAction func didDoubleClick(_ sender: NSTableView) {
         guard sender.clickedRow != -1 else { return }
         pickRecord(at: sender.clickedRow)
@@ -103,6 +107,7 @@ private extension CallHistoryViewController {
 
         searchField.placeholderString = NSLocalizedString("Search Call History", comment: "Call history search field placeholder.")
         searchField.sendsSearchStringImmediately = true
+        searchField.delegate = self
         searchField.target = self
         searchField.action = #selector(searchHistory(_:))
         searchField.translatesAutoresizingMaskIntoConstraints = false
@@ -129,9 +134,15 @@ private extension CallHistoryViewController {
 
         let oldRecords = records
         let oldIndex = tableView.selectedRow
+        let selectedIdentifier = records.indices.contains(oldIndex) ? records[oldIndex].identifier : nil
         records = filtered
         reloadTableView(old: oldRecords, new: filtered)
-        restoreSelection(oldIndex: oldIndex, old: oldRecords, new: filtered)
+        restoreSelection(
+            oldIndex: oldIndex,
+            old: oldRecords,
+            new: filtered,
+            selectedIdentifier: selectedIdentifier
+        )
     }
 
     func pickRecord(at index: Int) {
@@ -190,12 +201,37 @@ extension CallHistoryViewController: CallHistoryView {
         }
     }
 
-    private func restoreSelection(oldIndex: Int, old: [PresentationCallHistoryRecord], new: [PresentationCallHistoryRecord]) {
+    private func restoreSelection(
+        oldIndex: Int,
+        old: [PresentationCallHistoryRecord],
+        new: [PresentationCallHistoryRecord],
+        selectedIdentifier: String?
+    ) {
         guard !records.isEmpty else { return }
-        tableView.selectRowIndexes(
-            IndexSet(integer: RestoredSelectionIndex(indexBefore: oldIndex, before: old, after: new).value),
-            byExtendingSelection: false
-        )
+
+        let index: Int
+        if let selectedIdentifier,
+           let preservedIndex = new.firstIndex(where: { $0.identifier == selectedIdentifier }) {
+            index = preservedIndex
+        } else {
+            index = RestoredSelectionIndex(indexBefore: oldIndex, before: old, after: new).value
+        }
+
+        tableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+    }
+}
+
+extension CallHistoryViewController: NSSearchFieldDelegate {
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard commandSelector == #selector(NSResponder.cancelOperation(_:)) else { return false }
+
+        if !searchField.stringValue.isEmpty {
+            searchField.stringValue = ""
+            updateDisplayedRecords(allRecords)
+        } else {
+            view.window?.makeFirstResponder(tableView)
+        }
+        return true
     }
 }
 
@@ -254,6 +290,8 @@ extension CallHistoryViewController: NSTableViewDelegate {
 extension CallHistoryViewController: NSMenuItemValidation {
     func validateMenuItem(_ item: NSMenuItem) -> Bool {
         switch item.action {
+        case #selector(focusCallHistorySearch):
+            return true
         case #selector(copy(_:)), #selector(makeCall), #selector(delete):
             return records.indices.contains(clickedOrSelectedRow())
         case #selector(deleteAll):

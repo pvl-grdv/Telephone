@@ -22,7 +22,6 @@
 @import UseCases;
 
 #import "AKKeychain.h"
-#import "AKNetworkReachability.h"
 #import "AKNSString+Scanning.h"
 #import "AKSIPURIFormatter.h"
 #import "AKTelephoneNumberFormatter.h"
@@ -40,8 +39,6 @@
 static NSString * const kRussian = @"ru";
 
 @interface AccountController () <AccountWindowControllerDelegate>
-
-@property(nonatomic) AKNetworkReachability *registrarReachability;
 
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) WorkspaceSleepStatus *sleepStatus;
@@ -64,29 +61,6 @@ static NSString * const kRussian = @"ru";
 
 - (void)setEnabled:(BOOL)flag {
     _enabled = flag;
-    
-    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    
-    if (flag) {
-        AKNetworkReachability *reachability
-            = [AKNetworkReachability networkReachabilityWithHost:self.account.registrar.host];
-        [self setRegistrarReachability:reachability];
-        
-        if (reachability != nil) {
-            [notificationCenter addObserver:self
-                                   selector:@selector(networkReachabilityDidBecomeReachable:)
-                                       name:AKNetworkReachabilityDidBecomeReachableNotification
-                                     object:reachability];
-        }
-    } else {
-        if ([self registrarReachability] != nil) {
-            [notificationCenter removeObserver:self
-                                          name:AKNetworkReachabilityDidBecomeReachableNotification
-                                        object:[self registrarReachability]];
-            
-            [self setRegistrarReachability:nil];
-        }
-    }
 }
 
 - (BOOL)isAccountRegistered {
@@ -757,16 +731,6 @@ static NSString * const kRussian = @"ru";
         [self registerAccount];
     } else if ([self attemptingToUnregisterAccount]) {
         [self unregisterAccount];
-    }
-}
-
-
-#pragma mark - AKNetworkReachability notifications
-
-// This is the moment when the application starts doing its main job.
-- (void)networkReachabilityDidBecomeReachable:(NSNotification *)notification {
-    if (!self.sleepStatus.isSleeping && !self.isAccountUnavailable && !self.isAccountRegistered) {
-        [self registerAccount];
     }
 }
 

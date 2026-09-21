@@ -67,5 +67,6 @@
 
 - (void)allowHangUp;
 - (void)disallowHangUp;
+- (void)updateCallControls;
 
 @end

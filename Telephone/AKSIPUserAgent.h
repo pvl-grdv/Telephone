@@ -165,6 +165,10 @@ extern const NSInteger kAKSIPUserAgentInvalidIdentifier;
 - (void)stop;
 - (void)stopAndWait;
 
+// Informs PJSIP that the default network path changed so transports,
+// registrations, and active calls can be refreshed for the new IP path.
+- (void)handleIPAddressChange;
+
 // Adds an account to the user agent.
 - (BOOL)addAccount:(AKSIPAccount *)anAccount withPassword:(NSString *)aPassword;
 

@@ -64,6 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy) NSString *destinationToCall;
 @property(nonatomic, getter=isUserSessionActive) BOOL userSessionActive;
 @property(nonatomic, readonly) NameServers *nameServers;
+@property(nonatomic, readonly) AKNetworkReachability *networkReachability;
 
 @end
 
@@ -101,7 +102,13 @@ NS_ASSUME_NONNULL_END
     _userSessionActive = YES;
     _accountControllers = _compositionRoot.accountControllers;
     _nameServers = _compositionRoot.nameServers;
+    _networkReachability = [AKNetworkReachability networkReachability];
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+
+    [notificationCenter addObserver:self
+                           selector:@selector(networkPathDidChange:)
+                               name:AKNetworkReachabilityDidChangeNotification
+                             object:_networkReachability];
 
     [notificationCenter addObserver:self
                            selector:@selector(accountSetupControllerDidAddAccount:)
@@ -145,11 +152,6 @@ NS_ASSUME_NONNULL_END
                            selector:@selector(workspaceSessionDidBecomeActive:)
                                name:NSWorkspaceSessionDidBecomeActiveNotification
                              object:nil];
-    
-    [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
-                                                       andSelector:@selector(handleGetURLEvent:withReplyEvent:)
-                                                     forEventClass:kInternetEventClass
-                                                        andEventID:kAEGetURL];
     
     return self;
 }
@@ -477,6 +479,21 @@ NS_ASSUME_NONNULL_END
     [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSFullScreenMenuItemEverywhere"];
 }
 
+- (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls {
+    NSURL *url = urls.firstObject;
+    if (url == nil) {
+        return;
+    }
+
+    SanitizedCallDestination *destination = [[SanitizedCallDestination alloc] initWithURL:url];
+    if (destination == nil) {
+        NSLog(@"Ignoring unsupported call URL: %@", url);
+        return;
+    }
+
+    [self makeCallOrRememberDestination:destination.value];
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     NSWindow.allowsAutomaticWindowTabbing = NO;
     [self.compositionRoot.defaultAppSettings registerDefaults];
@@ -699,7 +716,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)workspaceDidWake:(NSNotification *)notification {
     if (self.isUserSessionActive) {
-        [self.accountControllers registerReachableAccounts];
+        [self.accountControllers registerAllAccounts];
     }
 }
 
@@ -714,11 +731,20 @@ NS_ASSUME_NONNULL_END
 }
 
 
-#pragma mark -
-#pragma mark Apple event handler for URLs support
+#pragma mark - Network path changes
 
-- (void)handleGetURLEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
-    [self makeCallOrRememberDestination:[[event paramDescriptorForKeyword:keyDirectObject] stringValue]];
+- (void)networkPathDidChange:(NSNotification *)notification {
+    if (!self.networkReachability.isReachable ||
+        !self.isFinishedLaunching ||
+        !self.isUserSessionActive) {
+        return;
+    }
+
+    if (self.userAgent.isStarted) {
+        [self.userAgent handleIPAddressChange];
+    } else {
+        [self.accountControllers registerAllAccounts];
+    }
 }
 
 

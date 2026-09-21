@@ -41,7 +41,19 @@ The bootstrap script records dependency versions in each installation prefix,
 so an existing checkout is rebuilt automatically when a pinned version changes.
 Telephone-specific PJSIP patches live in `ThirdParty/PJSIP/patches`.
 
+## Personal fork workflow
+
+This fork is maintained as a personal macOS build. Development happens only in
+`pvl-grdv/Telephone`; the original `64characters/Telephone` repository is treated
+as read-only upstream and this fork does not open pull requests against it.
+
+Use short-lived `work/<topic>` branches, let CI run unit tests and the app build,
+then integrate the validated result into `master` as one clean logical commit.
+A pull request is not required for the normal solo-development workflow.
+
+Detailed agent rules are in `AGENTS.md`.
+
 ## Contribution
 
-For the legal reasons, pull requests are not accepted. Please feel
-free to share your thoughts and ideas by commenting on the issues.
+For legal reasons, pull requests to the original project are not accepted. Please
+feel free to share thoughts and ideas in the original project's issue tracker.

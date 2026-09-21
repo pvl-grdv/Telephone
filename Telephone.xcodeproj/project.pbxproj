@@ -3797,12 +3797,6 @@
 			name = ActiveAccountView.xib;
 			sourceTree = "<group>";
 		};
-			isa = PBXVariantGroup;
-			children = (
-			);
-			name = AddressBookLabels.strings;
-			sourceTree = "<group>";
-		};
 		AA584A680F06CFD2003C4992 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (

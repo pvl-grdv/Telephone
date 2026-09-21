@@ -76,3 +76,20 @@ extension PresentationCallHistoryRecord {
         return contact.title.isEmpty ? date : "\(contact.title), \(date)"
     }
 }
+
+extension PresentationCallHistoryRecord {
+    func matchesSearch(_ query: String) -> Bool {
+        let haystacks = [
+            contact.title,
+            contact.tooltip,
+            contact.label,
+            contact.address,
+            date,
+            duration
+        ]
+
+        return haystacks.contains {
+            $0.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+        }
+    }
+}

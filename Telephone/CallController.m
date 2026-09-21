@@ -18,6 +18,7 @@
 
 #import "CallController.h"
 
+@import UserNotifications;
 @import UseCases;
 
 #import "AKActiveCallView.h"
@@ -395,13 +396,9 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 }
 
 - (void)removeUserNotification {
-    NSUserNotificationCenter *center = NSUserNotificationCenter.defaultUserNotificationCenter;
-    for (NSUserNotification *notification in center.deliveredNotifications) {
-        if ([notification.identifier isEqualToString:self.identifier]) {
-            [center removeDeliveredNotification:notification];
-            break;
-        }
-    }
+    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+    [center removeDeliveredNotificationsWithIdentifiers:@[self.identifier]];
+    [center removePendingNotificationRequestsWithIdentifiers:@[self.identifier]];
 }
 
 - (void)showUserNotification {
@@ -422,11 +419,20 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
          [self.defaults boolForKey:UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits]];
         notificationTitle = [SIPURIFormatter stringForObjectValue:[[self call] remoteURI]];
     }
-    NSUserNotification *userNotification = [[NSUserNotification alloc] init];
-    userNotification.identifier = self.identifier;
-    userNotification.title = notificationTitle;
-    userNotification.informativeText = self.status;
-    [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNotification];
+
+    UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+    content.title = notificationTitle ?: @"";
+    content.body = self.status ?: @"";
+
+    UNNotificationRequest *request =
+        [UNNotificationRequest requestWithIdentifier:self.identifier content:content trigger:nil];
+    [[UNUserNotificationCenter currentNotificationCenter]
+        addNotificationRequest:request
+         withCompletionHandler:^(NSError *error) {
+            if (error != nil) {
+                NSLog(@"Could not deliver call notification: %@", error);
+            }
+        }];
 }
 
 - (void)updateWindowTitle {

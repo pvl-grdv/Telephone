@@ -515,7 +515,6 @@
 		AA3905461BFFDE7C005A8AA3 /* UserAgentEventTargetsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA25AB4F1BE0F7B600E677A4 /* UserAgentEventTargetsTests.swift */; };
 		AA3905471BFFDE9A005A8AA3 /* KeyValueSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA32F7FD1BC6908300FAC228 /* KeyValueSettings.swift */; };
 		AA39054A1BFFE125005A8AA3 /* DomainUserAgentAudioDeviceExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3905491BFFE125005A8AA3 /* DomainUserAgentAudioDeviceExtension.swift */; };
-		AA3A15400F30A49C00C45739 /* AddressBookLabels.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA3A153E0F30A49C00C45739 /* AddressBookLabels.strings */; };
 		AA3B6E801C46B40C0030D410 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3B6E7F1C46B40C0030D410 /* Sound.swift */; };
 		AA3B6E821C46B55C0030D410 /* RepeatingSound.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3B6E811C46B55C0030D410 /* RepeatingSound.swift */; };
 		AA3B6E871C47AD0B0030D410 /* Timer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3B6E861C47AD0B0030D410 /* Timer.swift */; };
@@ -1250,9 +1249,6 @@
 		AA3578B50E4070AD00021989 /* CallController.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.objc; path = CallController.m; sourceTree = "<group>"; tabWidth = 4; };
 		AA3905221BFFA1C8005A8AA3 /* UserAgentAudioDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserAgentAudioDevice.swift; sourceTree = "<group>"; };
 		AA3905491BFFE125005A8AA3 /* DomainUserAgentAudioDeviceExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DomainUserAgentAudioDeviceExtension.swift; sourceTree = "<group>"; };
-		AA3A153F0F30A49C00C45739 /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/AddressBookLabels.strings; sourceTree = "<group>"; };
-		AA3A15470F30A4C200C45739 /* ru */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/AddressBookLabels.strings; sourceTree = "<group>"; };
-		AA3A15480F30A4C700C45739 /* de */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/AddressBookLabels.strings; sourceTree = "<group>"; };
 		AA3B6E7F1C46B40C0030D410 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
 		AA3B6E811C46B55C0030D410 /* RepeatingSound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RepeatingSound.swift; sourceTree = "<group>"; };
 		AA3B6E861C47AD0B0030D410 /* Timer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Timer.swift; sourceTree = "<group>"; };
@@ -1559,7 +1555,6 @@
 				AA584A680F06CFD2003C4992 /* Localizable.strings */,
 				8A3961EE1F7EEE7500209266 /* Localizable.stringsdict */,
 				AA167A1C0F07BF9E00AF8B71 /* SIPResponses.strings */,
-				AA3A153E0F30A49C00C45739 /* AddressBookLabels.strings */,
 				1DDD58140DA1D0A300B32029 /* MainMenu.xib */,
 				AA2ED99B0F05B362004A13C6 /* Account.xib */,
 				8A1AA7D01F4737C800804280 /* AccountView.xib */,
@@ -2967,7 +2962,6 @@
 				AA584A6A0F06CFD2003C4992 /* Localizable.strings in Resources */,
 				8AE4E95C1DABBBF90003F063 /* Images.xcassets in Resources */,
 				AA167A1E0F07BF9E00AF8B71 /* SIPResponses.strings in Resources */,
-				AA3A15400F30A49C00C45739 /* AddressBookLabels.strings in Resources */,
 				8ACC2ABD300520BE00172E36 /* Configuration.storekit in Resources */,
 				AA34ACC3106E229A00FA38F7 /* ActiveAccountView.xib in Resources */,
 				AAFC002C1074D0B50018C7DA /* GeneralPreferencesView.xib in Resources */,
@@ -3803,12 +3797,8 @@
 			name = ActiveAccountView.xib;
 			sourceTree = "<group>";
 		};
-		AA3A153E0F30A49C00C45739 /* AddressBookLabels.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				AA3A153F0F30A49C00C45739 /* en */,
-				AA3A15470F30A4C200C45739 /* ru */,
-				AA3A15480F30A4C700C45739 /* de */,
 			);
 			name = AddressBookLabels.strings;
 			sourceTree = "<group>";

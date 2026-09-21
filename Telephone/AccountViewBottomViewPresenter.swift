@@ -33,14 +33,17 @@ final class AccountViewBottomViewPresenter: NSObject {
     }
 
     @objc func hideWithoutAnimation() {
+        button.isHidden = true
         constraint.constant = 0
     }
 
     private func show() {
+        button.isHidden = false
         constraint.animator().constant = height
     }
 
     private func hide() {
+        button.isHidden = true
         constraint.animator().constant = 0
     }
 }

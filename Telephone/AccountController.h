@@ -22,9 +22,6 @@
 
 #import "CallController.h"
 
-// Address Book label for SIP address in the email field.
-extern NSString * const kEmailSIPLabel;
-
 @class AKSIPURI, AKNetworkReachability;
 @class AsyncCallHistoryPurchaseCheckUseCaseFactory, AsyncCallHistoryViewEventTargetFactory;
 @class CallTransferController, IncomingCallContactResolver, SanitizedCallDestination, StoreWindowPresenter, WorkspaceSleepStatus;

@@ -29,7 +29,7 @@ Build and run the local app:
 CI uses ad-hoc signing. For repeated local development, create a stable self-signed
 code-signing identity once so macOS Keychain/TCC can recognize subsequent builds:
 
-    $ ./script/create_local_signing_identity.sh
+    $ bash ./script/create_local_signing_identity.sh
     $ export TELEPHONE_CODE_SIGN_IDENTITY="Telephone Local Development"
     $ ./script/build_and_run.sh
 

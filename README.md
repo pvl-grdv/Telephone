@@ -22,9 +22,20 @@ Build Telephone:
 
     $ ./script/build.sh Debug
 
-Build and run the local ad-hoc signed app:
+Build and run the local app:
 
     $ ./script/build_and_run.sh
+
+CI uses ad-hoc signing. For repeated local development, create a stable self-signed
+code-signing identity once so macOS Keychain/TCC can recognize subsequent builds:
+
+    $ ./script/create_local_signing_identity.sh
+    $ export TELEPHONE_CODE_SIGN_IDENTITY="Telephone Local Development"
+    $ ./script/build_and_run.sh
+
+This identity is local to your Mac and does not require an Apple Developer
+Program membership. If `TELEPHONE_CODE_SIGN_IDENTITY` is unset, the build
+scripts fall back to ad-hoc signing.
 
 The bootstrap script records dependency versions in each installation prefix,
 so an existing checkout is rebuilt automatically when a pinned version changes.

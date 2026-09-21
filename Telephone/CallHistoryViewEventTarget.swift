@@ -61,16 +61,10 @@ nonisolated extension CallHistoryViewEventTarget: CallHistoryEventTarget {
     }
 }
 
-extension CallHistoryViewEventTarget: StoreEventTarget {
-    func didPurchase() {
-        executeRecordGetAndPurchaseCheck()
-    }
-}
-
 nonisolated extension CallHistoryViewEventTarget: DayChangeEventTarget {
     func dayDidChange() {
-        Task {
-            await executeRecordGetAndPurchaseCheck()
+        Task { @MainActor in
+            recordsGet.execute()
         }
     }
 }

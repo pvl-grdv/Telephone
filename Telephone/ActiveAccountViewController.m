@@ -36,6 +36,8 @@ NSString * const kPhoneLabel = @"PhoneLabel";
 @interface ActiveAccountViewController ()
 
 @property(nonatomic) CNContactStore *contactStore;
+@property(nonatomic, copy) NSArray<CNContact *> *contactsCache;
+@property(nonatomic) BOOL contactsCacheLoading;
 
 @end
 
@@ -206,13 +208,61 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
     [[self callDestinationField] setCompletionDelay:0.4];
 
     self.contactStore = [[CNContactStore alloc] init];
-    if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] == CNAuthorizationStatusNotDetermined) {
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(contactsDidChange:)
+                                                 name:CNContactStoreDidChangeNotification
+                                               object:nil];
+
+    CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+    if (status == CNAuthorizationStatusAuthorized) {
+        [self refreshContactsCache];
+    } else if (status == CNAuthorizationStatusNotDetermined) {
+        __weak typeof(self) weakSelf = self;
         [self.contactStore requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError *error) {
-            if (!granted && error != nil) {
-                NSLog(@"Could not get Contacts access: %@", error);
+            if (!granted) {
+                if (error != nil) {
+                    NSLog(@"Could not get Contacts access: %@", error);
+                }
+                return;
             }
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf refreshContactsCache];
+            });
         }];
     }
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:CNContactStoreDidChangeNotification object:nil];
+}
+
+- (void)contactsDidChange:(NSNotification *)notification {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self refreshContactsCache];
+    });
+}
+
+- (void)refreshContactsCache {
+    if (self.contactsCacheLoading) {
+        return;
+    }
+
+    self.contactsCacheLoading = YES;
+    CNContactStore *store = self.contactStore;
+    __weak typeof(self) weakSelf = self;
+
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        NSArray<CNContact *> *contacts = AllContacts(store);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            typeof(self) strongSelf = weakSelf;
+            if (strongSelf == nil) {
+                return;
+            }
+            strongSelf.contactsCache = contacts;
+            strongSelf.contactsCacheLoading = NO;
+        });
+    });
 }
 
 - (IBAction)makeCall:(id)sender {
@@ -278,12 +328,10 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
         return @[];
     }
 
-    if (self.contactStore == nil) {
-        self.contactStore = [[CNContactStore alloc] init];
-    }
+    NSArray<CNContact *> *contacts = self.contactsCache ?: @[];
 
     NSMutableOrderedSet<NSString *> *completionSet = [NSMutableOrderedSet orderedSet];
-    for (CNContact *contact in AllContacts(self.contactStore)) {
+    for (CNContact *contact in contacts) {
         NSString *name = ContactDisplayName(contact);
         BOOL nameMatches = ContactMatchesName(contact, query);
 
@@ -353,11 +401,7 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
         return nil;
     }
 
-    if (self.contactStore == nil) {
-        self.contactStore = [[CNContactStore alloc] init];
-    }
-
-    NSArray<CNContact *> *contacts = AllContacts(self.contactStore);
+    NSArray<CNContact *> *contacts = self.contactsCache ?: @[];
     CNContact *contact = ContactMatchingURI(contacts, theURI, theURI.displayName);
 
     NSMutableArray *callDestinations = [[NSMutableArray alloc] init];

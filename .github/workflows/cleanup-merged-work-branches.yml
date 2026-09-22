@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -42,8 +42,13 @@ jobs:
 
             if [[ "$integrated" == true ]]; then
               echo "Deleting integrated branch: $branch"
-              if ! git push origin --delete "$branch"; then
-                echo "::warning::Could not delete $branch"
+              # Delete only if the remote tip is still exactly the commit we
+              # inspected above. If new work was pushed after our fetch,
+              # --force-with-lease rejects the deletion instead of racing it.
+              if ! git push \
+                --force-with-lease="refs/heads/$branch:$branch_sha" \
+                origin ":refs/heads/$branch"; then
+                echo "::warning::Skipped $branch because it changed after cleanup started"
               fi
             else
               echo "Keeping unmerged branch: $branch"

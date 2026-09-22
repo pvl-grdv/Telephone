@@ -222,3 +222,31 @@
 
 /* Clear outbound proxy button. */
 "Clear Outbound Proxy" = "Clear Outbound Proxy";
+
+/* Call history filter picker label. */
+"Filter" = "Filter";
+
+/* Empty call history title. */
+"No Calls" = "No Calls";
+
+/* Call history search has no matches title. */
+"No Results" = "No Results";
+
+/* Empty call history description. */
+"Your call history will appear here." = "Your call history will appear here.";
+
+/* Empty call history search description. */
+"Try a different search or filter." = "Try a different search or filter.";
+
+/* Call history context menu item. */
+"Call Number" = "Call";
+
+/* Call history context menu item. */
+"Copy Number" = "Copy Number";
+
+/* Call history context menu item. */
+"Delete…" = "Delete…";
+
+/* Call history context menu item. */
+"Delete All…" = "Delete All…";
+

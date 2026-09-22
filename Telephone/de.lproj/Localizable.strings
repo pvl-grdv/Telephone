@@ -221,3 +221,31 @@
 
 /* Clear outbound proxy button. */
 "Clear Outbound Proxy" = "Outbound-Proxy löschen";
+
+/* Call history filter picker label. */
+"Filter" = "Filter";
+
+/* Empty call history title. */
+"No Calls" = "Keine Anrufe";
+
+/* Call history search has no matches title. */
+"No Results" = "Keine Ergebnisse";
+
+/* Empty call history description. */
+"Your call history will appear here." = "Ihr Anrufverlauf wird hier angezeigt.";
+
+/* Empty call history search description. */
+"Try a different search or filter." = "Versuchen Sie eine andere Suche oder einen anderen Filter.";
+
+/* Call history context menu item. */
+"Call Number" = "Anrufen";
+
+/* Call history context menu item. */
+"Copy Number" = "Nummer kopieren";
+
+/* Call history context menu item. */
+"Delete…" = "Löschen …";
+
+/* Call history context menu item. */
+"Delete All…" = "Alle löschen …";
+

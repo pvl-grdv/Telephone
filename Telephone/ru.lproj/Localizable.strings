@@ -221,3 +221,31 @@
 
 /* Clear outbound proxy button. */
 "Clear Outbound Proxy" = "Очистить исходящий прокси";
+
+/* Call history filter picker label. */
+"Filter" = "Фильтр";
+
+/* Empty call history title. */
+"No Calls" = "Нет звонков";
+
+/* Call history search has no matches title. */
+"No Results" = "Ничего не найдено";
+
+/* Empty call history description. */
+"Your call history will appear here." = "Здесь появится история звонков.";
+
+/* Empty call history search description. */
+"Try a different search or filter." = "Попробуйте изменить поиск или фильтр.";
+
+/* Call history context menu item. */
+"Call Number" = "Позвонить";
+
+/* Call history context menu item. */
+"Copy Number" = "Скопировать номер";
+
+/* Call history context menu item. */
+"Delete…" = "Удалить…";
+
+/* Call history context menu item. */
+"Delete All…" = "Удалить все…";
+

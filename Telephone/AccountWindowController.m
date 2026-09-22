@@ -18,8 +18,6 @@
 
 #import "AccountWindowController.h"
 
-#import "AccountViewController.h"
-
 #import "Telephone-Swift.h"
 
 @interface AccountWindowController ()

@@ -31,8 +31,7 @@
           "children": [
             { "path": "AccountController.h", "encoding": "utf8" },
             { "path": "AccountController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AccountViewController.h", "encoding": "utf8" },
-            { "path": "AccountViewController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AccountViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountWindowController.h", "encoding": "utf8" },
             { "path": "AccountWindowController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountControllerToAccountAdapter.h", "encoding": "utf8" },
@@ -758,7 +757,6 @@
                 },
               ],
             },
-            { "path": "AccountView.xib", "encoding": "utf8", "target-membership": [ "Telephone/resources" ] },
             {
               "kind": "variant-group",
               "name": "ActiveAccountView.xib",

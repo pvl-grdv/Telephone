@@ -396,3 +396,6 @@
 /* Account setup username placeholder. */
 "john" = "pavel";
 
+/* Account state toolbar item. */
+"Account State" = "Статус аккаунта";
+

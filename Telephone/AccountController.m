@@ -27,7 +27,6 @@
 #import "AKTelephoneNumberFormatter.h"
 
 #import "AccountControllerToAccountAdapter.h"
-#import "AccountWindowController.h"
 #import "ActiveAccountViewController.h"
 #import "AuthenticationFailureController.h"
 #import "CallTransferController.h"

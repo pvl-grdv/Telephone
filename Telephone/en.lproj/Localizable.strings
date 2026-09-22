@@ -397,3 +397,6 @@
 /* Account setup username placeholder. */
 "john" = "john";
 
+/* Account state toolbar item. */
+"Account State" = "Account State";
+

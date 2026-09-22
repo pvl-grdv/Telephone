@@ -32,8 +32,7 @@
             { "path": "AccountController.h", "encoding": "utf8" },
             { "path": "AccountController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AccountWindowController.h", "encoding": "utf8" },
-            { "path": "AccountWindowController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AccountWindowController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountControllerToAccountAdapter.h", "encoding": "utf8" },
             { "path": "AccountControllerToAccountAdapter.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "ActiveAccountViewController.h", "encoding": "utf8" },
@@ -740,22 +739,6 @@
                 },
               ],
             }, {
-              "kind": "variant-group",
-              "name": "Account.xib",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "Base.lproj/Account.xib",
-                }, {
-                  "path": "en.lproj/Account.strings",
-                }, {
-                  "path": "de.lproj/Account.strings",
-                }, {
-                  "path": "ru.lproj/Account.strings",
-                },
-              ],
             },
             {
               "kind": "variant-group",

@@ -408,3 +408,9 @@
 /* Transfer call button and menu item. */
 "Transfer" = "Transfer";
 
+/* Call destination field placeholder. */
+"Phone number or SIP address" = "Phone number or SIP address";
+
+/* Choose a contact destination. */
+"Choose Destination" = "Choose Destination";
+

@@ -72,6 +72,10 @@ extension PresentationCallHistoryRecord {
     }
 }
 
+extension PresentationCallHistoryRecord: Identifiable {
+    var id: String { identifier }
+}
+
 extension PresentationCallHistoryRecord: NSPasteboardWriting {
     func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
         return [.string]

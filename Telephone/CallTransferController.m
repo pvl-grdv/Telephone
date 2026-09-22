@@ -114,9 +114,7 @@
 }
 
 - (void)makeCallDestinationFieldFirstResponder {
-    if ([self.activeAccountTransferViewController.callDestinationField acceptsFirstResponder]) {
-        [self.window makeFirstResponder:self.activeAccountTransferViewController.callDestinationField];
-    }
+    [self.activeAccountTransferViewController focusCallDestination];
 }
 
 

@@ -407,3 +407,9 @@
 /* Transfer call button and menu item. */
 "Transfer" = "Weiterleiten";
 
+/* Call destination field placeholder. */
+"Phone number or SIP address" = "Telefonnummer oder SIP-Adresse";
+
+/* Choose a contact destination. */
+"Choose Destination" = "Ziel auswählen";
+

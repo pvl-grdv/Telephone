@@ -407,3 +407,9 @@
 /* Transfer call button and menu item. */
 "Transfer" = "Перевести";
 
+/* Call destination field placeholder. */
+"Phone number or SIP address" = "Телефон или SIP-адрес";
+
+/* Choose a contact destination. */
+"Choose Destination" = "Выбрать адрес";
+

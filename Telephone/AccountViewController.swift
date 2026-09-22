@@ -60,9 +60,6 @@ final class AccountViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        activeAccountViewController.updateNextKeyView(callHistoryViewController.keyView)
-        callHistoryViewController.updateNextKeyView(activeAccountViewController.keyView)
-
         callHistoryViewEventTargetFactory.make(
             account: account,
             view: callHistoryViewController
@@ -106,8 +103,8 @@ private struct AccountContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             if model.isActive {
-                ViewControllerHost(controller: activeAccountViewController)
-                    .frame(height: 62)
+                activeAccountViewController.contentView
+                    .transition(.opacity.combined(with: .move(edge: .top)))
 
                 Divider()
             }

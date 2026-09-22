@@ -12,10 +12,7 @@ final class ActiveAccountTransferViewController: ActiveAccountViewController {
     @objc(initWithAccountController:)
     override init(accountController: AccountController) {
         super.init(accountController: accountController)
-
-        callDestinationField.isHidden = false
-        callDestinationField.target = self
-        callDestinationField.action = #selector(makeCallToTransferDestination(_:))
+        allowCallDestinationInput()
     }
 
     required init?(coder: NSCoder) {
@@ -25,7 +22,12 @@ final class ActiveAccountTransferViewController: ActiveAccountViewController {
     override func loadView() {
         view = NSHostingView(
             rootView: ActiveAccountTransferView(
-                field: callDestinationField,
+                input: destinationInputView(
+                    showsCallButton: false,
+                    call: { [weak self] in
+                        self?.makeCallToTransferDestination(nil)
+                    }
+                ),
                 call: { [weak self] in
                     self?.makeCallToTransferDestination(nil)
                 },
@@ -65,7 +67,7 @@ final class ActiveAccountTransferViewController: ActiveAccountViewController {
 }
 
 private struct ActiveAccountTransferView: View {
-    let field: NSTokenField
+    let input: AnyView
     let call: () -> Void
     let close: () -> Void
 
@@ -77,9 +79,9 @@ private struct ActiveAccountTransferView: View {
                     comment: "Call transfer destination label."
                 )
             )
+            .font(.headline)
 
-            TokenFieldView(field: field)
-                .frame(height: 24)
+            input
 
             HStack {
                 Spacer()
@@ -98,6 +100,6 @@ private struct ActiveAccountTransferView: View {
             }
         }
         .padding(20)
-        .frame(minWidth: 320, idealWidth: 320, minHeight: 118, idealHeight: 118)
+        .frame(minWidth: 320, idealWidth: 360, minHeight: 118)
     }
 }

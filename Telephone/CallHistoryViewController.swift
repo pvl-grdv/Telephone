@@ -267,7 +267,6 @@ extension CallHistoryViewController: NSMenuItemValidation {
 private struct CallHistoryScreen: View {
     @Bindable var model: CallHistoryViewModel
     @FocusState private var searchFocused: Bool
-    @FocusState private var historyFocused: Bool
 
     let call: (String) -> Void
     let copy: (String) -> Void
@@ -342,18 +341,10 @@ private struct CallHistoryScreen: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(model.records, id: \.identifier) { record in
-                        CallHistoryRow(
-                            record: record,
-                            isSelected: model.selection == record.identifier
-                        )
+            Table(model.records, selection: tableSelection) {
+                TableColumn("") { record in
+                    CallHistoryRow(record: record)
                         .contentShape(Rectangle())
-                        .onTapGesture {
-                            model.selection = record.identifier
-                            historyFocused = true
-                        }
                         .onTapGesture(count: 2) {
                             model.selectAndCall(record, action: call)
                         }
@@ -379,41 +370,29 @@ private struct CallHistoryScreen: View {
                                 _ = model.requestDeleteAll()
                             }
                         }
-
-                        Divider()
-                            .padding(.leading, 32)
-                    }
                 }
-                .padding(.horizontal, 8)
             }
-            .focusable()
-            .focused($historyFocused)
-            .onMoveCommand(perform: moveSelection)
+            .tableColumnHeaders(.hidden)
+            .tableStyle(.inset)
             .onKeyPress(.return) {
                 model.callSelected(action: call) ? .handled : .ignored
             }
-            .onKeyPress(.delete) {
-                model.requestDeleteSelected() ? .handled : .ignored
+            .onDeleteCommand {
+                _ = model.requestDeleteSelected()
             }
         }
     }
 
-    private func moveSelection(_ direction: MoveCommandDirection) {
-        let records = model.records
-        guard !records.isEmpty else { return }
-
-        let currentIndex = model.selection.flatMap { selection in
-            records.firstIndex { $0.identifier == selection }
-        } ?? 0
-
-        switch direction {
-        case .up:
-            model.selection = records[max(0, currentIndex - 1)].identifier
-        case .down:
-            model.selection = records[min(records.count - 1, currentIndex + 1)].identifier
-        default:
-            break
-        }
+    private var tableSelection: Binding<Set<String>> {
+        Binding(
+            get: {
+                guard let selection = model.selection else { return [] }
+                return [selection]
+            },
+            set: { selection in
+                model.selection = selection.first
+            }
+        )
     }
 
     private var deletionIsPresented: Binding<Bool> {
@@ -430,7 +409,6 @@ private struct CallHistoryScreen: View {
 
 private struct CallHistoryRow: View {
     let record: PresentationCallHistoryRecord
-    let isSelected: Bool
 
     var body: some View {
         HStack(spacing: 8) {
@@ -475,13 +453,6 @@ private struct CallHistoryRow: View {
             }
             .frame(width: 120, alignment: .trailing)
         }
-        .frame(height: 44)
-        .padding(.horizontal, 4)
-        .background {
-            if isSelected {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.accentColor.opacity(0.14))
-            }
-        }
+        .padding(.vertical, 3)
     }
 }

@@ -418,3 +418,15 @@
 /* Call transfer window title. */
 "Call Transfer" = "Перевод вызова";
 
+/* Authentication failure window title. */
+"Authentication Failure" = "Ошибка аутентификации";
+
+/* Authentication failure title. */
+"Login failed." = "Аутентификация не прошла.";
+
+/* Authentication failure Keychain toggle. */
+"Remember this password in my Keychain" = "Запомнить пароль";
+
+/* Authentication failure submit button. */
+"Log In" = "Повторить";
+

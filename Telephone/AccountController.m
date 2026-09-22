@@ -27,7 +27,6 @@
 #import "AKTelephoneNumberFormatter.h"
 
 #import "AccountControllerToAccountAdapter.h"
-#import "AuthenticationFailureController.h"
 #import "CallTransferController.h"
 #import "SIPResponseLocalization.h"
 
@@ -219,7 +218,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     // Close authentication failure sheet if it's raised.
-    [[_authenticationFailureController cancelButton] performClick:nil];
+    [_authenticationFailureController closeSheet:nil];
 }
 
 - (NSString *)description {
@@ -517,19 +516,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
         if ([[self account] registrationStatus] == PJSIP_SC_UNAUTHORIZED &&
             [[self account] registrationErrorCode] == PJSIP_EFAILEDCREDENTIAL) {
 
-            [[[self authenticationFailureController] informativeText] setStringValue:
-             [NSString stringWithFormat:
-              NSLocalizedString(@"Telephone was unable to login to %@. "
-                                 "Change user name or password and try again.",
-                                @"Registrar authentication failed."),
-              [[self account] registrar]]];
-            
-            NSString *service = [NSString stringWithFormat:@"SIP: %@", [[self account] registrar]];
-            NSString *password = [AKKeychain passwordForService:service account:[[self account] username]];
-            
-            [[[self authenticationFailureController] usernameField] setStringValue:[[self account] username]];
-            [[[self authenticationFailureController] passwordField] setStringValue:password];
-
+            [[self authenticationFailureController] prepareForPresentation];
             [[self windowController] beginSheet:[[self authenticationFailureController] window]];
 
         } else if (([[self account] registrationStatus] / 100 != 2) &&

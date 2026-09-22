@@ -21,8 +21,7 @@
           "kind": "group",
           "name": "Account Setup",
           "children": [
-            { "path": "AuthenticationFailureController.h", "encoding": "utf8" },
-            { "path": "AuthenticationFailureController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AuthenticationFailureController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountSetupController.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
@@ -734,21 +733,6 @@
 {
             }, {
             }, {
-            }, {
-              "kind": "variant-group",
-              "name": "AuthenticationFailure.xib",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "ru.lproj/AuthenticationFailure.xib",
-                }, {
-                  "path": "de.lproj/AuthenticationFailure.xib",
-                }, {
-                  "path": "Base.lproj/AuthenticationFailure.xib",
-                },
-              ],
             }, {
             },
             { "path": "PublicCAs.pem", "encoding": "utf8", "target-membership": [ "Telephone/resources" ] },

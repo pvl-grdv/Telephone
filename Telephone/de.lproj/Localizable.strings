@@ -418,3 +418,15 @@
 /* Call transfer window title. */
 "Call Transfer" = "Anruf weiterleiten";
 
+/* Authentication failure window title. */
+"Authentication Failure" = "Authentifizierung fehlgeschlagen";
+
+/* Authentication failure title. */
+"Login failed." = "Anmeldung fehlgeschlagen.";
+
+/* Authentication failure Keychain toggle. */
+"Remember this password in my Keychain" = "Passwort im Schlüsselbund speichern";
+
+/* Authentication failure submit button. */
+"Log In" = "Anmelden";
+

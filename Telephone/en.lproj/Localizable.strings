@@ -419,3 +419,15 @@
 /* Call transfer window title. */
 "Call Transfer" = "Call Transfer";
 
+/* Authentication failure window title. */
+"Authentication Failure" = "Authentication Failure";
+
+/* Authentication failure title. */
+"Login failed." = "Login failed.";
+
+/* Authentication failure Keychain toggle. */
+"Remember this password in my Keychain" = "Remember this password in my Keychain";
+
+/* Authentication failure submit button. */
+"Log In" = "Log In";
+

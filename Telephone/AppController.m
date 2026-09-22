@@ -28,7 +28,6 @@
 
 #import "AccountController.h"
 #import "AccountControllers.h"
-#import "AuthenticationFailureController.h"
 #import "CallController.h"
 #import "NameServers.h"
 #import "PreferencesController.h"
@@ -131,7 +130,7 @@ NS_ASSUME_NONNULL_END
                              object:nil];
     [notificationCenter addObserver:self
                            selector:@selector(authenticationFailureControllerDidChangeUsernameAndPassword:)
-                               name:AKAuthenticationFailureControllerDidChangeUsernameAndPasswordNotification
+                               name:@"AKAuthenticationFailureControllerDidChangeUsernameAndPassword"
                              object:nil];
     
     notificationCenter = [[NSWorkspace sharedWorkspace] notificationCenter];

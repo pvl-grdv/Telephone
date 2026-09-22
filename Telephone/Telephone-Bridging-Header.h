@@ -19,6 +19,7 @@
 #import "SystemMediaPlayer.h"
 #import "NameServers.h"
 #import "PreferencesController.h"
+#import "SIPResponseLocalization.h"
 #import "SoundIOPreferences.h"
 #import "SoundIOPresenterOutput.h"
 #import "SoundPreferencesView.h"

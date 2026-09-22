@@ -376,3 +376,24 @@
 /* Empty account settings description. */
 "Select an account to edit its settings." = "Select an account to edit its settings.";
 
+/* Account setup window title. */
+"Account Setup" = "Account Setup";
+
+/* Account setup confirmation button. */
+"Done" = "Done";
+
+/* Account setup title. */
+"SIP Account Setup" = "SIP Account Setup";
+
+/* Account setup help text. */
+"Enter account details you received from your SIP provider." = "Enter account details you received from your SIP provider.";
+
+/* Required field placeholder. */
+"Required" = "Required";
+
+/* Account setup full name placeholder. */
+"John Smith" = "John Smith";
+
+/* Account setup username placeholder. */
+"john" = "john";
+

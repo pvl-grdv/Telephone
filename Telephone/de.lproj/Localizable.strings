@@ -375,3 +375,24 @@
 /* Empty account settings description. */
 "Select an account to edit its settings." = "Wählen Sie einen Account aus, um seine Einstellungen zu bearbeiten.";
 
+/* Account setup window title. */
+"Account Setup" = "Account einrichten";
+
+/* Account setup confirmation button. */
+"Done" = "Fertig";
+
+/* Account setup title. */
+"SIP Account Setup" = "SIP-Account einrichten";
+
+/* Account setup help text. */
+"Enter account details you received from your SIP provider." = "Geben Sie die Account-Daten ein, die Sie von Ihrem SIP-Provider erhalten haben. Oder die Daten des IP-Telefons einer FritzBox.";
+
+/* Required field placeholder. */
+"Required" = "Erforderlich";
+
+/* Account setup full name placeholder. */
+"John Smith" = "John Smith";
+
+/* Account setup username placeholder. */
+"john" = "john";
+

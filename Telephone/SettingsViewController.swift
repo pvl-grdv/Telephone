@@ -43,20 +43,8 @@ final class SettingsViewController: NSViewController {
     }
 
     private func presentAccountSetup() {
-        guard let sheet = accountSetupController.window else { return }
-
-        accountSetupController.fullNameField.stringValue = ""
-        accountSetupController.domainField.stringValue = ""
-        accountSetupController.usernameField.stringValue = ""
-        accountSetupController.passwordField.stringValue = ""
-
-        accountSetupController.fullNameInvalidDataView.isHidden = true
-        accountSetupController.domainInvalidDataView.isHidden = true
-        accountSetupController.usernameInvalidDataView.isHidden = true
-        accountSetupController.passwordInvalidDataView.isHidden = true
-
-        sheet.makeFirstResponder(accountSetupController.fullNameField)
-        view.window?.beginSheet(sheet)
+        guard let parent = view.window else { return }
+        accountSetupController.presentAsSheet(from: parent)
     }
 
     override func loadView() {

@@ -375,3 +375,24 @@
 /* Empty account settings description. */
 "Select an account to edit its settings." = "Выберите аккаунт, чтобы изменить его настройки.";
 
+/* Account setup window title. */
+"Account Setup" = "Новый аккаунт";
+
+/* Account setup confirmation button. */
+"Done" = "Добавить";
+
+/* Account setup title. */
+"SIP Account Setup" = "Новый SIP-аккаунт";
+
+/* Account setup help text. */
+"Enter account details you received from your SIP provider." = "Введите данные аккаунта, полученного от SIP-провайдера.";
+
+/* Required field placeholder. */
+"Required" = "Обязательно";
+
+/* Account setup full name placeholder. */
+"John Smith" = "Pavel Smirnov";
+
+/* Account setup username placeholder. */
+"john" = "pavel";
+

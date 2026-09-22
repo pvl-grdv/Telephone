@@ -28,7 +28,6 @@
 
 #import "AccountController.h"
 #import "AccountControllers.h"
-#import "AccountSetupController.h"
 #import "ActiveAccountViewController.h"
 #import "AuthenticationFailureController.h"
 #import "CallController.h"
@@ -113,7 +112,7 @@ NS_ASSUME_NONNULL_END
 
     [notificationCenter addObserver:self
                            selector:@selector(accountSetupControllerDidAddAccount:)
-                               name:AKAccountSetupControllerDidAddAccountNotification
+                               name:[AccountSetupController didAddAccountNotificationName]
                              object:nil];
     [notificationCenter addObserver:self
                            selector:@selector(SIPCallCalling:)
@@ -196,31 +195,6 @@ NS_ASSUME_NONNULL_END
     [self.preferencesController showWindowCentered];
 }
 
-- (IBAction)addAccountOnFirstLaunch:(id)sender {
-    [[self accountSetupController] addAccount:sender];
-    
-    if ([[[[self accountSetupController] fullNameField] stringValue] length] > 0 &&
-        [[[[self accountSetupController] domainField] stringValue] length] > 0 &&
-        [[[[self accountSetupController] usernameField] stringValue] length] > 0 &&
-        [[[[self accountSetupController] passwordField] stringValue] length] > 0) {
-        // Re-enable Preferences.
-        [[self preferencesMenuItem] setAction:@selector(showPreferencePanel:)];
-        
-        // Change back targets and actions of addAccountWindow buttons.
-        [[[self accountSetupController] defaultButton] setTarget:[self accountSetupController]];
-        [[[self accountSetupController] defaultButton] setAction:@selector(addAccount:)];
-        [[[self accountSetupController] otherButton] setTarget:[self accountSetupController]];
-        [[[self accountSetupController] otherButton] setAction:@selector(closeSheet:)];
-
-        [self setFinishedLaunching:YES];
-        if (self.networkReachability.isReachable) {
-            [self setShouldPresentUserAgentLaunchError:YES];
-            [self.accountControllers registerAllAccounts];
-        }
-        [self makeCallAfterLaunchIfNeeded];
-    }
-}
-
 - (void)updateDockTileBadgeLabel {
     NSString *badgeString;
     NSInteger badgeNumber = self.accountControllers.unhandledIncomingCallsCount;
@@ -268,15 +242,28 @@ NS_ASSUME_NONNULL_END
 #pragma mark AccountSetupController delegate
 
 - (void)accountSetupControllerDidAddAccount:(NSNotification *)notification {
+    BOOL isFirstLaunch = !self.isFinishedLaunching;
     AccountController *controller = [self accountControllerWithDictionary:notification.userInfo];
-    
+
     [self.accountControllers addController:controller];
     [self.accountControllers updateCallsShouldDisplayAccountInfo];
     [self.accountsMenuItems update];
-    
+
     [controller showWindowWithoutMakingKey];
 
-    if (controller.isEnabled) {
+    if (isFirstLaunch) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:NSWindowWillCloseNotification
+                                                      object:self.accountSetupController.window];
+        self.preferencesMenuItem.action = @selector(showPreferencePanel:);
+        self.finishedLaunching = YES;
+
+        if (self.networkReachability.isReachable) {
+            self.shouldPresentUserAgentLaunchError = YES;
+            [self.accountControllers registerAllAccounts];
+        }
+        [self makeCallAfterLaunchIfNeeded];
+    } else if (controller.isEnabled) {
         [controller registerAccount];
     }
 }
@@ -518,17 +505,12 @@ NS_ASSUME_NONNULL_END
     NSApp.servicesProvider = self;
     NSArray *accounts = [NSUserDefaults.standardUserDefaults arrayForKey:UserDefaultsKeys.accounts];
     if (accounts.count == 0) {
-        [[self preferencesMenuItem] setAction:NULL];
+        self.preferencesMenuItem.action = NULL;
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(windowWillClose:)
                                                      name:NSWindowWillCloseNotification
-                                                   object:[[self accountSetupController] window]];
-        [[[self accountSetupController] defaultButton] setTarget:self];
-        [[[self accountSetupController] defaultButton] setAction:@selector(addAccountOnFirstLaunch:)];
-        [[[self accountSetupController] otherButton] setTarget:[[self accountSetupController] window]];
-        [[[self accountSetupController] otherButton] setAction:@selector(performClose:)];
-        [[[self accountSetupController] window] center];
-        [[[self accountSetupController] window] makeKeyAndOrderFront:self];
+                                                   object:self.accountSetupController.window];
+        [self.accountSetupController showCentered];
         return;
     }
     for (NSUInteger i = 0; i < accounts.count; ++i) {

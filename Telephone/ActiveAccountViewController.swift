@@ -672,7 +672,7 @@ class ActiveAccountViewController: NSViewController {
         inputModel.isVisible
     }
 
-    @nonobjc var contentView: AnyView {
+    @nonobjc final var contentView: some View {
         destinationInputView(
             showsCallButton: true,
             call: { [weak self] in self?.makeCall(nil) }
@@ -720,16 +720,14 @@ class ActiveAccountViewController: NSViewController {
         inputModel.requestFocus()
     }
 
-    @nonobjc func destinationInputView(
+    @nonobjc final func destinationInputView(
         showsCallButton: Bool,
         call: @escaping () -> Void
-    ) -> AnyView {
-        AnyView(
-            CallDestinationInputView(
-                model: inputModel,
-                showsCallButton: showsCallButton,
-                call: call
-            )
+    ) -> some View {
+        CallDestinationInputView(
+            model: inputModel,
+            showsCallButton: showsCallButton,
+            call: call
         )
     }
 }
@@ -790,8 +788,11 @@ private struct CallDestinationInputView: View {
                         }
                     } label: {
                         Image(systemName: "chevron.down")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
                     .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
                     .help(
                         NSLocalizedString(
                             "Choose Destination",

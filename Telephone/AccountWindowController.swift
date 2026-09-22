@@ -263,6 +263,7 @@ private struct AccountStateToolbarView: View {
             }
         }
         .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
         .fixedSize()
     }
 }

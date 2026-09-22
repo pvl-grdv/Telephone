@@ -66,8 +66,8 @@ final class ActiveAccountTransferViewController: ActiveAccountViewController {
     }
 }
 
-private struct ActiveAccountTransferView: View {
-    let input: AnyView
+private struct ActiveAccountTransferView<Input: View>: View {
+    let input: Input
     let call: () -> Void
     let close: () -> Void
 

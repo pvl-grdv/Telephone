@@ -430,3 +430,24 @@
 /* Authentication failure submit button. */
 "Log In" = "Повторить";
 
+/* Application settings menu item. */
+"Settings…" = "Настройки…";
+
+/* Keep call window on top menu item. */
+"Keep on Top" = "Держать сверху";
+
+/* Focus call history search menu item. */
+"Find…" = "Найти…";
+
+/* Copy application settings help menu item. */
+"Copy Settings" = "Копировать настройки";
+
+/* Show log file help menu item. */
+"Show Log File in Finder" = "Показать лог-файл в Файндере";
+
+/* Open homepage help menu item. */
+"Open Homepage…" = "Открыть домашнюю страницу…";
+
+/* Open FAQ help menu item. */
+"Open FAQ…" = "Открыть FAQ…";
+

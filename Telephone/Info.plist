@@ -49,8 +49,6 @@
 	<string>Details from your contacts can be used for displaying names and phone labels and for phone number autocomplete.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2016–2022 64 Characters</string>
-	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>The microphone is used for phone calls.</string>
 	<key>NSPrincipalClass</key>

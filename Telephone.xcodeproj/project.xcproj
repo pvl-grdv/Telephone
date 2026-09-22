@@ -641,7 +641,8 @@
           "name": "Other Sources",
           "children": [
             { "path": "Telephone-Bridging-Header.h" },
-            { "path": "main.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "TelephoneApp.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "ApplicationMenuInstaller.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
           "kind": "group",
@@ -709,23 +710,6 @@
                 }, {
                   "path": "ru.lproj/SIPResponses.strings",
                   "encoding": "utf8",
-                },
-              ],
-            }, {
-              "kind": "variant-group",
-              "name": "MainMenu.xib",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "Base.lproj/MainMenu.xib",
-                }, {
-                  "path": "ru.lproj/MainMenu.strings",
-                }, {
-                  "path": "de.lproj/MainMenu.strings",
-                }, {
-                  "path": "en.lproj/MainMenu.strings",
                 },
               ],
             }, {

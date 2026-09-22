@@ -48,9 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, getter=isTerminating) BOOL terminating;
 @property(nonatomic) BOOL shouldPresentUserAgentLaunchError;
 @property(nonatomic) AccountsMenuItems *accountsMenuItems;
-@property(nonatomic, weak) IBOutlet NSMenu *windowMenu;
-@property(nonatomic, weak) IBOutlet NSMenuItem *preferencesMenuItem;
-@property(nonatomic, weak) IBOutlet HelpMenuActionRedirect *helpMenuActionRedirect;
+@property(nonatomic, strong) ApplicationMenuInstaller *applicationMenuInstaller;
+@property(nonatomic, strong) HelpMenuActionRedirect *helpMenuActionRedirect;
 
 @property(nonatomic, readonly) CompositionRoot *compositionRoot;
 @property(nonatomic, readonly) PreferencesController *preferencesController;
@@ -88,6 +87,10 @@ NS_ASSUME_NONNULL_END
 
     _compositionRoot = [[CompositionRoot alloc] initWithPreferencesControllerDelegate:self
                                                          nameServersChangeEventTarget:self];
+
+    _helpMenuActionRedirect = [[HelpMenuActionRedirect alloc] init];
+    _helpMenuActionRedirect.target = _compositionRoot.helpMenuActionTarget;
+    _applicationMenuInstaller = [[ApplicationMenuInstaller alloc] init];
     
     _userAgent = _compositionRoot.userAgent;
     [[self userAgent] setDelegate:self];
@@ -253,7 +256,6 @@ NS_ASSUME_NONNULL_END
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                         name:NSWindowWillCloseNotification
                                                       object:self.accountSetupController.window];
-        self.preferencesMenuItem.action = @selector(showPreferencePanel:);
         self.finishedLaunching = YES;
 
         if (self.networkReachability.isReachable) {
@@ -496,14 +498,16 @@ NS_ASSUME_NONNULL_END
     NSWindow.allowsAutomaticWindowTabbing = NO;
     [self.compositionRoot.defaultAppSettings registerDefaults];
     [self.compositionRoot.settingsMigration execute];
-    self.helpMenuActionRedirect.target = self.compositionRoot.helpMenuActionTarget;
+    [self.applicationMenuInstaller installWithHelpMenuActionRedirect:self.helpMenuActionRedirect];
     [self configureUserAgent];
-    self.accountsMenuItems = [[AccountsMenuItems alloc] initWithMenu:self.windowMenu controllers:self.accountControllers];
+    NSMenu *windowMenu = NSApp.windowsMenu;
+    if (windowMenu != nil) {
+        self.accountsMenuItems = [[AccountsMenuItems alloc] initWithMenu:windowMenu controllers:self.accountControllers];
+    }
     [self configureUserNotifications];
     NSApp.servicesProvider = self;
     NSArray *accounts = [NSUserDefaults.standardUserDefaults arrayForKey:UserDefaultsKeys.accounts];
     if (accounts.count == 0) {
-        self.preferencesMenuItem.action = NULL;
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(windowWillClose:)
                                                      name:NSWindowWillCloseNotification

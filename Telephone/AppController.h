@@ -20,8 +20,9 @@
 
 #import "AKSIPUserAgent.h"
 
-@interface AppController : NSObject <AKSIPUserAgentDelegate>
+@interface AppController : NSObject <NSApplicationDelegate, AKSIPUserAgentDelegate>
 
 - (void)updateDockTileBadgeLabel;
+- (IBAction)showPreferencePanel:(id)sender;
 
 @end

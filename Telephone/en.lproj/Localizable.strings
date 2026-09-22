@@ -431,3 +431,24 @@
 /* Authentication failure submit button. */
 "Log In" = "Log In";
 
+/* Application settings menu item. */
+"Settings…" = "Settings…";
+
+/* Keep call window on top menu item. */
+"Keep on Top" = "Keep on Top";
+
+/* Focus call history search menu item. */
+"Find…" = "Find…";
+
+/* Copy application settings help menu item. */
+"Copy Settings" = "Copy Settings";
+
+/* Show log file help menu item. */
+"Show Log File in Finder" = "Show Log File in Finder";
+
+/* Open homepage help menu item. */
+"Open Homepage…" = "Open Homepage…";
+
+/* Open FAQ help menu item. */
+"Open FAQ…" = "Open FAQ…";
+

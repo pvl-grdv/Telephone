@@ -430,3 +430,24 @@
 /* Authentication failure submit button. */
 "Log In" = "Anmelden";
 
+/* Application settings menu item. */
+"Settings…" = "Einstellungen …";
+
+/* Keep call window on top menu item. */
+"Keep on Top" = "Immer im Vordergrund halten";
+
+/* Focus call history search menu item. */
+"Find…" = "Suchen …";
+
+/* Copy application settings help menu item. */
+"Copy Settings" = "Einstellungen kopieren";
+
+/* Show log file help menu item. */
+"Show Log File in Finder" = "Protokolldatei im Finder anzeigen";
+
+/* Open homepage help menu item. */
+"Open Homepage…" = "Homepage öffnen …";
+
+/* Open FAQ help menu item. */
+"Open FAQ…" = "FAQ öffnen …";
+

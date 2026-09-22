@@ -20,6 +20,22 @@ private final class CallDestination: NSObject {
         self.uri = uri
         self.phoneLabel = phoneLabel
     }
+
+    override func isEqual(_ object: Any?) -> Bool {
+        if self === object as AnyObject? {
+            return true
+        }
+        guard let other = object as? CallDestination else {
+            return false
+        }
+        return uri.isEqual(other.uri) && phoneLabel == other.phoneLabel
+    }
+
+    override var hash: Int {
+        var result = uri.hash
+        result = result &* 31 &+ phoneLabel.hashValue
+        return result
+    }
 }
 
 private final class CallDestinationGroup: NSObject {
@@ -34,6 +50,31 @@ private final class CallDestinationGroup: NSObject {
     init(destinations: [CallDestination], selectedIndex: Int) {
         self.destinations = destinations
         self.selectedIndex = destinations.indices.contains(selectedIndex) ? selectedIndex : 0
+    }
+
+    override func isEqual(_ object: Any?) -> Bool {
+        if self === object as AnyObject? {
+            return true
+        }
+        guard
+            let other = object as? CallDestinationGroup,
+            selectedIndex == other.selectedIndex,
+            destinations.count == other.destinations.count
+        else {
+            return false
+        }
+
+        return zip(destinations, other.destinations).allSatisfy { left, right in
+            left.isEqual(right)
+        }
+    }
+
+    override var hash: Int {
+        var result = selectedIndex.hashValue
+        for destination in destinations {
+            result = result &* 31 &+ destination.hash
+        }
+        return result
     }
 }
 

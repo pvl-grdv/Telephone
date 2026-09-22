@@ -787,8 +787,7 @@ private struct CallDestinationInputView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "chevron.down")
-                            .font(.caption2)
+                        Image(systemName: "ellipsis.circle")
                             .foregroundStyle(.secondary)
                     }
                     .menuStyle(.borderlessButton)
@@ -811,7 +810,8 @@ private struct CallDestinationInputView: View {
                     Button(action: call) {
                         Image(systemName: "phone.fill")
                     }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
                     .disabled(!model.canCall)
                     .help(NSLocalizedString("Call", comment: "Call button."))
                     .accessibilityLabel(

@@ -16,7 +16,6 @@
 //  GNU General Public License for more details.
 //
 
-import Cocoa
 import Foundation
 import UseCases
 
@@ -24,15 +23,19 @@ final class PresentationContact: NSObject {
     @objc let title: String
     @objc let tooltip: String
     @objc let label: String
-    @objc let color: NSColor
     let address: String
 
-    init(title: String, tooltip: String, label: String, color: NSColor, address: String) {
+    init(title: String, tooltip: String, label: String, address: String) {
         self.title = title
         self.tooltip = tooltip
         self.label = label
-        self.color = color
         self.address = address
+    }
+
+    var detail: String {
+        [label, tooltip]
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
     }
 }
 
@@ -47,7 +50,6 @@ extension PresentationContact {
         hasher.combine(title)
         hasher.combine(tooltip)
         hasher.combine(label)
-        hasher.combine(color)
         hasher.combine(address)
         return hasher.finalize()
     }
@@ -56,25 +58,24 @@ extension PresentationContact {
         return title == contact.title &&
             tooltip == contact.tooltip &&
             label == contact.label &&
-            color == contact.color &&
             address == contact.address
     }
 }
 
 extension PresentationContact {
-    convenience init(contact: MatchedContact, color: NSColor) {
+    convenience init(contact: MatchedContact) {
         switch contact.address {
         case let .phone(number, label):
             if contact.name.isEmpty {
-                self.init(title: number, tooltip: "", label: label, color: color, address: number)
+                self.init(title: number, tooltip: "", label: label, address: number)
             } else {
-                self.init(title: contact.name, tooltip: number, label: label, color: color, address: number)
+                self.init(title: contact.name, tooltip: number, label: label, address: number)
             }
         case let .email(address, label):
             if contact.name.isEmpty {
-                self.init(title: address, tooltip: "", label: label, color: color, address: address)
+                self.init(title: address, tooltip: "", label: label, address: address)
             } else {
-                self.init(title: contact.name, tooltip: address, label: label, color: color, address: address)
+                self.init(title: contact.name, tooltip: address, label: label, address: address)
             }
         }
     }

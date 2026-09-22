@@ -155,11 +155,11 @@ private final class CallHistoryViewModel {
     }
 
     private func normalizeSelection() {
-        let displayedRecords = records
-        if let selection, displayedRecords.contains(where: { $0.identifier == selection }) {
+        guard let selection else { return }
+        guard records.contains(where: { $0.identifier == selection }) else {
+            self.selection = nil
             return
         }
-        selection = displayedRecords.first?.identifier
     }
 }
 
@@ -301,19 +301,13 @@ private struct CallHistoryScreen: View {
 
     private var controls: some View {
         HStack(spacing: 8) {
-            Picker(
-                NSLocalizedString("Filter", comment: "Call history filter picker label."),
-                selection: $model.filter
-            ) {
-                ForEach(CallHistoryFilter.allCases, id: \.self) { filter in
-                    Text(filter.title).tag(filter)
-                }
-            }
-            .labelsHidden()
-            .frame(width: 112)
+            CallHistoryFilterMenu(selection: $model.filter)
 
             TextField(
-                NSLocalizedString("Search Call History", comment: "Call history search field placeholder."),
+                NSLocalizedString(
+                    "Search Call History",
+                    comment: "Call history search field placeholder."
+                ),
                 text: $model.query
             )
             .textFieldStyle(.roundedBorder)
@@ -325,46 +319,54 @@ private struct CallHistoryScreen: View {
     @ViewBuilder
     private var content: some View {
         if model.records.isEmpty {
-            ContentUnavailableView {
-                Label(
-                    model.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        ? NSLocalizedString("No Calls", comment: "Empty call history title.")
-                        : NSLocalizedString("No Results", comment: "Call history search has no matches title."),
-                    systemImage: "phone"
-                )
-            } description: {
-                Text(
-                    model.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        ? NSLocalizedString("Your call history will appear here.", comment: "Empty call history description.")
-                        : NSLocalizedString("Try a different search or filter.", comment: "Empty call history search description.")
-                )
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            emptyState
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            Table(model.records, selection: tableSelection) {
-                TableColumn("") { record in
+            List(selection: $model.selection) {
+                ForEach(model.records) { record in
                     CallHistoryRow(record: record)
+                        .tag(record.identifier)
                         .contentShape(Rectangle())
                         .onTapGesture(count: 2) {
                             model.selectAndCall(record, action: call)
                         }
                         .contextMenu {
-                            Button(NSLocalizedString("Call Number", comment: "Call history context menu item.")) {
+                            Button(
+                                NSLocalizedString(
+                                    "Call Number",
+                                    comment: "Call history context menu item."
+                                )
+                            ) {
                                 model.selectAndCall(record, action: call)
                             }
-                            Button(NSLocalizedString("Copy Number", comment: "Call history context menu item.")) {
+
+                            Button(
+                                NSLocalizedString(
+                                    "Copy Number",
+                                    comment: "Call history context menu item."
+                                )
+                            ) {
                                 copy(record.contact.address)
                             }
+
                             Divider()
+
                             Button(
-                                NSLocalizedString("Delete…", comment: "Call history context menu item."),
+                                NSLocalizedString(
+                                    "Delete…",
+                                    comment: "Call history context menu item."
+                                ),
                                 role: .destructive
                             ) {
                                 model.selection = record.identifier
                                 _ = model.requestDeleteSelected()
                             }
+
                             Button(
-                                NSLocalizedString("Delete All…", comment: "Call history context menu item."),
+                                NSLocalizedString(
+                                    "Delete All…",
+                                    comment: "Call history context menu item."
+                                ),
                                 role: .destructive
                             ) {
                                 _ = model.requestDeleteAll()
@@ -372,8 +374,7 @@ private struct CallHistoryScreen: View {
                         }
                 }
             }
-            .tableColumnHeaders(.hidden)
-            .tableStyle(.inset)
+            .listStyle(.inset)
             .onKeyPress(.return) {
                 model.callSelected(action: call) ? .handled : .ignored
             }
@@ -383,16 +384,44 @@ private struct CallHistoryScreen: View {
         }
     }
 
-    private var tableSelection: Binding<Set<String>> {
-        Binding(
-            get: {
-                guard let selection = model.selection else { return [] }
-                return [selection]
-            },
-            set: { selection in
-                model.selection = selection.first
+    @ViewBuilder
+    private var emptyState: some View {
+        let query = model.query.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if !query.isEmpty {
+            ContentUnavailableView.search(text: query)
+        } else if model.filter != .all {
+            ContentUnavailableView {
+                Label(
+                    NSLocalizedString(
+                        "No Matching Calls",
+                        comment: "Call history filter has no matches title."
+                    ),
+                    systemImage: "phone"
+                )
+            } description: {
+                Text(
+                    NSLocalizedString(
+                        "Try a different call filter.",
+                        comment: "Call history filter has no matches description."
+                    )
+                )
             }
-        )
+        } else {
+            ContentUnavailableView {
+                Label(
+                    NSLocalizedString("No Calls", comment: "Empty call history title."),
+                    systemImage: "phone"
+                )
+            } description: {
+                Text(
+                    NSLocalizedString(
+                        "Your call history will appear here.",
+                        comment: "Empty call history description."
+                    )
+                )
+            }
+        }
     }
 
     private var deletionIsPresented: Binding<Bool> {
@@ -407,34 +436,81 @@ private struct CallHistoryScreen: View {
     }
 }
 
+private struct CallHistoryFilterMenu: View {
+    @Binding var selection: CallHistoryFilter
+
+    var body: some View {
+        Menu {
+            ForEach(CallHistoryFilter.allCases, id: \.self) { filter in
+                Button {
+                    selection = filter
+                } label: {
+                    if selection == filter {
+                        Label(filter.title, systemImage: "checkmark")
+                    } else {
+                        Text(filter.title)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "line.3.horizontal.decrease")
+                    .foregroundStyle(.secondary)
+
+                Text(selection.title)
+                    .lineLimit(1)
+
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .frame(width: 112, alignment: .leading)
+        .help(NSLocalizedString("Filter Call History", comment: "Call history filter help."))
+        .accessibilityLabel(
+            NSLocalizedString("Filter Call History", comment: "Call history filter accessibility label.")
+        )
+        .accessibilityValue(selection.title)
+    }
+}
+
 private struct CallHistoryRow: View {
     let record: PresentationCallHistoryRecord
 
+    private var directionSymbol: String {
+        record.isIncoming
+            ? "phone.arrow.down.left.fill"
+            : "phone.arrow.up.right.fill"
+    }
+
+    private var statusText: String {
+        record.isMissed
+            ? NSLocalizedString("Missed", comment: "Missed call history status.")
+            : record.duration
+    }
+
     var body: some View {
-        HStack(spacing: 8) {
-            Group {
-                if record.isIncoming {
-                    Color.clear
-                } else {
-                    Image(systemName: "phone.arrow.up.right.fill")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .frame(width: 16, height: 16)
+        HStack(spacing: 10) {
+            Image(systemName: directionSymbol)
+                .font(.caption)
+                .foregroundStyle(record.isMissed ? Color.red : Color.secondary)
+                .frame(width: 16, height: 16)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(record.contact.title)
                     .font(.body.weight(.medium))
-                    .foregroundStyle(Color(nsColor: record.contact.color))
+                    .foregroundStyle(record.isMissed ? Color.red : Color.primary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .help(record.contact.tooltip)
 
-                Text(record.contact.label)
+                Text(record.contact.detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.middle)
                     .frame(height: 14, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -445,14 +521,16 @@ private struct CallHistoryRow: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
 
-                Text(record.duration)
+                Text(statusText)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(record.isMissed ? Color.red : Color.secondary)
                     .lineLimit(1)
                     .frame(height: 14, alignment: .trailing)
             }
             .frame(width: 120, alignment: .trailing)
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, 4)
+        .help(record.contact.address)
+        .accessibilityElement(children: .combine)
     }
 }

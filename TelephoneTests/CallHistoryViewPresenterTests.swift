@@ -51,7 +51,7 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         XCTAssertEqual(invokedRecords, [expected1, expected2])
     }
 
-    func testContactColorIsSystemRedForMissedCallRecords() async {
+    func testMissedStateIsPreserved() async {
         let record = CallHistoryRecord(
             uri: URI(user: "any-user", host: "any-host", displayName: "any-name"),
             date: Date(),
@@ -73,7 +73,6 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         await sut.update(records: [ContactCallHistoryRecord(origin: record, contact: contact)])
 
         await fulfillment(of: [didCallShow], timeout: 1)
-        XCTAssertEqual(invokedRecords!.first!.contact.color, NSColor.systemRed)
         XCTAssertTrue(invokedRecords!.first!.isMissed)
     }
 
@@ -109,12 +108,22 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         XCTAssertTrue(invokedRecords![1].contact.tooltip.isEmpty)
     }
 
+    func testPresentationContactDetailCombinesLabelAndTooltip() {
+        let contact = PresentationContact(
+            title: "Alice",
+            tooltip: "+1 555 123 4567",
+            label: "Mobile",
+            address: "+1 555 123 4567"
+        )
+
+        XCTAssertEqual(contact.detail, "Mobile · +1 555 123 4567")
+    }
+
     func testCallHistorySearchIgnoresPhoneNumberFormatting() {
         let contact = PresentationContact(
             title: "Alice",
             tooltip: "+1 (555) 123-4567",
             label: "Mobile",
-            color: .controlTextColor,
             address: "+1 (555) 123-4567"
         )
         let record = PresentationCallHistoryRecord(
@@ -136,7 +145,6 @@ final class CallHistoryViewPresenterTests: XCTestCase {
             title: "Any",
             tooltip: "",
             label: "",
-            color: .controlTextColor,
             address: "123"
         )
         let missed = PresentationCallHistoryRecord(
@@ -185,7 +193,7 @@ private func makeContact(number: Int) -> MatchedContact {
 private func makePresentationCallHistoryRecord(contact: MatchedContact, record: CallHistoryRecord) -> PresentationCallHistoryRecord {
     return PresentationCallHistoryRecord(
         identifier: record.identifier,
-        contact: makePresentationContact(contact: contact, color: contactColor(for: record)),
+        contact: makePresentationContact(contact: contact),
         date: ShortRelativeDateTimeFormatter().string(from: record.date),
         duration: DurationFormatter().string(from: TimeInterval(record.duration))!,
         isIncoming: record.isIncoming,
@@ -193,15 +201,11 @@ private func makePresentationCallHistoryRecord(contact: MatchedContact, record: 
     )
 }
 
-private func makePresentationContact(contact: MatchedContact, color: NSColor) -> PresentationContact {
+private func makePresentationContact(contact: MatchedContact) -> PresentationContact {
     switch contact.address {
     case let .phone(number, label):
-        return PresentationContact(title: contact.name, tooltip: number, label: label, color: color, address: number)
+        return PresentationContact(title: contact.name, tooltip: number, label: label, address: number)
     case let .email(address, label):
-        return PresentationContact(title: contact.name, tooltip: address, label: label, color: color, address: address)
+        return PresentationContact(title: contact.name, tooltip: address, label: label, address: address)
     }
-}
-
-private func contactColor(for record: CallHistoryRecord) -> NSColor {
-    return record.isMissed ? NSColor.systemRed : NSColor.controlTextColor
 }

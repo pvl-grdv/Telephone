@@ -16,7 +16,7 @@
 //  GNU General Public License for more details.
 //
 
-import Cocoa
+import Foundation
 import UseCases
 
 @MainActor
@@ -43,15 +43,11 @@ nonisolated extension CallHistoryViewPresenter: ContactCallHistoryRecordGetAllUs
     private func makeRecord(from record: ContactCallHistoryRecord) -> PresentationCallHistoryRecord {
         return PresentationCallHistoryRecord(
             identifier: record.origin.identifier,
-            contact: PresentationContact(contact: record.contact, color: contactColor(for: record)),
+            contact: PresentationContact(contact: record.contact),
             date: dateFormatter.string(from: record.origin.date),
             duration: durationFormatter.string(from: TimeInterval(record.origin.duration)) ?? "",
             isIncoming: record.origin.isIncoming,
             isMissed: record.origin.isMissed
         )
     }
-}
-
-private func contactColor(for record: ContactCallHistoryRecord) -> NSColor {
-    return record.origin.isMissed ? NSColor.systemRed : NSColor.controlTextColor
 }

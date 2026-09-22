@@ -157,9 +157,7 @@ final class CompositionRoot: NSObject {
             center: NotificationCenter.default,
             target: CallEventTargets(
                 targets: [
-                    CallHistoryCallEventTarget(
-                        histories: callHistories, factory: DefaultCallHistoryRecordAddUseCaseFactory()
-                    ),
+                    CallHistoryCallEventTarget(histories: callHistories),
                     MusicPlayerCallEventTarget(
                         player: SettingsMusicPlayer(
                             origin: CallsMusicPlayer(

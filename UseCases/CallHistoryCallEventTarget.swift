@@ -10,26 +10,19 @@
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
 public final class CallHistoryCallEventTarget: Sendable {
     private let histories: CallHistories
-    private let factory: CallHistoryRecordAddUseCaseFactory
 
-    public init(histories: CallHistories, factory: CallHistoryRecordAddUseCaseFactory) {
+    public init(histories: CallHistories) {
         self.histories = histories
-        self.factory = factory
     }
 }
 
 extension CallHistoryCallEventTarget: CallEventTarget {
     public func didDisconnect(_ call: Call) {
         Task {
-            factory.make(
+            CallHistoryRecordAddUseCase(
                 history: await histories.history(withUUID: call.account.uuid),
                 record: CallHistoryRecord(call: call),
                 domain: call.account.domain

@@ -76,8 +76,7 @@
             { "path": "CallController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallController+Protected.h", "encoding": "utf8" },
             { "path": "CallControllerDelegate.h", "encoding": "utf8" },
-            { "path": "IncomingCallViewController.h", "encoding": "utf8" },
-            { "path": "IncomingCallViewController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "IncomingCallViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "ActiveCallViewController.h", "encoding": "utf8" },
             { "path": "ActiveCallViewController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "EndedCallViewController.h", "encoding": "utf8" },
@@ -750,22 +749,6 @@
                 },
               ],
             }, {
-              "kind": "variant-group",
-              "name": "IncomingCallView.xib",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "Base.lproj/IncomingCallView.xib",
-                }, {
-                  "path": "en.lproj/IncomingCallView.strings",
-                }, {
-                  "path": "de.lproj/IncomingCallView.strings",
-                }, {
-                  "path": "ru.lproj/IncomingCallView.strings",
-                },
-              ],
             }, {
               "kind": "variant-group",
               "name": "ActiveCallView.xib",

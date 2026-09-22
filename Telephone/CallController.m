@@ -34,7 +34,6 @@
 #import "CallController+Protected.h"
 #import "CallTransferController.h"
 #import "EndedCallViewController.h"
-#import "IncomingCallViewController.h"
 #import "SIPResponseLocalization.h"
 
 #import "Telephone-Swift.h"
@@ -245,8 +244,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     
     [self.activeCallViewController showHangUp];
     [self.activeCallViewController disallowHangUp];
-    [[[self incomingCallViewController] acceptCallButton] setEnabled:NO];
-    [[[self incomingCallViewController] declineCallButton] setEnabled:NO];
+    [self.incomingCallViewController setActionsEnabled:NO];
     
     [self removeUserNotification];
 
@@ -393,7 +391,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
 - (void)showIncomingCallView {
     [self showViewController:self.incomingCallViewController];
-    [self.window makeFirstResponder:self.incomingCallViewController.acceptCallButton];
+    [self.incomingCallViewController focusAnswer];
 }
 
 - (void)showViewController:(NSViewController *)viewController {
@@ -565,8 +563,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     
     [self.activeCallViewController showHangUp];
     [self.activeCallViewController disallowHangUp];
-    [[[self incomingCallViewController] acceptCallButton] setEnabled:NO];
-    [[[self incomingCallViewController] declineCallButton] setEnabled:NO];
+    [self.incomingCallViewController setActionsEnabled:NO];
     
     [NSTimer scheduledTimerWithTimeInterval:kRedialButtonReenableTime
                                      target:[self endedCallViewController]

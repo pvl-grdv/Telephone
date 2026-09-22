@@ -89,12 +89,16 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
             formatter.telephoneNumberFormatterSplitsLastFourDigits =
                 [self.defaults boolForKey:UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits];
             NSString *remoteIdentity = [formatter stringForObjectValue:_call.remoteURI];
+            NSString *remoteAddress = _call.remoteURI.SIPAddress;
+            if (remoteAddress.length == 0) {
+                remoteAddress = remoteIdentity;
+            }
 
             if (self.title.length == 0) {
-                self.title = remoteIdentity;
+                self.title = remoteAddress;
             }
             if (self.displayedName.length == 0) {
-                self.displayedName = remoteIdentity;
+                self.displayedName = remoteIdentity ?: remoteAddress;
             }
         }
     }

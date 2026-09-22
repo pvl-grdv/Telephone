@@ -48,15 +48,11 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
 @property(nonatomic, readonly) NSUserDefaults *defaults;
 
-// Call info view used by the legacy call-transfer window.
-@property(nonatomic, strong) NSView *callInfoView;
-
-// SwiftUI container used by regular call windows.
+// SwiftUI container used by call and call-transfer windows.
 @property(nonatomic, strong) CallContentViewController *callContentViewController;
 
 - (void)configureWindowBehavior;
-- (void)installLegacyEmptyCallInfoView;
-- (void)configureSwiftCallWindow;
+- (void)configureSwiftCallWindowForTransfer:(BOOL)isTransfer;
 
 // Closes call window.
 - (void)closeCallWindow;
@@ -158,12 +154,11 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
                             userAgent:(AKSIPUserAgent *)userAgent
                              delegate:(id<CallControllerDelegate>)delegate {
 
-    BOOL usesSwiftCallWindow = [windowNibName isEqualToString:@"Call"];
-    if (usesSwiftCallWindow) {
-        self = [super initWithWindow:nil];
-    } else {
-        self = [self initWithWindowNibName:windowNibName];
-    }
+    BOOL isTransfer = [windowNibName isEqualToString:@"CallTransfer"];
+    BOOL usesSwiftCallWindow = [windowNibName isEqualToString:@"Call"] || isTransfer;
+    NSAssert(usesSwiftCallWindow, @"Unsupported call window: %@", windowNibName);
+
+    self = [super initWithWindow:nil];
 
     if (self != nil) {
         _identifier = [NSUUID UUID].UUIDString;
@@ -172,9 +167,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
         _delegate = delegate;
         _defaults = NSUserDefaults.standardUserDefaults;
 
-        if (usesSwiftCallWindow) {
-            [self configureSwiftCallWindow];
-        }
+        [self configureSwiftCallWindowForTransfer:isTransfer];
     }
     return self;
 }
@@ -188,11 +181,6 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     return [[self call] description];
 }
 
-- (void)awakeFromNib {
-    [self configureWindowBehavior];
-    [self installLegacyEmptyCallInfoView];
-}
-
 - (void)configureWindowBehavior {
     self.window.movableByWindowBackground = YES;
     [self updateWindowFloating];
@@ -200,66 +188,33 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     [self updateWindowTitle];
 }
 
-- (void)installLegacyEmptyCallInfoView {
-    NSRect frame = [[[self window] contentView] frame];
-    frame.origin.x = 0.0;
-    CGFloat minYBorderThickness = [[self window] contentBorderThicknessForEdge:NSMinYEdge];
-    frame.origin.y = minYBorderThickness;
-    frame.size.height -= minYBorderThickness;
-    NSView *emptyCallInfoView = [[NSView alloc] initWithFrame:frame];
-    [self.window.contentView addSubview:emptyCallInfoView];
-    self.callInfoView = emptyCallInfoView;
-}
-
-- (void)configureSwiftCallWindow {
+- (void)configureSwiftCallWindowForTransfer:(BOOL)isTransfer {
     self.callContentViewController =
-        [[CallContentViewController alloc] initWithAccountController:self.accountController];
+        [[CallContentViewController alloc] initWithAccountController:self.accountController
+                                             showsAccountFooter:!isTransfer];
 
+    NSSize contentSize = isTransfer ? NSMakeSize(320, 118) : NSMakeSize(300, 84);
     NSWindow *window =
-        [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 300, 84)
+        [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, contentSize.width, contentSize.height)
                                     styleMask:NSWindowStyleMaskTitled |
                                               NSWindowStyleMaskClosable |
                                               NSWindowStyleMaskMiniaturizable
                                       backing:NSBackingStoreBuffered
                                         defer:NO];
     window.animationBehavior = NSWindowAnimationBehaviorDefault;
-    window.titlebarAppearsTransparent = YES;
+    window.titlebarAppearsTransparent = !isTransfer;
     window.releasedWhenClosed = NO;
     window.delegate = self;
     window.contentViewController = self.callContentViewController;
-    [window setFrameAutosaveName:@"Call"];
-    self.window = window;
 
-    [self configureWindowBehavior];
-}
-
-- (void)setCallInfoViewResizingWindow:(NSView *)newView {
-    NSSize currentCallInfoViewSize = self.callInfoView.frame.size;
-    NSSize newViewSize = newView.frame.size;
-    CGFloat minYBorderThickness = [self.window contentBorderThicknessForEdge:NSMinYEdge];
-
-    if (currentCallInfoViewSize.width > 0.0 && currentCallInfoViewSize.height > 0.0 &&
-        (fabs(newViewSize.width - currentCallInfoViewSize.width) > 0.1 ||
-         fabs(newViewSize.height - currentCallInfoViewSize.height) > 0.1)) {
-        NSSize contentSize = NSMakeSize(newViewSize.width, newViewSize.height + minYBorderThickness);
-        [self.window ak_resizeForContentViewSize:contentSize animate:YES];
-    }
-
-    if (minYBorderThickness > 0.0) {
-        CGRect newViewFrame = [newView frame];
-        newViewFrame.origin.y = minYBorderThickness;
-        newView.frame = newViewFrame;
-    }
-    
-    // Swap to the new view.
-    if (self.callInfoView == nil) {
-        [self.window.contentView addSubview:newView];
+    if (isTransfer) {
+        self.title = NSLocalizedString(@"Call Transfer", @"Call transfer window title.");
     } else {
-        [self.window.contentView replaceSubview:self.callInfoView with:newView];
+        [window setFrameAutosaveName:@"Call"];
     }
-    self.callInfoView = newView;
 
-    [[self window] makeFirstResponder:newView];
+    self.window = window;
+    [self configureWindowBehavior];
 }
 
 - (void)acceptCall {
@@ -447,27 +402,20 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
         return;
     }
 
-    if (self.callContentViewController != nil) {
-        [self.callContentViewController show:viewController];
-        [self.window ak_resizeForContentViewSize:self.callContentViewController.preferredWindowContentSize
-                                         animate:YES];
+    [self.callContentViewController show:viewController];
+    [self.window ak_resizeForContentViewSize:self.callContentViewController.preferredWindowContentSize
+                                     animate:YES];
 
-        NSView *stateView = viewController.view;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (stateView.window == self.window) {
-                [self.window makeFirstResponder:stateView];
-            }
-        });
-    } else {
-        [self setCallInfoViewResizingWindow:viewController.view];
-    }
+    NSView *stateView = viewController.view;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (stateView.window == self.window) {
+            [self.window makeFirstResponder:stateView];
+        }
+    });
 }
 
 - (BOOL)shouldShowViewController:(NSViewController *)viewController {
-    if (self.callContentViewController != nil) {
-        return ![self.callContentViewController isShowing:viewController];
-    }
-    return ![self.callInfoView isEqual:viewController.view];
+    return ![self.callContentViewController isShowing:viewController];
 }
 
 - (void)removeOrShowUserNotificationOnDisconnectIfNeeded {

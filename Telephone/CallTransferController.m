@@ -18,7 +18,6 @@
 
 #import "CallTransferController.h"
 
-#import "AKNSWindow+Resizing.h"
 #import "AKSIPCall.h"
 
 #import "AccountController.h"
@@ -75,13 +74,11 @@
                                   userAgent:userAgent
                                    delegate:accountController])) {
         [self setSourceCallController:callController];
-        _activeAccountTransferViewController = [[ActiveAccountTransferViewController alloc] initWithAccountController:accountController];
+        _activeAccountTransferViewController =
+            [[ActiveAccountTransferViewController alloc] initWithAccountController:accountController];
+        [self showInitialState:self];
     }
     return self;
-}
-
-- (void)windowDidLoad {
-    [self showInitialState:self];
 }
 
 - (void)transferCall {
@@ -109,7 +106,7 @@
 }
 
 - (void)showActiveAccountTransferView {
-    [self setCallInfoViewResizingWindow:[[self activeAccountTransferViewController] view]];
+    [self showViewController:self.activeAccountTransferViewController];
 }
 
 - (void)makeCallDestinationFieldFirstResponder {

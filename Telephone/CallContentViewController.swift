@@ -14,6 +14,7 @@ private final class CallContentModel {
     var stateSize = NSSize(width: 300, height: 62)
     var accountDescription = ""
     var showsAccountInfo = false
+    var showsAccountFooter = true
 }
 
 @MainActor
@@ -26,11 +27,23 @@ final class CallContentViewController: NSViewController {
     private var accountInfoObservation: NSKeyValueObservation?
 
     @objc(initWithAccountController:)
-    init(accountController: AccountController) {
+    convenience init(accountController: AccountController) {
+        self.init(accountController: accountController, showsAccountFooter: true)
+    }
+
+    @objc(initWithAccountController:showsAccountFooter:)
+    init(
+        accountController: AccountController,
+        showsAccountFooter: Bool
+    ) {
         self.accountController = accountController
         model.accountDescription = accountController.accountDescription
-        model.showsAccountInfo = accountController.callsShouldDisplayAccountInfo
+        model.showsAccountFooter = showsAccountFooter
+        model.showsAccountInfo =
+            showsAccountFooter && accountController.callsShouldDisplayAccountInfo
         super.init(nibName: nil, bundle: nil)
+
+        guard showsAccountFooter else { return }
 
         accountInfoObservation = accountController.observe(
             \.callsShouldDisplayAccountInfo,
@@ -54,7 +67,12 @@ final class CallContentViewController: NSViewController {
         guard model.controller !== controller else { return }
 
         let stateView = controller.view
-        let size = stateView.frame.size
+        let fittingSize = stateView.fittingSize
+        let frameSize = stateView.frame.size
+        let size = NSSize(
+            width: fittingSize.width > 0 ? fittingSize.width : frameSize.width,
+            height: fittingSize.height > 0 ? fittingSize.height : frameSize.height
+        )
         model.stateSize = NSSize(
             width: max(size.width, 300),
             height: max(size.height, 1)
@@ -69,7 +87,8 @@ final class CallContentViewController: NSViewController {
     var preferredWindowContentSize: NSSize {
         NSSize(
             width: model.stateSize.width,
-            height: model.stateSize.height + Self.accountInfoHeight
+            height: model.stateSize.height
+                + (model.showsAccountFooter ? Self.accountInfoHeight : 0)
         )
     }
 }
@@ -94,18 +113,21 @@ private struct CallContentView: View {
                     )
             }
 
-            HStack {
-                if model.showsAccountInfo {
-                    Text(model.accountDescription)
-                        .font(.caption)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
+            if model.showsAccountFooter {
+                HStack {
+                    if model.showsAccountInfo {
+                        Text(model.accountDescription)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
 
-                Spacer(minLength: 0)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 20)
+                .frame(height: CallContentViewController.accountInfoHeight)
             }
-            .padding(.horizontal, 20)
-            .frame(height: CallContentViewController.accountInfoHeight)
         }
         .frame(width: model.stateSize.width)
     }

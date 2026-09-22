@@ -20,6 +20,6 @@
 
 @interface CallController (Protected)
 
-- (void)setCallInfoViewResizingWindow:(NSView *)newView;
+- (void)showViewController:(NSViewController *)viewController;
 
 @end

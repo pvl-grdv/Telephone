@@ -733,17 +733,6 @@
             },
 {
             }, {
-              "kind": "variant-group",
-              "name": "CallTransfer.xib",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "Base.lproj/CallTransfer.xib",
-                },
-              ],
-            }, {
             }, {
             }, {
               "kind": "variant-group",

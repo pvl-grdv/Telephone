@@ -416,4 +416,6 @@
 
 /* Call back button. */
 "Call Back" = "Call Back";
+/* Call transfer window title. */
+"Call Transfer" = "Call Transfer";
 

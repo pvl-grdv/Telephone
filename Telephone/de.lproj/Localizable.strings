@@ -415,4 +415,6 @@
 
 /* Call back button. */
 "Call Back" = "Zurückrufen";
+/* Call transfer window title. */
+"Call Transfer" = "Anruf weiterleiten";
 

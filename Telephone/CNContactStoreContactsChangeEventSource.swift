@@ -31,7 +31,7 @@ final class CNContactStoreContactsChangeEventSource {
         center.addObserver(
             self,
             selector: #selector(contactsDidChange),
-            name: Notification.Name("TelephoneContactsAuthorizationDidChange"),
+            name: .AKContactsAuthorizationDidChange,
             object: nil
         )
     }
@@ -39,7 +39,7 @@ final class CNContactStoreContactsChangeEventSource {
     deinit {
         center.removeObserver(self, name: .CNContactStoreDidChange, object: nil)
         center.removeObserver(
-            self, name: Notification.Name("TelephoneContactsAuthorizationDidChange"), object: nil
+            self, name: .AKContactsAuthorizationDidChange, object: nil
         )
     }
 

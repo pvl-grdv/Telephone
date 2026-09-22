@@ -76,7 +76,7 @@ final class SQLiteCallHistory {
 
 extension SQLiteCallHistory: CallHistory {
     var allRecords: [CallHistoryRecord] {
-        guard let database else { return [] }
+        guard database != nil else { return [] }
 
         let sql = """
         SELECT user, host, display_name, date, duration, incoming, missed

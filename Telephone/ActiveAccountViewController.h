@@ -22,6 +22,7 @@
 // Call destination keys.
 extern NSString * const kURI;
 extern NSString * const kPhoneLabel;
+extern NSNotificationName const AKContactsAuthorizationDidChangeNotification;
 
 @class AccountController, AKSIPURI;
 

@@ -32,6 +32,8 @@
 
 NSString * const kURI = @"URI";
 NSString * const kPhoneLabel = @"PhoneLabel";
+NSNotificationName const AKContactsAuthorizationDidChangeNotification =
+    @"TelephoneContactsAuthorizationDidChange";
 
 @interface ActiveAccountViewController ()
 
@@ -213,6 +215,10 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
                                              selector:@selector(contactsDidChange:)
                                                  name:CNContactStoreDidChangeNotification
                                                object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(callDestinationTextDidBeginEditing:)
+                                                 name:NSControlTextDidBeginEditingNotification
+                                               object:self.callDestinationField];
 
     CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
     if (status == CNAuthorizationStatusAuthorized) {
@@ -220,10 +226,7 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
     }
 }
 
-- (void)controlTextDidBeginEditing:(NSNotification *)notification {
-    if (notification.object != self.callDestinationField) {
-        return;
-    }
+- (void)callDestinationTextDidBeginEditing:(NSNotification *)notification {
     [self requestContactsAccessIfNeeded];
 }
 
@@ -260,14 +263,14 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
 
             [strongSelf refreshContactsCache];
             [[NSNotificationCenter defaultCenter]
-                postNotificationName:@"TelephoneContactsAuthorizationDidChange"
+                postNotificationName:AKContactsAuthorizationDidChangeNotification
                               object:nil];
         });
     }];
 }
 
 - (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:CNContactStoreDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)contactsDidChange:(NSNotification *)notification {
@@ -350,10 +353,10 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
 #pragma mark -
 #pragma mark NSTokenField delegate
 
-// Returns completions based on the Address Book search.
+// Returns completions based on the Contacts search.
 // A completion string can be in one of two formats: Display Name <1234567> for person or company name searches,
 // 1234567 (Display Name) for the phone number searches.
-// Sets tokenField sytle to NSTokenStyleRounded if the substring is found in the Address Book; otherwise, sets
+// Sets tokenField sytle to NSTokenStyleRounded if the substring is found in Contacts; otherwise, sets
 // tokenField sytle to NSPlainTextTokenStyle.
 - (NSArray *)tokenField:(NSTokenField *)tokenField
         completionsForSubstring:(NSString *)substring

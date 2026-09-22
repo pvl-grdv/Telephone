@@ -23,7 +23,6 @@
 
 #import "AccountController.h"
 #import "CallController+Protected.h"
-#import "EndedCallTransferViewController.h"
 
 #import "Telephone-Swift.h"
 

@@ -31,7 +31,6 @@
 #import "AppController.h"
 #import "CallController+Protected.h"
 #import "CallTransferController.h"
-#import "EndedCallViewController.h"
 #import "SIPResponseLocalization.h"
 
 #import "Telephone-Swift.h"
@@ -626,7 +625,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     
     // Disable the redial button to re-enable it after some delay to prevent accidental clicking on in instead of
     // clicking on the hang-up button. Don't forget to re-enable it below!
-    [[[self endedCallViewController] redialButton] setEnabled:NO];
+    [[self endedCallViewController] setRedialEnabled:NO];
     
     [self.activeCallViewController showHangUp];
     [self.activeCallViewController disallowHangUp];

@@ -39,29 +39,16 @@ private enum AccountWindowDisplayState {
         }
     }
 
-    var systemImage: String {
+    var assetName: String? {
         switch self {
         case .offline:
-            "circle.fill"
-        case .connecting:
-            "arrow.triangle.2.circlepath"
+            "offline-state"
         case .available:
-            "circle.fill"
+            "available-state"
         case .unavailable:
-            "circle.fill"
-        }
-    }
-
-    var tint: Color {
-        switch self {
-        case .available:
-            .green
-        case .unavailable:
-            .yellow
-        case .offline:
-            .secondary
+            "unavailable-state"
         case .connecting:
-            .secondary
+            nil
         }
     }
 }
@@ -240,7 +227,7 @@ private struct AccountStateToolbarView: View {
             } label: {
                 Label(
                     NSLocalizedString("Available", comment: "Account registration Available menu item."),
-                    systemImage: "circle.fill"
+                    image: "available-state"
                 )
             }
 
@@ -249,7 +236,7 @@ private struct AccountStateToolbarView: View {
             } label: {
                 Label(
                     NSLocalizedString("Unavailable", comment: "Account registration Unavailable menu item."),
-                    systemImage: "circle.fill"
+                    image: "unavailable-state"
                 )
             }
 
@@ -260,14 +247,12 @@ private struct AccountStateToolbarView: View {
             } label: {
                 Label(
                     NSLocalizedString("Offline", comment: "Account registration Offline menu item."),
-                    systemImage: "circle.fill"
+                    image: "offline-state"
                 )
             }
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: model.state.systemImage)
-                    .foregroundStyle(model.state.tint)
-                    .font(.caption)
+                AccountStateIndicator(state: model.state)
 
                 Text(model.state.title)
                     .lineLimit(1)
@@ -279,5 +264,25 @@ private struct AccountStateToolbarView: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
+    }
+}
+
+
+private struct AccountStateIndicator: View {
+    let state: AccountWindowDisplayState
+
+    @ViewBuilder
+    var body: some View {
+        if state == .connecting {
+            ProgressView()
+                .controlSize(.mini)
+                .frame(width: 12, height: 12)
+        } else if let assetName = state.assetName {
+            Image(assetName)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 12, height: 12)
+                .accessibilityHidden(true)
+        }
     }
 }

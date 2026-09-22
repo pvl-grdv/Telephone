@@ -74,6 +74,7 @@
           "children": [
             { "path": "CallController.h", "encoding": "utf8" },
             { "path": "CallController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallContentViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallController+Protected.h", "encoding": "utf8" },
             { "path": "CallControllerDelegate.h", "encoding": "utf8" },
             { "path": "IncomingCallViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -738,17 +739,6 @@
             }, {
             },
 {
-              "kind": "variant-group",
-              "name": "Call.xib",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "Base.lproj/Call.xib",
-                },
-              ],
-            }, {
             }, {
               "kind": "variant-group",
               "name": "ActiveCallView.xib",

@@ -400,3 +400,9 @@
 /* Account state toolbar item. */
 "Account State" = "Account State";
 
+/* Call transfer destination label. */
+"Transfer to:" = "Transfer to:";
+
+/* Close button. */
+"Close" = "Close";
+

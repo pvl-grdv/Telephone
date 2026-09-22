@@ -5,14 +5,16 @@
 #import <pjsua-lib/pjsua.h>
 
 #import "AccountController.h"
-#import "ActiveAccountViewController.h"
 #import "AccountControllers.h"
 #import "AppController.h"
+#import "CallTransferController.h"
 #import "AKSIPAccount.h"
 #import "AKKeychain.h"
 #import "AKSIPCall.h"
 #import "AKSIPCallNotifications.h"
 #import "AKSIPURI.h"
+#import "AKSIPURIFormatter.h"
+#import "AKTelephoneNumberFormatter.h"
 #import "AKSIPUserAgent.h"
 #import "SystemMediaPlayer.h"
 #import "NameServers.h"

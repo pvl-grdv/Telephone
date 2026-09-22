@@ -93,9 +93,7 @@ final class AccountViewController: NSViewController {
     }
 
     func makeCallToDestination(_ destination: String) {
-        activeAccountViewController.callDestinationField.tokenStyle = .rounded
-        activeAccountViewController.callDestinationField.stringValue = destination
-        activeAccountViewController.makeCall(self)
+        activeAccountViewController.makeCallToDestination(destination)
     }
 }
 

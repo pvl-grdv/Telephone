@@ -399,3 +399,9 @@
 /* Account state toolbar item. */
 "Account State" = "Account-Status";
 
+/* Call transfer destination label. */
+"Transfer to:" = "Weiterleiten an:";
+
+/* Close button. */
+"Close" = "Schließen";
+

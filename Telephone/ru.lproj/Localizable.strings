@@ -399,3 +399,9 @@
 /* Account state toolbar item. */
 "Account State" = "Статус аккаунта";
 
+/* Call transfer destination label. */
+"Transfer to:" = "Перевести на:";
+
+/* Close button. */
+"Close" = "Закрыть";
+

@@ -18,7 +18,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "ActiveAccountTransferViewController.h"
 #import "CallController.h"
 
 

@@ -35,8 +35,7 @@
             { "path": "AccountWindowController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountControllerToAccountAdapter.h", "encoding": "utf8" },
             { "path": "AccountControllerToAccountAdapter.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "ActiveAccountViewController.h", "encoding": "utf8" },
-            { "path": "ActiveAccountViewController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "ActiveAccountViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
           "kind": "group",
@@ -166,8 +165,7 @@
           "children": [
             { "path": "CallTransferController.h", "encoding": "utf8" },
             { "path": "CallTransferController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "ActiveAccountTransferViewController.h", "encoding": "utf8" },
-            { "path": "ActiveAccountTransferViewController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "ActiveAccountTransferViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "ActiveCallTransferViewController.h", "encoding": "utf8" },
             { "path": "ActiveCallTransferViewController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "EndedCallTransferViewController.h", "encoding": "utf8" },
@@ -740,18 +738,7 @@
               ],
             }, {
             },
-            {
-              "kind": "variant-group",
-              "name": "ActiveAccountView.xib",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "Base.lproj/ActiveAccountView.xib",
-                },
-              ],
-            }, {
+{
               "kind": "variant-group",
               "name": "Call.xib",
               "target-membership": [
@@ -813,20 +800,6 @@
                 },
               ],
             }, {
-              "kind": "variant-group",
-              "name": "ActiveAccountTransferView.xib",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "ru.lproj/ActiveAccountTransferView.xib",
-                }, {
-                  "path": "de.lproj/ActiveAccountTransferView.xib",
-                }, {
-                  "path": "Base.lproj/ActiveAccountTransferView.xib",
-                },
-              ],
             }, {
               "kind": "variant-group",
               "name": "ActiveCallTransferView.xib",

@@ -21,7 +21,6 @@
 @import UserNotifications;
 @import UseCases;
 
-#import "AKActiveCallView.h"
 #import "AKNSWindow+Resizing.h"
 #import "AKSIPURI.h"
 #import "AKSIPURIFormatter.h"
@@ -29,7 +28,6 @@
 #import "AKTelephoneNumberFormatter.h"
 
 #import "AccountController.h"
-#import "ActiveCallViewController.h"
 #import "AppController.h"
 #import "CallController+Protected.h"
 #import "CallTransferController.h"

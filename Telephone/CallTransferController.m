@@ -22,7 +22,6 @@
 #import "AKSIPCall.h"
 
 #import "AccountController.h"
-#import "ActiveCallTransferViewController.h"
 #import "CallController+Protected.h"
 #import "EndedCallTransferViewController.h"
 

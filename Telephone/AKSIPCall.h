@@ -71,6 +71,7 @@ typedef NS_ENUM(NSUInteger, AKSIPCallState) {
 @property(nonatomic, readonly) AKSIPURI *localURI;
 @property(nonatomic, readonly) AKSIPURI *remoteURI;
 @property(nonatomic, readonly, getter=isActive) BOOL active;
+@property(nonatomic, readonly, getter=isConfirmed) BOOL confirmed;
 @property(nonatomic, readonly, getter=isMicrophoneMuted) BOOL microphoneMuted;
 @property(nonatomic, readonly, getter=isOnLocalHold) BOOL onLocalHold;
 @property(nonatomic, readonly, getter=isOnRemoteHold) BOOL onRemoteHold;

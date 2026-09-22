@@ -143,6 +143,10 @@
     return (pjsua_call_is_active((pjsua_call_id)[self identifier])) ? YES : NO;
 }
 
+- (BOOL)isConfirmed {
+    return self.state == kAKSIPCallConfirmedState;
+}
+
 - (BOOL)isOnLocalHold {
     if ([self identifier] == kAKSIPUserAgentInvalidIdentifier) {
         return NO;

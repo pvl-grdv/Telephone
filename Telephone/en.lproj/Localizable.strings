@@ -405,4 +405,6 @@
 
 /* Close button. */
 "Close" = "Close";
+/* Transfer call button and menu item. */
+"Transfer" = "Transfer";
 

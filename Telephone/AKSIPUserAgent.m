@@ -482,50 +482,10 @@ static void AKSIPUserAgentOnIPChangeProgress(
         transportConfig.port = (unsigned)[self transportPort];
     }
 
-    // Add UDP6 transport.
-    pjsua_transport_id UDP6TransportIdentifier = PJSUA_INVALID_ID;
-    status = pjsua_transport_create(PJSIP_TRANSPORT_UDP6, &transportConfig, &UDP6TransportIdentifier);
-    if (status != PJ_SUCCESS) {
-        NSLog(@"Error creating UDP6 transport");
-    }
-    self.UDP6TransportIdentifier = UDP6TransportIdentifier;
-
-    // Add TCP4 transport.
-    pjsua_transport_id TCP4TransportIdentifier = PJSUA_INVALID_ID;
-    status = pjsua_transport_create(PJSIP_TRANSPORT_TCP, &transportConfig, &TCP4TransportIdentifier);
-    if (status != PJ_SUCCESS) {
-        NSLog(@"Error creating TCP4 transport");
-    }
-    self.TCP4TransportIdentifier = TCP4TransportIdentifier;
-
-    // Add TCP6 transport.
-    pjsua_transport_id TCP6TransportIdentifier = PJSUA_INVALID_ID;
-    status = pjsua_transport_create(PJSIP_TRANSPORT_TCP6, &transportConfig, &TCP6TransportIdentifier);
-    if (status != PJ_SUCCESS) {
-        NSLog(@"Error creating TCP6 transport");
-    }
-    self.TCP6TransportIdentifier = TCP6TransportIdentifier;
-
-    // Add TLS transport.
-    transportConfig.tls_setting.verify_server = PJ_TRUE;
-    transportConfig.tls_setting.verify_client = PJ_TRUE;
-    NSURL *cert = [NSBundle.mainBundle URLForResource:@"PublicCAs" withExtension:@"pem"];
-    transportConfig.tls_setting.ca_list_file = cert.path.pjString;
-    transportConfig.port++;
-    pjsua_transport_id TLS4TransportIdentifier = PJSUA_INVALID_ID;
-    status = pjsua_transport_create(PJSIP_TRANSPORT_TLS, &transportConfig, &TLS4TransportIdentifier);
-    if (status != PJ_SUCCESS) {
-        NSLog(@"Error creating TLS4 transport");
-    }
-    self.TLS4TransportIdentifier = TLS4TransportIdentifier;
-
-    // Add TLS6 transport.
-    pjsua_transport_id TLS6TransportIdentifier = PJSUA_INVALID_ID;
-    status = pjsua_transport_create(PJSIP_TRANSPORT_TLS6, &transportConfig, &TLS6TransportIdentifier);
-    if (status != PJ_SUCCESS) {
-        NSLog(@"Error creating TLS6 transport");
-    }
-    self.TLS6TransportIdentifier = TLS6TransportIdentifier;
+    // Other SIP transports are created lazily when an enabled account
+    // actually needs TCP, TLS, or IPv6. Keeping UDP4 as the bootstrap
+    // transport preserves the simple PJSUA startup path without opening
+    // every possible listener up front.
 
     // Update codecs.
     [self updateCodecs];
@@ -626,6 +586,89 @@ static void AKSIPUserAgentOnIPChangeProgress(
     [[NSNotificationCenter defaultCenter] postNotificationName:AKSIPUserAgentDidFinishStoppingNotification object:self];
 }
 
+- (pjsua_transport_id)createSIPTransport:(pjsip_transport_type_e)type
+                                      name:(NSString *)name
+                                     isTLS:(BOOL)isTLS {
+    pjsua_transport_config config;
+    pjsua_transport_config_default(&config);
+
+    if (self.usesQoS) {
+        config.qos_params.flags = PJ_QOS_PARAM_HAS_DSCP;
+        config.qos_params.dscp_val = 24;
+    }
+
+    if (isTLS) {
+        config.tls_setting.verify_server = PJ_TRUE;
+        config.tls_setting.verify_client = PJ_TRUE;
+        NSURL *cert = [NSBundle.mainBundle URLForResource:@"PublicCAs" withExtension:@"pem"];
+        config.tls_setting.ca_list_file = cert.path.pjString;
+        config.port = self.transportPort > 0 && self.transportPort < 65535
+            ? (unsigned)self.transportPort + 1
+            : 0;
+    } else {
+        config.port = (unsigned)self.transportPort;
+    }
+
+    pjsua_transport_id identifier = PJSUA_INVALID_ID;
+    pj_status_t status = pjsua_transport_create(type, &config, &identifier);
+    if (status != PJ_SUCCESS) {
+        NSLog(@"Error creating %@ SIP transport: %d", name, status);
+        return PJSUA_INVALID_ID;
+    }
+
+    pjsua_transport_info info;
+    if (pjsua_transport_get_info(identifier, &info) == PJ_SUCCESS) {
+        NSLog(@"SIP transport %@ listening on port %u", name, info.local_name.port);
+    }
+
+    return identifier;
+}
+
+- (pjsua_transport_id)transportIdentifierForAccount:(AKSIPAccount *)account {
+    switch (account.transport) {
+        case TransportUDP:
+            if (!account.usesIPv6) {
+                return self.UDP4TransportIdentifier;
+            }
+            if (self.UDP6TransportIdentifier == PJSUA_INVALID_ID) {
+                self.UDP6TransportIdentifier =
+                    [self createSIPTransport:PJSIP_TRANSPORT_UDP6 name:@"UDP6" isTLS:NO];
+            }
+            return self.UDP6TransportIdentifier;
+
+        case TransportTCP:
+            if (account.usesIPv6) {
+                if (self.TCP6TransportIdentifier == PJSUA_INVALID_ID) {
+                    self.TCP6TransportIdentifier =
+                        [self createSIPTransport:PJSIP_TRANSPORT_TCP6 name:@"TCP6" isTLS:NO];
+                }
+                return self.TCP6TransportIdentifier;
+            }
+            if (self.TCP4TransportIdentifier == PJSUA_INVALID_ID) {
+                self.TCP4TransportIdentifier =
+                    [self createSIPTransport:PJSIP_TRANSPORT_TCP name:@"TCP4" isTLS:NO];
+            }
+            return self.TCP4TransportIdentifier;
+
+        case TransportTLS:
+            if (account.usesIPv6) {
+                if (self.TLS6TransportIdentifier == PJSUA_INVALID_ID) {
+                    self.TLS6TransportIdentifier =
+                        [self createSIPTransport:PJSIP_TRANSPORT_TLS6 name:@"TLS6" isTLS:YES];
+                }
+                return self.TLS6TransportIdentifier;
+            }
+            if (self.TLS4TransportIdentifier == PJSUA_INVALID_ID) {
+                self.TLS4TransportIdentifier =
+                    [self createSIPTransport:PJSIP_TRANSPORT_TLS name:@"TLS4" isTLS:YES];
+            }
+            return self.TLS4TransportIdentifier;
+
+        default:
+            return PJSUA_INVALID_ID;
+    }
+}
+
 - (BOOL)addAccount:(AKSIPAccount *)anAccount withPassword:(NSString *)aPassword {
     if ([[self delegate] respondsToSelector:@selector(SIPUserAgentShouldAddAccount:)]) {
         if (![[self delegate] SIPUserAgentShouldAddAccount:anAccount]) {
@@ -672,20 +715,13 @@ static void AKSIPUserAgentOnIPChangeProgress(
     }
     
     accountConfig.reg_timeout = (unsigned)[anAccount reregistrationTime];
-    
-    switch (anAccount.transport) {
-        case TransportUDP:
-            accountConfig.transport_id = anAccount.usesIPv6 ? self.UDP6TransportIdentifier : self.UDP4TransportIdentifier;
-            break;
-        case TransportTCP:
-            accountConfig.transport_id = anAccount.usesIPv6 ? self.TCP6TransportIdentifier : self.TCP4TransportIdentifier;
-            break;
-        case TransportTLS:
-            accountConfig.transport_id = anAccount.usesIPv6 ? self.TLS6TransportIdentifier : self.TLS4TransportIdentifier;
-            break;
-        default:
-            break;
+
+    pjsua_transport_id transportIdentifier = [self transportIdentifierForAccount:anAccount];
+    if (transportIdentifier == PJSUA_INVALID_ID) {
+        NSLog(@"Could not create required SIP transport for account %@", anAccount);
+        return NO;
     }
+    accountConfig.transport_id = transportIdentifier;
 
     accountConfig.use_srtp = anAccount.transport == TransportTLS ? PJMEDIA_SRTP_MANDATORY : PJMEDIA_SRTP_DISABLED;
 

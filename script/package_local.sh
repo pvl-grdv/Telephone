@@ -29,6 +29,7 @@ fi
 SIGNED_ENTITLEMENTS="$(/usr/bin/codesign -d --entitlements :- "$APP_BUNDLE" 2>&1)"
 grep -q "com.apple.security.app-sandbox" <<<"$SIGNED_ENTITLEMENTS"
 grep -q "com.apple.security.network.client" <<<"$SIGNED_ENTITLEMENTS"
+grep -q "com.apple.security.network.server" <<<"$SIGNED_ENTITLEMENTS"
 grep -q "com.apple.security.device.microphone" <<<"$SIGNED_ENTITLEMENTS"
 
 /usr/bin/codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"

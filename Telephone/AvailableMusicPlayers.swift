@@ -10,33 +10,24 @@
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
-final class AvailableMusicPlayers {
-    private let players: MusicPlayers
+import UseCases
+
+final class AvailableMusicPlayers: MusicPlayer {
+    private let players: [MusicPlayer]
 
     init(factory: MusicPlayerFactory) {
-        var players = [MusicPlayer]()
-        if let p = factory.makeMusicAppMusicPlayer() {
-            players.append(p)
-        }
-        if let p = factory.makeSpotifyMusicPlayer() {
-            players.append(p)
-        }
-        self.players = MusicPlayers(players: players)
+        players = [
+            factory.makeMusicAppMusicPlayer(),
+            factory.makeSpotifyMusicPlayer()
+        ].compactMap { $0 }
     }
-}
 
-extension AvailableMusicPlayers: MusicPlayer {
     func pause() {
-        players.pause()
+        players.forEach { $0.pause() }
     }
 
     func resume() {
-        players.resume()
+        players.forEach { $0.resume() }
     }
 }

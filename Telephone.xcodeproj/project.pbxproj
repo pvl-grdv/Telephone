@@ -265,9 +265,6 @@
 		8AA748AD1D702459000587DC /* MusicPlayerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA748AC1D702459000587DC /* MusicPlayerSettings.swift */; };
 		8AA748B51D70460B000587DC /* SimpleMusicPlayerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA748B01D703ED3000587DC /* SimpleMusicPlayerSettings.swift */; };
 		8AA748B61D704657000587DC /* SimpleMusicPlayerSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA748B21D703F45000587DC /* SimpleMusicPlayerSettingsTests.swift */; };
-		8AA748BC1D704962000587DC /* MusicPlayers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA748BB1D704962000587DC /* MusicPlayers.swift */; };
-		8AA748BE1D704A40000587DC /* MusicPlayersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA748BD1D704A40000587DC /* MusicPlayersTests.swift */; };
-		8AA748BF1D704A44000587DC /* MusicPlayers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA748BB1D704962000587DC /* MusicPlayers.swift */; };
 		8AA748C11D704B9F000587DC /* AvailableMusicPlayers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA748C01D704B9F000587DC /* AvailableMusicPlayers.swift */; };
 		8AA891DC1F83F69F0064B2EA /* SanitizedCallDestinationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA891DB1F83F69F0064B2EA /* SanitizedCallDestinationTests.swift */; };
 		8AA891DE1F83F6EA0064B2EA /* SanitizedCallDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA891DD1F83F6EA0064B2EA /* SanitizedCallDestination.swift */; };
@@ -912,8 +909,6 @@
 		8AA748AC1D702459000587DC /* MusicPlayerSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MusicPlayerSettings.swift; sourceTree = "<group>"; };
 		8AA748B01D703ED3000587DC /* SimpleMusicPlayerSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleMusicPlayerSettings.swift; sourceTree = "<group>"; };
 		8AA748B21D703F45000587DC /* SimpleMusicPlayerSettingsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SimpleMusicPlayerSettingsTests.swift; path = UseCasesTests/SimpleMusicPlayerSettingsTests.swift; sourceTree = SOURCE_ROOT; };
-		8AA748BB1D704962000587DC /* MusicPlayers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MusicPlayers.swift; sourceTree = "<group>"; };
-		8AA748BD1D704A40000587DC /* MusicPlayersTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MusicPlayersTests.swift; path = TelephoneTests/MusicPlayersTests.swift; sourceTree = SOURCE_ROOT; };
 		8AA748C01D704B9F000587DC /* AvailableMusicPlayers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AvailableMusicPlayers.swift; sourceTree = "<group>"; };
 		8AA748C21D744FAA000587DC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		8AA748C31D744FAA000587DC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/Account.xib; sourceTree = "<group>"; };
@@ -1729,8 +1724,6 @@
 				8AC66C9523A0166100FB64BA /* MusicAppMusicPlayer.m */,
 				8A635DD61D8C211300E2DBD0 /* MusicPlayerFactory.h */,
 				8A635DD71D8C211300E2DBD0 /* MusicPlayerFactory.m */,
-				8AA748BB1D704962000587DC /* MusicPlayers.swift */,
-				8AA748BD1D704A40000587DC /* MusicPlayersTests.swift */,
 				8AA748941D6F6D7C000587DC /* SpotifyMusicPlayer.h */,
 				8AA748951D6F6D7C000587DC /* SpotifyMusicPlayer.m */,
 			);
@@ -2884,7 +2877,6 @@
 				8AFC630E1D8C6F490022470D /* Array+Creating.swift in Sources */,
 				8A6568912180641400DAF0F6 /* PJSUACallInfo.m in Sources */,
 				AAD92132107A5E9F00F142A4 /* ActiveCallViewController.m in Sources */,
-				8AA748BC1D704962000587DC /* MusicPlayers.swift in Sources */,
 				8AA748811D6DECAB000587DC /* SettingsAccounts.swift in Sources */,
 				8ACC4F0B27EA59140007DE65 /* DefaultAppSettings.swift in Sources */,
 				AAD92136107A607C00F142A4 /* IncomingCallViewController.m in Sources */,
@@ -3137,7 +3129,6 @@
 				8A0E8A8423E0A71C00FC7BC3 /* AKNSString+Scanning.m in Sources */,
 				8AA891DF1F83F7100064B2EA /* SanitizedCallDestination.swift in Sources */,
 				8A41A74D1E5B4F3400E0C854 /* CallHistoryViewEventTargetTests.swift in Sources */,
-				8AA748BE1D704A40000587DC /* MusicPlayersTests.swift in Sources */,
 				8A8495F4243505AD000A3A90 /* TCPTransportSettingsMigrationTests.swift in Sources */,
 				8A2DA33F275548810065D573 /* AKSIPAccountKeys.swift in Sources */,
 				8AA27AE01E97CBDA002A08CD /* PreferencesControllerAccountsEventSource.swift in Sources */,
@@ -3188,7 +3179,6 @@
 				8A41A7501E5B593800E0C854 /* CallHistoryViewEventTarget.swift in Sources */,
 				AA6989A41C19AF1C0067BFB1 /* SoundPreferencesViewEventTarget.swift in Sources */,
 				AACC02A11C15E17E00913D7B /* SoundPreferencesViewSpy.swift in Sources */,
-				8AA748BF1D704A44000587DC /* MusicPlayers.swift in Sources */,
 				AACC029C1C15DC7600913D7B /* SoundIOPresenterTests.swift in Sources */,
 			);
 		};

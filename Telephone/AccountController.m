@@ -38,26 +38,6 @@
 
 static NSString * const kRussian = @"ru";
 
-static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *defaults) {
-    AKSIPURI *remoteURI = call.remoteURI;
-    if (remoteURI.user.length == 0) {
-        return remoteURI.host ?: @"";
-    }
-
-    if (![remoteURI.user ak_isTelephoneNumber]) {
-        return remoteURI.SIPAddress ?: remoteURI.user;
-    }
-
-    if (![defaults boolForKey:UserDefaultsKeys.formatTelephoneNumbers]) {
-        return remoteURI.user;
-    }
-
-    AKTelephoneNumberFormatter *formatter = [[AKTelephoneNumberFormatter alloc] init];
-    formatter.splitsLastFourDigits =
-        [defaults boolForKey:UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits];
-    return [formatter stringForObjectValue:remoteURI.user] ?: remoteURI.user;
-}
-
 @interface AccountController () <AccountWindowControllerDelegate>
 
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
@@ -660,14 +640,8 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
             if (contact.name.length > 0) {
                 [aCallController setDisplayedName:contact.name];
             }
-
-            NSString *callSource = FormattedIncomingCallSource(aCall, defaults);
-            if (callSource.length > 0) {
-                if (contact.label.length > 0) {
-                    [aCallController setStatus:[NSString stringWithFormat:@"%@ · %@", contact.label, callSource]];
-                } else {
-                    [aCallController setStatus:callSource];
-                }
+            if (contact.label.length > 0) {
+                [aCallController setStatus:contact.label];
             }
         }
 
@@ -684,16 +658,32 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
         return;
     }
 
-    NSString *callSource = FormattedIncomingCallSource(aCall, defaults);
-    NSString *phoneLabel = aCallController.phoneLabelFromAddressBook;
+    NSString *callSource;
+    AKTelephoneNumberFormatter *telephoneNumberFormatter = [[AKTelephoneNumberFormatter alloc] init];
+    [telephoneNumberFormatter setSplitsLastFourDigits:
+     [defaults boolForKey:UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits]];
+
+    if ([[aCallController phoneLabelFromAddressBook] length] > 0) {
+        callSource = [aCallController phoneLabelFromAddressBook];
+    } else if ([[[aCall remoteURI] user] length] > 0) {
+        if ([[[aCall remoteURI] user] ak_isTelephoneNumber]) {
+            if ([defaults boolForKey:UserDefaultsKeys.formatTelephoneNumbers]) {
+                callSource = [telephoneNumberFormatter stringForObjectValue:[[aCall remoteURI] user]];
+            } else {
+                callSource = [[aCall remoteURI] user];
+            }
+        } else {
+            callSource = [[aCall remoteURI] SIPAddress];
+        }
+    } else {
+        callSource = [[aCall remoteURI] host];
+    }
 
     NSString *notificationTitle;
     NSString *notificationDescription;
     if ([[aCallController nameFromAddressBook] length] > 0) {
         notificationTitle = [aCallController nameFromAddressBook];
-        notificationDescription = phoneLabel.length > 0
-            ? [NSString stringWithFormat:@"%@ · %@", phoneLabel, callSource]
-            : callSource;
+        notificationDescription = callSource;
     } else if ([[[aCall remoteURI] displayName] length] > 0) {
         notificationTitle = [[aCall remoteURI] displayName];
         notificationDescription = [NSString stringWithFormat:

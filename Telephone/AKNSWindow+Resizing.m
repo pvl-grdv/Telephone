@@ -22,14 +22,15 @@
 @implementation NSWindow (AKWindowResizingAdditions)
 
 - (void)ak_resizeForContentViewSize:(NSSize)size animate:(BOOL)animate {
-    CGFloat deltaWidth = size.width - self.contentView.frame.size.width;
-    CGFloat deltaHeight = size.height - self.contentView.frame.size.height;
-    NSRect frame = self.frame;
-    frame.size.height += deltaHeight;
-    frame.origin.y -= deltaHeight;
-    frame.size.width += deltaWidth;
-    self.contentView = [[NSView alloc] initWithFrame:self.contentView.frame];
-    [self setFrame:frame display:NO animate:animate];
+    NSRect currentFrame = self.frame;
+    NSRect contentRect = [self contentRectForFrameRect:currentFrame];
+    contentRect.size = size;
+
+    NSRect newFrame = [self frameRectForContentRect:contentRect];
+    newFrame.origin.x = currentFrame.origin.x;
+    newFrame.origin.y = NSMaxY(currentFrame) - newFrame.size.height;
+
+    [self setFrame:newFrame display:YES animate:animate];
 }
 
 @end

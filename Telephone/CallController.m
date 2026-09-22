@@ -168,25 +168,17 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 }
 
 - (void)setCallInfoViewResizingWindow:(NSView *)newView {
-    // Compute view size delta.
-    NSSize currentCallInfoViewSize = [[self callInfoView] frame].size;
-    NSSize newViewSize = [newView frame].size;
-    CGFloat deltaWidth = newViewSize.width - currentCallInfoViewSize.width;
-    CGFloat deltaHeight = newViewSize.height - currentCallInfoViewSize.height;
-    
+    NSSize currentCallInfoViewSize = self.callInfoView.frame.size;
+    NSSize newViewSize = newView.frame.size;
+    CGFloat minYBorderThickness = [self.window contentBorderThicknessForEdge:NSMinYEdge];
+
     if (currentCallInfoViewSize.width > 0.0 && currentCallInfoViewSize.height > 0.0 &&
-        (fabs(deltaWidth) > 0.1 || fabs(deltaHeight) > 0.1)) {
-        // Compute new window size.
-        NSRect windowFrame = [[self window] frame];
-        windowFrame.size.height += deltaHeight;
-        windowFrame.origin.y -= deltaHeight;
-        windowFrame.size.width += deltaWidth;
-        
-        // Set new window frame.
-        [[self window] setFrame:windowFrame display:YES animate:YES];
+        (fabs(newViewSize.width - currentCallInfoViewSize.width) > 0.1 ||
+         fabs(newViewSize.height - currentCallInfoViewSize.height) > 0.1)) {
+        NSSize contentSize = NSMakeSize(newViewSize.width, newViewSize.height + minYBorderThickness);
+        [self.window ak_resizeForContentViewSize:contentSize animate:YES];
     }
-    
-    CGFloat minYBorderThickness = [[self window] contentBorderThicknessForEdge:NSMinYEdge];
+
     if (minYBorderThickness > 0.0) {
         CGRect newViewFrame = [newView frame];
         newViewFrame.origin.y = minYBorderThickness;

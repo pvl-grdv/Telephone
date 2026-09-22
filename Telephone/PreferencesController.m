@@ -149,29 +149,22 @@
     }
     
     NSViewController *controller;
-    NSString *title;
     NSView *firstResponder;
     
     if ([sender isEqual:self.generalToolbarItem]) {
         controller = self.generalPreferencesViewController;
-        title = self.generalPreferencesViewController.title;
         firstResponder = nil;
     } else if ([sender isEqual:self.accountsToolbarItem]) {
         controller = self.accountPreferencesViewController;
-        title = self.accountPreferencesViewController.title;
         firstResponder = self.accountPreferencesViewController.accountsTable;
     } else if ([sender isEqual:self.soundToolbarItem]) {
         controller = self.soundPreferencesViewController;
-        title = self.soundPreferencesViewController.title;
         firstResponder = nil;
     } else if ([sender isEqual:self.networkToolbarItem]) {
         controller = self.networkPreferencesViewController;
-        title = self.networkPreferencesViewController.title;
         firstResponder = nil;
     } else {
-        controller = nil;
-        title = NSLocalizedString(@"Telephone Settings", @"Settings default window title.");
-        firstResponder = nil;
+        return;
     }
 
     [self.window ak_resizeForContentViewSize:controller.view.frame.size animate:YES];

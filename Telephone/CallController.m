@@ -78,6 +78,24 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
         if (_call != nil) {
             self.window.styleMask |= NSWindowStyleMaskClosable;
             [_activeCallViewController allowHangUp];
+
+            // Keep the remote party identity available in every call state.
+            // AccountController normally sets these before the call starts,
+            // but the SIP call itself is the reliable fallback for paths such
+            // as restored/redialed calls and late UI transitions.
+            AKSIPURIFormatter *formatter = [[AKSIPURIFormatter alloc] init];
+            formatter.formatsTelephoneNumbers =
+                [self.defaults boolForKey:UserDefaultsKeys.formatTelephoneNumbers];
+            formatter.telephoneNumberFormatterSplitsLastFourDigits =
+                [self.defaults boolForKey:UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits];
+            NSString *remoteIdentity = [formatter stringForObjectValue:_call.remoteURI];
+
+            if (self.title.length == 0) {
+                self.title = remoteIdentity;
+            }
+            if (self.displayedName.length == 0) {
+                self.displayedName = remoteIdentity;
+            }
         }
     }
 }

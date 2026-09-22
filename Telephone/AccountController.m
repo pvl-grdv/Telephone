@@ -624,6 +624,15 @@ static NSString * const kRussian = @"ru";
                                            displayName:remoteURI.displayName
                                                 domain:domain
                                             completion:^(IncomingCallContact *contact) {
+        // Contact lookup is asynchronous. The caller may have hung up or the
+        // call may have been answered while the lookup was in flight. Do not
+        // resurrect a stale actionable incoming-call notification.
+        if (!aCallController.isCallActive ||
+            !aCall.isMissed ||
+            aCall.state == kAKSIPCallDisconnectedState) {
+            return;
+        }
+
         if (contact != nil) {
             [aCallController setNameFromAddressBook:contact.name];
             [aCallController setPhoneLabelFromAddressBook:contact.label];
@@ -643,6 +652,12 @@ static NSString * const kRussian = @"ru";
 - (void)deliverIncomingCallNotificationForController:(CallController *)aCallController
                                                 call:(AKSIPCall *)aCall
                                             defaults:(NSUserDefaults *)defaults {
+    if (!aCallController.isCallActive ||
+        !aCall.isMissed ||
+        aCall.state == kAKSIPCallDisconnectedState) {
+        return;
+    }
+
     NSString *callSource;
     AKTelephoneNumberFormatter *telephoneNumberFormatter = [[AKTelephoneNumberFormatter alloc] init];
     [telephoneNumberFormatter setSplitsLastFourDigits:

@@ -11,7 +11,7 @@ import UseCases
 @MainActor
 @Observable
 private final class AccountContentModel {
-    var isActive = false
+    var showsCallComposer = false
 }
 
 @MainActor
@@ -43,8 +43,8 @@ final class AccountViewController: NSViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    var allowsCallDestinationInput: Bool {
-        activeAccountViewController.allowsCallDestinationInput
+    var canMakeCalls: Bool {
+        model.showsCallComposer
     }
 
     override func loadView() {
@@ -70,22 +70,21 @@ final class AccountViewController: NSViewController {
         }
     }
 
-    func showActiveState() {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            model.isActive = true
-        }
-        activeAccountViewController.allowCallDestinationInput()
-    }
+    func setCallComposerVisible(_ visible: Bool, animated: Bool) {
+        guard model.showsCallComposer != visible else { return }
 
-    func showInactiveStateAnimated(_ animated: Bool) {
-        activeAccountViewController.disallowCallDestinationInput()
+        let update = {
+            self.model.showsCallComposer = visible
+        }
 
         if animated {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                model.isActive = false
-            }
+            withAnimation(.easeInOut(duration: 0.15), update)
         } else {
-            model.isActive = false
+            update()
+        }
+
+        if visible {
+            activeAccountViewController.focusCallDestination()
         }
     }
 
@@ -102,9 +101,9 @@ private struct AccountContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if model.isActive {
+            if model.showsCallComposer {
                 activeAccountViewController.contentView
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .transition(.opacity)
 
                 Divider()
             }

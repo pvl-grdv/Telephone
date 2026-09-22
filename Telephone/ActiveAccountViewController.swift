@@ -13,35 +13,14 @@ extension Notification.Name {
         Notification.Name("TelephoneContactsAuthorizationDidChange")
 }
 
-private final class CallDestination: NSObject {
+private struct CallDestination {
     let uri: AKSIPURI
     let phoneLabel: String
-
-    init(uri: AKSIPURI, phoneLabel: String) {
-        self.uri = uri
-        self.phoneLabel = phoneLabel
-    }
-
-    override func isEqual(_ object: Any?) -> Bool {
-        if self === object as AnyObject? {
-            return true
-        }
-        guard let other = object as? CallDestination else {
-            return false
-        }
-        return uri.isEqual(other.uri) && phoneLabel == other.phoneLabel
-    }
-
-    override var hash: Int {
-        var result = uri.hash
-        result = result &* 31 &+ phoneLabel.hashValue
-        return result
-    }
 }
 
-private final class CallDestinationGroup: NSObject {
+private struct CallDestinationGroup {
     let destinations: [CallDestination]
-    var selectedIndex: Int
+    let selectedIndex: Int
 
     var selectedDestination: CallDestination? {
         guard destinations.indices.contains(selectedIndex) else { return nil }
@@ -51,31 +30,6 @@ private final class CallDestinationGroup: NSObject {
     init(destinations: [CallDestination], selectedIndex: Int) {
         self.destinations = destinations
         self.selectedIndex = destinations.indices.contains(selectedIndex) ? selectedIndex : 0
-    }
-
-    override func isEqual(_ object: Any?) -> Bool {
-        if self === object as AnyObject? {
-            return true
-        }
-        guard
-            let other = object as? CallDestinationGroup,
-            selectedIndex == other.selectedIndex,
-            destinations.count == other.destinations.count
-        else {
-            return false
-        }
-
-        return zip(destinations, other.destinations).allSatisfy { left, right in
-            left.isEqual(right)
-        }
-    }
-
-    override var hash: Int {
-        var result = selectedIndex.hashValue
-        for destination in destinations {
-            result = result &* 31 &+ destination.hash
-        }
-        return result
     }
 }
 
@@ -107,7 +61,6 @@ private final class CallDestinationInputModel {
             refreshSuggestions()
         }
     }
-    var isVisible = false
     var isFocused = false
     var focusRequest = 0
     var suggestions: [CallDestinationSuggestion] = []
@@ -668,10 +621,6 @@ class ActiveAccountViewController: NSViewController {
         inputModel.callDestinationPhoneLabel
     }
 
-    var allowsCallDestinationInput: Bool {
-        inputModel.isVisible
-    }
-
     @nonobjc final var contentView: some View {
         destinationInputView(
             showsCallButton: true,
@@ -706,16 +655,6 @@ class ActiveAccountViewController: NSViewController {
         makeCall(self)
     }
 
-    func allowCallDestinationInput() {
-        inputModel.isVisible = true
-        inputModel.requestFocus()
-    }
-
-    func disallowCallDestinationInput() {
-        inputModel.isVisible = false
-        inputModel.setFocused(false)
-    }
-
     func focusCallDestination() {
         inputModel.requestFocus()
     }
@@ -745,80 +684,7 @@ private struct CallDestinationInputView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            HStack(spacing: 6) {
-                TextField(
-                    NSLocalizedString(
-                        "Phone number or SIP address",
-                        comment: "Call destination field placeholder."
-                    ),
-                    text: $model.text
-                )
-                .textFieldStyle(.roundedBorder)
-                .focused($inputFocused)
-                .onSubmit {
-                    if !model.acceptHighlightedSuggestion() {
-                        call()
-                    }
-                }
-                .onKeyPress(.downArrow) {
-                    model.moveSuggestionSelection(by: 1)
-                    return .handled
-                }
-                .onKeyPress(.upArrow) {
-                    model.moveSuggestionSelection(by: -1)
-                    return .handled
-                }
-                .onKeyPress(.escape) {
-                    model.dismissSuggestions()
-                    return .handled
-                }
-
-                if model.hasMultipleDestinations {
-                    Menu {
-                        ForEach(model.destinationOptions) { option in
-                            Button {
-                                model.selectDestination(at: option.id)
-                            } label: {
-                                if option.isSelected {
-                                    Label(option.title, systemImage: "checkmark")
-                                } else {
-                                    Text(option.title)
-                                }
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .foregroundStyle(.secondary)
-                    }
-                    .menuStyle(.borderlessButton)
-                    .menuIndicator(.hidden)
-                    .help(
-                        NSLocalizedString(
-                            "Choose Destination",
-                            comment: "Choose a contact destination."
-                        )
-                    )
-                    .accessibilityLabel(
-                        NSLocalizedString(
-                            "Choose Destination",
-                            comment: "Choose a contact destination."
-                        )
-                    )
-                }
-
-                if showsCallButton {
-                    Button(action: call) {
-                        Image(systemName: "phone.fill")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .disabled(!model.canCall)
-                    .help(NSLocalizedString("Call", comment: "Call button."))
-                    .accessibilityLabel(
-                        NSLocalizedString("Call", comment: "Call button.")
-                    )
-                }
-            }
+            inputRow
 
             if showsSuggestions {
                 DestinationSuggestionsView(
@@ -827,15 +693,16 @@ private struct CallDestinationInputView: View {
                     choose: model.chooseSuggestion,
                     hover: model.highlightSuggestion
                 )
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                .transition(.opacity)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .onAppear {
-            if model.isVisible {
-                inputFocused = true
-            }
+            inputFocused = true
+        }
+        .onDisappear {
+            model.setFocused(false)
         }
         .onChange(of: inputFocused) {
             model.setFocused(inputFocused)
@@ -844,6 +711,83 @@ private struct CallDestinationInputView: View {
             inputFocused = true
         }
         .animation(.easeInOut(duration: 0.12), value: showsSuggestions)
+    }
+
+    private var inputRow: some View {
+        HStack(spacing: 6) {
+            TextField(
+                NSLocalizedString(
+                    "Phone number or SIP address",
+                    comment: "Call destination field placeholder."
+                ),
+                text: $model.text
+            )
+            .textFieldStyle(.roundedBorder)
+            .focused($inputFocused)
+            .onSubmit {
+                if !model.acceptHighlightedSuggestion() {
+                    call()
+                }
+            }
+            .onKeyPress(.downArrow) {
+                model.moveSuggestionSelection(by: 1)
+                return .handled
+            }
+            .onKeyPress(.upArrow) {
+                model.moveSuggestionSelection(by: -1)
+                return .handled
+            }
+            .onKeyPress(.escape) {
+                model.dismissSuggestions()
+                return .handled
+            }
+
+            if model.hasMultipleDestinations {
+                Menu {
+                    ForEach(model.destinationOptions) { option in
+                        Button {
+                            model.selectDestination(at: option.id)
+                        } label: {
+                            if option.isSelected {
+                                Label(option.title, systemImage: "checkmark")
+                            } else {
+                                Text(option.title)
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(.secondary)
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .help(
+                    NSLocalizedString(
+                        "Choose Destination",
+                        comment: "Choose a contact destination."
+                    )
+                )
+                .accessibilityLabel(
+                    NSLocalizedString(
+                        "Choose Destination",
+                        comment: "Choose a contact destination."
+                    )
+                )
+            }
+
+            if showsCallButton {
+                Button(action: call) {
+                    Image(systemName: "phone.fill")
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .disabled(!model.canCall)
+                .help(NSLocalizedString("Call", comment: "Call button."))
+                .accessibilityLabel(
+                    NSLocalizedString("Call", comment: "Call button.")
+                )
+            }
+        }
     }
 }
 
@@ -900,6 +844,7 @@ private struct DestinationSuggestionsView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial, in: .rect(cornerRadius: 7))
         .overlay {
             RoundedRectangle(cornerRadius: 7)

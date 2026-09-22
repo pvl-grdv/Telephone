@@ -12,7 +12,6 @@ final class ActiveAccountTransferViewController: ActiveAccountViewController {
     @objc(initWithAccountController:)
     override init(accountController: AccountController) {
         super.init(accountController: accountController)
-        allowCallDestinationInput()
     }
 
     required init?(coder: NSCoder) {

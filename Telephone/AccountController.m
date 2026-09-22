@@ -162,7 +162,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 }
 
 - (BOOL)canMakeCalls {
-    return self.windowController.allowsCallDestinationInput;
+    return self.windowController.canMakeCalls;
 }
 
 - (instancetype)initWithSIPAccount:(AKSIPAccount *)account

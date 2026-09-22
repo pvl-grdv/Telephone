@@ -313,7 +313,8 @@ private struct CallHistoryScreen: View {
             .textFieldStyle(.roundedBorder)
             .focused($searchFocused)
         }
-        .padding(8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
     @ViewBuilder

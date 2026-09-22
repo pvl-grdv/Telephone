@@ -57,7 +57,6 @@ private enum AccountWindowDisplayState {
 @Observable
 private final class AccountWindowModel {
     var state: AccountWindowDisplayState = .offline
-    var requestStateChange: ((AccountWindowControllerAccountState) -> Void)?
 }
 
 @MainActor
@@ -65,14 +64,12 @@ private final class AccountWindowModel {
 final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToolbarDelegate {
     private static let stateItemIdentifier = NSToolbarItem.Identifier("TelephoneAccountState")
 
-    private let accountDescription: String
-    private let sipAddress: String
     private let accountViewController: AccountViewController
     private weak var accountDelegate: AccountWindowControllerDelegate?
     private let model = AccountWindowModel()
 
-    var allowsCallDestinationInput: Bool {
-        accountViewController.allowsCallDestinationInput
+    var canMakeCalls: Bool {
+        accountViewController.canMakeCalls
     }
 
     @objc(initWithAccountDescription:SIPAddress:accountViewController:delegate:)
@@ -82,8 +79,6 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
         accountViewController: AccountViewController,
         delegate: AccountWindowControllerDelegate
     ) {
-        self.accountDescription = accountDescription
-        self.sipAddress = sipAddress
         self.accountViewController = accountViewController
         self.accountDelegate = delegate
 
@@ -105,17 +100,11 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
         window.setFrameAutosaveName(sipAddress)
 
         let toolbar = NSToolbar(identifier: "TelephoneAccountToolbar")
-        toolbar.displayMode = .iconOnly
         toolbar.showsBaselineSeparator = false
         toolbar.delegate = self
         window.toolbar = toolbar
 
-        model.requestStateChange = { [weak self] state in
-            guard let self else { return }
-            self.accountDelegate?.accountWindowController(self, didChangeAccountState: state)
-        }
-
-        showOfflineState(animated: false)
+        show(.offline, callComposerVisible: false, animated: false)
     }
 
     required init?(coder: NSCoder) {
@@ -123,17 +112,15 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
     }
 
     func showAvailableState() {
-        model.state = .available
-        accountViewController.showActiveState()
+        show(.available, callComposerVisible: true, animated: true)
     }
 
     func showUnavailableState() {
-        model.state = .unavailable
-        accountViewController.showActiveState()
+        show(.unavailable, callComposerVisible: true, animated: true)
     }
 
     func showOfflineState() {
-        showOfflineState(animated: true)
+        show(.offline, callComposerVisible: false, animated: true)
     }
 
     func showConnectingState() {
@@ -178,15 +165,16 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
         return false
     }
 
-    private func showOfflineState(animated: Bool) {
-        if animated {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                model.state = .offline
-            }
-        } else {
-            model.state = .offline
-        }
-        accountViewController.showInactiveStateAnimated(animated)
+    private func show(
+        _ state: AccountWindowDisplayState,
+        callComposerVisible: Bool,
+        animated: Bool
+    ) {
+        model.state = state
+        accountViewController.setCallComposerVisible(
+            callComposerVisible,
+            animated: animated
+        )
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
@@ -208,11 +196,20 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
         item.label = NSLocalizedString("Account State", comment: "Account state toolbar item.")
         item.paletteLabel = item.label
 
-        let hostingView = NSHostingView(rootView: AccountStateToolbarView(model: model))
-        hostingView.frame = NSRect(x: 0, y: 0, width: 132, height: 28)
+        let hostingView = NSHostingView(
+            rootView: AccountStateToolbarView(
+                model: model,
+                changeState: { [weak self] state in
+                    guard let self else { return }
+                    self.accountDelegate?.accountWindowController(
+                        self,
+                        didChangeAccountState: state
+                    )
+                }
+            )
+        )
+        hostingView.frame.size = hostingView.fittingSize
         item.view = hostingView
-        item.minSize = NSSize(width: 110, height: 28)
-        item.maxSize = NSSize(width: 160, height: 28)
         return item
     }
 }
@@ -220,22 +217,30 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
 private struct AccountStateToolbarView: View {
     @Bindable var model: AccountWindowModel
 
+    let changeState: (AccountWindowControllerAccountState) -> Void
+
     var body: some View {
         Menu {
             Button {
-                model.requestStateChange?(.available)
+                changeState(.available)
             } label: {
                 Label(
-                    NSLocalizedString("Available", comment: "Account registration Available menu item."),
+                    NSLocalizedString(
+                        "Available",
+                        comment: "Account registration Available menu item."
+                    ),
                     image: "available-state"
                 )
             }
 
             Button {
-                model.requestStateChange?(.unavailable)
+                changeState(.unavailable)
             } label: {
                 Label(
-                    NSLocalizedString("Unavailable", comment: "Account registration Unavailable menu item."),
+                    NSLocalizedString(
+                        "Unavailable",
+                        comment: "Account registration Unavailable menu item."
+                    ),
                     image: "unavailable-state"
                 )
             }
@@ -243,10 +248,13 @@ private struct AccountStateToolbarView: View {
             Divider()
 
             Button {
-                model.requestStateChange?(.offline)
+                changeState(.offline)
             } label: {
                 Label(
-                    NSLocalizedString("Offline", comment: "Account registration Offline menu item."),
+                    NSLocalizedString(
+                        "Offline",
+                        comment: "Account registration Offline menu item."
+                    ),
                     image: "offline-state"
                 )
             }
@@ -256,18 +264,27 @@ private struct AccountStateToolbarView: View {
 
                 Text(model.state.title)
                     .lineLimit(1)
-
-                Image(systemName: "chevron.down")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 78, alignment: .leading)
             }
         }
         .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
+        .controlSize(.small)
         .fixedSize()
+        .help(
+            NSLocalizedString(
+                "Account State",
+                comment: "Account state toolbar item."
+            )
+        )
+        .accessibilityLabel(
+            NSLocalizedString(
+                "Account State",
+                comment: "Account state toolbar item."
+            )
+        )
+        .accessibilityValue(model.state.title)
     }
 }
-
 
 private struct AccountStateIndicator: View {
     let state: AccountWindowDisplayState

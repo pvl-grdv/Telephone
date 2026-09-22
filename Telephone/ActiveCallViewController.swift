@@ -22,6 +22,15 @@ fileprivate final class ActiveCallModel {
     var transferActionEnabled = false
     var cancelEnabled = true
     var usesDTMFDisplay = false
+
+    var customerCompany = ""
+    var customerKeys = ""
+    var customerEmails = ""
+    var customerNote = ""
+    var previousConversationCount = 0
+    var lastCallDate: Date?
+    var recentCustomerNotes: [CustomerContextNote] = []
+    var customerContextLoaded = false
 }
 
 @MainActor
@@ -34,6 +43,8 @@ class ActiveCallViewController: NSViewController, NSMenuItemValidation {
     fileprivate let model = ActiveCallModel()
     private var displayedNameObservation: NSKeyValueObservation?
     private var statusObservation: NSKeyValueObservation?
+    private var customerContextSaveTask: Task<Void, Never>?
+    private var isApplyingCustomerContext = false
 
     @objc(initWithNibName:callController:)
     init(nibName: String, callController: CallController) {
@@ -63,6 +74,9 @@ class ActiveCallViewController: NSViewController, NSMenuItemValidation {
             },
             completeTransfer: { [weak self] in
                 (self as? ActiveCallTransferViewController)?.transferCall(nil)
+            },
+            customerContextChanged: { [weak self] in
+                self?.scheduleCustomerContextSave()
             }
         )
 
@@ -76,6 +90,12 @@ class ActiveCallViewController: NSViewController, NSMenuItemValidation {
     override func viewDidLoad() {
         super.viewDidLoad()
         updateCallControls()
+        loadCustomerContext()
+    }
+
+    override func viewWillDisappear() {
+        saveCustomerContextNow()
+        super.viewWillDisappear()
     }
 
     func removeObservations() {
@@ -215,6 +235,130 @@ class ActiveCallViewController: NSViewController, NSMenuItemValidation {
         }
     }
 
+    private var customerPartyAddress: CustomerPartyAddress? {
+        guard let callController else { return nil }
+
+        if let uri = callController.call?.remoteURI ?? callController.redialURI {
+            return CustomerPartyAddress(user: uri.user, host: uri.host)
+        }
+
+        let entered = callController.enteredCallDestination
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !entered.isEmpty else { return nil }
+        return CustomerPartyAddress(user: entered, host: "")
+    }
+
+    private var customerDisplayName: String {
+        guard let callController else { return "" }
+        if !callController.nameFromAddressBook.isEmpty {
+            return callController.nameFromAddressBook
+        }
+        return callController.displayedName
+    }
+
+    private func loadCustomerContext() {
+        guard
+            !isTransferPresentation,
+            let callController,
+            let address = customerPartyAddress
+        else {
+            return
+        }
+
+        guard
+            let callIdentifier = callController.identifier,
+            !callIdentifier.isEmpty
+        else {
+            return
+        }
+        let displayName = customerDisplayName
+
+        Task { [weak self] in
+            let snapshot = await CustomerContextStore.shared.load(
+                address: address,
+                displayName: displayName,
+                callIdentifier: callIdentifier
+            )
+
+            guard let self, self.customerPartyAddress == address else {
+                return
+            }
+
+            self.isApplyingCustomerContext = true
+            self.model.customerCompany = snapshot.company
+            self.model.customerKeys = snapshot.keys.joined(separator: ", ")
+            self.model.customerEmails = snapshot.emails.joined(separator: ", ")
+            self.model.customerNote = snapshot.currentCallNote
+            self.model.previousConversationCount = snapshot.previousConversationCount
+            self.model.lastCallDate = snapshot.lastCallDate
+            self.model.recentCustomerNotes = snapshot.recentNotes
+            self.model.customerContextLoaded = true
+            self.isApplyingCustomerContext = false
+        }
+    }
+
+    private func scheduleCustomerContextSave() {
+        guard !isApplyingCustomerContext else { return }
+
+        customerContextSaveTask?.cancel()
+        customerContextSaveTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .milliseconds(350))
+            } catch {
+                return
+            }
+            self?.saveCustomerContextNow()
+        }
+    }
+
+    private func saveCustomerContextNow() {
+        guard
+            !isTransferPresentation,
+            !isApplyingCustomerContext,
+            let callController,
+            let address = customerPartyAddress
+        else {
+            return
+        }
+
+        customerContextSaveTask?.cancel()
+        customerContextSaveTask = nil
+
+        guard
+            let callIdentifier = callController.identifier,
+            !callIdentifier.isEmpty
+        else {
+            return
+        }
+        let displayName = customerDisplayName
+        let company = model.customerCompany
+        let keys = listValues(model.customerKeys)
+        let emails = listValues(model.customerEmails)
+        let note = model.customerNote
+
+        Task {
+            await CustomerContextStore.shared.save(
+                address: address,
+                displayName: displayName,
+                callIdentifier: callIdentifier,
+                company: company,
+                keys: keys,
+                emails: emails,
+                note: note
+            )
+        }
+    }
+
+    private func listValues(_ text: String) -> [String] {
+        text.split { character in
+            character == "," || character == ";" || character.isNewline
+        }
+        .map {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        .filter { !$0.isEmpty }
+    }
+
     private func startObserving() {
         guard let callController else { return }
 
@@ -340,6 +484,7 @@ private struct ActiveCallView: View {
     let showTransfer: () -> Void
     let cancelTransfer: () -> Void
     let completeTransfer: () -> Void
+    let customerContextChanged: () -> Void
 
     var body: some View {
         if isTransfer {
@@ -347,12 +492,24 @@ private struct ActiveCallView: View {
                 .frame(width: 320, height: 115)
         } else {
             regularBody
-                .frame(width: 300, height: 84)
+                .frame(width: 380, height: 238)
+                .onChange(of: model.customerCompany) {
+                    customerContextChanged()
+                }
+                .onChange(of: model.customerKeys) {
+                    customerContextChanged()
+                }
+                .onChange(of: model.customerEmails) {
+                    customerContextChanged()
+                }
+                .onChange(of: model.customerNote) {
+                    customerContextChanged()
+                }
         }
     }
 
     private var regularBody: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Text(model.displayedName)
                     .font(.headline)
@@ -406,8 +563,12 @@ private struct ActiveCallView: View {
                     action: showTransfer
                 )
             }
+
+            Divider()
+
+            CustomerContextView(model: model)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
         .padding(.vertical, 10)
     }
 
@@ -455,6 +616,153 @@ private struct ActiveCallView: View {
             }
         }
         .padding(14)
+    }
+}
+
+private struct CustomerContextView: View {
+    @Bindable var model: ActiveCallModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Label(
+                    NSLocalizedString(
+                        "Client",
+                        comment: "Local customer context section title."
+                    ),
+                    systemImage: "person.crop.circle"
+                )
+                .font(.caption.weight(.semibold))
+
+                Spacer(minLength: 4)
+
+                if model.customerContextLoaded {
+                    Text(historySummary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                } else {
+                    ProgressView()
+                        .controlSize(.mini)
+                }
+            }
+
+            HStack(spacing: 6) {
+                TextField(
+                    NSLocalizedString(
+                        "Organization",
+                        comment: "Local customer organization field placeholder."
+                    ),
+                    text: $model.customerCompany
+                )
+
+                TextField(
+                    NSLocalizedString(
+                        "CRM keys",
+                        comment: "Local customer CRM keys field placeholder."
+                    ),
+                    text: $model.customerKeys
+                )
+                .help(
+                    NSLocalizedString(
+                        "Separate multiple keys with commas.",
+                        comment: "CRM keys field help."
+                    )
+                )
+            }
+            .disabled(!model.customerContextLoaded)
+
+            TextField(
+                NSLocalizedString(
+                    "Email addresses",
+                    comment: "Local customer email field placeholder."
+                ),
+                text: $model.customerEmails
+            )
+            .help(
+                NSLocalizedString(
+                    "Separate multiple email addresses with commas.",
+                    comment: "Customer email field help."
+                )
+            )
+            .disabled(!model.customerContextLoaded)
+
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $model.customerNote)
+                    .font(.body)
+                    .scrollContentBackground(.hidden)
+                    .padding(3)
+
+                if model.customerNote.isEmpty {
+                    Text(
+                        NSLocalizedString(
+                            "Notes for this call",
+                            comment: "Call note editor placeholder."
+                        )
+                    )
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 7)
+                    .allowsHitTesting(false)
+                }
+            }
+            .frame(height: 52)
+            .disabled(!model.customerContextLoaded)
+            .background(.background, in: .rect(cornerRadius: 5))
+            .overlay {
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(.separator, lineWidth: 0.5)
+            }
+
+            if let recent = model.recentCustomerNotes.first {
+                Text(
+                    String(
+                        format: NSLocalizedString(
+                            "Previous note: %@",
+                            comment: "Most recent previous customer note."
+                        ),
+                        recent.body
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .help(recent.body)
+            }
+        }
+    }
+
+    private var historySummary: String {
+        guard model.previousConversationCount > 0 else {
+            return NSLocalizedString(
+                "No previous conversations",
+                comment: "Customer has no previous conversations in Telephone."
+            )
+        }
+
+        if let lastCallDate = model.lastCallDate {
+            let date = lastCallDate.formatted(
+                date: .abbreviated,
+                time: .omitted
+            )
+            return String(
+                format: NSLocalizedString(
+                    "%ld previous · %@",
+                    comment: "Previous conversations count and most recent date."
+                ),
+                model.previousConversationCount,
+                date
+            )
+        }
+
+        return String(
+            format: NSLocalizedString(
+                "%ld previous conversations",
+                comment: "Previous conversations count."
+            ),
+            model.previousConversationCount
+        )
     }
 }
 

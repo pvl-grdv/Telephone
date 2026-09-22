@@ -451,3 +451,36 @@
 /* Open FAQ help menu item. */
 "Open FAQ…" = "FAQ öffnen …";
 
+
+/* Local customer context section title. */
+"Client" = "Kunde";
+
+/* Local customer organization field placeholder. */
+"Organization" = "Organisation";
+
+/* Local customer CRM keys field placeholder. */
+"CRM keys" = "CRM-Schlüssel";
+
+/* CRM keys field help. */
+"Separate multiple keys with commas." = "Mehrere Schlüssel durch Kommas trennen.";
+
+/* Local customer email field placeholder. */
+"Email addresses" = "E-Mail-Adressen";
+
+/* Customer email field help. */
+"Separate multiple email addresses with commas." = "Mehrere E-Mail-Adressen durch Kommas trennen.";
+
+/* Call note editor placeholder. */
+"Notes for this call" = "Notizen zu diesem Gespräch";
+
+/* Most recent previous customer note. */
+"Previous note: %@" = "Vorherige Notiz: %@";
+
+/* Customer has no previous conversations in Telephone. */
+"No previous conversations" = "Keine früheren Gespräche";
+
+/* Previous conversations count and most recent date. */
+"%ld previous · %@" = "%ld vorherige · %@";
+
+/* Previous conversations count. */
+"%ld previous conversations" = "%ld frühere Gespräche";

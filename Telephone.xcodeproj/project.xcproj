@@ -127,6 +127,15 @@
               ],
             },
             { "path": "NotifyingCallHistoryFactory.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            {
+              "path": "CustomerPartyAddress.swift",
+              "encoding": "utf8",
+              "target-membership": [
+                "Telephone/compile-sources",
+                "TelephoneTests/compile-sources",
+              ],
+            },
+            { "path": "CustomerContextStore.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SQLiteCallHistory.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SQLiteCallHistoryFactory.swift", "target-membership": [ "Telephone/compile-sources" ] },
             {

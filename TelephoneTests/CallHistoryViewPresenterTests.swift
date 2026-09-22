@@ -140,6 +140,47 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         XCTAssertFalse(record.matchesSearch("Alice 555"))
     }
 
+    func testCustomerPartyAddressNormalizesPhoneFormatting() {
+        let formatted = CustomerPartyAddress(
+            user: "+1 (555) 123-4567",
+            host: "example.com"
+        )
+        let plain = CustomerPartyAddress(
+            user: "15551234567",
+            host: "another.example"
+        )
+
+        XCTAssertEqual(formatted.kind, "phone")
+        XCTAssertEqual(formatted.normalizedValue, plain.normalizedValue)
+    }
+
+    func testCustomerPartyAddressNormalizesSIPAddress() {
+        let address = CustomerPartyAddress(
+            user: "Sales",
+            host: "Example.COM"
+        )
+
+        XCTAssertEqual(address.kind, "sip")
+        XCTAssertEqual(address.normalizedValue, "sales@example.com")
+    }
+
+    func testCustomerPartyAddressKeepsShortNumericSIPExtensionScopedToHost() {
+        let first = CustomerPartyAddress(user: "1234", host: "pbx.example.com")
+        let second = CustomerPartyAddress(user: "1234", host: "other.example.com")
+
+        XCTAssertEqual(first.kind, "sip")
+        XCTAssertNotEqual(first.normalizedValue, second.normalizedValue)
+    }
+
+    func testCustomerPartyAddressNormalizesEmail() {
+        let address = CustomerPartyAddress(
+            email: " Sales@Example.COM "
+        )
+
+        XCTAssertEqual(address.kind, "email")
+        XCTAssertEqual(address.normalizedValue, "sales@example.com")
+    }
+
     func testCallHistoryFiltersMatchExpectedRecords() {
         let contact = PresentationContact(
             title: "Any",

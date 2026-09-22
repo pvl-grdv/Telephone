@@ -283,6 +283,7 @@
               ],
             },
             { "path": "SettingsViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AccountSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "GeneralSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SoundSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "NetworkSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -307,8 +308,6 @@
                 "TelephoneTests/compile-sources",
               ],
             },
-            { "path": "AccountPreferencesViewController.h", "encoding": "utf8" },
-            { "path": "AccountPreferencesViewController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
           "kind": "group",
@@ -879,22 +878,6 @@
                 },
               ],
             }, {
-              "kind": "variant-group",
-              "name": "AccountPreferencesView.xib",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "Base.lproj/AccountPreferencesView.xib",
-                }, {
-                  "path": "en.lproj/AccountPreferencesView.strings",
-                }, {
-                  "path": "de.lproj/AccountPreferencesView.strings",
-                }, {
-                  "path": "ru.lproj/AccountPreferencesView.strings",
-                },
-              ],
             }, {
               "kind": "variant-group",
               "name": "AuthenticationFailure.xib",

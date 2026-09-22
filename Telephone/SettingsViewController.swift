@@ -11,16 +11,18 @@ import SwiftUI
 @objcMembers
 final class SettingsViewController: NSViewController {
     private let model: SettingsViewModel
+    private let accountSetupController: AccountSetupController
 
-    @objc(initWithAccountPreferencesViewController:soundEventTarget:userAgent:preferencesController:)
+    @objc(initWithSoundEventTarget:userAgent:preferencesController:)
     init(
-        accountPreferencesViewController: AccountPreferencesViewController,
         soundEventTarget: SoundPreferencesViewEventTarget,
         userAgent: AKSIPUserAgent,
         preferencesController: PreferencesController
     ) {
+        let accountModel = AccountSettingsModel(preferencesController: preferencesController)
+        accountSetupController = AccountSetupController()
         model = SettingsViewModel(
-            accountPreferencesViewController: accountPreferencesViewController,
+            accountModel: accountModel,
             soundModel: SoundSettingsModel(eventTarget: soundEventTarget, userAgent: userAgent),
             networkModel: NetworkSettingsModel(
                 userAgent: userAgent,
@@ -31,10 +33,30 @@ final class SettingsViewController: NSViewController {
         model.closeWindow = { [weak self] in
             self?.view.window?.performClose(nil)
         }
+        accountModel.presentAddAccount = { [weak self] in
+            self?.presentAccountSetup()
+        }
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    private func presentAccountSetup() {
+        guard let sheet = accountSetupController.window else { return }
+
+        accountSetupController.fullNameField.stringValue = ""
+        accountSetupController.domainField.stringValue = ""
+        accountSetupController.usernameField.stringValue = ""
+        accountSetupController.passwordField.stringValue = ""
+
+        accountSetupController.fullNameInvalidDataView.isHidden = true
+        accountSetupController.domainInvalidDataView.isHidden = true
+        accountSetupController.usernameInvalidDataView.isHidden = true
+        accountSetupController.passwordInvalidDataView.isHidden = true
+
+        sheet.makeFirstResponder(accountSetupController.fullNameField)
+        view.window?.beginSheet(sheet)
     }
 
     override func loadView() {
@@ -47,6 +69,10 @@ final class SettingsViewController: NSViewController {
 
     func updateSoundIO() {
         model.soundModel.updateSoundIO()
+    }
+
+    func reloadAccount(at index: Int) {
+        model.accountModel.reloadAccount(at: index)
     }
 
     func requestWindowClose() -> Bool {
@@ -94,7 +120,7 @@ private final class SettingsViewModel {
     var selection: SettingsSection = .general
     var showsNetworkSavePrompt = false
 
-    let accountPreferencesViewController: AccountPreferencesViewController
+    let accountModel: AccountSettingsModel
     let soundModel: SoundSettingsModel
     let networkModel: NetworkSettingsModel
 
@@ -103,11 +129,11 @@ private final class SettingsViewModel {
     private var pendingTransition: PendingSettingsTransition?
 
     init(
-        accountPreferencesViewController: AccountPreferencesViewController,
+        accountModel: AccountSettingsModel,
         soundModel: SoundSettingsModel,
         networkModel: NetworkSettingsModel
     ) {
-        self.accountPreferencesViewController = accountPreferencesViewController
+        self.accountModel = accountModel
         self.soundModel = soundModel
         self.networkModel = networkModel
     }
@@ -174,7 +200,7 @@ private struct SettingsRootView: View {
                 .tabItem { Label(SettingsSection.general.title, systemImage: SettingsSection.general.systemImage) }
                 .tag(SettingsSection.general)
 
-            LegacyAccountSettingsView(controller: model.accountPreferencesViewController)
+            AccountSettingsView(model: model.accountModel)
                 .tabItem { Label(SettingsSection.accounts.title, systemImage: SettingsSection.accounts.systemImage) }
                 .tag(SettingsSection.accounts)
 
@@ -219,14 +245,4 @@ private struct SettingsRootView: View {
             set: { model.requestSelection($0) }
         )
     }
-}
-
-private struct LegacyAccountSettingsView: NSViewControllerRepresentable {
-    let controller: AccountPreferencesViewController
-
-    func makeNSViewController(context: Context) -> AccountPreferencesViewController {
-        controller
-    }
-
-    func updateNSViewController(_ nsViewController: AccountPreferencesViewController, context: Context) {}
 }

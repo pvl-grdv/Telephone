@@ -303,3 +303,75 @@
 /* Network settings help text. */
 "Use the account proxy instead." = "Используйте прокси-сервер аккаунта.";
 
+/* Account settings toggle. */
+"Enable this account" = "Включить аккаунт";
+
+/* Account settings label. */
+"Description" = "Название";
+
+/* Account settings label. */
+"Full Name" = "Имя с фамилией";
+
+/* Account settings label. */
+"Domain" = "Домен";
+
+/* Account settings label. */
+"User Name" = "Пользователь";
+
+/* Account settings label. */
+"Password" = "Пароль";
+
+/* Account settings section. */
+"Account Information" = "Информация";
+
+/* Account settings section. */
+"Advanced" = "Дополнительно";
+
+/* Account settings toggle. */
+"Replace “+” with" = "Заменять «+» на";
+
+/* Account settings label. */
+"Reregister every" = "Регистрация каждые";
+
+/* Account settings unit. */
+"seconds" = "секунд";
+
+/* Enabled account editing hint. */
+"Disable account to change settings." = "Выключите аккаунт, чтобы поменять настройки.";
+
+/* Account settings label. */
+"Update IP address" = "Обновлять IP-адрес";
+
+/* Account settings label. */
+"SIP Transport" = "SIP-транспорт";
+
+/* Account settings label. */
+"IP Version" = "Версия IP";
+
+/* Account proxy toggle. */
+"Connect using proxy" = "Соединяться через прокси";
+
+/* Account settings label. */
+"Server" = "Сервер";
+
+/* Account settings label. */
+"Registry Server" = "Сервер регистраций";
+
+/* Account settings label. */
+"SIP Address" = "SIP-адрес";
+
+/* Account IP address update help text. */
+"Enabling this option may solve some audio problems." = "Может решить некоторые проблемы со звуком.";
+
+/* Account IP address update mode. */
+"Off" = "Выкл.";
+
+/* Account IP address update mode. */
+"Partial" = "Частично";
+
+/* Empty account settings title. */
+"No Account Selected" = "Аккаунт не выбран";
+
+/* Empty account settings description. */
+"Select an account to edit its settings." = "Выберите аккаунт, чтобы изменить его настройки.";
+

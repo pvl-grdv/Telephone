@@ -22,7 +22,7 @@
 #import "PreferencesControllerNotifications.h"
 #import "SoundIOPreferences.h"
 
-@class AKSIPUserAgent, AccountPreferencesViewController, SoundPreferencesViewEventTarget;
+@class AKSIPUserAgent, SoundPreferencesViewEventTarget;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,7 +31,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly, weak) id<PreferencesControllerDelegate> delegate;
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) SoundPreferencesViewEventTarget *soundPreferencesViewEventTarget;
-@property(nonatomic, readonly) AccountPreferencesViewController *accountPreferencesViewController;
 
 - (instancetype)initWithDelegate:(id<PreferencesControllerDelegate>)delegate
                        userAgent:(AKSIPUserAgent *)userAgent
@@ -39,6 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)showWindowCentered;
 - (void)showAccounts;
+- (void)reloadAccountAtIndex:(NSInteger)index;
 
 @end
 

@@ -303,3 +303,75 @@
 /* Network settings help text. */
 "Use the account proxy instead." = "Stattdessen nutzen Sie den Account-Proxy.";
 
+/* Account settings toggle. */
+"Enable this account" = "Diesen Account aktivieren";
+
+/* Account settings label. */
+"Description" = "Beschreibung";
+
+/* Account settings label. */
+"Full Name" = "Vollständiger Name";
+
+/* Account settings label. */
+"Domain" = "Domain";
+
+/* Account settings label. */
+"User Name" = "Benutzername";
+
+/* Account settings label. */
+"Password" = "Passwort";
+
+/* Account settings section. */
+"Account Information" = "Account-Informationen";
+
+/* Account settings section. */
+"Advanced" = "Erweitert";
+
+/* Account settings toggle. */
+"Replace “+” with" = "„+“ ersetzen durch";
+
+/* Account settings label. */
+"Reregister every" = "Registrierung alle";
+
+/* Account settings unit. */
+"seconds" = "Sekunden";
+
+/* Enabled account editing hint. */
+"Disable account to change settings." = "Deaktivieren Sie den Account, um Einstellungen zu ändern.";
+
+/* Account settings label. */
+"Update IP address" = "IP-Adresse aktualisieren";
+
+/* Account settings label. */
+"SIP Transport" = "SIP-Transport";
+
+/* Account settings label. */
+"IP Version" = "IP-Version";
+
+/* Account proxy toggle. */
+"Connect using proxy" = "Über Proxy verbinden";
+
+/* Account settings label. */
+"Server" = "Server";
+
+/* Account settings label. */
+"Registry Server" = "Registrar";
+
+/* Account settings label. */
+"SIP Address" = "SIP-Adresse";
+
+/* Account IP address update help text. */
+"Enabling this option may solve some audio problems." = "Aktivierung dieser Option kann manche Tonprobleme lösen.";
+
+/* Account IP address update mode. */
+"Off" = "Aus";
+
+/* Account IP address update mode. */
+"Partial" = "Teilweise";
+
+/* Empty account settings title. */
+"No Account Selected" = "Kein Account ausgewählt";
+
+/* Empty account settings description. */
+"Select an account to edit its settings." = "Wählen Sie einen Account aus, um seine Einstellungen zu bearbeiten.";
+

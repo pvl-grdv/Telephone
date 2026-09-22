@@ -28,7 +28,6 @@
 
 #import "AccountController.h"
 #import "AccountControllers.h"
-#import "AccountPreferencesViewController.h"
 #import "AccountSetupController.h"
 #import "ActiveAccountViewController.h"
 #import "AuthenticationFailureController.h"
@@ -661,10 +660,7 @@ NS_ASSUME_NONNULL_END
         account[AKSIPAccountKeys.username] = controller.account.username;
         accounts[index] = account;
         [defaults setObject:accounts forKey:UserDefaultsKeys.accounts];
-        AccountPreferencesViewController *viewController = self.preferencesController.accountPreferencesViewController;
-        if (viewController.accountsTable.selectedRow == index) {
-            [viewController populateFieldsForAccountAtIndex:index];
-        }
+        [self.preferencesController reloadAccountAtIndex:index];
     }
 }
 

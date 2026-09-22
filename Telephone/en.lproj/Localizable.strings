@@ -304,3 +304,75 @@
 /* Network settings help text. */
 "Use the account proxy instead." = "Use the account proxy instead.";
 
+/* Account settings toggle. */
+"Enable this account" = "Enable this account";
+
+/* Account settings label. */
+"Description" = "Description";
+
+/* Account settings label. */
+"Full Name" = "Full Name";
+
+/* Account settings label. */
+"Domain" = "Domain";
+
+/* Account settings label. */
+"User Name" = "User Name";
+
+/* Account settings label. */
+"Password" = "Password";
+
+/* Account settings section. */
+"Account Information" = "Account Information";
+
+/* Account settings section. */
+"Advanced" = "Advanced";
+
+/* Account settings toggle. */
+"Replace “+” with" = "Replace “+” with";
+
+/* Account settings label. */
+"Reregister every" = "Reregister every";
+
+/* Account settings unit. */
+"seconds" = "seconds";
+
+/* Enabled account editing hint. */
+"Disable account to change settings." = "Disable account to change settings.";
+
+/* Account settings label. */
+"Update IP address" = "Update IP address";
+
+/* Account settings label. */
+"SIP Transport" = "SIP Transport";
+
+/* Account settings label. */
+"IP Version" = "IP Version";
+
+/* Account proxy toggle. */
+"Connect using proxy" = "Connect using proxy";
+
+/* Account settings label. */
+"Server" = "Server";
+
+/* Account settings label. */
+"Registry Server" = "Registry Server";
+
+/* Account settings label. */
+"SIP Address" = "SIP Address";
+
+/* Account IP address update help text. */
+"Enabling this option may solve some audio problems." = "Enabling this option may solve some audio problems.";
+
+/* Account IP address update mode. */
+"Off" = "Off";
+
+/* Account IP address update mode. */
+"Partial" = "Partial";
+
+/* Empty account settings title. */
+"No Account Selected" = "No Account Selected";
+
+/* Empty account settings description. */
+"Select an account to edit its settings." = "Select an account to edit its settings.";
+

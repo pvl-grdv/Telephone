@@ -18,7 +18,6 @@
 
 #import "PreferencesController.h"
 
-#import "AccountPreferencesViewController.h"
 #import "Telephone-Swift.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -89,15 +88,11 @@ NS_ASSUME_NONNULL_END
     _userAgent = userAgent;
     _soundPreferencesViewEventTarget = soundPreferencesViewEventTarget;
 
-    _accountPreferencesViewController = [[AccountPreferencesViewController alloc] init];
-    _accountPreferencesViewController.preferencesController = self;
-
     _settingsViewController =
         [[SettingsViewController alloc]
-            initWithAccountPreferencesViewController:_accountPreferencesViewController
-                                    soundEventTarget:soundPreferencesViewEventTarget
-                                           userAgent:userAgent
-                               preferencesController:self];
+            initWithSoundEventTarget:soundPreferencesViewEventTarget
+                           userAgent:userAgent
+               preferencesController:self];
 
     NSWindow *window =
         [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 720, 560)
@@ -129,6 +124,10 @@ NS_ASSUME_NONNULL_END
 
 - (void)showAccounts {
     [self.settingsViewController showAccounts];
+}
+
+- (void)reloadAccountAtIndex:(NSInteger)index {
+    [self.settingsViewController reloadAccountAt:index];
 }
 
 #pragma mark - SoundIOPreferences

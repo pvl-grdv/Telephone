@@ -35,4 +35,5 @@ extension RingtonePlaybackCallEventTarget: CallEventTarget {
 
     public func didMake(_ call: Call) {}
     public func didReceive(_ call: Call) {}
+    public func didConnect(_ call: Call) {}
 }

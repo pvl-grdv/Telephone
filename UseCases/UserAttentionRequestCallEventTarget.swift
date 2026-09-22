@@ -29,6 +29,10 @@ extension UserAttentionRequestCallEventTarget: CallEventTarget {
         request.start()
     }
 
+    public func didConnect(_ call: Call) {
+        request.stop()
+    }
+
     public func didDisconnect(_ call: Call) {
         request.stop()
     }

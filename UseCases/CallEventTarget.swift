@@ -20,5 +20,6 @@ public protocol CallEventTarget {
     func didMake(_ call: Call)
     func didReceive(_ call: Call)
     func isConnecting(_ call: Call)
+    func didConnect(_ call: Call)
     func didDisconnect(_ call: Call)
 }

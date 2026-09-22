@@ -3,7 +3,7 @@
 "256.title" = "Telefonnummern automatisch formatieren";
 
 /* Class = "NSButtonCell"; title = "Pause Music and Spotify during call"; ObjectID = "521"; */
-"521.title" = "Bei Anruf Musik und Spotify pausieren";
+"521.title" = "Medien während verbundener Anrufe pausieren";
 
 /* Class = "NSButtonCell"; title = "Automatically close call windows"; ObjectID = "525"; */
 "525.title" = "Anruffenster automatisch schließen";

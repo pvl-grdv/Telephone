@@ -24,7 +24,7 @@ import UseCasesTestDoubles
 struct SimpleMusicPlayerSettingsTests {
     @Test func getsFromSettingsWithExpectedKey() {
         let settings = SettingsFake()
-        settings.set(true, forKey: SettingsKeys.pauseITunes)
+        settings.set(true, forKey: SettingsKeys.pauseMedia)
         let sut = SimpleMusicPlayerSettings(settings: settings)
 
         #expect(sut.shouldPause)
@@ -36,6 +36,6 @@ struct SimpleMusicPlayerSettingsTests {
 
         sut.shouldPause = true
 
-        #expect(settings.bool(forKey: SettingsKeys.pauseITunes))
+        #expect(settings.bool(forKey: SettingsKeys.pauseMedia))
     }
 }

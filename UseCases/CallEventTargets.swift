@@ -37,6 +37,10 @@ extension CallEventTargets: CallEventTarget {
         targets.forEach { $0.isConnecting(call) }
     }
 
+    public func didConnect(_ call: Call) {
+        targets.forEach { $0.didConnect(call) }
+    }
+
     public func didDisconnect(_ call: Call) {
         targets.forEach { $0.didDisconnect(call) }
     }

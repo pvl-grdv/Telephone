@@ -371,6 +371,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
 - (void)showIncomingCallView {
     [self showViewController:self.incomingCallViewController];
+    [self.window makeFirstResponder:self.incomingCallViewController.acceptCallButton];
 }
 
 - (void)showViewController:(NSViewController *)viewController {

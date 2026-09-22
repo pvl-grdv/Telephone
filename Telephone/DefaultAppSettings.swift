@@ -77,7 +77,7 @@ private func makeDefaults(for localization: String) -> [String: Any] {
         UserDefaultsKeys.voiceActivityDetection: false,
 
         SettingsKeys.ringingSound: "Purr",
-        SettingsKeys.pauseITunes: true,
+        SettingsKeys.pauseMedia: true,
         SettingsKeys.significantPhoneNumberLength: 9,
     ]
     if localization == "de" {

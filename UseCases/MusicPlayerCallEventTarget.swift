@@ -10,11 +10,6 @@
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
 public final class MusicPlayerCallEventTarget {
     private let player: MusicPlayer
@@ -25,11 +20,7 @@ public final class MusicPlayerCallEventTarget {
 }
 
 extension MusicPlayerCallEventTarget: CallEventTarget {
-    public func didMake(_ call: Call) {
-        player.pause()
-    }
-
-    public func didReceive(_ call: Call) {
+    public func didConnect(_ call: Call) {
         player.pause()
     }
 
@@ -37,5 +28,7 @@ extension MusicPlayerCallEventTarget: CallEventTarget {
         player.resume()
     }
 
+    public func didMake(_ call: Call) {}
+    public func didReceive(_ call: Call) {}
     public func isConnecting(_ call: Call) {}
 }

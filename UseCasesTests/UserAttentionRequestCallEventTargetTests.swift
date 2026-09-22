@@ -30,6 +30,15 @@ final class UserAttentionRequestCallEventTargetTests: XCTestCase {
         XCTAssertTrue(request.didStart)
     }
 
+    func testStopsOnDidConnect() {
+        let request = UserAttentionRequestSpy()
+        let sut = UserAttentionRequestCallEventTarget(request: request)
+
+        sut.didConnect(CallTestFactory().make())
+
+        XCTAssertTrue(request.didStop)
+    }
+
     func testStopsOnDidDisconnect() {
         let request = UserAttentionRequestSpy()
         let sut = UserAttentionRequestCallEventTarget(request: request)

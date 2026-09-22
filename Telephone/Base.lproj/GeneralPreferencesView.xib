@@ -28,7 +28,7 @@
                 </button>
                 <button translatesAutoresizingMaskIntoConstraints="NO" id="520">
                     <rect key="frame" x="131" y="64" width="238" height="16"/>
-                    <buttonCell key="cell" type="check" title="Pause Music and Spotify during call" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="521">
+                    <buttonCell key="cell" type="check" title="Pause media during connected calls" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="521">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>

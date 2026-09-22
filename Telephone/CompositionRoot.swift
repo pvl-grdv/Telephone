@@ -161,7 +161,7 @@ final class CompositionRoot: NSObject {
                     MusicPlayerCallEventTarget(
                         player: SettingsMusicPlayer(
                             origin: CallsMusicPlayer(
-                                origin: AvailableMusicPlayers(factory: MusicPlayerFactory()), calls: userAgent
+                                origin: SystemMediaPlayer(), calls: userAgent
                             ),
                             settings: SimpleMusicPlayerSettings(settings: defaults)
                         )

@@ -29,6 +29,7 @@ final class AKSIPCallEventSource {
         center.addObserver(self, selector: #selector(didMake), name: .AKSIPCallCalling, object: nil)
         center.addObserver(self, selector: #selector(didReceive), name: .AKSIPCallIncoming, object: nil)
         center.addObserver(self, selector: #selector(isConnecting), name: .AKSIPCallConnecting, object: nil)
+        center.addObserver(self, selector: #selector(didConnect), name: .AKSIPCallDidConfirm, object: nil)
         center.addObserver(self, selector: #selector(didDisconnect), name: .AKSIPCallDidDisconnect, object: nil)
     }
 
@@ -46,6 +47,10 @@ final class AKSIPCallEventSource {
 
     @objc private func isConnecting(_ notification: Notification) {
         target.isConnecting(notification.object as! Call)
+    }
+
+    @objc private func didConnect(_ notification: Notification) {
+        target.didConnect(notification.object as! Call)
     }
 
     @objc private func didDisconnect(_ notification: Notification) {

@@ -19,7 +19,7 @@ These rules are authoritative for automated coding agents working on this reposi
 - CI must pass both unit tests and the local app build before integrating.
 - After CI is green, integrate the final result into `master` as one clean logical commit.
 - Do not require or create a pull request for the normal solo-development workflow.
-- After integration, the work branch is disposable and should be deleted when branch-deletion tooling is available. If deletion is unavailable, report that one manual cleanup step without reopening workflow discussion.
+- After integration, the work branch is disposable. The `Cleanup merged work branches` GitHub Actions workflow automatically deletes integrated `work/**` branches after a push to `master`. Do not ask the user to clean these branches up manually unless that workflow reports a deletion failure.
 
 ## Change policy
 
@@ -29,6 +29,7 @@ These rules are authoritative for automated coding agents working on this reposi
 - Preserve PJSIP/CoreAudio behavior unless the task explicitly targets that behavior.
 - For macOS API availability, trust the actual project target and CI compiler over assumptions based on iOS APIs.
 - If a speculative modernization fails platform availability or CI, revert it rather than adding compatibility complexity without a product need.
+- System media pause intentionally uses the private macOS MediaRemote framework in this personal fork. Keep that dependency isolated in `SystemMediaPlayer`, load it dynamically, and let it degrade to a no-op if unavailable. Do not reintroduce per-app Apple Events/ScriptingBridge integrations unless a demonstrated runtime regression requires a fallback.
 
 ## Build and validation
 

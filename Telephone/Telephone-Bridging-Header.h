@@ -13,7 +13,7 @@
 #import "AKSIPCallNotifications.h"
 #import "AKSIPURI.h"
 #import "AKSIPUserAgent.h"
-#import "MusicPlayerFactory.h"
+#import "SystemMediaPlayer.h"
 #import "NameServers.h"
 #import "PreferencesController.h"
 #import "SoundIOPreferences.h"

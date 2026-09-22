@@ -33,4 +33,5 @@ extension CallHistoryCallEventTarget: CallEventTarget {
     public func didMake(_ call: Call) {}
     public func didReceive(_ call: Call) {}
     public func isConnecting(_ call: Call) {}
+    public func didConnect(_ call: Call) {}
 }

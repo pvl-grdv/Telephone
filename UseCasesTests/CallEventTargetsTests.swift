@@ -63,6 +63,20 @@ final class CallEventTargetsTests: XCTestCase {
         XCTAssertTrue(second.invokedCall === call)
     }
 
+    func testCallsDidConnectWithPassedArgumentOnAllTargets() {
+        let first = CallEventTargetSpy()
+        let second = CallEventTargetSpy()
+        let call = CallTestFactory().make()
+        let sut = CallEventTargets(targets: [first, second])
+
+        sut.didConnect(call)
+
+        XCTAssertTrue(first.didCallDidConnect)
+        XCTAssertTrue(second.didCallDidConnect)
+        XCTAssertTrue(first.invokedCall === call)
+        XCTAssertTrue(second.invokedCall === call)
+    }
+
     func testCallsDidDisconnectWithPassedArgumentOnAllTargets() {
         let first = CallEventTargetSpy()
         let second = CallEventTargetSpy()

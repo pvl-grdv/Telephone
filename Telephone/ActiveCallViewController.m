@@ -117,6 +117,12 @@
     self.muteButton.buttonType = NSButtonTypeToggle;
     self.holdButton.buttonType = NSButtonTypeToggle;
 
+    self.view.nextKeyView = self.muteButton;
+    self.muteButton.nextKeyView = self.holdButton;
+    self.holdButton.nextKeyView = self.transferButton;
+    self.transferButton.nextKeyView = self.hangUpButton;
+    self.hangUpButton.nextKeyView = self.view;
+
     [NSLayoutConstraint activateConstraints:@[
         [self.transferButton.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-20],
         [self.transferButton.centerYAnchor constraintEqualToAnchor:self.statusField.centerYAnchor],

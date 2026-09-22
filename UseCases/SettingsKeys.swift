@@ -22,6 +22,7 @@ public enum SettingsKeys {
     public static let ringtoneOutput = "RingtoneOutput"
     public static let ringingSound = "RingingSound"
 
-    public static let pauseITunes = "PauseITunes"
+    // Keep the persisted key for compatibility with existing installs.
+    public static let pauseMedia = "PauseITunes"
     public static let significantPhoneNumberLength = "SignificantPhoneNumberLength"
 }

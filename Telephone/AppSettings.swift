@@ -129,7 +129,7 @@ private let settingsKeys = [
     SettingsKeys.soundOutput: "String",
     SettingsKeys.ringtoneOutput: "String",
     SettingsKeys.ringingSound: "String",
-    SettingsKeys.pauseITunes: "Bool",
+    SettingsKeys.pauseMedia: "Bool",
     SettingsKeys.significantPhoneNumberLength: "Int"
 ]
 

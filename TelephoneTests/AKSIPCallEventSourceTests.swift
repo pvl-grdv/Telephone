@@ -60,6 +60,19 @@ class AKSIPCallEventSourceTests: XCTestCase {
         }
     }
 
+    func testCallsDidConnect() {
+        let center = NotificationCenter.default
+        let target = CallEventTargetSpy()
+        let call = CallTestFactory().make()
+        withExtendedLifetime(AKSIPCallEventSource(center: center, target: target)) {
+
+            center.post(Notification(name: .AKSIPCallDidConfirm, object: call, userInfo: nil))
+
+            XCTAssertTrue(target.didCallDidConnect)
+            XCTAssertTrue(target.invokedCall === call)
+        }
+    }
+
     func testCallsDidDisconnect() {
         let center = NotificationCenter.default
         let target = CallEventTargetSpy()

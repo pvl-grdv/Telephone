@@ -66,6 +66,9 @@
     self.declineCallButton.toolTip = declineTitle;
     self.declineCallButton.accessibilityLabel = declineTitle;
     self.declineCallButton.keyEquivalent = @"\033";
+
+    self.acceptCallButton.nextKeyView = self.declineCallButton;
+    self.declineCallButton.nextKeyView = self.acceptCallButton;
 }
 
 - (void)removeObservations {

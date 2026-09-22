@@ -28,10 +28,10 @@ public final class SimpleMusicPlayerSettings {
 extension SimpleMusicPlayerSettings: MusicPlayerSettings {
     public var shouldPause: Bool {
         get {
-            return settings.bool(forKey: SettingsKeys.pauseITunes)
+            return settings.bool(forKey: SettingsKeys.pauseMedia)
         }
         set {
-            settings.set(newValue, forKey: SettingsKeys.pauseITunes)
+            settings.set(newValue, forKey: SettingsKeys.pauseMedia)
         }
     }
 }

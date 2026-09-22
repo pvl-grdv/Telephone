@@ -60,8 +60,19 @@ final class CallHistoryViewEventTargetFactory {
                 )
             ),
             recordRemoveAll: CallHistoryRecordRemoveAllUseCase(history: history),
-            recordRemove: DefaultCallHistoryRecordRemoveUseCaseFactory(history: history),
-            callMake: DefaultCallHistoryCallMakeUseCaseFactory(account: account, history: history, factory: factory)
+            removeRecord: { identifier in
+                CallHistoryRecordRemoveUseCase(identifier: identifier, history: history).execute()
+            },
+            makeCall: { identifier in
+                CallHistoryRecordGetUseCase(
+                    identifier: identifier,
+                    history: history,
+                    output: ContactCallHistoryRecordGetUseCase(
+                        factory: factory,
+                        output: CallHistoryCallMakeUseCase(account: account)
+                    )
+                ).execute()
+            }
         )
         await history.updateTarget(WeakCallHistoryEventTarget(origin: result))
         dayChangeEventTargets.add(WeakDayChangeEventTarget(origin: result))

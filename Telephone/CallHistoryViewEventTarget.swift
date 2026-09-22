@@ -10,11 +10,6 @@
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
 import UseCases
 
@@ -22,17 +17,19 @@ import UseCases
 final class CallHistoryViewEventTarget: NSObject {
     private let recordsGet: UseCase
     private let recordRemoveAll: UseCase
-    private let recordRemove: CallHistoryRecordRemoveUseCaseFactory
-    private let callMake: CallHistoryCallMakeUseCaseFactory
+    private let removeRecord: (String) -> Void
+    private let makeCall: (String) -> Void
 
-    init(recordsGet: UseCase,
-         recordRemoveAll: UseCase,
-         recordRemove: CallHistoryRecordRemoveUseCaseFactory,
-         callMake: CallHistoryCallMakeUseCaseFactory) {
+    init(
+        recordsGet: UseCase,
+        recordRemoveAll: UseCase,
+        removeRecord: @escaping (String) -> Void,
+        makeCall: @escaping (String) -> Void
+    ) {
         self.recordsGet = recordsGet
         self.recordRemoveAll = recordRemoveAll
-        self.recordRemove = recordRemove
-        self.callMake = callMake
+        self.removeRecord = removeRecord
+        self.makeCall = makeCall
     }
 
     func shouldReloadData() {
@@ -44,13 +41,12 @@ final class CallHistoryViewEventTarget: NSObject {
     }
 
     func didPickRecord(withIdentifier identifier: String) {
-        callMake.make(identifier: identifier).execute()
+        makeCall(identifier)
     }
 
     func shouldRemoveRecord(withIdentifier identifier: String) {
-        recordRemove.make(identifier: identifier).execute()
+        removeRecord(identifier)
     }
-
 }
 
 nonisolated extension CallHistoryViewEventTarget: CallHistoryEventTarget {

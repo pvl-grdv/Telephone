@@ -250,3 +250,57 @@
 /* Call history context menu item. */
 "Delete All…" = "Delete All…";
 
+/* General settings toggle. */
+"Automatically format phone numbers" = "Automatically format phone numbers";
+
+/* General settings toggle. */
+"Pause media during connected calls" = "Pause media during connected calls";
+
+/* General settings toggle. */
+"Automatically close call windows" = "Automatically close call windows";
+
+/* General settings toggle. */
+"Call waiting" = "Call waiting";
+
+/* Sound settings label. */
+"Sound Input" = "Sound Input";
+
+/* Sound settings label. */
+"Sound Output" = "Sound Output";
+
+/* Sound settings label. */
+"Ringtone Output" = "Ringtone Output";
+
+/* Sound settings label. */
+"Ringtone" = "Ringtone";
+
+/* Sound settings help text. */
+"Place ringtones in ~/Library/Sounds" = "Place ringtones in ~/Library/Sounds";
+
+/* Sound settings toggle. */
+"Use only G.711 codec" = "Use only G.711 codec";
+
+/* Network settings label. */
+"Local SIP Port" = "Local SIP Port";
+
+/* Network settings help text. */
+"Leave empty to use any available port." = "Leave empty to use any available port.";
+
+/* Network settings label. */
+"STUN Server" = "STUN Server";
+
+/* Network settings toggle. */
+"Use ICE" = "Use ICE";
+
+/* Network settings toggle. */
+"Use DNS SRV" = "Use DNS SRV";
+
+/* Network settings label. */
+"Outbound Proxy" = "Outbound Proxy";
+
+/* Network settings port field. */
+"Port" = "Port";
+
+/* Network settings help text. */
+"Use the account proxy instead." = "Use the account proxy instead.";
+

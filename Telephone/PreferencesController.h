@@ -22,47 +22,20 @@
 #import "PreferencesControllerNotifications.h"
 #import "SoundIOPreferences.h"
 
-@class SoundPreferencesViewEventTarget;
+@class AKSIPUserAgent, AccountPreferencesViewController, SoundPreferencesViewEventTarget;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class AKSIPUserAgent;
-@class GeneralPreferencesViewController, AccountPreferencesViewController;
-@class SoundPreferencesViewController, NetworkPreferencesViewController;
-
-// A preferences controller.
 @interface PreferencesController : NSWindowController <SoundIOPreferences>
 
 @property(nonatomic, readonly, weak) id<PreferencesControllerDelegate> delegate;
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) SoundPreferencesViewEventTarget *soundPreferencesViewEventTarget;
-
-// General preferences view controller.
-@property(nonatomic, readonly) GeneralPreferencesViewController *generalPreferencesViewController;
-
-// Account preferences view controller.
 @property(nonatomic, readonly) AccountPreferencesViewController *accountPreferencesViewController;
-
-// Sound preferences view controller.
-@property(nonatomic, readonly) SoundPreferencesViewController *soundPreferencesViewController;
-
-// Network preferences view controller.
-@property(nonatomic, readonly) NetworkPreferencesViewController *networkPreferencesViewController;
-
-// Outlets.
-//
-@property(nonatomic, weak) IBOutlet NSToolbar *toolbar;
-@property(nonatomic, weak) IBOutlet NSToolbarItem *generalToolbarItem;
-@property(nonatomic, weak) IBOutlet NSToolbarItem *accountsToolbarItem;
-@property(nonatomic, weak) IBOutlet NSToolbarItem *soundToolbarItem;
-@property(nonatomic, weak) IBOutlet NSToolbarItem *networkToolbarItem;
 
 - (instancetype)initWithDelegate:(id<PreferencesControllerDelegate>)delegate
                        userAgent:(AKSIPUserAgent *)userAgent
  soundPreferencesViewEventTarget:(SoundPreferencesViewEventTarget *)soundPreferencesViewEventTarget;
-
-// Changes window's content view.
-- (IBAction)changeView:(id)sender;
 
 - (void)showWindowCentered;
 - (void)showAccounts;

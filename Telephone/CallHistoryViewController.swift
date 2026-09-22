@@ -267,6 +267,7 @@ extension CallHistoryViewController: NSMenuItemValidation {
 private struct CallHistoryScreen: View {
     @Bindable var model: CallHistoryViewModel
     @FocusState private var searchFocused: Bool
+    @FocusState private var historyFocused: Bool
 
     let call: (String) -> Void
     let copy: (String) -> Void
@@ -341,11 +342,18 @@ private struct CallHistoryScreen: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            List(selection: $model.selection) {
-                ForEach(model.records, id: \.identifier) { record in
-                    CallHistoryRow(record: record)
-                        .tag(record.identifier)
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(model.records, id: \.identifier) { record in
+                        CallHistoryRow(
+                            record: record,
+                            isSelected: model.selection == record.identifier
+                        )
                         .contentShape(Rectangle())
+                        .onTapGesture {
+                            model.selection = record.identifier
+                            historyFocused = true
+                        }
                         .onTapGesture(count: 2) {
                             model.selectAndCall(record, action: call)
                         }
@@ -371,15 +379,40 @@ private struct CallHistoryScreen: View {
                                 _ = model.requestDeleteAll()
                             }
                         }
+
+                        Divider()
+                            .padding(.leading, 32)
+                    }
                 }
+                .padding(.horizontal, 8)
             }
-            .listStyle(.inset)
+            .focusable()
+            .focused($historyFocused)
+            .onMoveCommand(perform: moveSelection)
             .onKeyPress(.return) {
                 model.callSelected(action: call) ? .handled : .ignored
             }
             .onKeyPress(.delete) {
                 model.requestDeleteSelected() ? .handled : .ignored
             }
+        }
+    }
+
+    private func moveSelection(_ direction: MoveCommandDirection) {
+        let records = model.records
+        guard !records.isEmpty else { return }
+
+        let currentIndex = model.selection.flatMap { selection in
+            records.firstIndex { $0.identifier == selection }
+        } ?? 0
+
+        switch direction {
+        case .up:
+            model.selection = records[max(0, currentIndex - 1)].identifier
+        case .down:
+            model.selection = records[min(records.count - 1, currentIndex + 1)].identifier
+        default:
+            break
         }
     }
 
@@ -397,44 +430,58 @@ private struct CallHistoryScreen: View {
 
 private struct CallHistoryRow: View {
     let record: PresentationCallHistoryRecord
+    let isSelected: Bool
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: record.isIncoming ? "phone.arrow.down.left.fill" : "phone.arrow.up.right.fill")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: 16)
+            Group {
+                if record.isIncoming {
+                    Color.clear
+                } else {
+                    Image(systemName: "phone.arrow.up.right.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 16, height: 16)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(record.contact.title)
                     .font(.body.weight(.medium))
                     .foregroundStyle(Color(nsColor: record.contact.color))
                     .lineLimit(1)
+                    .truncationMode(.tail)
                     .help(record.contact.tooltip)
 
-                if !record.contact.label.isEmpty {
-                    Text(record.contact.label)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
+                Text(record.contact.label)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .frame(height: 14, alignment: .leading)
             }
-
-            Spacer(minLength: 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text(record.date)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.tail)
 
-                if !record.duration.isEmpty {
-                    Text(record.duration)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
+                Text(record.duration)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .frame(height: 14, alignment: .trailing)
+            }
+            .frame(width: 120, alignment: .trailing)
+        }
+        .frame(height: 44)
+        .padding(.horizontal, 4)
+        .background {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.accentColor.opacity(0.14))
             }
         }
-        .padding(.vertical, 3)
     }
 }

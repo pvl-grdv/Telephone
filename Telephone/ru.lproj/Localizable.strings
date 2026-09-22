@@ -249,3 +249,57 @@
 /* Call history context menu item. */
 "Delete All…" = "Удалить все…";
 
+/* General settings toggle. */
+"Automatically format phone numbers" = "Форматировать телефонные номера";
+
+/* General settings toggle. */
+"Pause media during connected calls" = "Приостанавливать медиа во время разговора";
+
+/* General settings toggle. */
+"Automatically close call windows" = "Автоматически закрывать окно звонка";
+
+/* General settings toggle. */
+"Call waiting" = "Ожидание вызова";
+
+/* Sound settings label. */
+"Sound Input" = "Звуковой вход";
+
+/* Sound settings label. */
+"Sound Output" = "Звуковой выход";
+
+/* Sound settings label. */
+"Ringtone Output" = "Выход рингтона";
+
+/* Sound settings label. */
+"Ringtone" = "Рингтон";
+
+/* Sound settings help text. */
+"Place ringtones in ~/Library/Sounds" = "Рингтоны поместите в папку ~/Библиотеки/Sounds";
+
+/* Sound settings toggle. */
+"Use only G.711 codec" = "Использовать только кодек G.711";
+
+/* Network settings label. */
+"Local SIP Port" = "Локальный SIP-порт";
+
+/* Network settings help text. */
+"Leave empty to use any available port." = "Для автоматического назначения порта оставьте поле пустым.";
+
+/* Network settings label. */
+"STUN Server" = "STUN-сервер";
+
+/* Network settings toggle. */
+"Use ICE" = "Использовать ICE";
+
+/* Network settings toggle. */
+"Use DNS SRV" = "Использовать DNS SRV";
+
+/* Network settings label. */
+"Outbound Proxy" = "Общий прокси";
+
+/* Network settings port field. */
+"Port" = "Порт";
+
+/* Network settings help text. */
+"Use the account proxy instead." = "Используйте прокси-сервер аккаунта.";
+

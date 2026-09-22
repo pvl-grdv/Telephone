@@ -249,3 +249,57 @@
 /* Call history context menu item. */
 "Delete All…" = "Alle löschen …";
 
+/* General settings toggle. */
+"Automatically format phone numbers" = "Telefonnummern automatisch formatieren";
+
+/* General settings toggle. */
+"Pause media during connected calls" = "Medien während verbundener Anrufe pausieren";
+
+/* General settings toggle. */
+"Automatically close call windows" = "Anruffenster automatisch schließen";
+
+/* General settings toggle. */
+"Call waiting" = "Anklopfen";
+
+/* Sound settings label. */
+"Sound Input" = "Toneingabe";
+
+/* Sound settings label. */
+"Sound Output" = "Tonausgabe";
+
+/* Sound settings label. */
+"Ringtone Output" = "Klingeltonausgabe";
+
+/* Sound settings label. */
+"Ringtone" = "Klingelton";
+
+/* Sound settings help text. */
+"Place ringtones in ~/Library/Sounds" = "Speichern Sie Klingeltöne in ~/Library/Sounds";
+
+/* Sound settings toggle. */
+"Use only G.711 codec" = "Nur G.711-Codec verwenden";
+
+/* Network settings label. */
+"Local SIP Port" = "Lokaler SIP-Port";
+
+/* Network settings help text. */
+"Leave empty to use any available port." = "Wenn leer, wird automatisch ein verfügbarer Port verwendet.";
+
+/* Network settings label. */
+"STUN Server" = "STUN-Server";
+
+/* Network settings toggle. */
+"Use ICE" = "ICE verwenden";
+
+/* Network settings toggle. */
+"Use DNS SRV" = "DNS SRV verwenden";
+
+/* Network settings label. */
+"Outbound Proxy" = "SIP-Proxy";
+
+/* Network settings port field. */
+"Port" = "Port";
+
+/* Network settings help text. */
+"Use the account proxy instead." = "Stattdessen nutzen Sie den Account-Proxy.";
+

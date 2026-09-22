@@ -18,161 +18,106 @@
 
 #import "PreferencesController.h"
 
-#import "AKNSWindow+Resizing.h"
-
 #import "AccountPreferencesViewController.h"
-#import "GeneralPreferencesViewController.h"
-#import "NetworkPreferencesViewController.h"
-#import "SoundPreferencesViewController.h"
+#import "Telephone-Swift.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface PreferencesController () <NSWindowDelegate>
+
+@property(nonatomic, readonly) SettingsViewController *settingsViewController;
+
+@end
+
+NS_ASSUME_NONNULL_END
 
 @implementation PreferencesController
-
-@synthesize generalPreferencesViewController = _generalPreferencesViewController;
-@synthesize accountPreferencesViewController = _accountPreferencesViewController;
-@synthesize soundPreferencesViewController = _soundPreferencesViewController;
-@synthesize networkPreferencesViewController = _networkPreferencesViewController;
 
 - (void)setDelegate:(id)aDelegate {
     if (_delegate == aDelegate) {
         return;
     }
-    
-    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-    
-    if (_delegate != nil)
-        [nc removeObserver:_delegate name:nil object:self];
-    
+
+    NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+
+    if (_delegate != nil) {
+        [center removeObserver:_delegate name:nil object:self];
+    }
+
     if (aDelegate != nil) {
         if ([aDelegate respondsToSelector:@selector(preferencesControllerDidRemoveAccount:)]) {
-            [nc addObserver:aDelegate
-                   selector:@selector(preferencesControllerDidRemoveAccount:)
-                       name:AKPreferencesControllerDidRemoveAccountNotification
-                     object:self];
+            [center addObserver:aDelegate
+                      selector:@selector(preferencesControllerDidRemoveAccount:)
+                          name:AKPreferencesControllerDidRemoveAccountNotification
+                        object:self];
         }
-        
+
         if ([aDelegate respondsToSelector:@selector(preferencesControllerDidChangeAccountEnabled:)]) {
-            [nc addObserver:aDelegate
-                   selector:@selector(preferencesControllerDidChangeAccountEnabled:)
-                       name:AKPreferencesControllerDidChangeAccountEnabledNotification
-                     object:self];
+            [center addObserver:aDelegate
+                      selector:@selector(preferencesControllerDidChangeAccountEnabled:)
+                          name:AKPreferencesControllerDidChangeAccountEnabledNotification
+                        object:self];
         }
-        
+
         if ([aDelegate respondsToSelector:@selector(preferencesControllerDidSwapAccounts:)]) {
-            [nc addObserver:aDelegate
-                   selector:@selector(preferencesControllerDidSwapAccounts:)
-                       name:AKPreferencesControllerDidSwapAccountsNotification
-                     object:self];
+            [center addObserver:aDelegate
+                      selector:@selector(preferencesControllerDidSwapAccounts:)
+                          name:AKPreferencesControllerDidSwapAccountsNotification
+                        object:self];
         }
-        
+
         if ([aDelegate respondsToSelector:@selector(preferencesControllerDidChangeNetworkSettings:)]) {
-            [nc addObserver:aDelegate
-                   selector:@selector(preferencesControllerDidChangeNetworkSettings:)
-                       name:AKPreferencesControllerDidChangeNetworkSettingsNotification
-                     object:self];
+            [center addObserver:aDelegate
+                      selector:@selector(preferencesControllerDidChangeNetworkSettings:)
+                          name:AKPreferencesControllerDidChangeNetworkSettingsNotification
+                        object:self];
         }
     }
-    
+
     _delegate = aDelegate;
-}
-
-- (GeneralPreferencesViewController *)generalPreferencesViewController {
-    if (_generalPreferencesViewController == nil) {
-        _generalPreferencesViewController = [[GeneralPreferencesViewController alloc] init];
-    }
-    return _generalPreferencesViewController;
-}
-
-- (AccountPreferencesViewController *)accountPreferencesViewController {
-    if (_accountPreferencesViewController == nil) {
-        _accountPreferencesViewController = [[AccountPreferencesViewController alloc] init];
-        [_accountPreferencesViewController setPreferencesController:self];
-    }
-    return _accountPreferencesViewController;
-}
-
-- (SoundPreferencesViewController *)soundPreferencesViewController {
-    if (![self isSoundPreferencesViewControllerLoaded]) {
-        _soundPreferencesViewController
-            = [[SoundPreferencesViewController alloc] initWithEventTarget:_soundPreferencesViewEventTarget
-                                                                userAgent:self.userAgent];
-    }
-    return _soundPreferencesViewController;
-}
-
-- (NetworkPreferencesViewController *)networkPreferencesViewController {
-    if (_networkPreferencesViewController == nil) {
-        _networkPreferencesViewController
-            = [[NetworkPreferencesViewController alloc] initWithPreferencesController:self userAgent:self.userAgent];
-    }
-    return _networkPreferencesViewController;
-}
-
-- (BOOL)isSoundPreferencesViewControllerLoaded {
-    return _soundPreferencesViewController != nil;
 }
 
 - (instancetype)initWithDelegate:(id<PreferencesControllerDelegate>)delegate
                        userAgent:(AKSIPUserAgent *)userAgent
  soundPreferencesViewEventTarget:(SoundPreferencesViewEventTarget *)soundPreferencesViewEventTarget {
-    if ((self = [super initWithWindowNibName:@"Preferences"])) {
-        self.delegate = delegate;
-        _userAgent = userAgent;
-        _soundPreferencesViewEventTarget = soundPreferencesViewEventTarget;
+    self = [super initWithWindow:nil];
+    if (self == nil) {
+        return nil;
     }
+
+    self.delegate = delegate;
+    _userAgent = userAgent;
+    _soundPreferencesViewEventTarget = soundPreferencesViewEventTarget;
+
+    _accountPreferencesViewController = [[AccountPreferencesViewController alloc] init];
+    _accountPreferencesViewController.preferencesController = self;
+
+    _settingsViewController =
+        [[SettingsViewController alloc]
+            initWithAccountPreferencesViewController:_accountPreferencesViewController
+                                    soundEventTarget:soundPreferencesViewEventTarget
+                                           userAgent:userAgent
+                               preferencesController:self];
+
+    NSWindow *window =
+        [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 720, 560)
+                                    styleMask:NSWindowStyleMaskTitled |
+                                              NSWindowStyleMaskClosable |
+                                              NSWindowStyleMaskResizable
+                                      backing:NSBackingStoreBuffered
+                                        defer:NO];
+    window.title = NSLocalizedString(@"Telephone Settings", @"Settings default window title.");
+    window.releasedWhenClosed = NO;
+    window.contentMinSize = NSMakeSize(650, 480);
+    window.contentViewController = _settingsViewController;
+    window.delegate = self;
+    self.window = window;
+
     return self;
 }
 
 - (void)dealloc {
     [self setDelegate:nil];
-}
-
-- (void)awakeFromNib {
-    [super awakeFromNib];
-    self.generalToolbarItem.image = [NSImage imageWithSystemSymbolName:@"gearshape" accessibilityDescription:nil];
-    self.accountsToolbarItem.image = [NSImage imageWithSystemSymbolName:@"at" accessibilityDescription:nil];
-    self.soundToolbarItem.image = [NSImage imageWithSystemSymbolName:@"speaker.wave.2" accessibilityDescription:nil];
-    self.networkToolbarItem.image = [NSImage imageWithSystemSymbolName:@"network" accessibilityDescription:nil];
-}
-
-- (void)windowDidLoad {
-    self.toolbar.selectedItemIdentifier = self.generalToolbarItem.itemIdentifier;
-    [self.window ak_resizeForContentViewSize:self.generalPreferencesViewController.view.frame.size animate:NO];
-    self.contentViewController = self.generalPreferencesViewController;
-    self.window.title = self.generalPreferencesViewController.title;
-}
-
-- (IBAction)changeView:(id)sender {
-    if ([self isNetworkPreferencesViewCurrent] &&
-        ![sender isEqual:self.networkToolbarItem] &&
-        [self.networkPreferencesViewController areNetworkSettingsChanged:sender]) {
-        return;
-    }
-    
-    NSViewController *controller;
-    NSView *firstResponder;
-    
-    if ([sender isEqual:self.generalToolbarItem]) {
-        controller = self.generalPreferencesViewController;
-        firstResponder = nil;
-    } else if ([sender isEqual:self.accountsToolbarItem]) {
-        controller = self.accountPreferencesViewController;
-        firstResponder = self.accountPreferencesViewController.accountsTable;
-    } else if ([sender isEqual:self.soundToolbarItem]) {
-        controller = self.soundPreferencesViewController;
-        firstResponder = nil;
-    } else if ([sender isEqual:self.networkToolbarItem]) {
-        controller = self.networkPreferencesViewController;
-        firstResponder = nil;
-    } else {
-        return;
-    }
-
-    [self.window ak_resizeForContentViewSize:controller.view.frame.size animate:YES];
-    self.contentViewController = controller;
-    self.window.title = controller.title;
-    if ([firstResponder acceptsFirstResponder]) {
-        [self.window makeFirstResponder:firstResponder];
-    }
 }
 
 - (void)showWindowCentered {
@@ -183,45 +128,19 @@
 }
 
 - (void)showAccounts {
-    self.toolbar.selectedItemIdentifier = self.accountsToolbarItem.itemIdentifier;
-    [self changeView:self.accountsToolbarItem];
+    [self.settingsViewController showAccounts];
 }
-
-- (BOOL)isNetworkPreferencesViewCurrent {
-    return self.networkPreferencesViewController.isViewLoaded &&
-    [self.window.contentView isEqual:self.networkPreferencesViewController.view];
-}
-
 
 #pragma mark - SoundIOPreferences
 
 - (void)updateSoundIO {
-    if ([self isSoundPreferencesViewControllerLoaded]) {
-        [self.soundPreferencesViewController updateSoundIO];
-    }
+    [self.settingsViewController updateSoundIO];
 }
 
+#pragma mark - NSWindowDelegate
 
-#pragma mark -
-#pragma mark NSToolbar delegate
-
-- (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)aToolbar {
-    return @[[[self generalToolbarItem] itemIdentifier],
-            [[self accountsToolbarItem] itemIdentifier],
-            [[self soundToolbarItem] itemIdentifier],
-            [[self networkToolbarItem] itemIdentifier]];
-}
-
-
-#pragma mark -
-#pragma mark NSWindow delegate
-
-- (BOOL)windowShouldClose:(id)window {
-    if ([self isNetworkPreferencesViewCurrent] &&
-        [[self networkPreferencesViewController] areNetworkSettingsChanged:window]) {
-        return NO;
-    }
-    return YES;
+- (BOOL)windowShouldClose:(NSWindow *)sender {
+    return [self.settingsViewController requestWindowClose];
 }
 
 @end

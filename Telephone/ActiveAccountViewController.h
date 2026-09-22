@@ -19,9 +19,6 @@
 #import <Cocoa/Cocoa.h>
 
 
-// Call destination keys.
-extern NSString * const kURI;
-extern NSString * const kPhoneLabel;
 extern NSNotificationName const AKContactsAuthorizationDidChangeNotification;
 
 @class AccountController, AKSIPURI;
@@ -36,11 +33,9 @@ extern NSNotificationName const AKContactsAuthorizationDidChangeNotification;
 // Call destination token field outlet.
 @property(nonatomic, weak) IBOutlet NSTokenField *callDestinationField;
 
-// Index of a URI in a call destination token.
-@property(nonatomic, assign) NSUInteger callDestinationURIIndex;
-
-// Call destination URI.
+// Selected call destination.
 @property(nonatomic, readonly, copy) AKSIPURI *callDestinationURI;
+@property(nonatomic, readonly, copy) NSString *callDestinationPhoneLabel;
 
 @property(nonatomic, readonly) BOOL allowsCallDestinationInput;
 @property(nonatomic, readonly) NSView *keyView;
@@ -52,9 +47,6 @@ extern NSNotificationName const AKContactsAuthorizationDidChangeNotification;
 
 // Makes a call.
 - (IBAction)makeCall:(id)sender;
-
-// Changes the active SIP URI index in the call destination token.
-- (IBAction)changeCallDestinationURIIndex:(id)sender;
 
 - (void)allowCallDestinationInput;
 - (void)disallowCallDestinationInput;

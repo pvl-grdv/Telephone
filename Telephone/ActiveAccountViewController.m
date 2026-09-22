@@ -30,10 +30,62 @@
 #import "Telephone-Swift.h"
 
 
-NSString * const kURI = @"URI";
-NSString * const kPhoneLabel = @"PhoneLabel";
 NSNotificationName const AKContactsAuthorizationDidChangeNotification =
     @"TelephoneContactsAuthorizationDidChange";
+
+@interface AKCallDestination : NSObject
+
+@property(nonatomic, readonly) AKSIPURI *uri;
+@property(nonatomic, readonly, copy) NSString *phoneLabel;
+
+- (instancetype)initWithURI:(AKSIPURI *)uri phoneLabel:(NSString *)phoneLabel;
+
+@end
+
+@implementation AKCallDestination
+
+- (instancetype)initWithURI:(AKSIPURI *)uri phoneLabel:(NSString *)phoneLabel {
+    self = [super init];
+    if (self != nil) {
+        _uri = uri;
+        _phoneLabel = [phoneLabel copy];
+    }
+    return self;
+}
+
+@end
+
+@interface AKCallDestinationGroup : NSObject
+
+@property(nonatomic, readonly, copy) NSArray<AKCallDestination *> *destinations;
+@property(nonatomic) NSUInteger selectedIndex;
+@property(nonatomic, readonly) AKCallDestination *selectedDestination;
+
+- (instancetype)initWithDestinations:(NSArray<AKCallDestination *> *)destinations
+                       selectedIndex:(NSUInteger)selectedIndex;
+
+@end
+
+@implementation AKCallDestinationGroup
+
+- (instancetype)initWithDestinations:(NSArray<AKCallDestination *> *)destinations
+                       selectedIndex:(NSUInteger)selectedIndex {
+    self = [super init];
+    if (self != nil) {
+        _destinations = [destinations copy];
+        _selectedIndex = selectedIndex < destinations.count ? selectedIndex : 0;
+    }
+    return self;
+}
+
+- (AKCallDestination *)selectedDestination {
+    if (self.destinations.count == 0 || self.selectedIndex >= self.destinations.count) {
+        return nil;
+    }
+    return self.destinations[self.selectedIndex];
+}
+
+@end
 
 @interface ActiveAccountViewController ()
 
@@ -41,6 +93,7 @@ NSNotificationName const AKContactsAuthorizationDidChangeNotification =
 @property(nonatomic, copy) NSArray<CNContact *> *contactsCache;
 @property(nonatomic) BOOL contactsCacheLoading;
 @property(nonatomic) BOOL contactsPermissionRequestInFlight;
+@property(nonatomic, readonly) AKCallDestinationGroup *callDestinationGroup;
 
 @end
 
@@ -167,21 +220,26 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
 
 @implementation ActiveAccountViewController
 
-- (AKSIPURI *)callDestinationURI {
-    NSDictionary *callDestinationDict = [[self callDestinationField] objectValue][0][[self callDestinationURIIndex]];
-    
-    AKSIPURI *uri = [callDestinationDict[kURI] copy];
-    
-    // Displayed name is stored in the first URI only.
-    AKSIPURI *firstURI = [[self callDestinationField] objectValue][0][0][kURI];
-    
-    [uri setDisplayName:[firstURI displayName]];
-    
-    if ([uri isKindOfClass:[AKSIPURI class]] && [[uri user] length] > 0) {
-        return uri;
-    } else {
+- (AKCallDestinationGroup *)callDestinationGroup {
+    id objectValue = self.callDestinationField.objectValue;
+    if (![objectValue isKindOfClass:[NSArray class]]) {
         return nil;
     }
+
+    NSArray *tokens = objectValue;
+    if (tokens.count == 0 || ![tokens.firstObject isKindOfClass:[AKCallDestinationGroup class]]) {
+        return nil;
+    }
+    return tokens.firstObject;
+}
+
+- (AKSIPURI *)callDestinationURI {
+    AKSIPURI *uri = [self.callDestinationGroup.selectedDestination.uri copy];
+    return uri.user.length > 0 ? uri : nil;
+}
+
+- (NSString *)callDestinationPhoneLabel {
+    return self.callDestinationGroup.selectedDestination.phoneLabel ?: @"";
 }
 
 - (BOOL)allowsCallDestinationInput {
@@ -307,28 +365,26 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
 }
 
 - (IBAction)makeCall:(id)sender {
-    if (![self canMakeCall]) {
-        return;
-    }
-    
-    NSDictionary *callDestinationDict = [[self callDestinationField] objectValue][0][[self callDestinationURIIndex]];
-    NSString *phoneLabel = callDestinationDict[kPhoneLabel];
-    
-    AKSIPURI *uri = [self callDestinationURI];
+    AKSIPURI *uri = self.callDestinationURI;
     if (uri != nil) {
-        [[self accountController] makeCallToURI:uri phoneLabel:phoneLabel];
+        [[self accountController] makeCallToURI:uri phoneLabel:self.callDestinationPhoneLabel];
     }
 }
 
 - (BOOL)canMakeCall {
-    return [self.callDestinationField.objectValue count] > 0 &&
-    [self.callDestinationField.objectValue isKindOfClass:[NSArray class]] &&
-    [self.callDestinationField.objectValue[0] isKindOfClass:[NSArray class]] &&
-    [self.callDestinationField.objectValue[0][self.callDestinationURIIndex] isKindOfClass:[NSDictionary class]];
+    AKCallDestination *destination = self.callDestinationGroup.selectedDestination;
+    return destination != nil && destination.uri.user.length > 0;
 }
 
 - (IBAction)changeCallDestinationURIIndex:(id)sender {
-    [self setCallDestinationURIIndex:[sender tag]];
+    AKCallDestinationGroup *group = self.callDestinationGroup;
+    NSUInteger index = [sender tag];
+    if (index >= group.destinations.count) {
+        return;
+    }
+
+    group.selectedIndex = index;
+    [self.callDestinationField setNeedsDisplay:YES];
 }
 
 - (void)allowCallDestinationInput {
@@ -423,9 +479,8 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
     return [completions copy];
 }
 
-// Converts input text to the array of dictionaries containing AKSIPURIs and phone labels (mobile, home, etc).
-// Dictionary keys are kURI and kPhoneLabel. If there is no @ sign, the input is treated as a user part of the URI and
-// host part will be nil.
+// Converts input text to a typed group of call destinations (mobile, home, SIP, etc).
+// If there is no @ sign, the input is treated as a user part of the URI and host part will be nil.
 - (id)tokenField:(NSTokenField *)tokenField representedObjectForEditingString:(NSString *)editingString {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 
@@ -445,7 +500,7 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
     NSArray<CNContact *> *contacts = self.contactsCache ?: @[];
     CNContact *contact = ContactMatchingURI(contacts, theURI, theURI.displayName);
 
-    NSMutableArray *callDestinations = [[NSMutableArray alloc] init];
+    NSMutableArray<AKCallDestination *> *callDestinations = [[NSMutableArray alloc] init];
     NSUInteger destinationIndex = 0;
 
     if (contact != nil) {
@@ -462,10 +517,9 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
                 continue;
             }
             [uri setDisplayName:theURI.displayName];
-            [callDestinations addObject:@{
-                kURI: uri,
-                kPhoneLabel: LocalizedContactLabel(phone.label)
-            }];
+            [callDestinations addObject:[[AKCallDestination alloc]
+                initWithURI:uri
+                phoneLabel:LocalizedContactLabel(phone.label)]];
 
             if (theURI.host.length == 0 &&
                 targetPhone.length > 0 &&
@@ -485,10 +539,9 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
                 continue;
             }
             [uri setDisplayName:theURI.displayName];
-            [callDestinations addObject:@{
-                kURI: uri,
-                kPhoneLabel: LocalizedContactLabel(email.label)
-            }];
+            [callDestinations addObject:[[AKCallDestination alloc]
+                initWithURI:uri
+                phoneLabel:LocalizedContactLabel(email.label)]];
 
             if ([address caseInsensitiveCompare:theURI.SIPAddress] == NSOrderedSame) {
                 destinationIndex = callDestinations.count - 1;
@@ -497,19 +550,19 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
     }
 
     if (callDestinations.count == 0) {
-        [callDestinations addObject:@{kURI: theURI, kPhoneLabel: @""}];
+        [callDestinations addObject:[[AKCallDestination alloc] initWithURI:theURI phoneLabel:@""]];
     }
 
-    [self setCallDestinationURIIndex:destinationIndex];
-    return [callDestinations copy];
+    return [[AKCallDestinationGroup alloc] initWithDestinations:callDestinations
+                                                 selectedIndex:destinationIndex];
 }
 
 - (NSString *)tokenField:(NSTokenField *)tokenField displayStringForRepresentedObject:(id)representedObject {
-    if (![representedObject isKindOfClass:[NSArray class]]) {
+    if (![representedObject isKindOfClass:[AKCallDestinationGroup class]]) {
         return nil;
     }
-    
-    AKSIPURI *uri = representedObject[[self callDestinationURIIndex]][kURI];
+
+    AKSIPURI *uri = [(AKCallDestinationGroup *)representedObject selectedDestination].uri;
     
     NSString *returnString = nil;
     
@@ -539,11 +592,11 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
 }
 
 - (NSString *)tokenField:(NSTokenField *)tokenField editingStringForRepresentedObject:(id)representedObject {
-    if (![representedObject isKindOfClass:[NSArray class]]) {
+    if (![representedObject isKindOfClass:[AKCallDestinationGroup class]]) {
         return nil;
     }
-    
-    AKSIPURI *uri = representedObject[[self callDestinationURIIndex]][kURI];
+
+    AKSIPURI *uri = [(AKCallDestinationGroup *)representedObject selectedDestination].uri;
     
     NSAssert(([[uri user] length] > 0), @"User part of the URI must not have zero length in this context");
     
@@ -566,22 +619,24 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
 }
 
 - (BOOL)tokenField:(NSTokenField *)tokenField hasMenuForRepresentedObject:(id)representedObject {
-    AKSIPURI *uri = representedObject[[self callDestinationURIIndex]][kURI];
-    
-    if ([representedObject isKindOfClass:[NSArray class]] && [[uri displayName] length] > 0) {
-        return YES;
-    } else {
+    if (![representedObject isKindOfClass:[AKCallDestinationGroup class]]) {
         return NO;
     }
+    return [(AKCallDestinationGroup *)representedObject destinations].count > 1;
 }
 
 - (NSMenu *)tokenField:(NSTokenField *)tokenField menuForRepresentedObject:(id)representedObject {
+    if (![representedObject isKindOfClass:[AKCallDestinationGroup class]]) {
+        return nil;
+    }
+
+    AKCallDestinationGroup *group = representedObject;
     NSMenu *tokenMenu = [[NSMenu alloc] init];
-    
-    for (NSUInteger i = 0; i < [representedObject count]; ++i) {
-        AKSIPURI *uri = representedObject[i][kURI];
-        
-        NSString *phoneLabel = representedObject[i][kPhoneLabel];
+
+    for (NSUInteger i = 0; i < group.destinations.count; ++i) {
+        AKCallDestination *destination = group.destinations[i];
+        AKSIPURI *uri = destination.uri;
+        NSString *phoneLabel = destination.phoneLabel;
         
         NSMenuItem *menuItem = [[NSMenuItem alloc] init];
         
@@ -605,8 +660,8 @@ static CNContact *ContactMatchingURI(NSArray<CNContact *> *contacts, AKSIPURI *u
         [tokenMenu addItem:menuItem];
     }
     
-    [[tokenMenu itemWithTag:[self callDestinationURIIndex]] setState:NSControlStateValueOn];
-    
+    [[tokenMenu itemWithTag:group.selectedIndex] setState:NSControlStateValueOn];
+
     return tokenMenu;
 }
 

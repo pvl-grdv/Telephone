@@ -32,17 +32,10 @@
 }
 
 - (IBAction)makeCallToTransferDestination:(id)sender {
-    if ([[[self callDestinationField] objectValue] count] == 0) {
-        return;
-    }
-    
-    NSDictionary *callDestinationDict = [[self callDestinationField] objectValue][0][[self callDestinationURIIndex]];
-    NSString *phoneLabel = callDestinationDict[kPhoneLabel];
-    
-    AKSIPURI *uri = [self callDestinationURI];
+    AKSIPURI *uri = self.callDestinationURI;
     if (uri != nil) {
         [[self accountController] makeCallToURI:uri
-                                     phoneLabel:phoneLabel
+                                     phoneLabel:self.callDestinationPhoneLabel
                          callTransferController:(CallTransferController *)[[sender window] windowController]];
     }
 }

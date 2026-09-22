@@ -159,12 +159,9 @@ final class CompositionRoot: NSObject {
                 targets: [
                     CallHistoryCallEventTarget(histories: callHistories),
                     MusicPlayerCallEventTarget(
-                        player: SettingsMusicPlayer(
-                            origin: CallsMusicPlayer(
-                                origin: SystemMediaPlayer(), calls: userAgent
-                            ),
-                            settings: SimpleMusicPlayerSettings(settings: defaults)
-                        )
+                        player: SystemMediaPlayer(),
+                        calls: userAgent,
+                        settings: SimpleMusicPlayerSettings(settings: defaults)
                     ),
                     RingtonePlaybackCallEventTarget(playback: ringtonePlayback),
                     UserAttentionRequestCallEventTarget(

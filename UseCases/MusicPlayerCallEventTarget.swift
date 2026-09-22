@@ -13,19 +13,27 @@
 
 public final class MusicPlayerCallEventTarget {
     private let player: MusicPlayer
+    private let calls: Calls
+    private let settings: MusicPlayerSettings
 
-    public init(player: MusicPlayer) {
+    public init(player: MusicPlayer, calls: Calls, settings: MusicPlayerSettings) {
         self.player = player
+        self.calls = calls
+        self.settings = settings
     }
 }
 
 extension MusicPlayerCallEventTarget: CallEventTarget {
     public func didConnect(_ call: Call) {
-        player.pause()
+        if settings.shouldPause {
+            player.pause()
+        }
     }
 
     public func didDisconnect(_ call: Call) {
-        player.resume()
+        if settings.shouldPause && !calls.haveActive {
+            player.resume()
+        }
     }
 
     public func didMake(_ call: Call) {}

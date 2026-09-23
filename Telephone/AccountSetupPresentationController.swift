@@ -50,6 +50,7 @@ private final class AccountSetupSceneController {
 
     private let representation:
         NSHostingSceneRepresentation<AccountSetupHostedScene>
+    private var installed = false
 
     init() {
         representation = NSHostingSceneRepresentation {
@@ -58,10 +59,13 @@ private final class AccountSetupSceneController {
     }
 
     func install() {
+        guard !installed else { return }
+        installed = true
         NSApplication.shared.addSceneRepresentation(representation)
     }
 
     func show() {
+        install()
         representation.environment.openWindow(id: Self.windowID)
     }
 }

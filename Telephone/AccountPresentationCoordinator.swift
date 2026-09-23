@@ -34,6 +34,7 @@ final class AccountPresentationCoordinator: NSObject {
     private let model = AccountWindowModel()
 
     private var callHistoryViewEventTarget: CallHistoryViewEventTarget?
+    private var callHistoryConfigured = false
 
     var canMakeCalls: Bool {
         model.showsCallComposer
@@ -69,7 +70,6 @@ final class AccountPresentationCoordinator: NSObject {
         super.init()
 
         AccountPresentationRegistry.shared.register(self, key: windowKey)
-        configureCallHistory()
         show(.offline, callComposerVisible: false, animated: false)
     }
 
@@ -93,6 +93,9 @@ final class AccountPresentationCoordinator: NSObject {
         )
         .navigationTitle(accountDescription)
         .focusedSceneValue(\.callHistoryPresenter, callHistoryPresenter)
+        .onAppear { [weak self] in
+            self?.configureCallHistoryIfNeeded()
+        }
     }
 
     func showAvailableState() {
@@ -156,7 +159,10 @@ final class AccountPresentationCoordinator: NSObject {
         AccountPresentationRegistry.shared.unregister(key: windowKey)
     }
 
-    private func configureCallHistory() {
+    private func configureCallHistoryIfNeeded() {
+        guard !callHistoryConfigured else { return }
+        callHistoryConfigured = true
+
         callHistoryViewEventTargetFactory.make(
             account: account,
             view: callHistoryPresenter

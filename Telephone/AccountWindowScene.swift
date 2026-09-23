@@ -62,6 +62,7 @@ final class AccountWindowSceneController {
     }
 
     func show(key: String) {
+        install()
         representation.environment.openWindow(
             id: Self.sceneID,
             value: key

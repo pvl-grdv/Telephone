@@ -134,12 +134,6 @@ private final class CallDestinationInputModel {
         return selectedGroup?.selectedDestination?.phoneLabel ?? ""
     }
 
-    init() {
-        if CNContactStore.authorizationStatus(for: .contacts) == .authorized {
-            refreshContactsCache()
-        }
-    }
-
     func setFocused(_ focused: Bool) {
         isFocused = focused
 

@@ -488,11 +488,6 @@ NS_ASSUME_NONNULL_END
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification {
     [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSFullScreenMenuItemEverywhere"];
-    [self.accountSetupPresentationController install];
-    [self.preferencesController install];
-    [AccountPresentationCoordinator installScene];
-    [CallPresentationCoordinator installScene];
-    [self.applicationDialogController install];
 }
 
 - (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls {

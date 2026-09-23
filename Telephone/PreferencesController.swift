@@ -135,6 +135,7 @@ private struct PreferencesHostedScene: Scene {
 private final class PreferencesSceneController {
     private let representation:
         NSHostingSceneRepresentation<PreferencesHostedScene>
+    private var installed = false
 
     init(model: SettingsViewModel) {
         representation = NSHostingSceneRepresentation {
@@ -143,10 +144,13 @@ private final class PreferencesSceneController {
     }
 
     func install() {
+        guard !installed else { return }
+        installed = true
         NSApplication.shared.addSceneRepresentation(representation)
     }
 
     func show() {
+        install()
         representation.environment.openSettings()
     }
 }

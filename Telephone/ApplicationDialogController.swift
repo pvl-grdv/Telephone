@@ -18,6 +18,7 @@ final class ApplicationDialogController: NSObject {
     fileprivate static let sceneID = "telephone-application-dialog"
 
     private let model = ApplicationDialogModel()
+    private var installed = false
     private lazy var representation =
         NSHostingSceneRepresentation<ApplicationDialogScene> {
             ApplicationDialogScene(
@@ -37,6 +38,8 @@ final class ApplicationDialogController: NSObject {
     }
 
     func install() {
+        guard !installed else { return }
+        installed = true
         NSApplication.shared.addSceneRepresentation(representation)
     }
 
@@ -86,6 +89,7 @@ final class ApplicationDialogController: NSObject {
     }
 
     private func present(_ dialog: ApplicationDialog) {
+        install()
         model.dialog = dialog
         representation.environment.openWindow(id: Self.sceneID)
     }

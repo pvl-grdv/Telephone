@@ -3,16 +3,30 @@
 //  Telephone
 //
 
+import Foundation
 import StateReporting
 
 @MainActor
 enum PerformanceStateReporting {
-    private static let settingsDomain =
-        "com.tlphn.Telephone.settings"
+    static func showSettingsSection(_ section: SettingsSection) {
+        if #available(macOS 27.0, *) {
+            PerformanceStateReporting27.showSettingsSection(section)
+        }
+    }
 
+    static func hideSettings() {
+        if #available(macOS 27.0, *) {
+            PerformanceStateReporting27.hideSettings()
+        }
+    }
+}
+
+@available(macOS 27.0, *)
+@MainActor
+private enum PerformanceStateReporting27 {
     private static let settingsReporter:
         StateReporter<Never, Never> = .reporter(
-            for: settingsDomain
+            for: "com.tlphn.Telephone.settings"
         )
 
     static func showSettingsSection(_ section: SettingsSection) {

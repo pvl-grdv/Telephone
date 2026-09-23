@@ -4,40 +4,12 @@
 //
 
 import AppKit
-import Observation
 import SwiftUI
 
 @MainActor
-@Observable
-final class AccountPresentationRegistry {
-    static let shared = AccountPresentationRegistry()
-
-    private final class WeakController {
-        weak var value: AccountPresentationCoordinator?
-
-        init(_ value: AccountPresentationCoordinator) {
-            self.value = value
-        }
-    }
-
-    @ObservationIgnored
-    private var controllers: [String: WeakController] = [:]
-
-    private(set) var generation = 0
-
-    func register(_ controller: AccountPresentationCoordinator, key: String) {
-        controllers[key] = WeakController(controller)
-        generation &+= 1
-    }
-
-    func unregister(key: String) {
-        controllers.removeValue(forKey: key)
-        generation &+= 1
-    }
-
-    func controller(for key: String) -> AccountPresentationCoordinator? {
-        controllers[key]?.value
-    }
+enum AccountPresentationRegistry {
+    static let shared =
+        WeakObjectRegistry<String, AccountPresentationCoordinator>()
 }
 
 private struct AccountWindowsScene: Scene {
@@ -65,7 +37,7 @@ private struct AccountWindowSceneContent: View {
         let _ = registry.generation
 
         if let key,
-           let controller = registry.controller(for: key) {
+           let controller = registry.value(for: key) {
             controller.contentView
         } else {
             EmptyView()

@@ -34,8 +34,7 @@ final class CallTransferCoordinator {
         guard model.isTransfer else { return }
 
         waitingForHold = false
-        model.phase = .transferDestination
-        model.transferActionEnabled = false
+        model.showTransferDestinationState()
         destinationComposer?.focus()
     }
 
@@ -77,7 +76,7 @@ final class CallTransferCoordinator {
 
         guard
             let transferController = callController.callTransferController,
-            let presentation = CallPresentationRegistry.shared.presentation(
+            let presentation = CallPresentationRegistry.shared.value(
                 for: transferController.identifier
             )
         else {

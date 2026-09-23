@@ -7,34 +7,9 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class CallPresentationRegistry {
-    static let shared = CallPresentationRegistry()
-
-    private final class WeakPresentation {
-        weak var value: CallPresentationCoordinator?
-
-        init(_ value: CallPresentationCoordinator) {
-            self.value = value
-        }
-    }
-
-    private var presentations: [String: WeakPresentation] = [:]
-
-    func register(_ presentation: CallPresentationCoordinator) {
-        presentations[presentation.id] = WeakPresentation(presentation)
-    }
-
-    func unregister(key: String) {
-        presentations.removeValue(forKey: key)
-    }
-
-    func presentation(for key: String) -> CallPresentationCoordinator? {
-        guard let presentation = presentations[key]?.value else {
-            presentations[key] = nil
-            return nil
-        }
-        return presentation
-    }
+enum CallPresentationRegistry {
+    static let shared =
+        WeakObjectRegistry<String, CallPresentationCoordinator>()
 }
 
 private struct CallWindowsScene: Scene {
@@ -51,7 +26,7 @@ private struct CallWindowsScene: Scene {
             for: String.self
         ) { key in
             if let key = key.wrappedValue,
-               let presentation = CallPresentationRegistry.shared.presentation(
+               let presentation = CallPresentationRegistry.shared.value(
                    for: key
                ) {
                 presentation.contentView

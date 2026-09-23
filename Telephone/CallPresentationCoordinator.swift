@@ -60,7 +60,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
         super.init()
 
-        CallPresentationRegistry.shared.register(self)
+        CallPresentationRegistry.shared.register(self, key: id)
 
         guard !isTransfer else { return }
 
@@ -168,27 +168,20 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     }
 
     func showIncomingState() {
-        guard !model.isTransfer else { return }
-        model.phase = .incoming
-        model.incomingActionsEnabled = true
-        model.showsProgress = false
+        model.showIncomingState()
         customerContextCoordinator?.loadIfNeeded()
         focusAnswer()
     }
 
     func showActiveState() {
-        model.phase = model.isTransfer ? .transferActive : .active
+        model.showActiveState()
         updateCallControls()
         customerContextCoordinator?.loadIfNeeded()
-        focusCallSurface()
+        model.requestCallSurfaceFocus()
     }
 
     func showEndedState() {
-        model.phase = model.isTransfer ? .transferEnded : .ended
-        model.showsProgress = false
-        if !model.isTransfer {
-            model.transferPresentation = nil
-        }
+        model.showEndedState()
         stopCallTimer()
         customerContextCoordinator?.loadIfNeeded()
     }
@@ -331,14 +324,6 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         callController.status = value
     }
 
-    private func focusCallSurface() {
-        guard model.phase == .active || model.phase == .transferActive else {
-            return
-        }
-
-        model.callSurfaceFocusRequest &+= 1
-    }
-
     private func handleDTMF(_ text: String) {
         guard
             model.phase == .active || model.phase == .transferActive,
@@ -348,8 +333,12 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
             return
         }
 
-        let allowed = CharacterSet(charactersIn: "0123456789*#abcdrABCDR")
-        guard text.unicodeScalars.allSatisfy(allowed.contains) else { return }
+        guard DTMFKeyRouting.shouldHandle(
+            text,
+            isCallSurfaceFocused: true
+        ) else {
+            return
+        }
 
         if enteredDTMF.length == 0 {
             setWindowTitle(callController.displayedName ?? "")

@@ -67,6 +67,42 @@ final class CallWindowModel {
     var recentCustomerNotes: [CustomerContextNote] = []
     var customerContextLoaded = false
 
+    func showIncomingState() {
+        guard !isTransfer else { return }
+
+        phase = .incoming
+        incomingActionsEnabled = true
+        showsProgress = false
+    }
+
+    func showActiveState() {
+        phase = isTransfer ? .transferActive : .active
+    }
+
+    func showEndedState() {
+        phase = isTransfer ? .transferEnded : .ended
+        showsProgress = false
+
+        if !isTransfer {
+            transferPresentation = nil
+        }
+    }
+
+    func showTransferDestinationState() {
+        guard isTransfer else { return }
+
+        phase = .transferDestination
+        transferActionEnabled = false
+    }
+
+    func requestCallSurfaceFocus() {
+        guard phase == .active || phase == .transferActive else {
+            return
+        }
+
+        callSurfaceFocusRequest &+= 1
+    }
+
     var commandState: CallCommandState {
         CallCommandState(
             phase: phase,

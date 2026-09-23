@@ -74,16 +74,16 @@
     [self.sourceCallController.call attendedTransferToCall:self.call];
 }
 
-- (IBAction)closeSheet:(id)sender {
+- (void)closeSheet:(id)sender {
     if (self.sourceCallController.isCallActive &&
         self.sourceCallController.isCallOnHold) {
         [self.sourceCallController toggleCallHold];
     }
 
-    [self.window.sheetParent endSheet:self.window];
+    [self.sourceCallController dismissCallTransfer];
 }
 
-- (IBAction)showInitialState:(id)sender {
+- (void)showInitialState:(id)sender {
     if (self.isCallActive) {
         [self hangUpCall];
     }

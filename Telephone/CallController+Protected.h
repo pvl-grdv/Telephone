@@ -24,5 +24,6 @@
 - (void)focusTransferDestination;
 - (void)setTransferActionEnabled:(BOOL)enabled;
 - (void)callDidHoldForTransfer;
+- (void)dismissCallTransfer;
 
 @end

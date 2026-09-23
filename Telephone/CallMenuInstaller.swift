@@ -7,7 +7,9 @@ import AppKit
 import SwiftUI
 
 struct CallCommands: Commands {
-    private let defaults = UserDefaults.standard
+    @FocusedValue(\.callCommandState) private var state
+    @AppStorage(UserDefaultsKeys.keepCallWindowOnTop)
+    private var keepOnTop = false
 
     var body: some Commands {
         CommandMenu(
@@ -17,21 +19,34 @@ struct CallCommands: Commands {
             )
         ) {
             responderButton(
-                title: NSLocalizedString(
-                    "Mute",
-                    comment: "Mute. Call menu item."
-                ),
+                title: state?.muted == true
+                    ? NSLocalizedString(
+                        "Unmute",
+                        comment: "Unmute. Call menu item."
+                    )
+                    : NSLocalizedString(
+                        "Mute",
+                        comment: "Mute. Call menu item."
+                    ),
                 selector: Selector(("toggleMicrophoneMute:")),
+                enabled: state?.phase == .active
+                    && state?.muteEnabled == true,
                 key: "m",
                 modifiers: [.command, .shift]
             )
 
             responderButton(
-                title: NSLocalizedString(
-                    "Hold",
-                    comment: "Hold. Call menu item."
-                ),
-                selector: Selector(("toggleCallHold:"))
+                title: state?.held == true
+                    ? NSLocalizedString(
+                        "Resume",
+                        comment: "Resume. Call menu item."
+                    )
+                    : NSLocalizedString(
+                        "Hold",
+                        comment: "Hold. Call menu item."
+                    ),
+                selector: Selector(("toggleCallHold:")),
+                enabled: holdEnabled
             )
 
             responderButton(
@@ -39,7 +54,9 @@ struct CallCommands: Commands {
                     "Transfer",
                     comment: "Transfer. Call menu item."
                 ),
-                selector: Selector(("showCallTransferSheet:"))
+                selector: Selector(("showCallTransferSheet:")),
+                enabled: state?.phase == .active
+                    && state?.transferEnabled == true
             )
 
             responderButton(
@@ -48,6 +65,7 @@ struct CallCommands: Commands {
                     comment: "Call back menu item."
                 ),
                 selector: Selector(("redial:")),
+                enabled: redialEnabled,
                 key: "r"
             )
 
@@ -59,16 +77,24 @@ struct CallCommands: Commands {
                     comment: "Call answer menu item."
                 ),
                 selector: Selector(("acceptCall:")),
+                enabled: state?.phase == .incoming
+                    && state?.incomingActionsEnabled == true,
                 key: "\r",
                 modifiers: []
             )
 
             responderButton(
-                title: NSLocalizedString(
-                    "End Call",
-                    comment: "End call menu item."
-                ),
+                title: state?.phase == .incoming
+                    ? NSLocalizedString(
+                        "Decline",
+                        comment: "Decline. Call menu item."
+                    )
+                    : NSLocalizedString(
+                        "End Call",
+                        comment: "End call menu item."
+                    ),
                 selector: Selector(("hangUpCall:")),
+                enabled: hangUpEnabled,
                 key: "."
             )
 
@@ -79,20 +105,33 @@ struct CallCommands: Commands {
                     "Keep on Top",
                     comment: "Keep call window on top menu item."
                 ),
-                isOn: Binding(
-                    get: {
-                        defaults.bool(
-                            forKey: UserDefaultsKeys.keepCallWindowOnTop
-                        )
-                    },
-                    set: { newValue in
-                        defaults.set(
-                            newValue,
-                            forKey: UserDefaultsKeys.keepCallWindowOnTop
-                        )
-                    }
-                )
+                isOn: $keepOnTop
             )
+        }
+    }
+
+    private var holdEnabled: Bool {
+        guard let state else { return false }
+        return (state.phase == .active || state.phase == .transferActive)
+            && state.holdEnabled
+    }
+
+    private var redialEnabled: Bool {
+        guard let state else { return false }
+        return (state.phase == .ended || state.phase == .transferEnded)
+            && state.redialEnabled
+    }
+
+    private var hangUpEnabled: Bool {
+        guard let state else { return false }
+
+        switch state.phase {
+        case .incoming:
+            return state.incomingActionsEnabled
+        case .active, .transferActive:
+            return state.hangUpEnabled
+        default:
+            return false
         }
     }
 
@@ -100,6 +139,7 @@ struct CallCommands: Commands {
     private func responderButton(
         title: String,
         selector: Selector,
+        enabled: Bool,
         key: KeyEquivalent? = nil,
         modifiers: EventModifiers = .command
     ) -> some View {
@@ -110,13 +150,7 @@ struct CallCommands: Commands {
                 from: nil
             )
         }
-        .disabled(
-            NSApp.target(
-                forAction: selector,
-                to: nil,
-                from: nil
-            ) == nil
-        )
+        .disabled(!enabled)
 
         if let key {
             button.keyboardShortcut(key, modifiers: modifiers)

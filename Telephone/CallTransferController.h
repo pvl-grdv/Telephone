@@ -16,7 +16,7 @@
 //  GNU General Public License for more details.
 //
 
-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
 #import "CallController.h"
 
@@ -31,9 +31,9 @@
 - (void)transferCall;
 
 // Closes a sheet.
-- (IBAction)closeSheet:(id)sender;
+- (void)closeSheet:(id)sender;
 
 // Hangs up call and shows initial state.
-- (IBAction)showInitialState:(id)sender;
+- (void)showInitialState:(id)sender;
 
 @end

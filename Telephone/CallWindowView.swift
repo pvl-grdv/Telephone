@@ -19,6 +19,7 @@ struct CallWindowView: View {
     let showTransfer: () -> Void
     let redial: () -> Void
     let callTransferDestination: () -> Void
+    let closeTransfer: () -> Void
     let cancelTransfer: () -> Void
     let completeTransfer: () -> Void
     let customerContextChanged: () -> Void
@@ -40,6 +41,21 @@ struct CallWindowView: View {
                         maxHeight: .infinity
                     )
             }
+        }
+        .navigationTitle(model.windowTitle)
+        .windowDismissBehavior(
+            model.windowDismissEnabled ? .enabled : .disabled
+        )
+        .focusedSceneValue(\.callCommandState, model.commandState)
+        .onCommand(Selector(("toggleMicrophoneMute:")), perform: toggleMute)
+        .onCommand(Selector(("toggleCallHold:")), perform: toggleHold)
+        .onCommand(Selector(("showCallTransferSheet:")), perform: showTransfer)
+        .onCommand(Selector(("redial:")), perform: redial)
+        .onCommand(Selector(("acceptCall:")), perform: answer)
+        .onCommand(Selector(("hangUpCall:")), perform: hangUp)
+        .sheet(item: $model.transferPresentation) { transfer in
+            transfer.contentView
+                .interactiveDismissDisabled()
         }
     }
 
@@ -113,7 +129,7 @@ struct CallWindowView: View {
                 TransferDestinationView(
                     composer: transferDestinationComposer,
                     call: callTransferDestination,
-                    close: cancelTransfer
+                    close: closeTransfer
                 )
             }
         case .transferActive:
@@ -139,6 +155,10 @@ struct CallWindowView: View {
             EmptyView()
         }
     }
+}
+
+extension FocusedValues {
+    @Entry var callCommandState: CallCommandState?
 }
 
 private let dtmfCharacters =

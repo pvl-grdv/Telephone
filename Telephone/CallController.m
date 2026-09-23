@@ -47,11 +47,9 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
 @property(nonatomic, readonly) NSUserDefaults *defaults;
 
-// SwiftUI container used by call and call-transfer windows.
+// SwiftUI presentation used by call windows and transfer sheets.
 @property(nonatomic, strong) CallContentViewController *callContentViewController;
-
-- (void)configureWindowBehavior;
-- (void)configureSwiftCallWindowForTransfer:(BOOL)isTransfer;
+@property(nonatomic, assign) BOOL didHandleWindowClose;
 
 // Closes call window.
 - (void)closeCallWindow;
@@ -71,7 +69,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
         _call.delegate = self;
         [self.callContentViewController setCall:_call];
         if (_call != nil) {
-            self.window.styleMask |= NSWindowStyleMaskClosable;
+            [self.callContentViewController setWindowDismissEnabled:YES];
             [self.callContentViewController setHangUpEnabled:YES];
 
             // Keep the remote party identity available in every call state.
@@ -110,9 +108,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 - (void)setTitle:(NSString *)title {
     if (![_title isEqualToString:title]) {
         _title = [title copy];
-        if (self.isWindowLoaded) {
-            [self updateWindowTitle];
-        }
+        [self.callContentViewController setWindowTitle:_title ?: @""];
     }
 }
 
@@ -143,7 +139,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     BOOL usesSwiftCallWindow = [windowNibName isEqualToString:@"Call"] || isTransfer;
     NSAssert(usesSwiftCallWindow, @"Unsupported call window: %@", windowNibName);
 
-    self = [super initWithWindow:nil];
+    self = [super init];
 
     if (self != nil) {
         _identifier = [NSUUID UUID].UUIDString;
@@ -152,64 +148,53 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
         _delegate = delegate;
         _defaults = NSUserDefaults.standardUserDefaults;
 
-        [self configureSwiftCallWindowForTransfer:isTransfer];
+        _callContentViewController =
+            [[CallContentViewController alloc] initWithCallController:self
+                                                    accountController:self.accountController
+                                                          isTransfer:isTransfer];
+        if (isTransfer) {
+            self.title = NSLocalizedString(@"Call Transfer", @"Call transfer window title.");
+        }
     }
     return self;
 }
 
 - (void)dealloc {
     [self setCall:nil];
-    [self unsubscribeFromWindowFloatingChanges];
 }
 
 - (NSString *)description {
     return [[self call] description];
 }
 
-- (void)configureWindowBehavior {
-    self.window.movableByWindowBackground = YES;
-    [self updateWindowFloating];
-    [self subscribeToWindowFloatingChanges];
-    [self updateWindowTitle];
+- (void)showWindow:(id)sender {
+    self.didHandleWindowClose = NO;
+    [self.callContentViewController showWindow];
 }
 
-- (void)configureSwiftCallWindowForTransfer:(BOOL)isTransfer {
-    self.callContentViewController =
-        [[CallContentViewController alloc] initWithCallController:self
-                                                accountController:self.accountController
-                                                      isTransfer:isTransfer];
+- (void)close {
+    [self.callContentViewController closeWindow];
+    [self callWindowDidClose];
+}
 
-    NSSize contentSize = isTransfer ? NSMakeSize(360, 160) : NSMakeSize(420, 318);
-    NSWindowStyleMask styleMask =
-        NSWindowStyleMaskTitled |
-        NSWindowStyleMaskClosable |
-        NSWindowStyleMaskMiniaturizable;
-    if (!isTransfer) {
-        styleMask |= NSWindowStyleMaskResizable;
+- (void)callWindowDidClose {
+    if (self.didHandleWindowClose) {
+        return;
+    }
+    self.didHandleWindowClose = YES;
+
+    if ([self isCallActive]) {
+        [self setCallActive:NO];
+        [self.callContentViewController stopCallTimer];
+
+        if ([[[self call] delegate] isEqual:self]) {
+            [[self call] setDelegate:nil];
+        }
+
+        [[self call] hangUp];
     }
 
-    NSWindow *window =
-        [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, contentSize.width, contentSize.height)
-                                    styleMask:styleMask
-                                      backing:NSBackingStoreBuffered
-                                        defer:NO];
-    window.animationBehavior = NSWindowAnimationBehaviorDefault;
-    window.titlebarAppearsTransparent = !isTransfer;
-    window.releasedWhenClosed = NO;
-    window.delegate = self;
-    window.contentViewController = self.callContentViewController;
-    if (!isTransfer) {
-        window.contentMinSize = NSMakeSize(380, 280);
-    }
-
-    if (isTransfer) {
-        self.title = NSLocalizedString(@"Call Transfer", @"Call transfer window title.");
-    } else {
-        [window setFrameAutosaveName:@"Call"];
-    }
-
-    self.window = window;
-    [self configureWindowBehavior];
+    [self.delegate callControllerWillClose:self];
 }
 
 - (void)acceptCall {
@@ -361,13 +346,11 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 }
 
 - (void)closeCallWindow {
-    if ([[self window] isVisible]) {
-        [[self window] performClose:self];
-    }
+    [self close];
 }
 
 - (void)prepareForCall {
-    self.window.styleMask &= ~NSWindowStyleMaskClosable;
+    [self.callContentViewController setWindowDismissEnabled:NO];
     [self showActiveCallView];
     [self.callContentViewController setProgressVisible:YES];
     [self.callContentViewController setHangUpEnabled:NO];
@@ -378,7 +361,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 }
 
 - (void)showEndedCallView {
-    self.window.styleMask |= NSWindowStyleMaskClosable;
+    [self.callContentViewController setWindowDismissEnabled:YES];
     [self.callContentViewController showEndedState];
 }
 
@@ -400,6 +383,10 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
 - (void)callDidHoldForTransfer {
     [self.callContentViewController callDidHoldForTransfer];
+}
+
+- (void)dismissCallTransfer {
+    [self.callContentViewController dismissTransfer];
 }
 
 - (void)removeOrShowUserNotificationOnDisconnectIfNeeded {
@@ -453,36 +440,6 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
             }
         }];
 }
-
-- (void)updateWindowTitle {
-    self.window.title = self.title.length > 0 ? self.title : NSLocalizedString(@"Call", @"Window title.");
-}
-
-
-#pragma mark -
-#pragma mark NSWindow delegate methods
-
-- (void)windowWillClose:(NSNotification *)notification {
-    if ([self isCallActive]) {
-        [self setCallActive:NO];
-        [self.callContentViewController stopCallTimer];
-        
-        if ([[[self call] delegate] isEqual:self]) {
-            [[self call] setDelegate:nil];
-        }
-        
-        [[self call] hangUp];
-    }
-    
-    [self.delegate callControllerWillClose:self];
-
-}
-
-- (NSRect)window:(NSWindow *)window willPositionSheet:(NSWindow *)sheet usingRect:(NSRect)rect {
-    rect.origin.y = [self.window contentRectForFrameRect:self.window.frame].size.height;
-    return rect;
-}
-
 
 #pragma mark -
 #pragma mark AKSIPCallDelegate
@@ -610,28 +567,6 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     if (isFinal && [[self call] transferStatus] == PJSIP_SC_OK) {
         [self hangUpCall];
         [self setStatus:NSLocalizedString(@"call transferred", @"Call transferred.")];
-    }
-}
-
-#pragma mark - Window floating
-
-- (void)updateWindowFloating {
-    self.window.level = [self.defaults boolForKey:UserDefaultsKeys.keepCallWindowOnTop] ? NSFloatingWindowLevel : NSNormalWindowLevel;
-}
-
-- (void)subscribeToWindowFloatingChanges {
-    [self.defaults addObserver:self forKeyPath:UserDefaultsKeys.keepCallWindowOnTop options:0 context:NULL];
-}
-
-- (void)unsubscribeFromWindowFloatingChanges {
-    [self.defaults removeObserver:self forKeyPath:UserDefaultsKeys.keepCallWindowOnTop];
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
-    if (object == self.defaults && [keyPath isEqualToString:UserDefaultsKeys.keepCallWindowOnTop]) {
-        [self updateWindowFloating];
-    } else {
-        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
 }
 

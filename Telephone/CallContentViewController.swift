@@ -8,7 +8,9 @@ import SwiftUI
 
 @MainActor
 @objcMembers
-final class CallContentViewController: NSViewController, NSMenuItemValidation {
+final class CallContentViewController: NSObject, Identifiable {
+    @nonobjc let id: String
+
     private weak var callController: CallController?
     private weak var accountController: AccountController?
     private let model: CallWindowModel
@@ -22,6 +24,11 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
     private var customerContextSaveTask: Task<Void, Never>?
     private var loadedCustomerContextKey: String?
     private var isApplyingCustomerContext = false
+    private var didNotifyWindowClose = false
+
+    class func installScene() {
+        CallWindowSceneController.shared.install()
+    }
 
     @objc(initWithCallController:accountController:isTransfer:)
     init(
@@ -29,6 +36,7 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
         accountController: AccountController,
         isTransfer: Bool
     ) {
+        id = callController.identifier
         self.callController = callController
         self.accountController = accountController
 
@@ -36,13 +44,21 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
         model.accountDescription = accountController.accountDescription
         model.showsAccountInfo =
             !isTransfer && accountController.callsShouldDisplayAccountInfo
+        model.windowTitle = isTransfer
+            ? NSLocalizedString(
+                "Call Transfer",
+                comment: "Call transfer window title."
+            )
+            : NSLocalizedString("Call", comment: "Window title.")
         self.model = model
 
         transferDestinationComposer = isTransfer
             ? CallDestinationComposer(accountController: accountController)
             : nil
 
-        super.init(nibName: nil, bundle: nil)
+        super.init()
+
+        CallWindowRegistry.shared.register(self)
 
         guard !isTransfer else { return }
 
@@ -56,12 +72,9 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
         }
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func loadView() {
-        let rootView = CallWindowView(
+    @nonobjc
+    var contentView: some View {
+        CallWindowView(
             model: model,
             transferDestinationComposer: transferDestinationComposer,
             answer: { [weak self] in self?.acceptCall(nil) },
@@ -74,8 +87,15 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
             callTransferDestination: { [weak self] in
                 self?.callTransferDestination()
             },
-            cancelTransfer: { [weak self] in self?.cancelTransfer() },
-            completeTransfer: { [weak self] in self?.completeTransfer() },
+            closeTransfer: { [weak self] in
+                self?.closeTransferSheet()
+            },
+            cancelTransfer: { [weak self] in
+                self?.cancelTransfer()
+            },
+            completeTransfer: { [weak self] in
+                self?.completeTransfer()
+            },
             customerContextChanged: { [weak self] in
                 self?.scheduleCustomerContextSave()
             },
@@ -83,13 +103,34 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
                 self?.handleDTMF(text)
             }
         )
-
-        view = NSHostingView(rootView: rootView)
+        .onDisappear { [weak self] in
+            self?.windowDidDisappear()
+        }
     }
 
-    override func viewWillDisappear() {
-        saveCustomerContextNow()
-        super.viewWillDisappear()
+    func showWindow() {
+        guard !model.isTransfer else { return }
+        didNotifyWindowClose = false
+        CallWindowSceneController.shared.show(key: id)
+    }
+
+    func closeWindow() {
+        guard !model.isTransfer else { return }
+        CallWindowSceneController.shared.hide(key: id)
+    }
+
+    func setWindowTitle(_ value: String) {
+        model.windowTitle = value.isEmpty
+            ? NSLocalizedString("Call", comment: "Window title.")
+            : value
+    }
+
+    func setWindowDismissEnabled(_ enabled: Bool) {
+        model.windowDismissEnabled = enabled
+    }
+
+    func dismissTransfer() {
+        model.transferPresentation = nil
     }
 
     func setCall(_ call: AKSIPCall?) {
@@ -130,6 +171,9 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
     func showEndedState() {
         model.phase = model.isTransfer ? .transferEnded : .ended
         model.showsProgress = false
+        if !model.isTransfer {
+            model.transferPresentation = nil
+        }
         stopCallTimer()
         loadCustomerContextIfNeeded()
     }
@@ -288,60 +332,20 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
         }
 
         guard
-            let transferWindow = callController.callTransferController?.window,
-            let parentWindow = callController.window
+            let transferController = callController.callTransferController,
+            let presentation = CallWindowRegistry.shared.presentation(
+                for: transferController.identifier
+            )
         else {
             return
         }
 
-        parentWindow.beginSheet(transferWindow)
+        presentation.showTransferDestinationState()
+        model.transferPresentation = presentation
     }
 
     @IBAction func redial(_ sender: Any?) {
         callController?.redial()
-    }
-
-    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-        switch menuItem.action {
-        case #selector(toggleMicrophoneMute(_:)):
-            menuItem.title = model.muted
-                ? NSLocalizedString("Unmute", comment: "Unmute. Call menu item.")
-                : NSLocalizedString("Mute", comment: "Mute. Call menu item.")
-            return model.phase == .active && model.muteEnabled
-
-        case #selector(toggleCallHold(_:)):
-            menuItem.title = model.held
-                ? NSLocalizedString("Resume", comment: "Resume. Call menu item.")
-                : NSLocalizedString("Hold", comment: "Hold. Call menu item.")
-            return (model.phase == .active || model.phase == .transferActive)
-                && model.holdEnabled
-
-        case #selector(showCallTransferSheet(_:)):
-            return model.phase == .active && model.transferEnabled
-
-        case #selector(acceptCall(_:)):
-            return model.phase == .incoming && model.incomingActionsEnabled
-
-        case #selector(hangUpCall(_:)):
-            menuItem.title = model.phase == .incoming
-                ? NSLocalizedString("Decline", comment: "Decline. Call menu item.")
-                : NSLocalizedString("End Call", comment: "End Call. Call menu item.")
-            switch model.phase {
-            case .incoming:
-                return model.incomingActionsEnabled
-            case .active, .transferActive:
-                return model.hangUpEnabled
-            default:
-                return false
-            }
-
-        case #selector(redial(_:)):
-            return (model.phase == .ended || model.phase == .transferEnded)
-                && model.redialEnabled
-
-        default:
-            return true
-        }
     }
 
     private func callTransferDestination() {
@@ -372,6 +376,14 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
             model.transferActionEnabled = false
             waitingForTransferHold = true
         }
+    }
+
+    private func closeTransferSheet() {
+        guard let transferController = callController as? CallTransferController else {
+            return
+        }
+
+        transferController.closeSheet(nil)
     }
 
     private func cancelTransfer() {
@@ -405,7 +417,7 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
         guard text.unicodeScalars.allSatisfy(allowed.contains) else { return }
 
         if enteredDTMF.length == 0 {
-            view.window?.title = callController.displayedName
+            setWindowTitle(callController.displayedName)
             model.usesDTMFDisplay = true
         }
 
@@ -539,6 +551,14 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
         }
     }
 
+    private func windowDidDisappear() {
+        guard !model.isTransfer, !didNotifyWindowClose else { return }
+
+        didNotifyWindowClose = true
+        saveCustomerContextNow()
+        callController?.callWindowDidClose()
+    }
+
     private func listValues(_ text: String) -> [String] {
         text.split { character in
             character == "," || character == ";" || character.isNewline
@@ -547,5 +567,93 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
             $0.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         .filter { !$0.isEmpty }
+    }
+}
+
+
+@MainActor
+private final class CallWindowRegistry {
+    static let shared = CallWindowRegistry()
+
+    private final class WeakPresentation {
+        weak var value: CallContentViewController?
+
+        init(_ value: CallContentViewController) {
+            self.value = value
+        }
+    }
+
+    private var presentations: [String: WeakPresentation] = [:]
+
+    func register(_ presentation: CallContentViewController) {
+        presentations[presentation.id] = WeakPresentation(presentation)
+    }
+
+    func presentation(for key: String) -> CallContentViewController? {
+        guard let presentation = presentations[key]?.value else {
+            presentations[key] = nil
+            return nil
+        }
+        return presentation
+    }
+}
+
+private struct CallWindowsScene: Scene {
+    @AppStorage(UserDefaultsKeys.keepCallWindowOnTop)
+    private var keepOnTop = false
+
+    var body: some Scene {
+        WindowGroup(
+            NSLocalizedString(
+                "Call",
+                comment: "Call window scene title."
+            ),
+            id: CallWindowSceneController.sceneID,
+            for: String.self
+        ) { key in
+            if let key = key.wrappedValue,
+               let presentation = CallWindowRegistry.shared.presentation(
+                   for: key
+               ) {
+                presentation.contentView
+            } else {
+                EmptyView()
+            }
+        }
+        .defaultLaunchBehavior(.suppressed)
+        .restorationBehavior(.disabled)
+        .windowBackgroundDragBehavior(.enabled)
+        .windowLevel(keepOnTop ? .floating : .normal)
+    }
+}
+
+@MainActor
+private final class CallWindowSceneController {
+    static let shared = CallWindowSceneController()
+    static let sceneID = "telephone-call"
+
+    private let representation = NSHostingSceneRepresentation {
+        CallWindowsScene()
+    }
+    private var installed = false
+
+    func install() {
+        guard !installed else { return }
+        installed = true
+        NSApplication.shared.addSceneRepresentation(representation)
+    }
+
+    func show(key: String) {
+        representation.environment.openWindow(
+            id: Self.sceneID,
+            value: key
+        )
+    }
+
+    func hide(key: String) {
+        representation.environment.dismissWindow(
+            id: Self.sceneID,
+            value: key
+        )
     }
 }

@@ -474,6 +474,7 @@ NS_ASSUME_NONNULL_END
     [self.accountSetupPresentationController install];
     [self.preferencesController install];
     [AccountWindowController installScene];
+    [CallContentViewController installScene];
 }
 
 - (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls {

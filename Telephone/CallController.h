@@ -16,7 +16,7 @@
 //  GNU General Public License for more details.
 //
 
-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
 #import "AKSIPCall.h"
 
@@ -27,7 +27,7 @@
 @class CallTransferController;
 
 // A call controller.
-@interface CallController : NSWindowController <AKSIPCallDelegate>
+@interface CallController : NSObject <AKSIPCallDelegate>
 
 @property(nonatomic, readonly, weak) id<CallControllerDelegate> delegate;
 
@@ -85,6 +85,10 @@
                     accountController:(AccountController *)accountController
                             userAgent:(AKSIPUserAgent *)userAgent
                              delegate:(id<CallControllerDelegate>)delegate;
+
+- (void)showWindow:(nullable id)sender;
+- (void)close;
+- (void)callWindowDidClose;
 
 // Accepts an incoming call.
 - (void)acceptCall;

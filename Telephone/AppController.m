@@ -30,7 +30,6 @@
 #import "AccountControllers.h"
 #import "CallController.h"
 #import "NameServers.h"
-#import "PreferencesController.h"
 
 #import "Telephone-Swift.h"
 
@@ -48,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, getter=isTerminating) BOOL terminating;
 @property(nonatomic) BOOL shouldPresentUserAgentLaunchError;
 @property(nonatomic) AccountsMenuItems *accountsMenuItems;
-@property(nonatomic, strong) ApplicationMenuInstaller *applicationMenuInstaller;
+@property(nonatomic, strong) CallMenuInstaller *callMenuInstaller;
 
 @property(nonatomic, readonly) CompositionRoot *compositionRoot;
 @property(nonatomic, readonly) PreferencesController *preferencesController;
@@ -87,7 +86,7 @@ NS_ASSUME_NONNULL_END
     _compositionRoot = [[CompositionRoot alloc] initWithPreferencesControllerDelegate:self
                                                          nameServersChangeEventTarget:self];
 
-    _applicationMenuInstaller = [[ApplicationMenuInstaller alloc] init];
+    _callMenuInstaller = [[CallMenuInstaller alloc] init];
     
     _userAgent = _compositionRoot.userAgent;
     [[self userAgent] setDelegate:self];
@@ -511,7 +510,7 @@ NS_ASSUME_NONNULL_END
     NSWindow.allowsAutomaticWindowTabbing = NO;
     [self.compositionRoot.defaultAppSettings registerDefaults];
     [self.compositionRoot.settingsMigration execute];
-    [self.applicationMenuInstaller install];
+    [self.callMenuInstaller install];
     [self configureUserAgent];
     NSMenu *windowMenu = NSApp.windowsMenu;
     if (windowMenu != nil) {

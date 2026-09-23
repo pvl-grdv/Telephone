@@ -48,20 +48,20 @@ final class AccountWindowModel {
 struct AccountWindowRootView: View {
     @Bindable var model: AccountWindowModel
 
-    let activeAccountViewController: ActiveAccountViewController
-    let callHistoryViewController: CallHistoryViewController
+    let callDestinationComposer: CallDestinationComposer
+    let callHistoryPresenter: CallHistoryPresenter
     let changeState: (AccountWindowControllerAccountState) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
             if model.showsCallComposer {
-                activeAccountViewController.contentView
+                callDestinationComposer.contentView
                     .transition(.opacity)
 
                 Divider()
             }
 
-            callHistoryViewController.contentView
+            callHistoryPresenter.contentView
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(

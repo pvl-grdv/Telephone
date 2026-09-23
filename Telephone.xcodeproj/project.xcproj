@@ -36,7 +36,7 @@
             { "path": "AccountWindowView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountControllerToAccountAdapter.h", "encoding": "utf8" },
             { "path": "AccountControllerToAccountAdapter.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "ActiveAccountViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallDestinationComposer.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
           "kind": "group",
@@ -93,7 +93,7 @@
                 "TelephoneTests/compile-sources",
               ],
             },
-            { "path": "CallHistoryViewController.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallHistoryPresenter.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             {
               "path": "CallHistoryViewEventTarget.swift",
               "encoding": "utf8",
@@ -170,7 +170,6 @@
           "children": [
             { "path": "CallTransferController.h", "encoding": "utf8" },
             { "path": "CallTransferController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "ActiveAccountTransferViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
 
           ],
         }, {
@@ -277,14 +276,12 @@
                 { "path": "<PROJECT>/TelephoneTests/SoundPreferencesViewEventTargetTests.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
               ],
             },
-            { "path": "SettingsViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "GeneralSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SoundSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "NetworkSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "PreferencesController.h", "encoding": "utf8" },
-            { "path": "PreferencesController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "PreferencesController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             {
               "path": "PreferencesControllerAccountsEventSource.swift",
               "encoding": "utf8",
@@ -650,7 +647,7 @@
           "children": [
             { "path": "Telephone-Bridging-Header.h" },
             { "path": "TelephoneApp.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "ApplicationMenuInstaller.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallMenuInstaller.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
           "kind": "group",

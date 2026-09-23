@@ -14,7 +14,7 @@
 import UseCases
 
 @MainActor
-final class CallHistoryViewEventTarget: NSObject {
+final class CallHistoryViewEventTarget {
     private let recordsGet: UseCase
     private let recordRemoveAll: UseCase
     private let removeRecord: (String) -> Void

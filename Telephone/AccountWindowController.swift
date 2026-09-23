@@ -23,8 +23,8 @@ import UseCases
 @MainActor
 @objcMembers
 final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMenuItemValidation {
-    private let activeAccountViewController: ActiveAccountViewController
-    private let callHistoryViewController: CallHistoryViewController
+    private let callDestinationComposer: CallDestinationComposer
+    private let callHistoryPresenter: CallHistoryPresenter
     private let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
     private let account: Account
     private weak var accountDelegate: AccountWindowControllerDelegate?
@@ -45,10 +45,10 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         account: Account,
         delegate: AccountWindowControllerDelegate
     ) {
-        activeAccountViewController = ActiveAccountViewController(
+        callDestinationComposer = CallDestinationComposer(
             accountController: accountController
         )
-        callHistoryViewController = CallHistoryViewController()
+        callHistoryPresenter = CallHistoryPresenter()
         self.callHistoryViewEventTargetFactory = callHistoryViewEventTargetFactory
         self.account = account
         accountDelegate = delegate
@@ -73,8 +73,8 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
 
         let rootView = AccountWindowRootView(
             model: model,
-            activeAccountViewController: activeAccountViewController,
-            callHistoryViewController: callHistoryViewController,
+            callDestinationComposer: callDestinationComposer,
+            callHistoryPresenter: callHistoryPresenter,
             changeState: { [weak self] state in
                 guard let self else { return }
                 self.accountDelegate?.accountWindowController(
@@ -112,7 +112,7 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
     }
 
     func makeCallToDestination(_ destination: String) {
-        activeAccountViewController.makeCallToDestination(destination)
+        callDestinationComposer.makeCallToDestination(destination)
     }
 
     func showAlert(_ alert: NSAlert) {
@@ -153,33 +153,35 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
     }
 
     @IBAction func focusCallHistorySearch(_ sender: Any?) {
-        callHistoryViewController.focusCallHistorySearch(sender)
+        callHistoryPresenter.focusSearch()
     }
 
     @IBAction func makeCall(_ sender: Any?) {
-        callHistoryViewController.makeCall(sender)
+        callHistoryPresenter.makeCall()
     }
 
     @IBAction func copy(_ sender: Any?) {
-        callHistoryViewController.copy(sender)
+        callHistoryPresenter.copySelectedAddress()
     }
 
     @IBAction func delete(_ sender: Any?) {
-        callHistoryViewController.delete(sender)
+        callHistoryPresenter.delete()
     }
 
     @IBAction func deleteAll(_ sender: Any?) {
-        callHistoryViewController.deleteAll(sender)
+        callHistoryPresenter.deleteAll()
     }
 
     func validateMenuItem(_ item: NSMenuItem) -> Bool {
         switch item.action {
-        case #selector(focusCallHistorySearch(_:)),
-             #selector(makeCall(_:)),
+        case #selector(focusCallHistorySearch(_:)):
+            return true
+        case #selector(makeCall(_:)),
              #selector(copy(_:)),
-             #selector(delete(_:)),
-             #selector(deleteAll(_:)):
-            return callHistoryViewController.validateMenuItem(item)
+             #selector(delete(_:)):
+            return callHistoryPresenter.hasSelection
+        case #selector(deleteAll(_:)):
+            return callHistoryPresenter.hasRecords
         default:
             return true
         }
@@ -188,11 +190,11 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
     private func configureCallHistory() {
         callHistoryViewEventTargetFactory.make(
             account: account,
-            view: callHistoryViewController
+            view: callHistoryPresenter
         ) { [weak self] target in
             guard let self else { return }
             self.callHistoryViewEventTarget = target
-            self.callHistoryViewController.target = target
+            self.callHistoryPresenter.target = target
         }
     }
 
@@ -213,7 +215,7 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         }
 
         if callComposerVisible {
-            activeAccountViewController.focusCallDestination()
+            callDestinationComposer.focus()
         }
     }
 }

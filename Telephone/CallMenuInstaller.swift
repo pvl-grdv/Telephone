@@ -1,5 +1,5 @@
 //
-//  ApplicationMenuInstaller.swift
+//  CallMenuInstaller.swift
 //  Telephone
 //
 
@@ -7,7 +7,7 @@ import AppKit
 
 @MainActor
 @objcMembers
-final class ApplicationMenuInstaller: NSObject, NSMenuItemValidation {
+final class CallMenuInstaller: NSObject, NSMenuItemValidation {
     private let defaults = UserDefaults.standard
 
     func install() {

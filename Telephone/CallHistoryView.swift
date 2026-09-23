@@ -18,7 +18,7 @@
 
 import UseCases
 
-@objc @MainActor
+@MainActor
 protocol CallHistoryView {
     func show(_ records: [PresentationCallHistoryRecord])
 }

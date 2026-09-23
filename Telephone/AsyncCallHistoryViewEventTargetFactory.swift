@@ -26,7 +26,7 @@ final class AsyncCallHistoryViewEventTargetFactory: NSObject {
         self.origin = origin
     }
 
-    @objc func make(account: Account, view: CallHistoryView, completion: @escaping (CallHistoryViewEventTarget) -> Void) {
+    func make(account: Account, view: CallHistoryView, completion: @escaping (CallHistoryViewEventTarget) -> Void) {
         Task {
             completion(await origin.make(account: account, view: view))
         }

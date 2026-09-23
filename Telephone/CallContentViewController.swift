@@ -13,7 +13,7 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
     private weak var callController: CallController?
     private weak var accountController: AccountController?
     private let model: CallWindowModel
-    private let transferDestinationController: ActiveAccountTransferViewController?
+    private let transferDestinationComposer: CallDestinationComposer?
 
     private var accountInfoObservation: NSKeyValueObservation?
     private var callTimer: Foundation.Timer?
@@ -39,8 +39,8 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
             !isTransfer && accountController.callsShouldDisplayAccountInfo
         self.model = model
 
-        transferDestinationController = isTransfer
-            ? ActiveAccountTransferViewController(accountController: accountController)
+        transferDestinationComposer = isTransfer
+            ? CallDestinationComposer(accountController: accountController)
             : nil
 
         super.init(nibName: nil, bundle: nil)
@@ -64,7 +64,7 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
     override func loadView() {
         let rootView = CallWindowView(
             model: model,
-            transferDestinationController: transferDestinationController,
+            transferDestinationComposer: transferDestinationComposer,
             answer: { [weak self] in self?.acceptCall(nil) },
             decline: { [weak self] in self?.hangUpCall(nil) },
             hangUp: { [weak self] in self?.hangUpCall(nil) },
@@ -72,6 +72,9 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
             toggleHold: { [weak self] in self?.toggleCallHold(nil) },
             showTransfer: { [weak self] in self?.showCallTransferSheet(nil) },
             redial: { [weak self] in self?.redial(nil) },
+            callTransferDestination: { [weak self] in
+                self?.callTransferDestination()
+            },
             cancelTransfer: { [weak self] in self?.cancelTransfer() },
             completeTransfer: { [weak self] in self?.completeTransfer() },
             customerContextChanged: { [weak self] in
@@ -138,7 +141,7 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
         waitingForTransferHold = false
         model.phase = .transferDestination
         model.transferActionEnabled = false
-        transferDestinationController?.focusCallDestination()
+        transferDestinationComposer?.focus()
     }
 
     func setProgressVisible(_ visible: Bool) {
@@ -174,7 +177,7 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
     }
 
     func focusTransferDestination() {
-        transferDestinationController?.focusCallDestination()
+        transferDestinationComposer?.focus()
     }
 
     func updateCallControls() {
@@ -341,6 +344,19 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
         default:
             return true
         }
+    }
+
+    private func callTransferDestination() {
+        guard
+            let transferDestinationComposer,
+            let transferController = callController as? CallTransferController
+        else {
+            return
+        }
+
+        transferDestinationComposer.makeCall(
+            callTransferController: transferController
+        )
     }
 
     private func completeTransfer() {

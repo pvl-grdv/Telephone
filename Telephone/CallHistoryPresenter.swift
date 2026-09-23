@@ -1,5 +1,5 @@
 //
-//  CallHistoryViewController.swift
+//  CallHistoryPresenter.swift
 //  Telephone
 //
 //  Copyright © 2008-2016 Alexey Kuznetsov
@@ -16,7 +16,7 @@
 //  GNU General Public License for more details.
 //
 
-import Cocoa
+import AppKit
 import Observation
 import SwiftUI
 
@@ -164,24 +164,28 @@ private final class CallHistoryViewModel {
 }
 
 @MainActor
-final class CallHistoryViewController: NSViewController {
-    @objc var keyView: NSView {
-        return view
-    }
-
-    @objc weak var target: CallHistoryViewEventTarget? {
+final class CallHistoryPresenter: CallHistoryView {
+    weak var target: CallHistoryViewEventTarget? {
         didSet {
             target?.shouldReloadData()
         }
     }
 
-    @objc var recordCount: Int {
-        return model.allRecords.count
+    var recordCount: Int {
+        model.allRecords.count
+    }
+
+    var hasSelection: Bool {
+        model.selectedRecord != nil
+    }
+
+    var hasRecords: Bool {
+        !model.allRecords.isEmpty
     }
 
     private let model = CallHistoryViewModel()
 
-    @nonobjc final var contentView: some View {
+    var contentView: some View {
         CallHistoryScreen(
             model: model,
             call: { [weak self] identifier in
@@ -199,42 +203,30 @@ final class CallHistoryViewController: NSViewController {
         )
     }
 
-    init() {
-        super.init(nibName: nil, bundle: nil)
+    func show(_ records: [PresentationCallHistoryRecord]) {
+        model.show(records)
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func loadView() {
-        view = NSHostingView(rootView: contentView)
-    }
-
-    @objc func updateNextKeyView(_ view: NSView) {
-        keyView.nextKeyView = view
-    }
-
-    @objc func focusCallHistorySearch(_ sender: Any?) {
+    func focusSearch() {
         model.requestSearchFocus()
     }
 
-    @IBAction func makeCall(_ sender: Any?) {
+    func makeCall() {
         _ = model.callSelected { [weak self] identifier in
             self?.target?.didPickRecord(withIdentifier: identifier)
         }
     }
 
-    @IBAction func copy(_ sender: Any?) {
+    func copySelectedAddress() {
         guard let address = model.selectedRecord?.contact.address else { return }
         copyToPasteboard(address)
     }
 
-    @IBAction func delete(_ sender: Any?) {
+    func delete() {
         _ = model.requestDeleteSelected()
     }
 
-    @IBAction func deleteAll(_ sender: Any?) {
+    func deleteAll() {
         _ = model.requestDeleteAll()
     }
 
@@ -242,27 +234,6 @@ final class CallHistoryViewController: NSViewController {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(value, forType: .string)
-    }
-}
-
-extension CallHistoryViewController: CallHistoryView {
-    func show(_ records: [PresentationCallHistoryRecord]) {
-        model.show(records)
-    }
-}
-
-extension CallHistoryViewController: NSMenuItemValidation {
-    func validateMenuItem(_ item: NSMenuItem) -> Bool {
-        switch item.action {
-        case #selector(focusCallHistorySearch(_:)):
-            return true
-        case #selector(copy(_:)), #selector(makeCall(_:)), #selector(delete(_:)):
-            return model.selectedRecord != nil
-        case #selector(deleteAll(_:)):
-            return !model.allRecords.isEmpty
-        default:
-            return false
-        }
     }
 }
 

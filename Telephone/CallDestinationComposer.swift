@@ -1,9 +1,9 @@
 //
-//  ActiveAccountViewController.swift
+//  CallDestinationComposer.swift
 //  Telephone
 //
 
-import AppKit
+import Foundation
 @preconcurrency import Contacts
 import Observation
 import SwiftUI
@@ -604,14 +604,9 @@ private final class CallDestinationInputModel {
 }
 
 @MainActor
-@objcMembers
-class ActiveAccountViewController: NSViewController {
-    private weak var storedAccountController: AccountController?
+final class CallDestinationComposer {
+    private weak var accountController: AccountController?
     fileprivate let inputModel = CallDestinationInputModel()
-
-    var accountController: AccountController? {
-        storedAccountController
-    }
 
     var callDestinationURI: AKSIPURI? {
         inputModel.callDestinationURI
@@ -621,45 +616,46 @@ class ActiveAccountViewController: NSViewController {
         inputModel.callDestinationPhoneLabel
     }
 
-    @nonobjc final var contentView: some View {
-        destinationInputView(
+    var contentView: some View {
+        inputView(
             showsCallButton: true,
-            call: { [weak self] in self?.makeCall(nil) }
+            call: { [weak self] in
+                self?.makeCall()
+            }
         )
     }
 
-    @objc(initWithAccountController:)
     init(accountController: AccountController) {
-        storedAccountController = accountController
-        super.init(nibName: nil, bundle: nil)
+        self.accountController = accountController
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func loadView() {
-        view = NSHostingView(rootView: contentView)
-    }
-
-    @IBAction func makeCall(_ sender: Any?) {
+    func makeCall(callTransferController: CallTransferController? = nil) {
         guard let uri = callDestinationURI else { return }
-        storedAccountController?.makeCall(
-            to: uri,
-            phoneLabel: callDestinationPhoneLabel
-        )
+
+        if let callTransferController {
+            accountController?.makeCall(
+                to: uri,
+                phoneLabel: callDestinationPhoneLabel,
+                callTransferController: callTransferController
+            )
+        } else {
+            accountController?.makeCall(
+                to: uri,
+                phoneLabel: callDestinationPhoneLabel
+            )
+        }
     }
 
     func makeCallToDestination(_ destination: String) {
         inputModel.setDestination(destination)
-        makeCall(self)
+        makeCall()
     }
 
-    func focusCallDestination() {
+    func focus() {
         inputModel.requestFocus()
     }
 
-    @nonobjc final func destinationInputView(
+    func inputView(
         showsCallButton: Bool,
         call: @escaping () -> Void
     ) -> some View {
@@ -849,5 +845,48 @@ private struct DestinationSuggestionsView: View {
                 .stroke(.separator.opacity(0.6), lineWidth: 0.5)
         }
         .shadow(radius: 5, y: 2)
+    }
+}
+
+
+struct TransferDestinationView: View {
+    let composer: CallDestinationComposer
+    let call: () -> Void
+    let close: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(
+                NSLocalizedString(
+                    "Transfer to:",
+                    comment: "Call transfer destination label."
+                )
+            )
+            .font(.headline)
+
+            composer.inputView(
+                showsCallButton: false,
+                call: call
+            )
+
+            HStack {
+                Spacer()
+
+                Button(
+                    NSLocalizedString("Close", comment: "Close button."),
+                    action: close
+                )
+                .keyboardShortcut(.cancelAction)
+
+                Button(
+                    NSLocalizedString("Call", comment: "Call button."),
+                    action: call
+                )
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(20)
+        .frame(minWidth: 320, idealWidth: 360, minHeight: 118)
     }
 }

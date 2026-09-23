@@ -3,13 +3,12 @@
 //  Telephone
 //
 
-import AppKit
 import SwiftUI
 
 struct CallWindowView: View {
     @Bindable var model: CallWindowModel
 
-    let transferDestinationController: ActiveAccountTransferViewController?
+    let transferDestinationComposer: CallDestinationComposer?
 
     let answer: () -> Void
     let decline: () -> Void
@@ -18,6 +17,7 @@ struct CallWindowView: View {
     let toggleHold: () -> Void
     let showTransfer: () -> Void
     let redial: () -> Void
+    let callTransferDestination: () -> Void
     let cancelTransfer: () -> Void
     let completeTransfer: () -> Void
     let customerContextChanged: () -> Void
@@ -100,9 +100,11 @@ struct CallWindowView: View {
     private var transferContent: some View {
         switch model.phase {
         case .transferDestination:
-            if let transferDestinationController {
-                TransferDestinationHost(
-                    controller: transferDestinationController
+            if let transferDestinationComposer {
+                TransferDestinationView(
+                    composer: transferDestinationComposer,
+                    call: callTransferDestination,
+                    close: cancelTransfer
                 )
             }
         case .transferActive:
@@ -567,17 +569,4 @@ private struct CallControlButton: View {
         .help(help)
         .accessibilityLabel(help)
     }
-}
-
-private struct TransferDestinationHost: NSViewControllerRepresentable {
-    let controller: ActiveAccountTransferViewController
-
-    func makeNSViewController(context: Context) -> ActiveAccountTransferViewController {
-        controller
-    }
-
-    func updateNSViewController(
-        _ nsViewController: ActiveAccountTransferViewController,
-        context: Context
-    ) {}
 }

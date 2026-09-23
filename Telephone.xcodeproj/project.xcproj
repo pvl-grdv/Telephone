@@ -755,6 +755,7 @@
           "children": [
             { "path": "<SDK>/System/Library/Frameworks/AudioUnit.framework", "target-membership": [ "Telephone/frameworks" ] },
             { "path": "<SDK>/System/Library/Frameworks/AudioToolbox.framework", "target-membership": [ "Telephone/frameworks" ] },
+            { "path": "<SDK>/System/Library/Frameworks/AppIntents.framework", "target-membership": [ "Telephone/frameworks" ] },
           ],
         },
       ],

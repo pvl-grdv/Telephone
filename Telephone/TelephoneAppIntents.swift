@@ -189,3 +189,35 @@ struct SetTelephoneAccountAvailabilityIntent: AppIntent {
         }
     }
 }
+
+
+struct TelephoneAppShortcuts: AppShortcutsProvider {
+    static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: CallWithTelephoneIntent(),
+            phrases: [
+                "Call with \(.applicationName)",
+            ],
+            shortTitle: "Call",
+            systemImageName: "phone"
+        )
+
+        AppShortcut(
+            intent: OpenTelephoneSettingsIntent(),
+            phrases: [
+                "Open \(.applicationName) settings",
+            ],
+            shortTitle: "Open Settings",
+            systemImageName: "gearshape"
+        )
+
+        AppShortcut(
+            intent: SetTelephoneAccountAvailabilityIntent(),
+            phrases: [
+                "Set \(.applicationName) account status",
+            ],
+            shortTitle: "Set Account Status",
+            systemImageName: "person.crop.circle.badge.checkmark"
+        )
+    }
+}

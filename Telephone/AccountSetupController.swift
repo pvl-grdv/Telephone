@@ -8,8 +8,10 @@ import SwiftUI
 
 @MainActor
 @objcMembers
-final class AccountSetupController: NSWindowController {
+final class AccountSetupController: NSWindowController, NSWindowDelegate {
     private let model = AccountSetupModel()
+    private var isStandalonePresentation = false
+    private var didSubmit = false
 
     override init(window: NSWindow?) {
         let setupWindow = NSWindow(
@@ -39,6 +41,7 @@ final class AccountSetupController: NSWindowController {
         )
         setupWindow.contentViewController = contentController
         setupWindow.setContentSize(contentController.view.fittingSize)
+        setupWindow.delegate = self
     }
 
     convenience init() {
@@ -59,12 +62,18 @@ final class AccountSetupController: NSWindowController {
 
     func presentAsSheet(from parent: NSWindow) {
         prepare()
+        isStandalonePresentation = false
+        didSubmit = false
+
         guard let window else { return }
         parent.beginSheet(window)
     }
 
     func showCentered() {
         prepare()
+        isStandalonePresentation = true
+        didSubmit = false
+
         window?.center()
         showWindow(nil)
         window?.makeKeyAndOrderFront(nil)
@@ -74,6 +83,8 @@ final class AccountSetupController: NSWindowController {
         guard model.saveAccount(notificationObject: self) else {
             return
         }
+
+        didSubmit = true
         closePresentedWindow()
     }
 
@@ -84,6 +95,15 @@ final class AccountSetupController: NSWindowController {
             parent.endSheet(window)
         } else {
             window.performClose(nil)
+        }
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        guard isStandalonePresentation else { return }
+
+        isStandalonePresentation = false
+        if !didSubmit {
+            NSApp.terminate(self)
         }
     }
 }

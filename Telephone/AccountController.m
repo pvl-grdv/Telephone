@@ -514,8 +514,8 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
         if ([[self account] registrationStatus] == PJSIP_SC_UNAUTHORIZED &&
             [[self account] registrationErrorCode] == PJSIP_EFAILEDCREDENTIAL) {
 
-            [[self authenticationFailureController] prepareForPresentation];
-            [[self windowController] beginSheet:[[self authenticationFailureController] window]];
+            [[self authenticationFailureController]
+                presentFromParentWindow:self.windowController.window];
 
         } else if (([[self account] registrationStatus] / 100 != 2) &&
                    ([[self account] registrationExpireTime] == kAKSIPAccountRegistrationExpireTimeNotSpecified)) {

@@ -265,9 +265,6 @@ NS_ASSUME_NONNULL_END
     [controller showWindowWithoutMakingKey];
 
     if (isFirstLaunch) {
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                        name:NSWindowWillCloseNotification
-                                                      object:self.accountSetupController.window];
         self.finishedLaunching = YES;
 
         if (self.networkReachability.isReachable) {
@@ -469,20 +466,6 @@ NS_ASSUME_NONNULL_END
 }
 
 
-#pragma mark -
-#pragma mark NSWindow notifications
-
-- (void)windowWillClose:(NSNotification *)notification {
-    // User closed Account Setup window. Terminate application.
-    if ([[notification object] isEqual:[[self accountSetupController] window]]) {
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                        name:NSWindowWillCloseNotification
-                                                      object:[[self accountSetupController] window]];
-        
-        [NSApp terminate:self];
-    }
-}
-
 
 #pragma mark -
 #pragma mark NSApplication delegate methods
@@ -520,10 +503,6 @@ NS_ASSUME_NONNULL_END
     NSApp.servicesProvider = self;
     NSArray *accounts = [NSUserDefaults.standardUserDefaults arrayForKey:UserDefaultsKeys.accounts];
     if (accounts.count == 0) {
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(windowWillClose:)
-                                                     name:NSWindowWillCloseNotification
-                                                   object:self.accountSetupController.window];
         [self.accountSetupController showCentered];
         return;
     }

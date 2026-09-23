@@ -59,7 +59,14 @@ final class AuthenticationFailureController: NSWindowController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func prepareForPresentation() {
+    @objc(presentFromParentWindow:)
+    func present(from parent: NSWindow) {
+        prepareForPresentation()
+        guard let window else { return }
+        parent.beginSheet(window)
+    }
+
+    private func prepareForPresentation() {
         guard
             let accountController,
             let account = accountController.account

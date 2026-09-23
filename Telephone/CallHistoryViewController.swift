@@ -181,6 +181,24 @@ final class CallHistoryViewController: NSViewController {
 
     private let model = CallHistoryViewModel()
 
+    @nonobjc final var contentView: some View {
+        CallHistoryScreen(
+            model: model,
+            call: { [weak self] identifier in
+                self?.target?.didPickRecord(withIdentifier: identifier)
+            },
+            copy: { [weak self] address in
+                self?.copyToPasteboard(address)
+            },
+            deleteRecord: { [weak self] identifier in
+                self?.target?.shouldRemoveRecord(withIdentifier: identifier)
+            },
+            deleteAll: { [weak self] in
+                self?.target?.shouldRemoveAllRecords()
+            }
+        )
+    }
+
     init() {
         super.init(nibName: nil, bundle: nil)
     }
@@ -190,23 +208,7 @@ final class CallHistoryViewController: NSViewController {
     }
 
     override func loadView() {
-        view = NSHostingView(
-            rootView: CallHistoryScreen(
-                model: model,
-                call: { [weak self] identifier in
-                    self?.target?.didPickRecord(withIdentifier: identifier)
-                },
-                copy: { [weak self] address in
-                    self?.copyToPasteboard(address)
-                },
-                deleteRecord: { [weak self] identifier in
-                    self?.target?.shouldRemoveRecord(withIdentifier: identifier)
-                },
-                deleteAll: { [weak self] in
-                    self?.target?.shouldRemoveAllRecords()
-                }
-            )
-        )
+        view = NSHostingView(rootView: contentView)
     }
 
     @objc func updateNextKeyView(_ view: NSView) {

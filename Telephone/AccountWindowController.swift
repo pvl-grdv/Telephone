@@ -4,8 +4,8 @@
 //
 
 import AppKit
-import Observation
 import SwiftUI
+import UseCases
 
 @objc enum AccountWindowControllerAccountState: Int {
     case offline
@@ -20,70 +20,41 @@ import SwiftUI
     )
 }
 
-private enum AccountWindowDisplayState {
-    case offline
-    case connecting
-    case available
-    case unavailable
-
-    var title: String {
-        switch self {
-        case .offline:
-            NSLocalizedString("Offline", comment: "Account registration Offline menu item.")
-        case .connecting:
-            NSLocalizedString("Connecting...", comment: "Account registration Connecting... menu item.")
-        case .available:
-            NSLocalizedString("Available", comment: "Account registration Available menu item.")
-        case .unavailable:
-            NSLocalizedString("Unavailable", comment: "Account registration Unavailable menu item.")
-        }
-    }
-
-    var assetName: String? {
-        switch self {
-        case .offline:
-            "offline-state"
-        case .available:
-            "available-state"
-        case .unavailable:
-            "unavailable-state"
-        case .connecting:
-            nil
-        }
-    }
-}
-
-@MainActor
-@Observable
-private final class AccountWindowModel {
-    var state: AccountWindowDisplayState = .offline
-}
-
 @MainActor
 @objcMembers
-final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToolbarDelegate {
-    private static let stateItemIdentifier = NSToolbarItem.Identifier("TelephoneAccountState")
-
-    private let accountViewController: AccountViewController
+final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMenuItemValidation {
+    private let activeAccountViewController: ActiveAccountViewController
+    private let callHistoryViewController: CallHistoryViewController
+    private let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
+    private let account: Account
     private weak var accountDelegate: AccountWindowControllerDelegate?
     private let model = AccountWindowModel()
 
+    private var callHistoryViewEventTarget: CallHistoryViewEventTarget?
+
     var canMakeCalls: Bool {
-        accountViewController.canMakeCalls
+        model.showsCallComposer
     }
 
-    @objc(initWithAccountDescription:SIPAddress:accountViewController:delegate:)
+    @objc(initWithAccountDescription:SIPAddress:accountController:callHistoryViewEventTargetFactory:account:delegate:)
     init(
         accountDescription: String,
         sipAddress: String,
-        accountViewController: AccountViewController,
+        accountController: AccountController,
+        callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
+        account: Account,
         delegate: AccountWindowControllerDelegate
     ) {
-        self.accountViewController = accountViewController
-        self.accountDelegate = delegate
+        activeAccountViewController = ActiveAccountViewController(
+            accountController: accountController
+        )
+        callHistoryViewController = CallHistoryViewController()
+        self.callHistoryViewEventTargetFactory = callHistoryViewEventTargetFactory
+        self.account = account
+        accountDelegate = delegate
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 330, height: 253),
+            contentRect: NSRect(x: 0, y: 0, width: 380, height: 300),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
@@ -91,7 +62,8 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
         window.title = accountDescription
         window.isExcludedFromWindowsMenu = true
         window.collectionBehavior.insert(.fullScreenNone)
-        window.contentViewController = accountViewController
+        window.contentMinSize = NSSize(width: 340, height: 220)
+        window.toolbarStyle = .unifiedCompact
 
         super.init(window: window)
 
@@ -99,11 +71,21 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
         window.delegate = self
         window.setFrameAutosaveName(sipAddress)
 
-        let toolbar = NSToolbar(identifier: "TelephoneAccountToolbar")
-        toolbar.showsBaselineSeparator = false
-        toolbar.delegate = self
-        window.toolbar = toolbar
+        let rootView = AccountWindowRootView(
+            model: model,
+            activeAccountViewController: activeAccountViewController,
+            callHistoryViewController: callHistoryViewController,
+            changeState: { [weak self] state in
+                guard let self else { return }
+                self.accountDelegate?.accountWindowController(
+                    self,
+                    didChangeAccountState: state
+                )
+            }
+        )
+        window.contentViewController = NSHostingController(rootView: rootView)
 
+        configureCallHistory()
         show(.offline, callComposerVisible: false, animated: false)
     }
 
@@ -124,11 +106,13 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
     }
 
     func showConnectingState() {
-        model.state = .connecting
+        withAnimation(.easeInOut(duration: 0.15)) {
+            model.state = .connecting
+        }
     }
 
     func makeCallToDestination(_ destination: String) {
-        accountViewController.makeCallToDestination(destination)
+        activeAccountViewController.makeCallToDestination(destination)
     }
 
     func showAlert(_ alert: NSAlert) {
@@ -152,7 +136,10 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
         window?.isKeyWindow ?? false
     }
 
-    func orderWindow(_ place: NSWindow.OrderingMode, relativeTo otherWindow: Int) {
+    func orderWindow(
+        _ place: NSWindow.OrderingMode,
+        relativeTo otherWindow: Int
+    ) {
         window?.order(place, relativeTo: otherWindow)
     }
 
@@ -165,142 +152,68 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSToo
         return false
     }
 
+    @IBAction func focusCallHistorySearch(_ sender: Any?) {
+        callHistoryViewController.focusCallHistorySearch(sender)
+    }
+
+    @IBAction func makeCall(_ sender: Any?) {
+        callHistoryViewController.makeCall(sender)
+    }
+
+    @IBAction func copy(_ sender: Any?) {
+        callHistoryViewController.copy(sender)
+    }
+
+    @IBAction func delete(_ sender: Any?) {
+        callHistoryViewController.delete(sender)
+    }
+
+    @IBAction func deleteAll(_ sender: Any?) {
+        callHistoryViewController.deleteAll(sender)
+    }
+
+    func validateMenuItem(_ item: NSMenuItem) -> Bool {
+        switch item.action {
+        case #selector(focusCallHistorySearch(_:)),
+             #selector(makeCall(_:)),
+             #selector(copy(_:)),
+             #selector(delete(_:)),
+             #selector(deleteAll(_:)):
+            return callHistoryViewController.validateMenuItem(item)
+        default:
+            return true
+        }
+    }
+
+    private func configureCallHistory() {
+        callHistoryViewEventTargetFactory.make(
+            account: account,
+            view: callHistoryViewController
+        ) { [weak self] target in
+            guard let self else { return }
+            self.callHistoryViewEventTarget = target
+            self.callHistoryViewController.target = target
+        }
+    }
+
     private func show(
         _ state: AccountWindowDisplayState,
         callComposerVisible: Bool,
         animated: Bool
     ) {
-        model.state = state
-        accountViewController.setCallComposerVisible(
-            callComposerVisible,
-            animated: animated
-        )
-    }
-
-    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [Self.stateItemIdentifier]
-    }
-
-    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [Self.stateItemIdentifier]
-    }
-
-    func toolbar(
-        _ toolbar: NSToolbar,
-        itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
-        willBeInsertedIntoToolbar flag: Bool
-    ) -> NSToolbarItem? {
-        guard itemIdentifier == Self.stateItemIdentifier else { return nil }
-
-        let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-        item.label = NSLocalizedString("Account State", comment: "Account state toolbar item.")
-        item.paletteLabel = item.label
-
-        let hostingView = NSHostingView(
-            rootView: AccountStateToolbarView(
-                model: model,
-                changeState: { [weak self] state in
-                    guard let self else { return }
-                    self.accountDelegate?.accountWindowController(
-                        self,
-                        didChangeAccountState: state
-                    )
-                }
-            )
-        )
-        hostingView.frame.size = hostingView.fittingSize
-        item.view = hostingView
-        return item
-    }
-}
-
-private struct AccountStateToolbarView: View {
-    @Bindable var model: AccountWindowModel
-
-    let changeState: (AccountWindowControllerAccountState) -> Void
-
-    var body: some View {
-        Menu {
-            Button {
-                changeState(.available)
-            } label: {
-                Label(
-                    NSLocalizedString(
-                        "Available",
-                        comment: "Account registration Available menu item."
-                    ),
-                    image: "available-state"
-                )
-            }
-
-            Button {
-                changeState(.unavailable)
-            } label: {
-                Label(
-                    NSLocalizedString(
-                        "Unavailable",
-                        comment: "Account registration Unavailable menu item."
-                    ),
-                    image: "unavailable-state"
-                )
-            }
-
-            Divider()
-
-            Button {
-                changeState(.offline)
-            } label: {
-                Label(
-                    NSLocalizedString(
-                        "Offline",
-                        comment: "Account registration Offline menu item."
-                    ),
-                    image: "offline-state"
-                )
-            }
-        } label: {
-            HStack(spacing: 6) {
-                AccountStateIndicator(state: model.state)
-
-                Text(model.state.title)
-                    .lineLimit(1)
-                    .frame(minWidth: 78, alignment: .leading)
-            }
+        let update = {
+            self.model.state = state
+            self.model.showsCallComposer = callComposerVisible
         }
-        .menuStyle(.borderlessButton)
-        .controlSize(.small)
-        .fixedSize()
-        .help(
-            NSLocalizedString(
-                "Account State",
-                comment: "Account state toolbar item."
-            )
-        )
-        .accessibilityLabel(
-            NSLocalizedString(
-                "Account State",
-                comment: "Account state toolbar item."
-            )
-        )
-        .accessibilityValue(model.state.title)
-    }
-}
 
-private struct AccountStateIndicator: View {
-    let state: AccountWindowDisplayState
+        if animated {
+            withAnimation(.easeInOut(duration: 0.15), update)
+        } else {
+            update()
+        }
 
-    @ViewBuilder
-    var body: some View {
-        if state == .connecting {
-            ProgressView()
-                .controlSize(.mini)
-                .frame(width: 12, height: 12)
-        } else if let assetName = state.assetName {
-            Image(assetName)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: 12, height: 12)
-                .accessibilityHidden(true)
+        if callComposerVisible {
+            activeAccountViewController.focusCallDestination()
         }
     }
 }

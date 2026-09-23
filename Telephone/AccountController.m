@@ -62,7 +62,6 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 
 @property(nonatomic, readonly) AuthenticationFailureController *authenticationFailureController;
 
-@property(nonatomic, readonly) AccountViewController *accountViewController;
 @property(nonatomic, readonly) AccountWindowController *windowController;
 
 @property(nonatomic, readonly, getter=isAccountAdded) BOOL accountAdded;
@@ -189,15 +188,14 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     _accountDescription = [accountDescription copy];
     _destinationToCall = @"";
 
-    _accountViewController
-    = [[AccountViewController alloc] initWithActiveAccountViewController:[[ActiveAccountViewController alloc] initWithAccountController:self]
-                                               callHistoryViewController:[[CallHistoryViewController alloc] init]
-                                       callHistoryViewEventTargetFactory:callHistoryViewEventTargetFactory
-                                                                 account:[[AccountControllerToAccountAdapter alloc] initWithController:self]];
-    _windowController = [[AccountWindowController alloc] initWithAccountDescription:_accountDescription
-                                                                         SIPAddress:_account.SIPAddress
-                                                              accountViewController:_accountViewController
-                                                                           delegate:self];
+    _windowController =
+        [[AccountWindowController alloc]
+            initWithAccountDescription:_accountDescription
+                            SIPAddress:_account.SIPAddress
+                     accountController:self
+     callHistoryViewEventTargetFactory:callHistoryViewEventTargetFactory
+                               account:[[AccountControllerToAccountAdapter alloc] initWithController:self]
+                              delegate:self];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(SIPUserAgentDidFinishStarting:)
                                                  name:AKSIPUserAgentDidFinishStartingNotification

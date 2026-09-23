@@ -698,9 +698,7 @@ private struct CallDestinationInputView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .onAppear {
-            inputFocused = true
-        }
+        .defaultFocus($inputFocused, true)
         .onDisappear {
             model.setFocused(false)
         }

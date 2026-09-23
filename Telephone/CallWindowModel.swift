@@ -50,7 +50,7 @@ final class CallWindowModel {
 
     var transferActionEnabled = false
     var transferCancelEnabled = true
-    var transferPresentation: CallContentViewController?
+    var transferPresentation: CallPresentationCoordinator?
     var redialEnabled = true
     var usesDTMFDisplay = false
 

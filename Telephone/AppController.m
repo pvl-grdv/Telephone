@@ -214,6 +214,10 @@ NS_ASSUME_NONNULL_END
     return self.accountsCommandModel;
 }
 
+- (void)showPreferencesForSwiftUI {
+    [self.preferencesController showWindowCentered];
+}
+
 - (void)updateDockTileBadgeLabel {
     NSString *badgeString;
     NSInteger badgeNumber = self.accountControllers.unhandledIncomingCallsCount;
@@ -461,7 +465,7 @@ NS_ASSUME_NONNULL_END
     [self.accountSetupPresentationController install];
     [self.preferencesController install];
     [AccountWindowController installScene];
-    [CallContentViewController installScene];
+    [CallPresentationCoordinator installScene];
     [self.applicationDialogController install];
 }
 

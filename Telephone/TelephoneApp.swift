@@ -19,6 +19,18 @@ struct TelephoneApp: App {
         }
         .defaultLaunchBehavior(.suppressed)
         .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button(
+                    NSLocalizedString(
+                        "Settings…",
+                        comment: "Application settings menu item."
+                    )
+                ) {
+                    appController.showPreferencesForSwiftUI()
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
+
             AccountsCommands(
                 model: appController.accountsCommandModelForSwiftUI()
                     as! AccountsCommandModel

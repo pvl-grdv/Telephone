@@ -75,7 +75,10 @@
           "children": [
             { "path": "CallController.h", "encoding": "utf8" },
             { "path": "CallController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "CallContentViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallPresentationCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallTransferCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallWindowScene.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CustomerContextCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallWindowModel.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallWindowView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallController+Protected.h", "encoding": "utf8" },
@@ -481,7 +484,7 @@
         { "path": "CompositionRoot.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AccountControllers.h" },
         { "path": "AccountControllers.m", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "AccountsMenuItems.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "AccountCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AppController.h", "encoding": "utf8" },
         { "path": "AppController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "ApplicationDialogController.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -648,7 +651,7 @@
           "children": [
             { "path": "Telephone-Bridging-Header.h" },
             { "path": "TelephoneApp.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "CallMenuInstaller.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
           "kind": "group",

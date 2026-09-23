@@ -51,12 +51,6 @@ struct CallWindowView: View {
             model.windowDismissEnabled ? .enabled : .disabled
         )
         .focusedSceneValue(\.callCommandState, model.commandState)
-        .onCommand(Selector(("toggleMicrophoneMute:")), perform: toggleMute)
-        .onCommand(Selector(("toggleCallHold:")), perform: toggleHold)
-        .onCommand(Selector(("showCallTransferSheet:")), perform: showTransfer)
-        .onCommand(Selector(("redial:")), perform: redial)
-        .onCommand(Selector(("acceptCall:")), perform: answer)
-        .onCommand(Selector(("hangUpCall:")), perform: hangUp)
         .sheet(item: $model.transferPresentation) { transfer in
             transfer.contentView
                 .interactiveDismissDisabled()

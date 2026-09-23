@@ -3,11 +3,15 @@
 //  Telephone
 //
 
-import AppKit
 import SwiftUI
+
+extension FocusedValues {
+    @Entry var callCommandTarget: CallPresentationCoordinator?
+}
 
 struct CallCommands: Commands {
     @FocusedValue(\.callCommandState) private var state
+    @FocusedValue(\.callCommandTarget) private var target
     @AppStorage(UserDefaultsKeys.keepCallWindowOnTop)
     private var keepOnTop = false
 
@@ -18,7 +22,7 @@ struct CallCommands: Commands {
                 comment: "Call menu title."
             )
         ) {
-            responderButton(
+            commandButton(
                 title: state?.muted == true
                     ? NSLocalizedString(
                         "Unmute",
@@ -28,14 +32,14 @@ struct CallCommands: Commands {
                         "Mute",
                         comment: "Mute. Call menu item."
                     ),
-                selector: Selector(("toggleMicrophoneMute:")),
+                action: { target?.toggleMicrophoneMute() },
                 enabled: state?.phase == .active
                     && state?.muteEnabled == true,
                 key: "m",
                 modifiers: [.command, .shift]
             )
 
-            responderButton(
+            commandButton(
                 title: state?.held == true
                     ? NSLocalizedString(
                         "Resume",
@@ -45,45 +49,45 @@ struct CallCommands: Commands {
                         "Hold",
                         comment: "Hold. Call menu item."
                     ),
-                selector: Selector(("toggleCallHold:")),
+                action: { target?.toggleCallHold() },
                 enabled: holdEnabled
             )
 
-            responderButton(
+            commandButton(
                 title: NSLocalizedString(
                     "Transfer",
                     comment: "Transfer. Call menu item."
                 ),
-                selector: Selector(("showCallTransferSheet:")),
+                action: { target?.showCallTransfer() },
                 enabled: state?.phase == .active
                     && state?.transferEnabled == true
             )
 
-            responderButton(
+            commandButton(
                 title: NSLocalizedString(
                     "Call Back",
                     comment: "Call back menu item."
                 ),
-                selector: Selector(("redial:")),
+                action: { target?.redial() },
                 enabled: redialEnabled,
                 key: "r"
             )
 
             Divider()
 
-            responderButton(
+            commandButton(
                 title: NSLocalizedString(
                     "Answer",
                     comment: "Call answer menu item."
                 ),
-                selector: Selector(("acceptCall:")),
+                action: { target?.acceptCall() },
                 enabled: state?.phase == .incoming
                     && state?.incomingActionsEnabled == true,
                 key: "\r",
                 modifiers: []
             )
 
-            responderButton(
+            commandButton(
                 title: state?.phase == .incoming
                     ? NSLocalizedString(
                         "Decline",
@@ -93,7 +97,7 @@ struct CallCommands: Commands {
                         "End Call",
                         comment: "End call menu item."
                     ),
-                selector: Selector(("hangUpCall:")),
+                action: { target?.hangUpCall() },
                 enabled: hangUpEnabled,
                 key: "."
             )
@@ -136,21 +140,15 @@ struct CallCommands: Commands {
     }
 
     @ViewBuilder
-    private func responderButton(
+    private func commandButton(
         title: String,
-        selector: Selector,
+        action: @escaping () -> Void,
         enabled: Bool,
         key: KeyEquivalent? = nil,
         modifiers: EventModifiers = .command
     ) -> some View {
-        let button = Button(title) {
-            NSApp.sendAction(
-                selector,
-                to: nil,
-                from: nil
-            )
-        }
-        .disabled(!enabled)
+        let button = Button(title, action: action)
+            .disabled(!enabled || target == nil)
 
         if let key {
             button.keyboardShortcut(key, modifiers: modifiers)

@@ -37,6 +37,7 @@
             { "path": "AccountWindowView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountControllerToAccountAdapter.h", "encoding": "utf8" },
             { "path": "AccountControllerToAccountAdapter.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallDestinationContactIndex.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallDestinationComposer.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {

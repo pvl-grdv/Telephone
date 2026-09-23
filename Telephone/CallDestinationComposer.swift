@@ -33,10 +33,6 @@ private struct CallDestinationGroup {
     }
 }
 
-private struct ContactCachePayload: @unchecked Sendable {
-    let contacts: [CNContact]
-}
-
 private struct CallDestinationSuggestion: Identifiable {
     let id: String
     let title: String
@@ -51,9 +47,16 @@ private struct CallDestinationOption: Identifiable {
     let isSelected: Bool
 }
 
+private struct CallDestinationSuggestionMatch: Sendable {
+    let contact: CallDestinationContactRecord
+    let destination: CallDestinationContactAddress
+}
+
 @MainActor
 @Observable
 private final class CallDestinationInputModel {
+    private static let contactStore = CNContactStore()
+
     var text = "" {
         didSet {
             guard !isApplyingSelection else { return }
@@ -66,15 +69,27 @@ private final class CallDestinationInputModel {
     var suggestions: [CallDestinationSuggestion] = []
     var highlightedSuggestionID: String?
 
-    @ObservationIgnored private let contactStore = CNContactStore()
-    @ObservationIgnored private var contactsCache: [CNContact]?
-    @ObservationIgnored private var contactsCacheLoading = false
-    @ObservationIgnored private var contactsPermissionRequestInFlight = false
-    @ObservationIgnored private var isApplyingSelection = false
-    @ObservationIgnored private var selectedGroup: CallDestinationGroup?
+    @ObservationIgnored
+    private var contactsCache: [CallDestinationContactRecord]?
+
+    @ObservationIgnored
+    private var contactsCacheLoading = false
+
+    @ObservationIgnored
+    private var contactsPermissionRequestInFlight = false
+
+    @ObservationIgnored
+    private var suggestionTask: Task<Void, Never>?
+
+    @ObservationIgnored
+    private var isApplyingSelection = false
+
+    @ObservationIgnored
+    private var selectedGroup: CallDestinationGroup?
 
     var canCall: Bool {
-        selectedGroup != nil || !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        selectedGroup != nil
+            || !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var hasMultipleDestinations: Bool {
@@ -103,7 +118,8 @@ private final class CallDestinationInputModel {
             normalizeCurrentDestination()
         }
         guard
-            let uri = selectedGroup?.selectedDestination?.uri.copy() as? AKSIPURI,
+            let uri = selectedGroup?.selectedDestination?.uri.copy()
+                as? AKSIPURI,
             !uri.user.isEmpty
         else {
             return nil
@@ -131,6 +147,8 @@ private final class CallDestinationInputModel {
             requestContactsAccessIfNeeded()
             refreshSuggestions()
         } else {
+            suggestionTask?.cancel()
+            suggestionTask = nil
             dismissSuggestions()
         }
     }
@@ -147,7 +165,10 @@ private final class CallDestinationInputModel {
     }
 
     func chooseSuggestion(_ suggestion: CallDestinationSuggestion) {
-        applySelection(group: suggestion.group, editingText: suggestion.editingText)
+        applySelection(
+            group: suggestion.group,
+            editingText: suggestion.editingText
+        )
     }
 
     func selectDestination(at index: Int) {
@@ -189,7 +210,9 @@ private final class CallDestinationInputModel {
     func acceptHighlightedSuggestion() -> Bool {
         guard
             let highlightedSuggestionID,
-            let suggestion = suggestions.first(where: { $0.id == highlightedSuggestionID })
+            let suggestion = suggestions.first(where: {
+                $0.id == highlightedSuggestionID
+            })
         else {
             return false
         }
@@ -203,7 +226,10 @@ private final class CallDestinationInputModel {
         highlightedSuggestionID = nil
     }
 
-    private func applySelection(group: CallDestinationGroup, editingText: String) {
+    private func applySelection(
+        group: CallDestinationGroup,
+        editingText: String
+    ) {
         selectedGroup = group
         isApplyingSelection = true
         text = editingText
@@ -224,77 +250,152 @@ private final class CallDestinationInputModel {
     }
 
     private func refreshSuggestions() {
+        suggestionTask?.cancel()
+        suggestionTask = nil
+
         guard isFocused else {
             dismissSuggestions()
             return
         }
 
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else {
+        guard
+            !query.isEmpty,
+            let contactsCache
+        else {
             dismissSuggestions()
             return
         }
 
+        suggestionTask = Task { [weak self] in
+            let matches = await Task.detached(priority: .userInitiated) {
+                Self.suggestionMatches(
+                    contacts: contactsCache,
+                    query: query,
+                    limit: 5
+                )
+            }.value
+
+            guard
+                !Task.isCancelled,
+                let self,
+                self.isFocused,
+                self.text.trimmingCharacters(
+                    in: .whitespacesAndNewlines
+                ) == query
+            else {
+                return
+            }
+
+            self.applySuggestionMatches(matches)
+        }
+    }
+
+    private func applySuggestionMatches(
+        _ matches: [CallDestinationSuggestionMatch]
+    ) {
         var values: [CallDestinationSuggestion] = []
-        var seen = Set<String>()
 
-        for contact in contactsCache ?? [] {
-            let displayName = contactDisplayName(contact)
-            let nameMatches = contactMatchesName(contact, query: query)
-            let destinations = destinations(for: contact, displayName: displayName)
+        for match in matches {
+            let contact = match.contact
+            let displayName = contact.displayName
+            let destinations = destinations(
+                for: contact,
+                displayName: displayName
+            )
 
-            for (index, destination) in destinations.enumerated() {
-                let uri = destination.uri
-                let address = uri.host.isEmpty ? uri.user : uri.sipAddress
-                let addressMatches: Bool
-
-                if uri.host.isEmpty {
-                    addressMatches = phoneMatchesPrefix(address, query: query)
-                } else {
-                    addressMatches = hasCaseInsensitivePrefix(address, query)
-                }
-
-                guard nameMatches || addressMatches else { continue }
-
-                let id = "\(contact.identifier)|\(index)|\(address)"
-                guard seen.insert(id).inserted else { continue }
-
-                let value = uri.host.isEmpty
-                    ? formattedPhoneNumber(uri.user)
-                    : uri.sipAddress
-                let subtitle = destination.phoneLabel.isEmpty
-                    ? value
-                    : "\(destination.phoneLabel) · \(value)"
-                let group = CallDestinationGroup(
-                    destinations: destinations,
-                    selectedIndex: index
-                )
-                let editingText = displayName.isEmpty
-                    ? address
-                    : "\(displayName) <\(address)>"
-
-                values.append(
-                    CallDestinationSuggestion(
-                        id: id,
-                        title: displayName.isEmpty ? value : displayName,
-                        subtitle: subtitle,
-                        editingText: editingText,
-                        group: group
-                    )
-                )
-
-                if values.count == 5 {
-                    break
-                }
+            guard
+                !destinations.isEmpty,
+                let selectedURI = parseURI(match.destination.value)
+            else {
+                continue
             }
 
-            if values.count == 5 {
-                break
-            }
+            selectedURI.displayName = displayName
+            let selectedIndex = selectedIndex(
+                in: destinations,
+                matching: selectedURI
+            )
+            let selected = destinations[selectedIndex]
+            let uri = selected.uri
+            let address = uri.host.isEmpty ? uri.user : uri.sipAddress
+            let value = uri.host.isEmpty
+                ? formattedPhoneNumber(uri.user)
+                : uri.sipAddress
+            let subtitle = selected.phoneLabel.isEmpty
+                ? value
+                : "\(selected.phoneLabel) · \(value)"
+            let group = CallDestinationGroup(
+                destinations: destinations,
+                selectedIndex: selectedIndex
+            )
+            let editingText = displayName.isEmpty
+                ? address
+                : "\(displayName) <\(address)>"
+
+            values.append(
+                CallDestinationSuggestion(
+                    id: "\(contact.id)|\(match.destination.kind)|\(match.destination.value)",
+                    title: displayName.isEmpty ? value : displayName,
+                    subtitle: subtitle,
+                    editingText: editingText,
+                    group: group
+                )
+            )
         }
 
         suggestions = values
         highlightedSuggestionID = values.first?.id
+    }
+
+    nonisolated private static func suggestionMatches(
+        contacts: [CallDestinationContactRecord],
+        query: String,
+        limit: Int
+    ) -> [CallDestinationSuggestionMatch] {
+        var matches: [CallDestinationSuggestionMatch] = []
+        var seen = Set<String>()
+
+        for contact in contacts {
+            let nameMatches = contactMatchesName(
+                contact,
+                query: query
+            )
+
+            for destination in contact.destinations {
+                let addressMatches: Bool
+                switch destination.kind {
+                case .phone:
+                    addressMatches = phoneMatchesPrefix(
+                        destination.value,
+                        query: query
+                    )
+                case .sip:
+                    addressMatches = hasCaseInsensitivePrefix(
+                        destination.value,
+                        query
+                    )
+                }
+
+                guard nameMatches || addressMatches else { continue }
+
+                let key =
+                    "\(contact.id)|\(destination.kind)|\(destination.value)"
+                guard seen.insert(key).inserted else { continue }
+
+                matches.append(
+                    CallDestinationSuggestionMatch(
+                        contact: contact,
+                        destination: destination
+                    )
+                )
+                if matches.count == limit {
+                    return matches
+                }
+            }
+        }
+
+        return matches
     }
 
     private func requestContactsAccessIfNeeded() {
@@ -307,22 +408,32 @@ private final class CallDestinationInputModel {
             return
         }
 
-        guard status == .notDetermined, !contactsPermissionRequestInFlight else { return }
+        guard
+            status == .notDetermined,
+            !contactsPermissionRequestInFlight
+        else {
+            return
+        }
 
         contactsPermissionRequestInFlight = true
-        contactStore.requestAccess(for: .contacts) { [weak self] granted, error in
+        Self.contactStore.requestAccess(
+            for: .contacts
+        ) { [weak self] granted, error in
             Task { @MainActor in
                 guard let self else { return }
 
                 self.contactsPermissionRequestInFlight = false
                 guard granted else {
                     if let error {
-                        NSLog("Could not get Contacts access: %@", error.localizedDescription)
+                        NSLog(
+                            "Could not get Contacts access: %@",
+                            error.localizedDescription
+                        )
                     }
                     return
                 }
 
-                self.refreshContactsCache()
+                self.refreshContactsCache(forceReload: true)
                 NotificationCenter.default.post(
                     name: .AKContactsAuthorizationDidChange,
                     object: nil
@@ -331,51 +442,35 @@ private final class CallDestinationInputModel {
         }
     }
 
-    private func refreshContactsCache() {
+    private func refreshContactsCache(
+        forceReload: Bool = false
+    ) {
         guard !contactsCacheLoading else { return }
 
         contactsCacheLoading = true
 
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard self != nil else { return }
-
-            let payload = ContactCachePayload(
-                contacts: Self.allContacts(in: CNContactStore())
+        Task { [weak self] in
+            let records = await CallDestinationContactIndex.shared.records(
+                forceReload: forceReload
             )
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                self.contactsCache = payload.contacts
-                self.contactsCacheLoading = false
-                self.refreshSuggestions()
-            }
+
+            guard let self else { return }
+
+            contactsCache = records
+            contactsCacheLoading = false
+            refreshSuggestions()
         }
     }
 
-    nonisolated private static func allContacts(in store: CNContactStore) -> [CNContact] {
-        var contacts: [CNContact] = []
-        let keys: [CNKeyDescriptor] = [
-            CNContactFormatter.descriptorForRequiredKeys(for: .fullName),
-            CNContactGivenNameKey as CNKeyDescriptor,
-            CNContactFamilyNameKey as CNKeyDescriptor,
-            CNContactOrganizationNameKey as CNKeyDescriptor,
-            CNContactPhoneNumbersKey as CNKeyDescriptor,
-            CNContactEmailAddressesKey as CNKeyDescriptor,
-        ]
-        let request = CNContactFetchRequest(keysToFetch: keys)
-
-        do {
-            try store.enumerateContacts(with: request) { contact, _ in
-                contacts.append(contact)
-            }
-        } catch {
-            NSLog("Could not enumerate contacts for autocomplete: %@", error.localizedDescription)
+    private func representedDestination(
+        for editingString: String
+    ) -> CallDestinationGroup? {
+        let trimmed = editingString.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        guard let uri = parseURI(trimmed), !uri.user.isEmpty else {
+            return nil
         }
-        return contacts
-    }
-
-    private func representedDestination(for editingString: String) -> CallDestinationGroup? {
-        let trimmed = editingString.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let uri = parseURI(trimmed), !uri.user.isEmpty else { return nil }
 
         let contact = matchingContact(
             for: uri,
@@ -384,12 +479,15 @@ private final class CallDestinationInputModel {
         )
 
         if let contact {
-            let displayName = contactDisplayName(contact)
+            let displayName = contact.displayName
             if !displayName.isEmpty {
                 uri.displayName = displayName
             }
 
-            let destinations = destinations(for: contact, displayName: uri.displayName)
+            let destinations = destinations(
+                for: contact,
+                displayName: uri.displayName
+            )
             let selectedIndex = selectedIndex(
                 in: destinations,
                 matching: uri
@@ -404,43 +502,30 @@ private final class CallDestinationInputModel {
         }
 
         return CallDestinationGroup(
-            destinations: [CallDestination(uri: uri, phoneLabel: "")],
+            destinations: [
+                CallDestination(
+                    uri: uri,
+                    phoneLabel: ""
+                )
+            ],
             selectedIndex: 0
         )
     }
 
     private func destinations(
-        for contact: CNContact,
+        for contact: CallDestinationContactRecord,
         displayName: String
     ) -> [CallDestination] {
-        var destinations: [CallDestination] = []
-
-        for phone in contact.phoneNumbers {
-            guard let candidate = parseURI(phone.value.stringValue) else { continue }
+        contact.destinations.compactMap { destination in
+            guard let candidate = parseURI(destination.value) else {
+                return nil
+            }
             candidate.displayName = displayName
-            destinations.append(
-                CallDestination(
-                    uri: candidate,
-                    phoneLabel: localizedContactLabel(phone.label)
-                )
+            return CallDestination(
+                uri: candidate,
+                phoneLabel: destination.label
             )
         }
-
-        for email in contact.emailAddresses {
-            guard isSIPLabel(email.label) else { continue }
-
-            let address = email.value as String
-            guard let candidate = parseURI(address) else { continue }
-            candidate.displayName = displayName
-            destinations.append(
-                CallDestination(
-                    uri: candidate,
-                    phoneLabel: localizedContactLabel(email.label)
-                )
-            )
-        }
-
-        return destinations
     }
 
     private func selectedIndex(
@@ -448,16 +533,18 @@ private final class CallDestinationInputModel {
         matching uri: AKSIPURI
     ) -> Int {
         if uri.host.isEmpty {
-            let targetPhone = normalizedPhoneNumber(uri.user)
+            let targetPhone = Self.normalizedPhoneNumber(uri.user)
             if let match = destinations.firstIndex(where: {
                 $0.uri.host.isEmpty
-                    && normalizedPhoneNumber($0.uri.user) == targetPhone
+                    && Self.normalizedPhoneNumber($0.uri.user) == targetPhone
             }) {
                 return match
             }
         } else if let match = destinations.firstIndex(where: {
             !$0.uri.host.isEmpty
-                && $0.uri.sipAddress.caseInsensitiveCompare(uri.sipAddress) == .orderedSame
+                && $0.uri.sipAddress.caseInsensitiveCompare(
+                    uri.sipAddress
+                ) == .orderedSame
         }) {
             return match
         }
@@ -465,7 +552,9 @@ private final class CallDestinationInputModel {
         return 0
     }
 
-    private func editingString(for group: CallDestinationGroup) -> String {
+    private func editingString(
+        for group: CallDestinationGroup
+    ) -> String {
         guard let uri = group.selectedDestination?.uri else { return text }
 
         let destination = uri.host.isEmpty ? uri.user : uri.sipAddress
@@ -500,7 +589,8 @@ private final class CallDestinationInputModel {
             defaults.bool(forKey: UserDefaultsKeys.formatTelephoneNumbers)
         formatter.telephoneNumberFormatterSplitsLastFourDigits =
             defaults.bool(
-                forKey: UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits
+                forKey:
+                    UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits
             )
         return formatter
     }
@@ -509,33 +599,22 @@ private final class CallDestinationInputModel {
         let formatter = AKTelephoneNumberFormatter()
         formatter.splitsLastFourDigits =
             UserDefaults.standard.bool(
-                forKey: UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits
+                forKey:
+                    UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits
             )
         return formatter.string(for: value) ?? value
     }
 
-    private func normalizedPhoneNumber(_ value: String) -> String {
+    nonisolated private static func normalizedPhoneNumber(
+        _ value: String
+    ) -> String {
         value.filter { $0.isNumber || $0 == "+" }
     }
 
-    private func contactDisplayName(_ contact: CNContact) -> String {
-        let name = CNContactFormatter.string(from: contact, style: .fullName) ?? ""
-        return name.isEmpty ? contact.organizationName : name
-    }
-
-    private func localizedContactLabel(_ label: String?) -> String {
-        guard let label, !label.isEmpty else { return "" }
-        return CNLabeledValue<NSString>.localizedString(forLabel: label)
-    }
-
-    private func isSIPLabel(_ label: String?) -> Bool {
-        guard let label, !label.isEmpty else { return false }
-        let localized = localizedContactLabel(label)
-        return label.caseInsensitiveCompare("sip") == .orderedSame
-            || localized.caseInsensitiveCompare("sip") == .orderedSame
-    }
-
-    private func hasCaseInsensitivePrefix(_ value: String, _ prefix: String) -> Bool {
+    nonisolated private static func hasCaseInsensitivePrefix(
+        _ value: String,
+        _ prefix: String
+    ) -> Bool {
         guard !value.isEmpty, !prefix.isEmpty else { return false }
         return value.range(
             of: prefix,
@@ -543,11 +622,14 @@ private final class CallDestinationInputModel {
         ) != nil
     }
 
-    private func contactMatchesName(_ contact: CNContact, query: String) -> Bool {
+    nonisolated private static func contactMatchesName(
+        _ contact: CallDestinationContactRecord,
+        query: String
+    ) -> Bool {
         let givenFamily = "\(contact.givenName) \(contact.familyName)"
         let familyGiven = "\(contact.familyName) \(contact.givenName)"
 
-        return hasCaseInsensitivePrefix(contactDisplayName(contact), query)
+        return hasCaseInsensitivePrefix(contact.displayName, query)
             || hasCaseInsensitivePrefix(contact.givenName, query)
             || hasCaseInsensitivePrefix(contact.familyName, query)
             || hasCaseInsensitivePrefix(givenFamily, query)
@@ -555,39 +637,49 @@ private final class CallDestinationInputModel {
             || hasCaseInsensitivePrefix(contact.organizationName, query)
     }
 
-    private func phoneMatchesPrefix(_ phoneNumber: String, query: String) -> Bool {
+    nonisolated private static func phoneMatchesPrefix(
+        _ phoneNumber: String,
+        query: String
+    ) -> Bool {
         let normalizedPhone = normalizedPhoneNumber(phoneNumber)
         let normalizedQuery = normalizedPhoneNumber(query)
-        return !normalizedQuery.isEmpty && normalizedPhone.hasPrefix(normalizedQuery)
+        return !normalizedQuery.isEmpty
+            && normalizedPhone.hasPrefix(normalizedQuery)
     }
 
-    private func contactNameEquals(_ contact: CNContact, name: String) -> Bool {
+    private func contactNameEquals(
+        _ contact: CallDestinationContactRecord,
+        name: String
+    ) -> Bool {
         guard !name.isEmpty else { return true }
-        return contactDisplayName(contact).caseInsensitiveCompare(name) == .orderedSame
-            || contact.organizationName.caseInsensitiveCompare(name) == .orderedSame
+        return contact.displayName.caseInsensitiveCompare(name) == .orderedSame
+            || contact.organizationName.caseInsensitiveCompare(name)
+                == .orderedSame
     }
 
     private func matchingContact(
         for uri: AKSIPURI,
         displayedName: String,
-        contacts: [CNContact]
-    ) -> CNContact? {
-        var fallback: CNContact?
+        contacts: [CallDestinationContactRecord]
+    ) -> CallDestinationContactRecord? {
+        var fallback: CallDestinationContactRecord?
 
         for contact in contacts {
             let addressMatches: Bool
 
             if uri.host.isEmpty {
-                let target = normalizedPhoneNumber(uri.user)
-                addressMatches = contact.phoneNumbers.contains {
-                    !target.isEmpty
-                        && normalizedPhoneNumber($0.value.stringValue) == target
+                let target = Self.normalizedPhoneNumber(uri.user)
+                addressMatches = contact.destinations.contains {
+                    $0.kind == .phone
+                        && !target.isEmpty
+                        && Self.normalizedPhoneNumber($0.value) == target
                 }
             } else {
                 let target = uri.sipAddress
-                addressMatches = contact.emailAddresses.contains {
-                    isSIPLabel($0.label)
-                        && ($0.value as String).caseInsensitiveCompare(target) == .orderedSame
+                addressMatches = contact.destinations.contains {
+                    $0.kind == .sip
+                        && $0.value.caseInsensitiveCompare(target)
+                            == .orderedSame
                 }
             }
 

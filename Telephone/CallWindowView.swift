@@ -3,12 +3,10 @@
 //  Telephone
 //
 
-import Foundation
 import SwiftUI
 
 struct CallWindowView: View {
     @Bindable var model: CallWindowModel
-    @FocusState private var focusedSurface: FocusTarget?
 
     let transferDestinationComposer: CallDestinationComposer?
 
@@ -23,14 +21,6 @@ struct CallWindowView: View {
     let cancelTransfer: () -> Void
     let completeTransfer: () -> Void
     let customerContextChanged: () -> Void
-    let sendDTMF: (String) -> Void
-
-    private enum FocusTarget: Hashable {
-        case callSurface
-    }
-
-    private static let dtmfCharacters =
-        CharacterSet(charactersIn: "0123456789*#abcdrABCDR")
 
     var body: some View {
         Group {
@@ -48,23 +38,6 @@ struct CallWindowView: View {
                         maxHeight: .infinity
                     )
             }
-        }
-        .focusable(interactions: .edit)
-        .focused($focusedSurface, equals: .callSurface)
-        .focusEffectDisabled()
-        .onChange(of: model.callSurfaceFocusRequest) {
-            focusedSurface = .callSurface
-        }
-        .onKeyPress(
-            characters: Self.dtmfCharacters,
-            phases: .down
-        ) { press in
-            guard focusedSurface == .callSurface else {
-                return .ignored
-            }
-
-            sendDTMF(press.characters)
-            return .handled
         }
     }
 

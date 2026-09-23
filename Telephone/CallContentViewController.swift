@@ -78,13 +78,14 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
             completeTransfer: { [weak self] in self?.completeTransfer() },
             customerContextChanged: { [weak self] in
                 self?.scheduleCustomerContextSave()
-            },
-            sendDTMF: { [weak self] text in
-                self?.handleDTMF(text)
             }
         )
 
-        view = NSHostingView(rootView: rootView)
+        let hostingView = DTMFCapturingHostingView(rootView: rootView)
+        hostingView.onText = { [weak self] text in
+            self?.handleDTMF(text)
+        }
+        view = hostingView
     }
 
     override func viewWillDisappear() {
@@ -389,7 +390,10 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
             return
         }
 
-        model.callSurfaceFocusRequest &+= 1
+        Task { @MainActor [weak self] in
+            guard let self, self.view.window != nil else { return }
+            self.view.window?.makeFirstResponder(self.view)
+        }
     }
 
     private func handleDTMF(_ text: String) {
@@ -547,5 +551,32 @@ final class CallContentViewController: NSViewController, NSMenuItemValidation {
             $0.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         .filter { !$0.isEmpty }
+    }
+}
+
+private final class DTMFCapturingHostingView<Content: View>: NSHostingView<Content> {
+    var onText: ((String) -> Void)?
+
+    override var acceptsFirstResponder: Bool {
+        true
+    }
+
+    override func keyDown(with event: NSEvent) {
+        guard
+            !event.isARepeat,
+            let characters = event.characters,
+            let firstScalar = characters.unicodeScalars.first
+        else {
+            super.keyDown(with: event)
+            return
+        }
+
+        let allowed = CharacterSet(charactersIn: "0123456789*#abcdrABCDR")
+        guard allowed.contains(firstScalar) else {
+            super.keyDown(with: event)
+            return
+        }
+
+        onText?(characters)
     }
 }

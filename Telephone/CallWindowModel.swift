@@ -25,7 +25,6 @@ final class CallWindowModel {
     var showsProgress = false
     var incomingActionsEnabled = true
     var answerFocusRequest = 0
-    var callSurfaceFocusRequest = 0
 
     var hangUpEnabled = true
     var muteEnabled = false

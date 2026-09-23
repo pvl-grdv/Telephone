@@ -22,7 +22,9 @@ import UseCases
 
 @MainActor
 @objcMembers
-final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMenuItemValidation {
+final class AccountWindowController: NSObject {
+    private let accountDescription: String
+    private let windowKey: String
     private let callDestinationComposer: CallDestinationComposer
     private let callHistoryPresenter: CallHistoryPresenter
     private let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
@@ -37,16 +39,21 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         model.showsCallComposer
     }
 
-    @objc(initWithAccountDescription:SIPAddress:accountController:userAgent:callHistoryViewEventTargetFactory:account:delegate:)
+    class func installScene() {
+        AccountWindowSceneController.shared.install()
+    }
+
+    @objc(initWithAccountDescription:accountController:userAgent:callHistoryViewEventTargetFactory:account:delegate:)
     init(
         accountDescription: String,
-        sipAddress: String,
         accountController: AccountController,
         userAgent: AKSIPUserAgent,
         callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
         account: Account,
         delegate: AccountWindowControllerDelegate
     ) {
+        self.accountDescription = accountDescription
+        windowKey = account.uuid
         callDestinationComposer = CallDestinationComposer(
             accountController: accountController
         )
@@ -59,25 +66,16 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         )
         accountDelegate = delegate
 
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 380, height: 300),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = accountDescription
-        window.isExcludedFromWindowsMenu = true
-        window.collectionBehavior.insert(.fullScreenNone)
-        window.contentMinSize = NSSize(width: 340, height: 220)
-        window.toolbarStyle = .unifiedCompact
+        super.init()
 
-        super.init(window: window)
+        AccountWindowRegistry.shared.register(self, key: windowKey)
+        configureCallHistory()
+        show(.offline, callComposerVisible: false, animated: false)
+    }
 
-        shouldCascadeWindows = false
-        window.delegate = self
-        window.setFrameAutosaveName(sipAddress)
-
-        let rootView = AccountWindowRootView(
+    @nonobjc
+    var contentView: some View {
+        AccountWindowRootView(
             model: model,
             callDestinationComposer: callDestinationComposer,
             callHistoryPresenter: callHistoryPresenter,
@@ -93,14 +91,7 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
                     .changeUsernameAndPassword(authenticationFailure)
             }
         )
-        window.contentViewController = NSHostingController(rootView: rootView)
-
-        configureCallHistory()
-        show(.offline, callComposerVisible: false, animated: false)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        .navigationTitle(accountDescription)
     }
 
     func showAvailableState() {
@@ -145,67 +136,16 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         callDestinationComposer.makeCallToDestination(destination)
     }
 
+    func showWindow() {
+        AccountWindowSceneController.shared.show(key: windowKey)
+    }
+
     func showWindowWithoutMakingKey() {
-        window?.orderFront(nil)
+        showWindow()
     }
 
     func hideWindow() {
-        window?.orderOut(nil)
-    }
-
-    func isWindowKey() -> Bool {
-        window?.isKeyWindow ?? false
-    }
-
-    func orderWindow(
-        _ place: NSWindow.OrderingMode,
-        relativeTo otherWindow: Int
-    ) {
-        window?.order(place, relativeTo: otherWindow)
-    }
-
-    func windowNumber() -> Int {
-        window?.windowNumber ?? 0
-    }
-
-    func windowShouldClose(_ sender: NSWindow) -> Bool {
-        sender.orderOut(nil)
-        return false
-    }
-
-    @IBAction func focusCallHistorySearch(_ sender: Any?) {
-        callHistoryPresenter.focusSearch()
-    }
-
-    @IBAction func makeCall(_ sender: Any?) {
-        callHistoryPresenter.makeCall()
-    }
-
-    @IBAction func copy(_ sender: Any?) {
-        callHistoryPresenter.copySelectedAddress()
-    }
-
-    @IBAction func delete(_ sender: Any?) {
-        callHistoryPresenter.delete()
-    }
-
-    @IBAction func deleteAll(_ sender: Any?) {
-        callHistoryPresenter.deleteAll()
-    }
-
-    func validateMenuItem(_ item: NSMenuItem) -> Bool {
-        switch item.action {
-        case #selector(focusCallHistorySearch(_:)):
-            return true
-        case #selector(makeCall(_:)),
-             #selector(copy(_:)),
-             #selector(delete(_:)):
-            return callHistoryPresenter.hasSelection
-        case #selector(deleteAll(_:)):
-            return callHistoryPresenter.hasRecords
-        default:
-            return true
-        }
+        AccountWindowSceneController.shared.hide(key: windowKey)
     }
 
     private func configureCallHistory() {
@@ -238,5 +178,85 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         if callComposerVisible {
             callDestinationComposer.focus()
         }
+    }
+}
+
+@MainActor
+private final class AccountWindowRegistry {
+    static let shared = AccountWindowRegistry()
+
+    private final class WeakController {
+        weak var value: AccountWindowController?
+
+        init(_ value: AccountWindowController) {
+            self.value = value
+        }
+    }
+
+    private var controllers: [String: WeakController] = [:]
+
+    func register(_ controller: AccountWindowController, key: String) {
+        controllers[key] = WeakController(controller)
+    }
+
+    func controller(for key: String) -> AccountWindowController? {
+        guard let controller = controllers[key]?.value else {
+            controllers[key] = nil
+            return nil
+        }
+        return controller
+    }
+}
+
+private struct AccountWindowsScene: Scene {
+    var body: some Scene {
+        WindowGroup(
+            NSLocalizedString(
+                "Account",
+                comment: "Account window scene title."
+            ),
+            id: AccountWindowSceneController.sceneID,
+            for: String.self
+        ) { key in
+            if let key = key.wrappedValue,
+               let controller = AccountWindowRegistry.shared.controller(for: key) {
+                controller.contentView
+            } else {
+                EmptyView()
+            }
+        }
+        .defaultLaunchBehavior(.suppressed)
+        .restorationBehavior(.disabled)
+    }
+}
+
+@MainActor
+private final class AccountWindowSceneController {
+    static let shared = AccountWindowSceneController()
+    static let sceneID = "telephone-account"
+
+    private let representation = NSHostingSceneRepresentation {
+        AccountWindowsScene()
+    }
+    private var installed = false
+
+    func install() {
+        guard !installed else { return }
+        installed = true
+        NSApplication.shared.addSceneRepresentation(representation)
+    }
+
+    func show(key: String) {
+        representation.environment.openWindow(
+            id: Self.sceneID,
+            value: key
+        )
+    }
+
+    func hide(key: String) {
+        representation.environment.dismissWindow(
+            id: Self.sceneID,
+            value: key
+        )
     }
 }

@@ -178,7 +178,6 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     _windowController =
         [[AccountWindowController alloc]
             initWithAccountDescription:_accountDescription
-                            SIPAddress:_account.SIPAddress
                      accountController:self
                              userAgent:_userAgent
      callHistoryViewEventTargetFactory:callHistoryViewEventTargetFactory
@@ -371,7 +370,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 }
 
 - (void)showWindow {
-    [self.windowController showWindow:self];
+    [self.windowController showWindow];
 }
 
 - (void)showWindowWithoutMakingKey {
@@ -380,18 +379,6 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 
 - (void)hideWindow {
     [self.windowController hideWindow];
-}
-
-- (BOOL)isWindowKey {
-    return self.windowController.isWindowKey;
-}
-
-- (void)orderWindow:(NSWindowOrderingMode)place relativeTo:(NSInteger)otherWindow {
-    [self.windowController orderWindow:place relativeTo:otherWindow];
-}
-
-- (NSInteger)windowNumber {
-    return self.windowController.windowNumber;
 }
 
 - (void)changeAccountState:(AccountWindowControllerAccountState)state {

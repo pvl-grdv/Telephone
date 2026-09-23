@@ -38,12 +38,8 @@ final class AccountsCommandModel: NSObject {
         }
     }
 
-    func toggle(_ item: Item) {
-        if item.controller.isWindowKey() {
-            item.controller.hideWindow()
-        } else {
-            item.controller.showWindow()
-        }
+    func show(_ item: Item) {
+        item.controller.showWindow()
     }
 }
 
@@ -69,7 +65,7 @@ struct AccountsCommands: Commands {
     ) -> some View {
         if index < 9 {
             Button(item.title) {
-                model.toggle(item)
+                model.show(item)
             }
             .keyboardShortcut(
                 KeyEquivalent(Character(String(index + 1))),
@@ -77,7 +73,7 @@ struct AccountsCommands: Commands {
             )
         } else {
             Button(item.title) {
-                model.toggle(item)
+                model.show(item)
             }
         }
     }

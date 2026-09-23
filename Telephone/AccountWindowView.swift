@@ -3,6 +3,7 @@
 //  Telephone
 //
 
+import Foundation
 import Observation
 import SwiftUI
 
@@ -127,6 +128,21 @@ struct AccountWindowRootView: View {
             ) {}
         } message: { error in
             Text(error.informativeText)
+        }
+        .onCommand(Selector(("focusCallHistorySearch:"))) {
+            callHistoryPresenter.focusSearch()
+        }
+        .onCommand(Selector(("makeCall:"))) {
+            callHistoryPresenter.makeCall()
+        }
+        .onCommand(Selector(("copy:"))) {
+            callHistoryPresenter.copySelectedAddress()
+        }
+        .onCommand(Selector(("delete:"))) {
+            callHistoryPresenter.delete()
+        }
+        .onCommand(Selector(("deleteAll:"))) {
+            callHistoryPresenter.deleteAll()
         }
     }
 

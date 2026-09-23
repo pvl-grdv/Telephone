@@ -473,6 +473,7 @@ NS_ASSUME_NONNULL_END
     [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSFullScreenMenuItemEverywhere"];
     [self.accountSetupPresentationController install];
     [self.preferencesController install];
+    [AccountWindowController installScene];
 }
 
 - (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls {
@@ -508,12 +509,7 @@ NS_ASSUME_NONNULL_END
         if (![controller isEnabled]) {
             continue;
         }
-        if (i == 0) {
-            [controller showWindow];
-        } else {
-            AccountController *previous = self.accountControllers[i - 1];
-            [controller orderWindow:NSWindowBelow relativeTo:previous.windowNumber];
-        }
+        [controller showWindow];
     }
     [self.accountControllers updateCallsShouldDisplayAccountInfo];
     [self.accountsCommandModel update];

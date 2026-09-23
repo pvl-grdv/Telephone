@@ -74,9 +74,6 @@
 - (void)showWindow;
 - (void)showWindowWithoutMakingKey;
 - (void)hideWindow;
-- (BOOL)isWindowKey;
-- (void)orderWindow:(NSWindowOrderingMode)place relativeTo:(NSInteger)otherWindow;
-- (NSInteger)windowNumber;
 
 - (void)showRegistrarConnectionErrorSheetWithError:(NSString *)error;
 

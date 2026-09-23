@@ -3,7 +3,6 @@
 //  Telephone
 //
 
-import AppKit
 import SwiftUI
 
 @main
@@ -27,28 +26,7 @@ struct TelephoneApp: App {
 
             CallCommands()
 
-            CommandGroup(after: .pasteboard) {
-                Button(
-                    NSLocalizedString(
-                        "Find…",
-                        comment: "Focus call history search menu item."
-                    )
-                ) {
-                    NSApp.sendAction(
-                        Selector(("focusCallHistorySearch:")),
-                        to: nil,
-                        from: nil
-                    )
-                }
-                .keyboardShortcut("f", modifiers: .command)
-                .disabled(
-                    NSApp.target(
-                        forAction: Selector(("focusCallHistorySearch:")),
-                        to: nil,
-                        from: nil
-                    ) == nil
-                )
-            }
+            CallHistoryCommands()
 
             CommandGroup(after: .help) {
                 Divider()

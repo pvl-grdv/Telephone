@@ -163,6 +163,10 @@ private final class CallHistoryViewModel {
     }
 }
 
+extension FocusedValues {
+    @Entry var callHistoryPresenter: CallHistoryPresenter?
+}
+
 @MainActor
 final class CallHistoryPresenter: CallHistoryView {
     weak var target: CallHistoryViewEventTarget? {
@@ -349,6 +353,7 @@ private struct CallHistoryScreen: View {
                 }
             }
             .listStyle(.inset)
+            .onCopyCommand(perform: copyCommandPayload)
             .onKeyPress(.return) {
                 model.callSelected(action: call) ? .handled : .ignored
             }
@@ -395,6 +400,16 @@ private struct CallHistoryScreen: View {
                     )
                 )
             }
+        }
+    }
+
+    private var copyCommandPayload: (() -> [NSItemProvider])? {
+        guard let address = model.selectedRecord?.contact.address else {
+            return nil
+        }
+
+        return {
+            [NSItemProvider(object: address as NSString)]
         }
     }
 
@@ -506,5 +521,26 @@ private struct CallHistoryRow: View {
         .padding(.vertical, 4)
         .help(record.contact.address)
         .accessibilityElement(children: .combine)
+    }
+}
+
+
+struct CallHistoryCommands: Commands {
+    @FocusedValue(\.callHistoryPresenter)
+    private var presenter
+
+    var body: some Commands {
+        CommandGroup(after: .pasteboard) {
+            Button(
+                NSLocalizedString(
+                    "Find…",
+                    comment: "Focus call history search menu item."
+                )
+            ) {
+                presenter?.focusSearch()
+            }
+            .keyboardShortcut("f", modifiers: .command)
+            .disabled(presenter == nil)
+        }
     }
 }

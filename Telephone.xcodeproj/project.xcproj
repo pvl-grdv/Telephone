@@ -484,6 +484,7 @@
         { "path": "AccountsMenuItems.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AppController.h", "encoding": "utf8" },
         { "path": "AppController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "ApplicationDialogController.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
           "path": "AppSettings.swift",
           "target-membership": [

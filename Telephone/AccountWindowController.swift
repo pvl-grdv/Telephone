@@ -92,6 +92,7 @@ final class AccountWindowController: NSObject {
             }
         )
         .navigationTitle(accountDescription)
+        .focusedSceneValue(\.callHistoryPresenter, callHistoryPresenter)
     }
 
     func showAvailableState() {

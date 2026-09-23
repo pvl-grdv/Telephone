@@ -42,9 +42,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) AccountControllers *accountControllers;
 @property(nonatomic, readonly) AccountSetupPresentationController *accountSetupPresentationController;
+@property(nonatomic, readonly) ApplicationDialogController *applicationDialogController;
 @property(nonatomic) BOOL shouldRegisterAllAccounts;
 @property(nonatomic) BOOL shouldRestartUserAgentASAP;
 @property(nonatomic, getter=isTerminating) BOOL terminating;
+@property(nonatomic, getter=isTerminationConfirmed) BOOL terminationConfirmed;
 @property(nonatomic) BOOL shouldPresentUserAgentLaunchError;
 @property(nonatomic, readonly) AccountsCommandModel *accountsCommandModel;
 
@@ -95,6 +97,7 @@ NS_ASSUME_NONNULL_END
     _destinationToCall = @"";
     _userSessionActive = YES;
     _accountControllers = _compositionRoot.accountControllers;
+    _applicationDialogController = [[ApplicationDialogController alloc] init];
     _accountsCommandModel =
         [[AccountsCommandModel alloc] initWithControllers:_accountControllers];
     _nameServers = _compositionRoot.nameServers;
@@ -129,6 +132,10 @@ NS_ASSUME_NONNULL_END
     [notificationCenter addObserver:self
                            selector:@selector(authenticationFailureControllerDidChangeUsernameAndPassword:)
                                name:@"AKAuthenticationFailureControllerDidChangeUsernameAndPassword"
+                             object:nil];
+    [notificationCenter addObserver:self
+                           selector:@selector(applicationDialogDidConfirmQuit:)
+                               name:[ApplicationDialogController quitConfirmedNotificationName]
                              object:nil];
     
     notificationCenter = [[NSWorkspace sharedWorkspace] notificationCenter];
@@ -414,16 +421,9 @@ NS_ASSUME_NONNULL_END
             }
         }
         
-        if ([self shouldPresentUserAgentLaunchError] && [NSApp modalWindow] == nil) {
-            // Display application modal alert.
-            NSAlert *alert = [[NSAlert alloc] init];
-            [alert addButtonWithTitle:@"OK"];
-            [alert setMessageText:NSLocalizedString(@"Could not start SIP user agent.",
-                                                    @"SIP user agent start error.")];
-            [alert setInformativeText:
-             NSLocalizedString(@"Please check your network connection and STUN server settings.",
-                               @"SIP user agent start error informative text.")];
-            [alert runModal]; 
+        if ([self shouldPresentUserAgentLaunchError] &&
+            !self.applicationDialogController.isPresenting) {
+            [self.applicationDialogController showSIPUserAgentLaunchError];
         }
     }
     
@@ -448,20 +448,7 @@ NS_ASSUME_NONNULL_END
         return;
     }
 
-    NSAlert *alert = [[NSAlert alloc] init];
-    [alert addButtonWithTitle:@"OK"];
-
-    [alert setMessageText:
-     NSLocalizedString(@"Failed to communicate with STUN server.",
-                       @"Failed to communicate with STUN server.")];
-    [alert setInformativeText:
-     NSLocalizedString(@"UDP packets are probably blocked. It is "
-                       "impossible to make or receive calls without that. "
-                       "Make sure that your local firewall and the "
-                       "firewall at your router allow UDP protocol.",
-                       @"Failed to communicate with STUN server "
-                       "informative text.")];
-    [alert runModal];
+    [self.applicationDialogController showSTUNCommunicationError];
 }
 
 
@@ -475,6 +462,7 @@ NS_ASSUME_NONNULL_END
     [self.preferencesController install];
     [AccountWindowController installScene];
     [CallContentViewController installScene];
+    [self.applicationDialogController install];
 }
 
 - (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls {
@@ -493,7 +481,6 @@ NS_ASSUME_NONNULL_END
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    NSWindow.allowsAutomaticWindowTabbing = NO;
     [self.compositionRoot.defaultAppSettings registerDefaults];
     [self.compositionRoot.settingsMigration execute];
     [self configureUserAgent];
@@ -550,7 +537,7 @@ NS_ASSUME_NONNULL_END
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)flag {
     if (self.userAgent.hasUnansweredIncomingCalls) {
         [self.accountControllers showIncomingCallWindows];
-    } else if ([NSApp keyWindow] == nil && self.accountControllers.enabled.count > 0) {
+    } else if (!flag && self.accountControllers.enabled.count > 0) {
         [self.accountControllers.enabled.firstObject showWindow];
     }
     return YES;
@@ -561,33 +548,30 @@ NS_ASSUME_NONNULL_END
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender {
-    if (self.accountControllers.haveActiveCallControllers) {
-        NSAlert *alert = [[NSAlert alloc] init];
-        [alert addButtonWithTitle:NSLocalizedString(@"Quit", @"Quit button.")];
-        [alert addButtonWithTitle:NSLocalizedString(@"Cancel", @"Cancel button.")].keyEquivalent = @"\033";
-        [alert setMessageText:NSLocalizedString(@"Are you sure you want to quit Telephone?",
-                                                @"Telephone quit confirmation.")];
-        [alert setInformativeText:NSLocalizedString(@"All active calls will be disconnected.",
-                                                    @"Telephone quit confirmation informative text.")];
-        NSInteger choice = [alert runModal];
-        
-        if (choice == NSAlertSecondButtonReturn) {
-            return NSTerminateCancel;
-        }
+    if (self.accountControllers.haveActiveCallControllers &&
+        !self.isTerminationConfirmed) {
+        [self.applicationDialogController showQuitConfirmation];
+        return NSTerminateCancel;
     }
-    
+
     if ([[self userAgent] isStarted]) {
         [self setTerminating:YES];
         [self stopUserAgent];
-        
+
         // Terminate after SIP user agent is stopped in the secondary thread.
         // We should send replyToApplicationShouldTerminate: to NSApp from
         // AKSIPUserAgentDidFinishStoppingNotification.
         return NSTerminateLater;
     }
-    
+
     return NSTerminateNow;
 }
+
+- (void)applicationDialogDidConfirmQuit:(NSNotification *)notification {
+    self.terminationConfirmed = YES;
+    [NSApp terminate:self];
+}
+
 
 
 #pragma mark -
@@ -790,7 +774,8 @@ NS_ASSUME_NONNULL_END
 }
 
 - (BOOL)canMakeCall {
-    return NSApp.modalWindow == nil && self.accountControllers.enabled.count > 0;
+    return !self.applicationDialogController.isPresenting &&
+        self.accountControllers.enabled.count > 0;
 }
 
 #pragma mark - NameServersChangeEventTarget

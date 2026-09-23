@@ -494,3 +494,6 @@
 
 /* Network settings apply help text. */
 "Applying network settings reconnects all accounts." = "Applying network settings reconnects all accounts.";
+
+/* General settings toggle. */
+"Show customer context during calls" = "Show customer context during calls";

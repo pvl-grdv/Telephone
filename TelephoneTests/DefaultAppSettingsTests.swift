@@ -30,6 +30,15 @@ struct DefaultAppSettingsTests {
         #expect(!settings.registeredDefaults.isEmpty)
     }
 
+    @Test func customerContextIsEnabledByDefault() {
+        let settings = SettingsFake()
+        let sut = DefaultAppSettings(settings: settings, localization: "any")
+
+        sut.register()
+
+        #expect(settings.registeredDefaults[UserDefaultsKeys.showCustomerContext] as! Bool)
+    }
+
     @Test func formatTelephoneNumbersIsFalseForGermanLocalization() {
         let settings = SettingsFake()
         let sut = DefaultAppSettings(settings: settings, localization: "de")

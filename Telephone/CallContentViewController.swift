@@ -99,6 +99,9 @@ final class CallContentViewController: NSObject, Identifiable {
             customerContextChanged: { [weak self] in
                 self?.scheduleCustomerContextSave()
             },
+            customerContextVisibilityChanged: { [weak self] isVisible in
+                self?.customerContextVisibilityChanged(isVisible)
+            },
             sendDTMF: { [weak self] text in
                 self?.handleDTMF(text)
             }
@@ -426,6 +429,13 @@ final class CallContentViewController: NSObject, Identifiable {
         call.sendDTMFDigits(text)
     }
 
+    private var customerContextEnabled: Bool {
+        let defaults = UserDefaults.standard
+        return defaults.object(
+            forKey: UserDefaultsKeys.showCustomerContext
+        ) as? Bool ?? true
+    }
+
     private var customerPartyAddress: CustomerPartyAddress? {
         guard !model.isTransfer, let callController else { return nil }
 
@@ -452,6 +462,7 @@ final class CallContentViewController: NSObject, Identifiable {
 
     private func loadCustomerContextIfNeeded() {
         guard
+            customerContextEnabled,
             !model.isTransfer,
             let callController,
             let address = customerPartyAddress,
@@ -498,6 +509,7 @@ final class CallContentViewController: NSObject, Identifiable {
 
     private func scheduleCustomerContextSave() {
         guard
+            customerContextEnabled,
             model.customerContextLoaded,
             !isApplyingCustomerContext
         else {
@@ -518,6 +530,7 @@ final class CallContentViewController: NSObject, Identifiable {
 
     private func saveCustomerContextNow() {
         guard
+            customerContextEnabled,
             !model.isTransfer,
             model.customerContextLoaded,
             !isApplyingCustomerContext,
@@ -548,6 +561,15 @@ final class CallContentViewController: NSObject, Identifiable {
                 emails: emails,
                 note: note
             )
+        }
+    }
+
+    private func customerContextVisibilityChanged(_ isVisible: Bool) {
+        if isVisible {
+            loadCustomerContextIfNeeded()
+        } else {
+            customerContextSaveTask?.cancel()
+            customerContextSaveTask = nil
         }
     }
 

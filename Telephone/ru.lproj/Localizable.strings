@@ -493,3 +493,6 @@
 
 /* Network settings apply help text. */
 "Applying network settings reconnects all accounts." = "Применение сетевых настроек переподключит все учётные записи.";
+
+/* General settings toggle. */
+"Show customer context during calls" = "Показывать данные клиента во время звонков";

@@ -9,6 +9,9 @@ import SwiftUI
 struct CallWindowView: View {
     @Bindable var model: CallWindowModel
 
+    @AppStorage(UserDefaultsKeys.showCustomerContext)
+    private var showsCustomerContext = true
+
     let transferDestinationComposer: CallDestinationComposer?
 
     let answer: () -> Void
@@ -23,6 +26,7 @@ struct CallWindowView: View {
     let cancelTransfer: () -> Void
     let completeTransfer: () -> Void
     let customerContextChanged: () -> Void
+    let customerContextVisibilityChanged: (Bool) -> Void
     let sendDTMF: (String) -> Void
 
     var body: some View {
@@ -57,6 +61,9 @@ struct CallWindowView: View {
             transfer.contentView
                 .interactiveDismissDisabled()
         }
+        .onChange(of: showsCustomerContext) { _, isVisible in
+            customerContextVisibilityChanged(isVisible)
+        }
     }
 
     private var regularContent: some View {
@@ -70,14 +77,16 @@ struct CallWindowView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
 
-            Divider()
+            if showsCustomerContext {
+                Divider()
 
-            CustomerContextView(
-                model: model,
-                changed: customerContextChanged
-            )
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+                CustomerContextView(
+                    model: model,
+                    changed: customerContextChanged
+                )
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+            }
 
             if model.showsAccountInfo {
                 Divider()

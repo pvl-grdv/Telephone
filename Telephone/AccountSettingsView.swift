@@ -119,7 +119,7 @@ final class AccountSettingsModel: NSObject {
     private var loadedPasswordAccount = ""
 
     init(
-        preferencesController: PreferencesController,
+        preferencesController: PreferencesController?,
         defaults: UserDefaults = .standard,
         credentials: any CredentialsStoring = CredentialsStore.shared
     ) {

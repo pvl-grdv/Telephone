@@ -66,12 +66,17 @@ final class AccountSettingsModel: NSObject {
         }
     }
     var draft = AccountSettingsDraft()
+    var passwordIsLoading = false
     var pendingRemovalID: String?
 
     var presentAddAccount: (() -> Void)?
 
     private weak var preferencesController: PreferencesController?
     private let defaults: UserDefaults
+    private var passwordLoadTask: Task<Void, Never>?
+    private var loadedPassword = ""
+    private var loadedPasswordService = ""
+    private var loadedPasswordAccount = ""
 
     init(
         preferencesController: PreferencesController,
@@ -144,15 +149,15 @@ final class AccountSettingsModel: NSObject {
         let previousSelection = selection
         accounts = summaries(from: storedAccounts())
 
-        if let previousSelection, accounts.contains(where: { $0.id == previousSelection }) {
-            selection = previousSelection
-            loadSelectedDraft()
+        let nextSelection: String?
+        if let previousSelection,
+           accounts.contains(where: { $0.id == previousSelection }) {
+            nextSelection = previousSelection
         } else {
-            selection = accounts.first?.id
-            if selection == nil {
-                draft = AccountSettingsDraft()
-            }
+            nextSelection = accounts.first?.id
         }
+
+        select(nextSelection, reloadIfUnchanged: true)
     }
 
     func reloadAccount(at index: Int) {
@@ -164,8 +169,7 @@ final class AccountSettingsModel: NSObject {
 
         let identifier = stringValue(stored[index][AKSIPAccountKeys.uuid])
         accounts = summaries(from: stored)
-        selection = identifier
-        loadSelectedDraft()
+        select(identifier, reloadIfUnchanged: true)
     }
 
     func addAccount() {
@@ -206,17 +210,19 @@ final class AccountSettingsModel: NSObject {
         )
 
         accounts = summaries(from: stored)
-        if stored.isEmpty {
-            selection = nil
-            draft = AccountSettingsDraft()
-        } else {
-            selection = accounts[min(index, accounts.count - 1)].id
-            loadSelectedDraft()
-        }
+        let nextSelection = stored.isEmpty
+            ? nil
+            : accounts[min(index, accounts.count - 1)].id
+        select(nextSelection, reloadIfUnchanged: true)
     }
 
     func setEnabled(_ enabled: Bool) {
-        guard enabled != draft.isEnabled else { return }
+        guard
+            enabled != draft.isEnabled,
+            !(enabled && passwordIsLoading)
+        else {
+            return
+        }
 
         var stored = storedAccounts()
         guard
@@ -239,10 +245,6 @@ final class AccountSettingsModel: NSObject {
         draft.isEnabled = enabled
         accounts = summaries(from: stored)
 
-        if enabled {
-            loadSelectedDraft()
-        }
-
         NotificationCenter.default.post(
             name: .AKPreferencesControllerDidChangeAccountEnabled,
             object: preferencesController,
@@ -257,7 +259,6 @@ final class AccountSettingsModel: NSObject {
         var stored = storedAccounts()
         guard stored.indices.contains(source), destination >= 0, destination <= stored.count else { return }
 
-        let selected = selection
         let moving = stored[source]
         stored.insert(moving, at: destination)
 
@@ -269,11 +270,6 @@ final class AccountSettingsModel: NSObject {
 
         defaults.set(stored, forKey: UserDefaultsKeys.accounts)
         accounts = summaries(from: stored)
-
-        if let selected {
-            selection = selected
-            loadSelectedDraft()
-        }
 
         NotificationCenter.default.post(
             name: .AKPreferencesControllerDidSwapAccounts,
@@ -288,11 +284,29 @@ final class AccountSettingsModel: NSObject {
     @objc private func accountDidAdd(_ notification: Notification) {
         let stored = storedAccounts()
         accounts = summaries(from: stored)
-        selection = accounts.last?.id
-        loadSelectedDraft()
+        select(accounts.last?.id, reloadIfUnchanged: true)
+    }
+
+    private func select(
+        _ identifier: String?,
+        reloadIfUnchanged: Bool
+    ) {
+        if selection == identifier {
+            if reloadIfUnchanged {
+                loadSelectedDraft()
+            }
+        } else {
+            selection = identifier
+        }
     }
 
     private func loadSelectedDraft() {
+        passwordLoadTask?.cancel()
+        passwordLoadTask = nil
+        passwordIsLoading = false
+        loadedPassword = ""
+        loadedPasswordService = ""
+        loadedPasswordAccount = ""
         guard let selection else {
             draft = AccountSettingsDraft()
             return
@@ -327,7 +341,7 @@ final class AccountSettingsModel: NSObject {
             fullName: stringValue(account[AKSIPAccountKeys.fullName]),
             domain: domain,
             username: username,
-            password: AKKeychain.password(forService: service, account: username),
+            password: "",
             sipAddress: stringValue(account[AKSIPAccountKeys.sipAddress]),
             registrar: registrar,
             reregistrationTime: positiveIntegerString(account[AKSIPAccountKeys.reregistrationTime]),
@@ -349,6 +363,48 @@ final class AccountSettingsModel: NSObject {
             ),
             ipUpdateMode: updateMode
         )
+
+        loadPassword(
+            service: service,
+            account: username,
+            selection: selection
+        )
+    }
+
+    private func loadPassword(
+        service: String,
+        account: String,
+        selection: String
+    ) {
+        passwordIsLoading = true
+        passwordLoadTask = Task { [weak self] in
+            let password = await Task.detached(priority: .userInitiated) {
+                AKKeychain.password(
+                    forService: service,
+                    account: account
+                )
+            }.value
+
+            guard
+                !Task.isCancelled,
+                let self,
+                self.selection == selection,
+                self.draft.username == account
+            else {
+                return
+            }
+
+            self.passwordIsLoading = false
+            self.loadedPassword = password
+            self.loadedPasswordService = service
+            self.loadedPasswordAccount = account
+
+            // Do not overwrite text the user may already have entered while
+            // the Keychain request was running.
+            if self.draft.password.isEmpty {
+                self.draft.password = password
+            }
+        }
     }
 
     private func saveDraft(into account: inout [String: Any]) {
@@ -391,9 +447,20 @@ final class AccountSettingsModel: NSObject {
         }
 
         let service = "SIP: \(registrar.isEmpty ? domain : registrar)"
-        let savedPassword = AKKeychain.password(forService: service, account: username)
-        if savedPassword != draft.password {
-            _ = AKKeychain.addItem(withService: service, account: username, password: draft.password)
+        let credentialsAreUnchanged =
+            loadedPasswordService == service
+            && loadedPasswordAccount == username
+            && loadedPassword == draft.password
+
+        if !credentialsAreUnchanged,
+           AKKeychain.addItem(
+               withService: service,
+               account: username,
+               password: draft.password
+           ) {
+            loadedPassword = draft.password
+            loadedPasswordService = service
+            loadedPasswordAccount = username
         }
     }
 
@@ -462,9 +529,6 @@ struct AccountSettingsView: View {
         } message: {
             Text(model.removalAlertMessage)
         }
-        .onAppear {
-            model.reload()
-        }
     }
 
     private var accountList: some View {
@@ -524,6 +588,7 @@ struct AccountSettingsView: View {
                         NSLocalizedString("Enable this account", comment: "Account settings toggle."),
                         isOn: enabled
                     )
+                    .disabled(!model.draft.isEnabled && model.passwordIsLoading)
 
                     if model.draft.isEnabled {
                         Label(

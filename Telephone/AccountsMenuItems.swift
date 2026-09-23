@@ -2,85 +2,83 @@
 //  AccountsMenuItems.swift
 //  Telephone
 //
-//  Copyright © 2008-2016 Alexey Kuznetsov
-//  Copyright © 2016-2022 64 Characters
-//
-//  Telephone is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-//
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
-import Cocoa
+import Observation
+import SwiftUI
 
-final class AccountsMenuItems: NSObject {
-    private var items: [NSMenuItem] = []
+@MainActor
+@Observable
+final class AccountsCommandModel: NSObject {
+    struct Item: Identifiable {
+        let id: ObjectIdentifier
+        let title: String
+        fileprivate let controller: AccountController
+    }
 
-    private let menu: NSMenu
+    @ObservationIgnored
     private let controllers: AccountControllers
 
-    @objc init(menu: NSMenu, controllers: AccountControllers) {
-        self.menu = menu
+    private(set) var items: [Item] = []
+
+    @objc(initWithControllers:)
+    init(controllers: AccountControllers) {
         self.controllers = controllers
         super.init()
         update()
     }
 
-    @objc func update() {
-        removeItemsFromMenu()
-        updateItems()
-        addItemsToMenu()
-    }
-}
-
-private extension AccountsMenuItems {
-    func removeItemsFromMenu() {
-        for item in items {
-            menu.removeItem(item)
+    @objc
+    func update() {
+        items = controllers.enabled.map { controller in
+            Item(
+                id: ObjectIdentifier(controller),
+                title: controller.accountDescription,
+                controller: controller
+            )
         }
     }
 
-    func updateItems() {
-        items = zip(controllers.enabled, 1...).map {
-            NSMenuItem(controller: $0, target: self, selector: #selector(toggleAccountWindow), count: $1)
-        }
-        if !items.isEmpty {
-            items.append(NSMenuItem.separator())
-        }
-    }
-
-    func addItemsToMenu() {
-        let start = indexOfFirstSeparatorItem() + 1
-        for (item, index) in zip(items, start..<(start + items.count)) {
-            menu.insertItem(item, at: index)
-        }
-    }
-
-    @objc func toggleAccountWindow(_ item: NSMenuItem) {
-        guard let controller = item.representedObject as? AccountController else { return }
-        if controller.isWindowKey() {
-            controller.hideWindow()
+    func toggle(_ item: Item) {
+        if item.controller.isWindowKey() {
+            item.controller.hideWindow()
         } else {
-            controller.showWindow()
+            item.controller.showWindow()
         }
-    }
-
-    func indexOfFirstSeparatorItem() -> Int {
-        guard let firstSeparator = menu.items.first(where:(\.isSeparatorItem)) else { return 0 }
-        return menu.index(of: firstSeparator)
     }
 }
 
-private extension NSMenuItem {
-    convenience init(controller: AccountController, target: AnyObject, selector: Selector, count: Int) {
-        let hotkey = count < 10 ? String(count) : ""
-        self.init(title: controller.accountDescription, action: selector, keyEquivalent: hotkey)
-        self.target = target
-        self.representedObject = controller
+struct AccountsCommands: Commands {
+    let model: AccountsCommandModel
+
+    var body: some Commands {
+        CommandGroup(after: .windowList) {
+            ForEach(Array(model.items.enumerated()), id: \.element.id) { index, item in
+                accountButton(item, index: index)
+            }
+
+            if !model.items.isEmpty {
+                Divider()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func accountButton(
+        _ item: AccountsCommandModel.Item,
+        index: Int
+    ) -> some View {
+        if index < 9 {
+            Button(item.title) {
+                model.toggle(item)
+            }
+            .keyboardShortcut(
+                KeyEquivalent(Character(String(index + 1))),
+                modifiers: .command
+            )
+        } else {
+            Button(item.title) {
+                model.toggle(item)
+            }
+        }
     }
 }

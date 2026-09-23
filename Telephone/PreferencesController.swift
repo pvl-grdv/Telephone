@@ -15,6 +15,7 @@ final class PreferencesController: NSObject, SoundIOPreferences {
     let soundPreferencesViewEventTarget: SoundPreferencesViewEventTarget
 
     private var fallbackWindowController: NSWindowController?
+    private var modernController: AnyObject?
 
     private lazy var model: SettingsViewModel = {
         let accountModel = AccountSettingsModel(preferencesController: self)
@@ -36,17 +37,6 @@ final class PreferencesController: NSObject, SoundIOPreferences {
         return model
     }()
 
-    @nonobjc
-    var contentView: some View {
-        SettingsRootView(
-            model: model,
-            selectionChanged: { _ in }
-        )
-        .onAppear { [weak self] in
-            self?.dismissFallbackWindow()
-        }
-    }
-
     @objc(initWithDelegate:userAgent:soundPreferencesViewEventTarget:)
     init(
         delegate: PreferencesControllerDelegate,
@@ -62,7 +52,21 @@ final class PreferencesController: NSObject, SoundIOPreferences {
         observePreferenceChanges()
     }
 
+    func install() {
+        if #available(macOS 26.0, *) {
+            let controller = PreferencesSceneController(model: model)
+            modernController = controller
+            controller.install()
+        }
+    }
+
     func showWindowCentered() {
+        if #available(macOS 26.0, *),
+           let controller = modernController as? PreferencesSceneController {
+            controller.show()
+            return
+        }
+
         let controller = fallbackWindowController
             ?? makeFallbackWindowController()
         fallbackWindowController = controller
@@ -160,5 +164,41 @@ final class PreferencesController: NSObject, SoundIOPreferences {
 
     @objc private func networkSettingsDidChange(_ notification: Notification) {
         delegate?.preferencesControllerDidChangeNetworkSettings?(notification)
+    }
+}
+
+
+@available(macOS 26.0, *)
+private struct PreferencesHostedScene: Scene {
+    let model: SettingsViewModel
+
+    var body: some Scene {
+        Settings {
+            SettingsRootView(
+                model: model,
+                selectionChanged: { _ in }
+            )
+        }
+    }
+}
+
+@available(macOS 26.0, *)
+@MainActor
+private final class PreferencesSceneController {
+    private let representation:
+        NSHostingSceneRepresentation<PreferencesHostedScene>
+
+    init(model: SettingsViewModel) {
+        representation = NSHostingSceneRepresentation {
+            PreferencesHostedScene(model: model)
+        }
+    }
+
+    func install() {
+        NSApplication.shared.addSceneRepresentation(representation)
+    }
+
+    func show() {
+        representation.environment.openSettings()
     }
 }

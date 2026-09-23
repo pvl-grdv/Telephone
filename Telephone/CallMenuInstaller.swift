@@ -4,143 +4,124 @@
 //
 
 import AppKit
+import SwiftUI
 
-@MainActor
-@objcMembers
-final class CallMenuInstaller: NSObject, NSMenuItemValidation {
+struct CallCommands: Commands {
     private let defaults = UserDefaults.standard
 
-    func install() {
-        installCallMenu()
-    }
-
-    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-        guard menuItem.action == #selector(toggleKeepCallWindowOnTop(_:)) else {
-            return true
-        }
-
-        menuItem.state = defaults.bool(
-            forKey: UserDefaultsKeys.keepCallWindowOnTop
-        ) ? .on : .off
-        return true
-    }
-
-    @IBAction
-    private func toggleKeepCallWindowOnTop(_ sender: Any?) {
-        let key = UserDefaultsKeys.keepCallWindowOnTop
-        defaults.set(!defaults.bool(forKey: key), forKey: key)
-    }
-
-    private func installCallMenu() {
-        guard
-            let mainMenu = NSApp.mainMenu,
-            !mainMenu.items.contains(where: { $0.submenu?.identifier?.rawValue == "TelephoneCallMenu" })
-        else {
-            return
-        }
-
-        let callMenu = NSMenu(
-            title: NSLocalizedString(
+    var body: some Commands {
+        CommandMenu(
+            NSLocalizedString(
                 "Call",
                 comment: "Call menu title."
             )
-        )
-        callMenu.identifier = NSUserInterfaceItemIdentifier("TelephoneCallMenu")
-
-        callMenu.addItem(
-            responderItem(
-                title: NSLocalizedString("Mute", comment: "Mute. Call menu item."),
+        ) {
+            responderButton(
+                title: NSLocalizedString(
+                    "Mute",
+                    comment: "Mute. Call menu item."
+                ),
                 selector: Selector(("toggleMicrophoneMute:")),
-                keyEquivalent: "m",
+                key: "m",
                 modifiers: [.command, .shift]
             )
-        )
-        callMenu.addItem(
-            responderItem(
-                title: NSLocalizedString("Hold", comment: "Hold. Call menu item."),
+
+            responderButton(
+                title: NSLocalizedString(
+                    "Hold",
+                    comment: "Hold. Call menu item."
+                ),
                 selector: Selector(("toggleCallHold:"))
             )
-        )
-        callMenu.addItem(
-            responderItem(
-                title: NSLocalizedString("Transfer", comment: "Transfer. Call menu item."),
+
+            responderButton(
+                title: NSLocalizedString(
+                    "Transfer",
+                    comment: "Transfer. Call menu item."
+                ),
                 selector: Selector(("showCallTransferSheet:"))
             )
-        )
-        callMenu.addItem(
-            responderItem(
-                title: NSLocalizedString("Call Back", comment: "Call back menu item."),
+
+            responderButton(
+                title: NSLocalizedString(
+                    "Call Back",
+                    comment: "Call back menu item."
+                ),
                 selector: Selector(("redial:")),
-                keyEquivalent: "r",
-                modifiers: [.command]
+                key: "r"
             )
-        )
 
-        callMenu.addItem(.separator())
+            Divider()
 
-        callMenu.addItem(
-            responderItem(
-                title: NSLocalizedString("Answer", comment: "Call answer menu item."),
+            responderButton(
+                title: NSLocalizedString(
+                    "Answer",
+                    comment: "Call answer menu item."
+                ),
                 selector: Selector(("acceptCall:")),
-                keyEquivalent: "\r",
+                key: "\r",
                 modifiers: []
             )
-        )
-        callMenu.addItem(
-            responderItem(
-                title: NSLocalizedString("End Call", comment: "End call menu item."),
+
+            responderButton(
+                title: NSLocalizedString(
+                    "End Call",
+                    comment: "End call menu item."
+                ),
                 selector: Selector(("hangUpCall:")),
-                keyEquivalent: ".",
-                modifiers: [.command]
+                key: "."
             )
-        )
 
-        callMenu.addItem(.separator())
+            Divider()
 
-        let keepOnTop = NSMenuItem(
-            title: NSLocalizedString(
-                "Keep on Top",
-                comment: "Keep call window on top menu item."
-            ),
-            action: #selector(toggleKeepCallWindowOnTop(_:)),
-            keyEquivalent: ""
-        )
-        keepOnTop.target = self
-        callMenu.addItem(keepOnTop)
-
-        let rootItem = NSMenuItem(
-            title: callMenu.title,
-            action: nil,
-            keyEquivalent: ""
-        )
-        rootItem.submenu = callMenu
-
-        if let windowMenu = NSApp.windowsMenu,
-           let windowIndex = mainMenu.items.firstIndex(where: { $0.submenu === windowMenu }) {
-            mainMenu.insertItem(rootItem, at: windowIndex)
-        } else if let helpMenu = NSApp.helpMenu,
-                  let helpIndex = mainMenu.items.firstIndex(where: { $0.submenu === helpMenu }) {
-            mainMenu.insertItem(rootItem, at: helpIndex)
-        } else {
-            mainMenu.addItem(rootItem)
+            Toggle(
+                NSLocalizedString(
+                    "Keep on Top",
+                    comment: "Keep call window on top menu item."
+                ),
+                isOn: Binding(
+                    get: {
+                        defaults.bool(
+                            forKey: UserDefaultsKeys.keepCallWindowOnTop
+                        )
+                    },
+                    set: { newValue in
+                        defaults.set(
+                            newValue,
+                            forKey: UserDefaultsKeys.keepCallWindowOnTop
+                        )
+                    }
+                )
+            )
         }
     }
 
-    private func responderItem(
+    @ViewBuilder
+    private func responderButton(
         title: String,
         selector: Selector,
-        keyEquivalent: String = "",
-        modifiers: NSEvent.ModifierFlags = [.command]
-    ) -> NSMenuItem {
-        let item = NSMenuItem(
-            title: title,
-            action: selector,
-            keyEquivalent: keyEquivalent
+        key: KeyEquivalent? = nil,
+        modifiers: EventModifiers = .command
+    ) -> some View {
+        let button = Button(title) {
+            NSApp.sendAction(
+                selector,
+                to: nil,
+                from: nil
+            )
+        }
+        .disabled(
+            NSApp.target(
+                forAction: selector,
+                to: nil,
+                from: nil
+            ) == nil
         )
-        item.target = nil
-        item.keyEquivalentModifierMask = modifiers
-        return item
+
+        if let key {
+            button.keyboardShortcut(key, modifiers: modifiers)
+        } else {
+            button
+        }
     }
-
-
 }

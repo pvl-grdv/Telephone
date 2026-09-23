@@ -46,8 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic) BOOL shouldRestartUserAgentASAP;
 @property(nonatomic, getter=isTerminating) BOOL terminating;
 @property(nonatomic) BOOL shouldPresentUserAgentLaunchError;
-@property(nonatomic) AccountsMenuItems *accountsMenuItems;
-@property(nonatomic, strong) CallMenuInstaller *callMenuInstaller;
+@property(nonatomic, readonly) AccountsCommandModel *accountsCommandModel;
 
 @property(nonatomic, readonly) CompositionRoot *compositionRoot;
 @property(nonatomic, readonly) PreferencesController *preferencesController;
@@ -86,8 +85,6 @@ NS_ASSUME_NONNULL_END
     _compositionRoot = [[CompositionRoot alloc] initWithPreferencesControllerDelegate:self
                                                          nameServersChangeEventTarget:self];
 
-    _callMenuInstaller = [[CallMenuInstaller alloc] init];
-    
     _userAgent = _compositionRoot.userAgent;
     [[self userAgent] setDelegate:self];
     _preferencesController = _compositionRoot.preferencesController;
@@ -98,6 +95,8 @@ NS_ASSUME_NONNULL_END
     _destinationToCall = @"";
     _userSessionActive = YES;
     _accountControllers = _compositionRoot.accountControllers;
+    _accountsCommandModel =
+        [[AccountsCommandModel alloc] initWithControllers:_accountControllers];
     _nameServers = _compositionRoot.nameServers;
     _networkReachability = [AKNetworkReachability networkReachability];
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
@@ -204,8 +203,12 @@ NS_ASSUME_NONNULL_END
     [self.compositionRoot.helpMenuActionTarget openFAQ];
 }
 
-- (id)preferencesControllerForSwiftUI {
-    return self.preferencesController;
+- (id)accountsCommandModelForSwiftUI {
+    return self.accountsCommandModel;
+}
+
+- (void)showPreferencesForSwiftUI {
+    [self.preferencesController showWindowCentered];
 }
 
 - (void)updateDockTileBadgeLabel {
@@ -260,7 +263,7 @@ NS_ASSUME_NONNULL_END
 
     [self.accountControllers addController:controller];
     [self.accountControllers updateCallsShouldDisplayAccountInfo];
-    [self.accountsMenuItems update];
+    [self.accountsCommandModel update];
 
     [controller showWindowWithoutMakingKey];
 
@@ -291,7 +294,7 @@ NS_ASSUME_NONNULL_END
     
     [self.accountControllers removeControllerAtIndex:index];
     [self.accountControllers updateCallsShouldDisplayAccountInfo];
-    [self.accountsMenuItems update];
+    [self.accountsCommandModel update];
 }
 
 - (void)preferencesControllerDidChangeAccountEnabled:(NSNotification *)notification {
@@ -325,7 +328,7 @@ NS_ASSUME_NONNULL_END
     }
     
     [self.accountControllers updateCallsShouldDisplayAccountInfo];
-    [self.accountsMenuItems update];
+    [self.accountsCommandModel update];
 }
 
 - (void)preferencesControllerDidSwapAccounts:(NSNotification *)notification {
@@ -344,7 +347,7 @@ NS_ASSUME_NONNULL_END
         [self.accountControllers removeControllerAtIndex:(sourceIndex + 1)];
     }
     
-    [self.accountsMenuItems update];
+    [self.accountsCommandModel update];
 }
 
 - (void)preferencesControllerDidChangeNetworkSettings:(NSNotification *)notification {
@@ -473,6 +476,7 @@ NS_ASSUME_NONNULL_END
 - (void)applicationWillFinishLaunching:(NSNotification *)notification {
     [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSFullScreenMenuItemEverywhere"];
     [self.accountSetupPresentationController install];
+    [self.preferencesController install];
 }
 
 - (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls {
@@ -494,12 +498,7 @@ NS_ASSUME_NONNULL_END
     NSWindow.allowsAutomaticWindowTabbing = NO;
     [self.compositionRoot.defaultAppSettings registerDefaults];
     [self.compositionRoot.settingsMigration execute];
-    [self.callMenuInstaller install];
     [self configureUserAgent];
-    NSMenu *windowMenu = NSApp.windowsMenu;
-    if (windowMenu != nil) {
-        self.accountsMenuItems = [[AccountsMenuItems alloc] initWithMenu:windowMenu controllers:self.accountControllers];
-    }
     [self configureUserNotifications];
     NSApp.servicesProvider = self;
     NSArray *accounts = [NSUserDefaults.standardUserDefaults arrayForKey:UserDefaultsKeys.accounts];
@@ -521,7 +520,7 @@ NS_ASSUME_NONNULL_END
         }
     }
     [self.accountControllers updateCallsShouldDisplayAccountInfo];
-    [self.accountsMenuItems update];
+    [self.accountsCommandModel update];
     [self setFinishedLaunching:YES];
     if (self.networkReachability.isReachable) {
         [self setShouldPresentUserAgentLaunchError:YES];

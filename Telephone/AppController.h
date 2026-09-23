@@ -28,6 +28,7 @@
 - (void)openHomepage;
 - (void)openFAQ;
 
-- (id)preferencesControllerForSwiftUI;
+- (id)accountsCommandModelForSwiftUI;
+- (void)showPreferencesForSwiftUI;
 
 @end

@@ -12,12 +12,35 @@ struct TelephoneApp: App {
     private var appController
 
     var body: some Scene {
-        Settings {
-            (appController.preferencesControllerForSwiftUI()
-                as! PreferencesController)
-                .contentView
+        WindowGroup(
+            "Telephone",
+            id: "telephone-command-host"
+        ) {
+            EmptyView()
         }
+        .defaultLaunchBehavior(.suppressed)
         .commands {
+            if #unavailable(macOS 26.0) {
+                CommandGroup(replacing: .appSettings) {
+                    Button(
+                        NSLocalizedString(
+                            "Settings…",
+                            comment: "Application settings menu item."
+                        )
+                    ) {
+                        appController.showPreferencesForSwiftUI()
+                    }
+                    .keyboardShortcut(",", modifiers: .command)
+                }
+            }
+
+            AccountsCommands(
+                model: appController.accountsCommandModelForSwiftUI()
+                    as! AccountsCommandModel
+            )
+
+            CallCommands()
+
             CommandGroup(after: .pasteboard) {
                 Button(
                     NSLocalizedString(

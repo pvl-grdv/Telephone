@@ -27,6 +27,7 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
     private let callHistoryPresenter: CallHistoryPresenter
     private let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
     private let account: Account
+    private let authenticationFailureController: AuthenticationFailureController
     private weak var accountDelegate: AccountWindowControllerDelegate?
     private let model = AccountWindowModel()
 
@@ -36,11 +37,12 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         model.showsCallComposer
     }
 
-    @objc(initWithAccountDescription:SIPAddress:accountController:callHistoryViewEventTargetFactory:account:delegate:)
+    @objc(initWithAccountDescription:SIPAddress:accountController:userAgent:callHistoryViewEventTargetFactory:account:delegate:)
     init(
         accountDescription: String,
         sipAddress: String,
         accountController: AccountController,
+        userAgent: AKSIPUserAgent,
         callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
         account: Account,
         delegate: AccountWindowControllerDelegate
@@ -51,6 +53,10 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         callHistoryPresenter = CallHistoryPresenter()
         self.callHistoryViewEventTargetFactory = callHistoryViewEventTargetFactory
         self.account = account
+        authenticationFailureController = AuthenticationFailureController(
+            accountController: accountController,
+            userAgent: userAgent
+        )
         accountDelegate = delegate
 
         let window = NSWindow(
@@ -81,6 +87,10 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
                     self,
                     didChangeAccountState: state
                 )
+            },
+            submitAuthenticationFailure: { [weak self] authenticationFailure in
+                self?.authenticationFailureController
+                    .changeUsernameAndPassword(authenticationFailure)
             }
         )
         window.contentViewController = NSHostingController(rootView: rootView)
@@ -111,6 +121,15 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         }
     }
 
+    func showAuthenticationFailure() {
+        guard model.authenticationFailure == nil else { return }
+        model.authenticationFailure = authenticationFailureController.makeModel()
+    }
+
+    func dismissAuthenticationFailure() {
+        model.authenticationFailure = nil
+    }
+
     func makeCallToDestination(_ destination: String) {
         callDestinationComposer.makeCallToDestination(destination)
     }
@@ -118,10 +137,6 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
     func showAlert(_ alert: NSAlert) {
         guard let window else { return }
         alert.beginSheetModal(for: window)
-    }
-
-    func beginSheet(_ sheet: NSWindow) {
-        window?.beginSheet(sheet)
     }
 
     func showWindowWithoutMakingKey() {

@@ -3,8 +3,7 @@
 //  Telephone
 //
 
-import AppKit
-import SwiftUI
+import Foundation
 
 private extension Notification.Name {
     static let authenticationFailureCredentialsDidChange =
@@ -13,94 +12,46 @@ private extension Notification.Name {
 
 @MainActor
 @objcMembers
-final class AuthenticationFailureController: NSWindowController {
+final class AuthenticationFailureController: NSObject {
     private(set) weak var accountController: AccountController?
     private let userAgent: AKSIPUserAgent
-    private let model = AuthenticationFailureModel()
 
-    @objc(initWithAccountController:userAgent:)
+    @nonobjc
     init(
         accountController: AccountController,
         userAgent: AKSIPUserAgent
     ) {
         self.accountController = accountController
         self.userAgent = userAgent
-        super.init(window: nil)
-
-        let contentController = NSHostingController(
-            rootView: AuthenticationFailureView(
-                model: model,
-                cancel: { [weak self] in
-                    self?.closeSheet(nil)
-                },
-                submit: { [weak self] in
-                    self?.changeUsernameAndPassword(nil)
-                }
-            )
-        )
-
-        let window = NSWindow(
-            contentRect: .zero,
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = NSLocalizedString(
-            "Authentication Failure",
-            comment: "Authentication failure window title."
-        )
-        window.isReleasedWhenClosed = false
-        window.contentViewController = contentController
-        window.setContentSize(contentController.view.fittingSize)
-        self.window = window
+        super.init()
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    @objc(presentFromParentWindow:)
-    func present(from parent: NSWindow) {
-        prepareForPresentation()
-        guard let window else { return }
-        parent.beginSheet(window)
-    }
-
-    private func prepareForPresentation() {
+    @nonobjc
+    func makeModel() -> AuthenticationFailureModel? {
         guard
             let accountController,
             let account = accountController.account
         else {
-            return
+            return nil
         }
 
         let registrar = account.registrar.stringValue
         let username = account.username
         let service = "SIP: \(registrar)"
 
-        model.registrar = registrar
-        model.username = username
-        model.password = AKKeychain.password(
-            forService: service,
-            account: username
+        return AuthenticationFailureModel(
+            registrar: registrar,
+            username: username,
+            password: AKKeychain.password(
+                forService: service,
+                account: username
+            ),
+            savesPassword: true
         )
-        model.savesPassword = true
-        model.focusRequest &+= 1
     }
 
-    @IBAction func closeSheet(_ sender: Any?) {
-        guard
-            let window,
-            let parent = window.sheetParent
-        else {
-            return
-        }
-        parent.endSheet(window)
-    }
-
-    @IBAction func changeUsernameAndPassword(_ sender: Any?) {
-        closeSheet(sender)
-
+    @nonobjc
+    func changeUsernameAndPassword(_ model: AuthenticationFailureModel) {
         let username = model.username.trimmingCharacters(
             in: .whitespacesAndNewlines
         )

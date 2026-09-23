@@ -43,14 +43,18 @@ enum AccountWindowDisplayState: Equatable {
 final class AccountWindowModel {
     var state: AccountWindowDisplayState = .offline
     var showsCallComposer = false
+    var authenticationFailure: AuthenticationFailureModel?
 }
 
 struct AccountWindowRootView: View {
     @Bindable var model: AccountWindowModel
+    @State private var pendingAuthenticationFailureSubmission:
+        AuthenticationFailureModel?
 
     let callDestinationComposer: CallDestinationComposer
     let callHistoryPresenter: CallHistoryPresenter
     let changeState: (AccountWindowControllerAccountState) -> Void
+    let submitAuthenticationFailure: (AuthenticationFailureModel) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -78,6 +82,29 @@ struct AccountWindowRootView: View {
                 )
             }
         }
+        .sheet(
+            item: $model.authenticationFailure,
+            onDismiss: submitPendingAuthenticationFailure
+        ) { authenticationFailure in
+            AuthenticationFailureView(
+                model: authenticationFailure
+            ) {
+                pendingAuthenticationFailureSubmission =
+                    authenticationFailure
+                model.authenticationFailure = nil
+            }
+        }
+    }
+
+    private func submitPendingAuthenticationFailure() {
+        guard let authenticationFailure =
+            pendingAuthenticationFailureSubmission
+        else {
+            return
+        }
+
+        pendingAuthenticationFailureSubmission = nil
+        submitAuthenticationFailure(authenticationFailure)
     }
 }
 

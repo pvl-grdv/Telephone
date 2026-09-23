@@ -60,8 +60,6 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 @property(nonatomic, readonly) WorkspaceSleepStatus *sleepStatus;
 @property(nonatomic, readonly) IncomingCallContactResolver *incomingCallContactResolver;
 
-@property(nonatomic, readonly) AuthenticationFailureController *authenticationFailureController;
-
 @property(nonatomic, readonly) AccountWindowController *windowController;
 
 @property(nonatomic, readonly, getter=isAccountAdded) BOOL accountAdded;
@@ -71,8 +69,6 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 @end
 
 @implementation AccountController
-
-@synthesize authenticationFailureController = _authenticationFailureController;
 
 - (void)setEnabled:(BOOL)flag {
     _enabled = flag;
@@ -151,15 +147,6 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     return self.account.identifier != kAKSIPUserAgentInvalidIdentifier;
 }
 
-- (AuthenticationFailureController *)authenticationFailureController {
-    if (_authenticationFailureController == nil) {
-        _authenticationFailureController
-            = [[AuthenticationFailureController alloc] initWithAccountController:self userAgent:self.userAgent];
-    }
-    
-    return _authenticationFailureController;
-}
-
 - (BOOL)canMakeCalls {
     return self.windowController.canMakeCalls;
 }
@@ -193,6 +180,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
             initWithAccountDescription:_accountDescription
                             SIPAddress:_account.SIPAddress
                      accountController:self
+                             userAgent:_userAgent
      callHistoryViewEventTargetFactory:callHistoryViewEventTargetFactory
                                account:[[AccountControllerToAccountAdapter alloc] initWithController:self]
                               delegate:self];
@@ -216,7 +204,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     // Close authentication failure sheet if it's raised.
-    [_authenticationFailureController closeSheet:nil];
+    [_windowController dismissAuthenticationFailure];
 }
 
 - (NSString *)description {
@@ -514,8 +502,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
         if ([[self account] registrationStatus] == PJSIP_SC_UNAUTHORIZED &&
             [[self account] registrationErrorCode] == PJSIP_EFAILEDCREDENTIAL) {
 
-            [[self authenticationFailureController]
-                presentFromParentWindow:self.windowController.window];
+            [self.windowController showAuthenticationFailure];
 
         } else if (([[self account] registrationStatus] / 100 != 2) &&
                    ([[self account] registrationExpireTime] == kAKSIPAccountRegistrationExpireTimeNotSpecified)) {

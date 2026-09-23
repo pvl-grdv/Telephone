@@ -3,17 +3,31 @@
 //  Telephone
 //
 
+import Foundation
 import Observation
 import SwiftUI
 
 @MainActor
 @Observable
-final class AuthenticationFailureModel {
-    var registrar = ""
-    var username = ""
-    var password = ""
-    var savesPassword = true
-    var focusRequest = 0
+final class AuthenticationFailureModel: Identifiable {
+    let id = UUID()
+
+    var registrar: String
+    var username: String
+    var password: String
+    var savesPassword: Bool
+
+    init(
+        registrar: String,
+        username: String,
+        password: String,
+        savesPassword: Bool
+    ) {
+        self.registrar = registrar
+        self.username = username
+        self.password = password
+        self.savesPassword = savesPassword
+    }
 
     var informativeText: String {
         String(
@@ -27,10 +41,10 @@ final class AuthenticationFailureModel {
 }
 
 struct AuthenticationFailureView: View {
+    @Environment(\.dismiss) private var dismiss
     @Bindable var model: AuthenticationFailureModel
     @FocusState private var focusedField: Field?
 
-    let cancel: () -> Void
     let submit: () -> Void
 
     private enum Field: Hashable {
@@ -96,9 +110,10 @@ struct AuthenticationFailureView: View {
                 Spacer()
 
                 Button(
-                    NSLocalizedString("Cancel", comment: "Cancel button."),
-                    action: cancel
-                )
+                    NSLocalizedString("Cancel", comment: "Cancel button.")
+                ) {
+                    dismiss()
+                }
                 .keyboardShortcut(.cancelAction)
 
                 Button(
@@ -119,8 +134,5 @@ struct AuthenticationFailureView: View {
         .padding(20)
         .frame(minWidth: 420, idealWidth: 454, maxWidth: 520)
         .defaultFocus($focusedField, .password)
-        .onChange(of: model.focusRequest) {
-            focusedField = .password
-        }
     }
 }

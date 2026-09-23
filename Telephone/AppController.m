@@ -464,7 +464,7 @@ NS_ASSUME_NONNULL_END
     [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSFullScreenMenuItemEverywhere"];
     [self.accountSetupPresentationController install];
     [self.preferencesController install];
-    [AccountWindowController installScene];
+    [AccountPresentationCoordinator installScene];
     [CallPresentationCoordinator installScene];
     [self.applicationDialogController install];
 }

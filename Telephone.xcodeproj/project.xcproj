@@ -32,7 +32,8 @@
           "children": [
             { "path": "AccountController.h", "encoding": "utf8" },
             { "path": "AccountController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AccountWindowController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AccountPresentationCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AccountWindowScene.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountWindowView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountControllerToAccountAdapter.h", "encoding": "utf8" },
             { "path": "AccountControllerToAccountAdapter.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },

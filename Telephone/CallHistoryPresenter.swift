@@ -16,7 +16,6 @@
 //  GNU General Public License for more details.
 //
 
-import AppKit
 import Observation
 import SwiftUI
 
@@ -188,6 +187,11 @@ final class CallHistoryPresenter: CallHistoryView {
     }
 
     private let model = CallHistoryViewModel()
+    private let clipboard: Clipboard
+
+    init(clipboard: Clipboard = SystemClipboard.shared) {
+        self.clipboard = clipboard
+    }
 
     var contentView: some View {
         CallHistoryScreen(
@@ -215,29 +219,8 @@ final class CallHistoryPresenter: CallHistoryView {
         model.requestSearchFocus()
     }
 
-    func makeCall() {
-        _ = model.callSelected { [weak self] identifier in
-            self?.target?.didPickRecord(withIdentifier: identifier)
-        }
-    }
-
-    func copySelectedAddress() {
-        guard let address = model.selectedRecord?.contact.address else { return }
-        copyToPasteboard(address)
-    }
-
-    func delete() {
-        _ = model.requestDeleteSelected()
-    }
-
-    func deleteAll() {
-        _ = model.requestDeleteAll()
-    }
-
     private func copyToPasteboard(_ value: String) {
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setString(value, forType: .string)
+        clipboard.copy(value)
     }
 }
 

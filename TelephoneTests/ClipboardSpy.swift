@@ -18,6 +18,7 @@
 
 import Foundation
 
+@MainActor
 final class ClipboardSpy {
     private(set) var invokedText: String?
 

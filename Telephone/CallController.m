@@ -136,8 +136,11 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
                              delegate:(id<CallControllerDelegate>)delegate {
 
     BOOL isTransfer = [windowNibName isEqualToString:@"CallTransfer"];
-    BOOL usesSwiftCallWindow = [windowNibName isEqualToString:@"Call"] || isTransfer;
-    NSAssert(usesSwiftCallWindow, @"Unsupported call window: %@", windowNibName);
+    NSAssert(
+        [windowNibName isEqualToString:@"Call"] || isTransfer,
+        @"Unsupported call window: %@",
+        windowNibName
+    );
 
     self = [super init];
 

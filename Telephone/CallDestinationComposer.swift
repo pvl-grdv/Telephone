@@ -336,7 +336,9 @@ private final class CallDestinationInputModel {
 
         contactsCacheLoading = true
 
-        DispatchQueue.global(qos: .userInitiated).async {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard self != nil else { return }
+
             let payload = ContactCachePayload(
                 contacts: Self.allContacts(in: CNContactStore())
             )

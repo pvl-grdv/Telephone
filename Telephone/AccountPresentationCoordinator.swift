@@ -1,28 +1,28 @@
 //
-//  AccountWindowController.swift
+//  AccountPresentationCoordinator.swift
 //  Telephone
 //
 
-import AppKit
+import Foundation
 import SwiftUI
 import UseCases
 
-@objc enum AccountWindowControllerAccountState: Int {
+@objc enum AccountAvailabilityState: Int {
     case offline
     case available
     case unavailable
 }
 
-@objc protocol AccountWindowControllerDelegate: AnyObject {
-    func accountWindowController(
-        _ controller: AccountWindowController,
-        didChangeAccountState state: AccountWindowControllerAccountState
+@objc protocol AccountPresentationCoordinatorDelegate: AnyObject {
+    func accountPresentationCoordinator(
+        _ controller: AccountPresentationCoordinator,
+        didChangeAccountState state: AccountAvailabilityState
     )
 }
 
 @MainActor
 @objcMembers
-final class AccountWindowController: NSObject {
+final class AccountPresentationCoordinator: NSObject {
     private let accountDescription: String
     private let windowKey: String
     private let callDestinationComposer: CallDestinationComposer
@@ -30,7 +30,7 @@ final class AccountWindowController: NSObject {
     private let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
     private let account: Account
     private let authenticationFailureController: AuthenticationFailureController
-    private weak var accountDelegate: AccountWindowControllerDelegate?
+    private weak var accountDelegate: AccountPresentationCoordinatorDelegate?
     private let model = AccountWindowModel()
 
     private var callHistoryViewEventTarget: CallHistoryViewEventTarget?
@@ -50,7 +50,7 @@ final class AccountWindowController: NSObject {
         userAgent: AKSIPUserAgent,
         callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
         account: Account,
-        delegate: AccountWindowControllerDelegate
+        delegate: AccountPresentationCoordinatorDelegate
     ) {
         self.accountDescription = accountDescription
         windowKey = account.uuid
@@ -68,7 +68,7 @@ final class AccountWindowController: NSObject {
 
         super.init()
 
-        AccountWindowRegistry.shared.register(self, key: windowKey)
+        AccountPresentationRegistry.shared.register(self, key: windowKey)
         configureCallHistory()
         show(.offline, callComposerVisible: false, animated: false)
     }
@@ -81,7 +81,7 @@ final class AccountWindowController: NSObject {
             callHistoryPresenter: callHistoryPresenter,
             changeState: { [weak self] state in
                 guard let self else { return }
-                self.accountDelegate?.accountWindowController(
+                self.accountDelegate?.accountPresentationCoordinator(
                     self,
                     didChangeAccountState: state
                 )
@@ -149,6 +149,13 @@ final class AccountWindowController: NSObject {
         AccountWindowSceneController.shared.hide(key: windowKey)
     }
 
+    func invalidate() {
+        dismissAuthenticationFailure()
+        callHistoryPresenter.target = nil
+        callHistoryViewEventTarget = nil
+        AccountPresentationRegistry.shared.unregister(key: windowKey)
+    }
+
     private func configureCallHistory() {
         callHistoryViewEventTargetFactory.make(
             account: account,
@@ -179,85 +186,5 @@ final class AccountWindowController: NSObject {
         if callComposerVisible {
             callDestinationComposer.focus()
         }
-    }
-}
-
-@MainActor
-private final class AccountWindowRegistry {
-    static let shared = AccountWindowRegistry()
-
-    private final class WeakController {
-        weak var value: AccountWindowController?
-
-        init(_ value: AccountWindowController) {
-            self.value = value
-        }
-    }
-
-    private var controllers: [String: WeakController] = [:]
-
-    func register(_ controller: AccountWindowController, key: String) {
-        controllers[key] = WeakController(controller)
-    }
-
-    func controller(for key: String) -> AccountWindowController? {
-        guard let controller = controllers[key]?.value else {
-            controllers[key] = nil
-            return nil
-        }
-        return controller
-    }
-}
-
-private struct AccountWindowsScene: Scene {
-    var body: some Scene {
-        WindowGroup(
-            NSLocalizedString(
-                "Account",
-                comment: "Account window scene title."
-            ),
-            id: AccountWindowSceneController.sceneID,
-            for: String.self
-        ) { key in
-            if let key = key.wrappedValue,
-               let controller = AccountWindowRegistry.shared.controller(for: key) {
-                controller.contentView
-            } else {
-                EmptyView()
-            }
-        }
-        .defaultLaunchBehavior(.suppressed)
-        .restorationBehavior(.disabled)
-    }
-}
-
-@MainActor
-private final class AccountWindowSceneController {
-    static let shared = AccountWindowSceneController()
-    static let sceneID = "telephone-account"
-
-    private let representation = NSHostingSceneRepresentation {
-        AccountWindowsScene()
-    }
-    private var installed = false
-
-    func install() {
-        guard !installed else { return }
-        installed = true
-        NSApplication.shared.addSceneRepresentation(representation)
-    }
-
-    func show(key: String) {
-        representation.environment.openWindow(
-            id: Self.sceneID,
-            value: key
-        )
-    }
-
-    func hide(key: String) {
-        representation.environment.dismissWindow(
-            id: Self.sceneID,
-            value: key
-        )
     }
 }

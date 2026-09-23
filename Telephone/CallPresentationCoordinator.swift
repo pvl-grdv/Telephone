@@ -352,7 +352,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         guard text.unicodeScalars.allSatisfy(allowed.contains) else { return }
 
         if enteredDTMF.length == 0 {
-            setWindowTitle(callController.displayedName)
+            setWindowTitle(callController.displayedName ?? "")
             model.usesDTMFDisplay = true
         }
 

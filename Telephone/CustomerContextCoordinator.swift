@@ -28,12 +28,12 @@ final class CustomerContextCoordinator {
             isEnabled,
             let callController,
             let address = partyAddress,
-            let callIdentifier = callController.identifier,
-            !callIdentifier.isEmpty
+            !callController.identifier.isEmpty
         else {
             return
         }
 
+        let callIdentifier = callController.identifier
         let key = "\(address.kind)|\(address.normalizedValue)|\(callIdentifier)"
         guard loadedKey != key else { return }
 
@@ -111,8 +111,7 @@ final class CustomerContextCoordinator {
             !isApplyingSnapshot,
             let callController,
             let address = partyAddress,
-            let callIdentifier = callController.identifier,
-            !callIdentifier.isEmpty
+            !callController.identifier.isEmpty
         else {
             return
         }
@@ -120,6 +119,7 @@ final class CustomerContextCoordinator {
         saveTask?.cancel()
         saveTask = nil
 
+        let callIdentifier = callController.identifier
         let displayName = customerDisplayName
         let company = model.customerCompany
         let keys = listValues(model.customerKeys)

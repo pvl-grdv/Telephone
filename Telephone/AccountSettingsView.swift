@@ -441,7 +441,7 @@ final class AccountSettingsModel: NSObject {
         autosaveTask?.cancel()
         autosaveTask = nil
 
-        var stored = storedAccounts()
+        let stored = storedAccounts()
         guard let index = stored.firstIndex(where: {
             stringValue($0[AKSIPAccountKeys.uuid]) == selection
         }) else {

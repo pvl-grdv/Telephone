@@ -26,47 +26,49 @@
 @class AccountController, AKSIPCall, AKSIPURI, AKSIPUserAgent;
 @class CallTransferController;
 
+NS_ASSUME_NONNULL_BEGIN
+
 // A call controller.
 @interface CallController : NSObject <AKSIPCallDelegate>
 
-@property(nonatomic, readonly, weak) id<CallControllerDelegate> delegate;
+@property(nonatomic, readonly, weak, nullable) id<CallControllerDelegate> delegate;
 
 // The receiver's identifier.
-@property(nonatomic, copy) NSString *identifier;
+@property(nonatomic, copy) NSString * _Nonnull identifier;
 
 // Call controlled by the receiver.
-@property(nonatomic, strong) AKSIPCall *call;
+@property(nonatomic, strong, nullable) AKSIPCall *call;
 
 // Account controller the receiver belongs to.
-@property(nonatomic, weak) AccountController *accountController;
+@property(nonatomic, weak, nullable) AccountController *accountController;
 
 // Call transfer controller.
-@property(nonatomic, readonly) CallTransferController *callTransferController;
+@property(nonatomic, readonly, nullable) CallTransferController *callTransferController;
 
 
-@property(nonatomic, copy) NSString *title;
+@property(nonatomic, copy, nullable) NSString *title;
 
 // Remote party dislpay name.
-@property(nonatomic, copy) NSString *displayedName;
+@property(nonatomic, copy, nullable) NSString *displayedName;
 
 // Call status.
-@property(nonatomic, copy) NSString *status;
+@property(nonatomic, copy, nullable) NSString *status;
 
 // Remote party name from the Address Book.
-@property(nonatomic, copy) NSString *nameFromAddressBook;
+@property(nonatomic, copy, nullable) NSString *nameFromAddressBook;
 
 // Remote party label from the Address Book.
-@property(nonatomic, copy) NSString *phoneLabelFromAddressBook;
+@property(nonatomic, copy, nullable) NSString *phoneLabelFromAddressBook;
 
 // Call destination entered by a user.
-@property(nonatomic, copy) NSString *enteredCallDestination;
+@property(nonatomic, copy, nullable) NSString *enteredCallDestination;
 
 // SIP URI for the redial.
-@property(nonatomic, copy) AKSIPURI *redialURI;
+@property(nonatomic, copy, nullable) AKSIPURI *redialURI;
 
 // Timer to display intermediate call status. This status appears for the short period of time and then is being
 // replaced with the current call status.
-@property(nonatomic, strong) NSTimer *intermediateStatusTimer;
+@property(nonatomic, strong, nullable) NSTimer *intermediateStatusTimer;
 
 // Call start time.
 @property(nonatomic, assign) NSTimeInterval callStartTime;
@@ -109,13 +111,15 @@
 
 // Sets intermediate call status. This status appears for the short period of time and then is being replaced with the
 // current call status.
-- (void)setIntermediateStatus:(NSString *)newIntermediateStatus;
+- (void)setIntermediateStatus:(NSString * _Nonnull)newIntermediateStatus;
 
 // Method to be called when intermediate call status timer fires.
-- (void)intermediateStatusTimerTick:(NSTimer *)theTimer;
+- (void)intermediateStatusTimerTick:(NSTimer * _Nonnull)theTimer;
 
 - (void)prepareForCall;
 - (void)showEndedCallView;
 - (void)showIncomingCallView;
 
 @end
+
+NS_ASSUME_NONNULL_END

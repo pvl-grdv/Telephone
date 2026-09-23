@@ -24,3 +24,15 @@ extension NSPasteboard: Clipboard {
         writeObjects([text as NSString])
     }
 }
+
+
+@MainActor
+final class SystemClipboard: Clipboard {
+    static let shared = SystemClipboard()
+
+    private init() {}
+
+    func copy(_ text: String) {
+        NSPasteboard.general.copy(text)
+    }
+}

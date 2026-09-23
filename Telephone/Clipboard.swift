@@ -18,6 +18,7 @@
 
 import Foundation
 
+@MainActor
 protocol Clipboard {
     func copy(_ text: String)
 }

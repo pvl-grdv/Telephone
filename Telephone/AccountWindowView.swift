@@ -77,7 +77,7 @@ struct AccountWindowRootView: View {
 
     let callDestinationComposer: CallDestinationComposer
     let callHistoryPresenter: CallHistoryPresenter
-    let changeState: (AccountWindowControllerAccountState) -> Void
+    let changeState: (AccountAvailabilityState) -> Void
     let submitAuthenticationFailure: (AuthenticationFailureModel) -> Void
 
     var body: some View {
@@ -129,21 +129,6 @@ struct AccountWindowRootView: View {
         } message: { error in
             Text(error.informativeText)
         }
-        .onCommand(Selector(("focusCallHistorySearch:"))) {
-            callHistoryPresenter.focusSearch()
-        }
-        .onCommand(Selector(("makeCall:"))) {
-            callHistoryPresenter.makeCall()
-        }
-        .onCommand(Selector(("copy:"))) {
-            callHistoryPresenter.copySelectedAddress()
-        }
-        .onCommand(Selector(("delete:"))) {
-            callHistoryPresenter.delete()
-        }
-        .onCommand(Selector(("deleteAll:"))) {
-            callHistoryPresenter.deleteAll()
-        }
     }
 
     private func submitPendingAuthenticationFailure() {
@@ -160,7 +145,7 @@ struct AccountWindowRootView: View {
 
 private struct AccountStateMenu: View {
     let state: AccountWindowDisplayState
-    let changeState: (AccountWindowControllerAccountState) -> Void
+    let changeState: (AccountAvailabilityState) -> Void
 
     var body: some View {
         Menu {

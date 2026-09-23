@@ -54,13 +54,13 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     return [formatter stringForObjectValue:remoteURI.user] ?: remoteURI.user;
 }
 
-@interface AccountController () <AccountWindowControllerDelegate>
+@interface AccountController () <AccountPresentationCoordinatorDelegate>
 
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) WorkspaceSleepStatus *sleepStatus;
 @property(nonatomic, readonly) IncomingCallContactResolver *incomingCallContactResolver;
 
-@property(nonatomic, readonly) AccountWindowController *windowController;
+@property(nonatomic, readonly) AccountPresentationCoordinator *presentationCoordinator;
 
 @property(nonatomic, readonly, getter=isAccountAdded) BOOL accountAdded;
 @property(nonatomic, strong) NSTimer *reRegistrationTimer;
@@ -148,7 +148,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 }
 
 - (BOOL)canMakeCalls {
-    return self.windowController.canMakeCalls;
+    return self.presentationCoordinator.canMakeCalls;
 }
 
 - (instancetype)initWithSIPAccount:(AKSIPAccount *)account
@@ -175,8 +175,8 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     _accountDescription = [accountDescription copy];
     _destinationToCall = @"";
 
-    _windowController =
-        [[AccountWindowController alloc]
+    _presentationCoordinator =
+        [[AccountPresentationCoordinator alloc]
             initWithAccountDescription:_accountDescription
                      accountController:self
                              userAgent:_userAgent
@@ -202,8 +202,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
-    // Close authentication failure sheet if it's raised.
-    [_windowController dismissAuthenticationFailure];
+    [_presentationCoordinator invalidate];
 }
 
 - (NSString *)description {
@@ -361,7 +360,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 }
 
 - (void)makeCallToDestination:(NSString *)destination {
-    [self.windowController makeCallToDestination:destination];
+    [self.presentationCoordinator makeCallToDestination:destination];
 }
 
 - (void)makeCallToSavedDestination {
@@ -370,30 +369,30 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 }
 
 - (void)showWindow {
-    [self.windowController showWindow];
+    [self.presentationCoordinator showWindow];
 }
 
 - (void)showWindowWithoutMakingKey {
-    [self.windowController showWindowWithoutMakingKey];
+    [self.presentationCoordinator showWindowWithoutMakingKey];
 }
 
 - (void)hideWindow {
-    [self.windowController hideWindow];
+    [self.presentationCoordinator hideWindow];
 }
 
-- (void)changeAccountState:(AccountWindowControllerAccountState)state {
+- (void)changeAccountState:(AccountAvailabilityState)state {
     [self invalidateReRegistrationTimer];
     switch (state) {
-        case AccountWindowControllerAccountStateOffline:
+        case AccountAvailabilityStateOffline:
             self.accountUnavailable = NO;
             [self removeAccountFromUserAgent];
             break;
-        case AccountWindowControllerAccountStateAvailable:
+        case AccountAvailabilityStateAvailable:
             self.accountUnavailable = NO;
             self.shouldPresentRegistrationError = YES;
             [self registerAccount];
             break;
-        case AccountWindowControllerAccountStateUnavailable:
+        case AccountAvailabilityStateUnavailable:
             if (self.isAccountRegistered || !self.isAccountAdded) {
                 self.accountUnavailable = YES;
                 self.shouldPresentRegistrationError = YES;
@@ -404,26 +403,26 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 }
 
 - (void)showRegistrarConnectionErrorSheetWithError:(NSString *)error {
-    [self.windowController
+    [self.presentationCoordinator
         showRegistrarConnectionErrorWithRegistrar:self.account.registrar.stringValue
                                             error:error];
 }
 
 
 - (void)showAvailableState {
-    [self.windowController showAvailableState];
+    [self.presentationCoordinator showAvailableState];
 }
 
 - (void)showUnavailableState {
-    [self.windowController showUnavailableState];
+    [self.presentationCoordinator showUnavailableState];
 }
 
 - (void)showOfflineState {
-    [self.windowController showOfflineState];
+    [self.presentationCoordinator showOfflineState];
 }
 
 - (void)showConnectingState {
-    [self.windowController showConnectingState];
+    [self.presentationCoordinator showConnectingState];
 }
 
 - (void)reRegistrationTimerTick:(NSTimer *)theTimer {
@@ -435,9 +434,9 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     self.reRegistrationTimer = nil;
 }
 
-#pragma mark - AccountWindowControllerDelegate
+#pragma mark - AccountPresentationCoordinatorDelegate
 
-- (void)accountWindowController:(AccountWindowController *)controller didChangeAccountState:(AccountWindowControllerAccountState)state {
+- (void)accountPresentationCoordinator:(AccountPresentationCoordinator *)controller didChangeAccountState:(AccountAvailabilityState)state {
     [self changeAccountState:state];
 }
 
@@ -476,7 +475,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
         if ([[self account] registrationStatus] == PJSIP_SC_UNAUTHORIZED &&
             [[self account] registrationErrorCode] == PJSIP_EFAILEDCREDENTIAL) {
 
-            [self.windowController showAuthenticationFailure];
+            [self.presentationCoordinator showAuthenticationFailure];
 
         } else if (([[self account] registrationStatus] / 100 != 2) &&
                    ([[self account] registrationExpireTime] == kAKSIPAccountRegistrationExpireTimeNotSpecified)) {

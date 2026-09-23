@@ -10,11 +10,8 @@ import AppKit
 final class ApplicationMenuInstaller: NSObject, NSMenuItemValidation {
     private let defaults = UserDefaults.standard
 
-    @objc(installWithHelpMenuActionRedirect:)
-    func install(helpMenuActionRedirect: HelpMenuActionRedirect) {
+    func install() {
         installCallMenu()
-        installFindCommand()
-        installHelpCommands(target: helpMenuActionRedirect)
     }
 
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
@@ -129,105 +126,6 @@ final class ApplicationMenuInstaller: NSObject, NSMenuItemValidation {
         }
     }
 
-    private func installFindCommand() {
-        guard
-            let mainMenu = NSApp.mainMenu,
-            let editMenu = mainMenu.items
-                .compactMap(\.submenu)
-                .first(where: { menu in
-                    menu.items.contains {
-                        $0.action == Selector(("undo:"))
-                    }
-                }),
-            !editMenu.items.contains(where: {
-                $0.action == Selector(("focusCallHistorySearch:"))
-            })
-        else {
-            return
-        }
-
-        let item = responderItem(
-            title: NSLocalizedString(
-                "Find…",
-                comment: "Focus call history search menu item."
-            ),
-            selector: Selector(("focusCallHistorySearch:")),
-            keyEquivalent: "f",
-            modifiers: [.command]
-        )
-
-        if let selectAllIndex = editMenu.items.firstIndex(where: {
-            $0.action == Selector(("selectAll:"))
-        }) {
-            editMenu.insertItem(item, at: min(selectAllIndex + 1, editMenu.items.count))
-        } else {
-            editMenu.addItem(item)
-        }
-    }
-
-    private func installHelpCommands(target: HelpMenuActionRedirect) {
-        guard let helpMenu = NSApp.helpMenu else { return }
-
-        let selectors: [Selector] = [
-            #selector(HelpMenuActionRedirect.copySettings(_:)),
-            #selector(HelpMenuActionRedirect.showLogFile(_:)),
-            #selector(HelpMenuActionRedirect.openHomepage(_:)),
-            #selector(HelpMenuActionRedirect.openFAQ(_:)),
-        ]
-
-        guard !helpMenu.items.contains(where: { item in
-            item.action.map(selectors.contains) ?? false
-        }) else {
-            return
-        }
-
-        if !helpMenu.items.isEmpty {
-            helpMenu.addItem(.separator())
-        }
-
-        helpMenu.addItem(
-            targetedItem(
-                title: NSLocalizedString(
-                    "Copy Settings",
-                    comment: "Copy application settings help menu item."
-                ),
-                selector: #selector(HelpMenuActionRedirect.copySettings(_:)),
-                target: target
-            )
-        )
-        helpMenu.addItem(
-            targetedItem(
-                title: NSLocalizedString(
-                    "Show Log File in Finder",
-                    comment: "Show log file help menu item."
-                ),
-                selector: #selector(HelpMenuActionRedirect.showLogFile(_:)),
-                target: target
-            )
-        )
-        helpMenu.addItem(.separator())
-        helpMenu.addItem(
-            targetedItem(
-                title: NSLocalizedString(
-                    "Open Homepage…",
-                    comment: "Open homepage help menu item."
-                ),
-                selector: #selector(HelpMenuActionRedirect.openHomepage(_:)),
-                target: target
-            )
-        )
-        helpMenu.addItem(
-            targetedItem(
-                title: NSLocalizedString(
-                    "Open FAQ…",
-                    comment: "Open FAQ help menu item."
-                ),
-                selector: #selector(HelpMenuActionRedirect.openFAQ(_:)),
-                target: target
-            )
-        )
-    }
-
     private func responderItem(
         title: String,
         selector: Selector,
@@ -244,17 +142,5 @@ final class ApplicationMenuInstaller: NSObject, NSMenuItemValidation {
         return item
     }
 
-    private func targetedItem(
-        title: String,
-        selector: Selector,
-        target: AnyObject
-    ) -> NSMenuItem {
-        let item = NSMenuItem(
-            title: title,
-            action: selector,
-            keyEquivalent: ""
-        )
-        item.target = target
-        return item
-    }
+
 }

@@ -49,7 +49,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic) BOOL shouldPresentUserAgentLaunchError;
 @property(nonatomic) AccountsMenuItems *accountsMenuItems;
 @property(nonatomic, strong) ApplicationMenuInstaller *applicationMenuInstaller;
-@property(nonatomic, strong) HelpMenuActionRedirect *helpMenuActionRedirect;
 
 @property(nonatomic, readonly) CompositionRoot *compositionRoot;
 @property(nonatomic, readonly) PreferencesController *preferencesController;
@@ -88,8 +87,6 @@ NS_ASSUME_NONNULL_END
     _compositionRoot = [[CompositionRoot alloc] initWithPreferencesControllerDelegate:self
                                                          nameServersChangeEventTarget:self];
 
-    _helpMenuActionRedirect = [[HelpMenuActionRedirect alloc] init];
-    _helpMenuActionRedirect.target = _compositionRoot.helpMenuActionTarget;
     _applicationMenuInstaller = [[ApplicationMenuInstaller alloc] init];
     
     _userAgent = _compositionRoot.userAgent;
@@ -194,6 +191,22 @@ NS_ASSUME_NONNULL_END
 
 - (IBAction)showPreferencePanel:(id)sender {
     [self.preferencesController showWindowCentered];
+}
+
+- (void)copySettings {
+    [self.compositionRoot.helpMenuActionTarget copySettings];
+}
+
+- (void)showLogFile {
+    [self.compositionRoot.helpMenuActionTarget showLogFile];
+}
+
+- (void)openHomepage {
+    [self.compositionRoot.helpMenuActionTarget openHomepage];
+}
+
+- (void)openFAQ {
+    [self.compositionRoot.helpMenuActionTarget openFAQ];
 }
 
 - (void)updateDockTileBadgeLabel {
@@ -498,7 +511,7 @@ NS_ASSUME_NONNULL_END
     NSWindow.allowsAutomaticWindowTabbing = NO;
     [self.compositionRoot.defaultAppSettings registerDefaults];
     [self.compositionRoot.settingsMigration execute];
-    [self.applicationMenuInstaller installWithHelpMenuActionRedirect:self.helpMenuActionRedirect];
+    [self.applicationMenuInstaller install];
     [self configureUserAgent];
     NSMenu *windowMenu = NSApp.windowsMenu;
     if (windowMenu != nil) {

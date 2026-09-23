@@ -22,7 +22,9 @@
           "name": "Account Setup",
           "children": [
             { "path": "AuthenticationFailureController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AuthenticationFailureView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountSetupController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AccountSetupView.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
           "kind": "group",
@@ -276,6 +278,7 @@
               ],
             },
             { "path": "SettingsViewController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "SettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "GeneralSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SoundSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -539,7 +542,6 @@
             "TelephoneTests/compile-sources",
           ],
         },
-        { "path": "HelpMenuActionRedirect.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
           "path": "HelpMenuActionTarget.swift",
           "target-membership": [

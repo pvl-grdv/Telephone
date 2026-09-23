@@ -25,4 +25,9 @@
 - (void)updateDockTileBadgeLabel;
 - (IBAction)showPreferencePanel:(id)sender;
 
+- (void)copySettings;
+- (void)showLogFile;
+- (void)openHomepage;
+- (void)openFAQ;
+
 @end

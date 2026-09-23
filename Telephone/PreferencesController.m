@@ -97,13 +97,11 @@ NS_ASSUME_NONNULL_END
     NSWindow *window =
         [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 720, 560)
                                     styleMask:NSWindowStyleMaskTitled |
-                                              NSWindowStyleMaskClosable |
-                                              NSWindowStyleMaskResizable
+                                              NSWindowStyleMaskClosable
                                       backing:NSBackingStoreBuffered
                                         defer:NO];
     window.title = NSLocalizedString(@"Telephone Settings", @"Settings default window title.");
     window.releasedWhenClosed = NO;
-    window.contentMinSize = NSMakeSize(650, 480);
     window.contentViewController = _settingsViewController;
     window.delegate = self;
     self.window = window;

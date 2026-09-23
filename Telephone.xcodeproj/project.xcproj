@@ -498,6 +498,7 @@
         { "path": "<PROJECT>/TelephoneTests/AppSettingsTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "AKKeychain.h", "encoding": "utf8" },
         { "path": "AKKeychain.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "CredentialsStore.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKNetworkReachability.h", "encoding": "utf8" },
         { "path": "AKNetworkReachability.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKSIPURIFormatter.h", "encoding": "utf8" },

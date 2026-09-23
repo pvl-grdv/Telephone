@@ -56,6 +56,7 @@ final class SettingsViewModel {
     }
 
     func prepareToClose() {
+        accountModel.flushPendingChanges()
         soundModel.stopPreview()
         networkModel.discard()
     }

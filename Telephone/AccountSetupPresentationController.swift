@@ -87,8 +87,10 @@ private struct FirstRunAccountSetupView: View {
     }
 
     private func submit() {
-        guard model.saveAccount() else { return }
-        dismissWindow(id: windowID)
+        Task {
+            guard await model.saveAccount() else { return }
+            dismissWindow(id: windowID)
+        }
     }
 
     private func cancel() {

@@ -496,3 +496,6 @@
 
 /* General settings toggle. */
 "Show customer context during calls" = "Kundenkontext während Anrufen anzeigen";
+
+/* Account credentials save error. */
+"Could not save account password." = "Das Passwort des Accounts konnte nicht gespeichert werden.";

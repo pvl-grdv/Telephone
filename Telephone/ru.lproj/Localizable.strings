@@ -496,3 +496,6 @@
 
 /* General settings toggle. */
 "Show customer context during calls" = "Показывать данные клиента во время звонков";
+
+/* Account credentials save error. */
+"Could not save account password." = "Не удалось сохранить пароль учётной записи.";

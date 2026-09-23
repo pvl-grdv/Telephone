@@ -22,6 +22,17 @@ final class AccountSetupModel {
     var domainInvalid = false
     var usernameInvalid = false
     var passwordInvalid = false
+    var isSaving = false
+    var showsCredentialsError = false
+
+    @ObservationIgnored
+    private let credentials: any CredentialsStoring
+
+    init(
+        credentials: any CredentialsStoring = CredentialsStore.shared
+    ) {
+        self.credentials = credentials
+    }
 
     func reset() {
         fullName = ""
@@ -32,10 +43,29 @@ final class AccountSetupModel {
         domainInvalid = false
         usernameInvalid = false
         passwordInvalid = false
+        showsCredentialsError = false
     }
 
-    func saveAccount(notificationObject: AnyObject? = nil) -> Bool {
-        guard let account = validatedAccount() else {
+    func saveAccount(
+        notificationObject: AnyObject? = nil
+    ) async -> Bool {
+        guard !isSaving, let account = validatedAccount() else {
+            return false
+        }
+
+        let domain = account[AKSIPAccountKeys.domain] as? String ?? ""
+        let username = account[AKSIPAccountKeys.username] as? String ?? ""
+
+        isSaving = true
+        let saved = await credentials.savePassword(
+            password,
+            service: "SIP: \(domain)",
+            account: username
+        )
+        isSaving = false
+
+        guard saved else {
+            showsCredentialsError = true
             return false
         }
 
@@ -45,20 +75,16 @@ final class AccountSetupModel {
         accounts.append(account)
         UserDefaults.standard.set(accounts, forKey: UserDefaultsKeys.accounts)
 
-        let domain = account[AKSIPAccountKeys.domain] as? String ?? ""
-        let username = account[AKSIPAccountKeys.username] as? String ?? ""
-        _ = AKKeychain.addItem(
-            withService: "SIP: \(domain)",
-            account: username,
-            password: password
-        )
-
         NotificationCenter.default.post(
             name: accountSetupDidAddNotificationName,
             object: notificationObject ?? self,
             userInfo: account
         )
         return true
+    }
+
+    func dismissCredentialsError() {
+        showsCredentialsError = false
     }
 
     private func validatedAccount() -> [String: Any]? {
@@ -119,8 +145,10 @@ struct AccountSetupSheet: View {
     }
 
     private func submit() {
-        guard model.saveAccount() else { return }
-        dismiss()
+        Task {
+            guard await model.saveAccount() else { return }
+            dismiss()
+        }
     }
 }
 
@@ -236,6 +264,11 @@ struct AccountSetupView: View {
             HStack {
                 Spacer()
 
+                if model.isSaving {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+
                 Button(
                     NSLocalizedString("Cancel", comment: "Cancel button."),
                     action: cancel
@@ -255,6 +288,33 @@ struct AccountSetupView: View {
         .padding(22)
         .frame(minWidth: 480, idealWidth: 520, maxWidth: 560)
         .defaultFocus($focusedField, .fullName)
+        .disabled(model.isSaving)
+        .windowDismissBehavior(model.isSaving ? .disabled : .enabled)
+        .alert(
+            NSLocalizedString(
+                "Could not save account password.",
+                comment: "Account credentials save error."
+            ),
+            isPresented: credentialsErrorPresented
+        ) {
+            Button(
+                NSLocalizedString("OK", comment: "OK button."),
+                role: .cancel
+            ) {
+                model.dismissCredentialsError()
+            }
+        }
+    }
+
+    private var credentialsErrorPresented: Binding<Bool> {
+        Binding(
+            get: { model.showsCredentialsError },
+            set: { isPresented in
+                if !isPresented {
+                    model.dismissCredentialsError()
+                }
+            }
+        )
     }
 
     private func setupField(

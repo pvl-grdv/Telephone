@@ -34,7 +34,7 @@ enum AccountIPUpdateMode: Int, CaseIterable, Hashable {
     }
 }
 
-struct AccountSettingsDraft {
+struct AccountSettingsDraft: Equatable {
     var isEnabled = false
     var descriptionText = ""
     var fullName = ""
@@ -58,32 +58,74 @@ struct AccountSettingsDraft {
 @Observable
 final class AccountSettingsModel: NSObject {
     var accounts: [AccountSettingsSummary] = []
+
     var selection: String? {
+        willSet {
+            if newValue != selection {
+                persistSelectedDraftNow()
+            }
+        }
         didSet {
             if oldValue != selection {
                 loadSelectedDraft()
             }
         }
     }
-    var draft = AccountSettingsDraft()
+
+    var draft = AccountSettingsDraft() {
+        didSet {
+            draftDidChange(from: oldValue)
+        }
+    }
+
     var passwordIsLoading = false
+    var credentialsAreSaving = false
+    var showsCredentialsError = false
     var pendingRemovalID: String?
 
     var presentAddAccount: (() -> Void)?
 
+    @ObservationIgnored
     private weak var preferencesController: PreferencesController?
+
+    @ObservationIgnored
     private let defaults: UserDefaults
+
+    @ObservationIgnored
+    private let credentials: any CredentialsStoring
+
+    @ObservationIgnored
     private var passwordLoadTask: Task<Void, Never>?
+
+    @ObservationIgnored
+    private var autosaveTask: Task<Void, Never>?
+
+    @ObservationIgnored
+    private var credentialSaveGeneration = 0
+
+    @ObservationIgnored
+    private var isApplyingDraft = false
+
+    @ObservationIgnored
+    private var hasUnsavedDraft = false
+
+    @ObservationIgnored
     private var loadedPassword = ""
+
+    @ObservationIgnored
     private var loadedPasswordService = ""
+
+    @ObservationIgnored
     private var loadedPasswordAccount = ""
 
     init(
         preferencesController: PreferencesController,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
+        credentials: any CredentialsStoring = CredentialsStore.shared
     ) {
         self.preferencesController = preferencesController
         self.defaults = defaults
+        self.credentials = credentials
         super.init()
 
         NotificationCenter.default.addObserver(
@@ -172,7 +214,12 @@ final class AccountSettingsModel: NSObject {
         select(identifier, reloadIfUnchanged: true)
     }
 
+    func flushPendingChanges() {
+        persistSelectedDraftNow()
+    }
+
     func addAccount() {
+        flushPendingChanges()
         guard canAddAccount else { return }
         presentAddAccount?()
     }
@@ -190,8 +237,14 @@ final class AccountSettingsModel: NSObject {
         guard let identifier = pendingRemovalID else { return }
         pendingRemovalID = nil
 
+        autosaveTask?.cancel()
+        autosaveTask = nil
+        hasUnsavedDraft = false
+
         var stored = storedAccounts()
-        guard let index = stored.firstIndex(where: { stringValue($0[AKSIPAccountKeys.uuid]) == identifier }) else {
+        guard let index = stored.firstIndex(where: {
+            stringValue($0[AKSIPAccountKeys.uuid]) == identifier
+        }) else {
             reload()
             return
         }
@@ -217,47 +270,29 @@ final class AccountSettingsModel: NSObject {
     }
 
     func setEnabled(_ enabled: Bool) {
-        guard
-            enabled != draft.isEnabled,
-            !(enabled && passwordIsLoading)
-        else {
-            return
-        }
-
-        var stored = storedAccounts()
-        guard
-            let selection,
-            let index = stored.firstIndex(where: { stringValue($0[AKSIPAccountKeys.uuid]) == selection })
-        else {
-            return
-        }
-
-        var account = stored[index]
-        account[UserDefaultsKeys.accountEnabled] = enabled
+        guard enabled != draft.isEnabled else { return }
 
         if enabled {
-            saveDraft(into: &account)
+            enableSelectedAccount()
+        } else {
+            disableSelectedAccount()
         }
-
-        stored[index] = account
-        defaults.set(stored, forKey: UserDefaultsKeys.accounts)
-
-        draft.isEnabled = enabled
-        accounts = summaries(from: stored)
-
-        NotificationCenter.default.post(
-            name: .AKPreferencesControllerDidChangeAccountEnabled,
-            object: preferencesController,
-            userInfo: [kAccountIndex: index]
-        )
     }
 
     func moveAccounts(from offsets: IndexSet, to destination: Int) {
         guard offsets.count == 1, let source = offsets.first else { return }
         guard destination != source, destination != source + 1 else { return }
 
+        flushPendingChanges()
+
         var stored = storedAccounts()
-        guard stored.indices.contains(source), destination >= 0, destination <= stored.count else { return }
+        guard
+            stored.indices.contains(source),
+            destination >= 0,
+            destination <= stored.count
+        else {
+            return
+        }
 
         let moving = stored[source]
         stored.insert(moving, at: destination)
@@ -281,7 +316,12 @@ final class AccountSettingsModel: NSObject {
         )
     }
 
-    @objc private func accountDidAdd(_ notification: Notification) {
+    func dismissCredentialsError() {
+        showsCredentialsError = false
+    }
+
+    @objc
+    private func accountDidAdd(_ notification: Notification) {
         let stored = storedAccounts()
         accounts = summaries(from: stored)
         select(accounts.last?.id, reloadIfUnchanged: true)
@@ -293,11 +333,218 @@ final class AccountSettingsModel: NSObject {
     ) {
         if selection == identifier {
             if reloadIfUnchanged {
+                persistSelectedDraftNow()
                 loadSelectedDraft()
             }
         } else {
             selection = identifier
         }
+    }
+
+    private func draftDidChange(from oldValue: AccountSettingsDraft) {
+        guard
+            !isApplyingDraft,
+            draft != oldValue,
+            !draft.isEnabled
+        else {
+            return
+        }
+
+        hasUnsavedDraft = true
+        scheduleAutosave()
+    }
+
+    private func scheduleAutosave() {
+        guard !passwordIsLoading else { return }
+
+        autosaveTask?.cancel()
+        autosaveTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .milliseconds(300))
+            } catch {
+                return
+            }
+
+            self?.persistSelectedDraftNow()
+        }
+    }
+
+    private func persistSelectedDraftNow() {
+        autosaveTask?.cancel()
+        autosaveTask = nil
+
+        guard
+            hasUnsavedDraft,
+            !draft.isEnabled,
+            !passwordIsLoading,
+            let selection
+        else {
+            return
+        }
+
+        var stored = storedAccounts()
+        guard let index = stored.firstIndex(where: {
+            stringValue($0[AKSIPAccountKeys.uuid]) == selection
+        }) else {
+            return
+        }
+
+        var account = stored[index]
+        applyDraft(to: &account)
+        stored[index] = account
+        defaults.set(stored, forKey: UserDefaultsKeys.accounts)
+        accounts = summaries(from: stored)
+        hasUnsavedDraft = false
+
+        saveCredentialsIfNeeded(
+            service: credentialService(
+                registrar: draft.registrar,
+                domain: draft.domain
+            ),
+            account: trimmed(draft.username),
+            password: draft.password,
+            selection: selection
+        )
+    }
+
+    private func disableSelectedAccount() {
+        guard let selection else { return }
+
+        var stored = storedAccounts()
+        guard let index = stored.firstIndex(where: {
+            stringValue($0[AKSIPAccountKeys.uuid]) == selection
+        }) else {
+            return
+        }
+
+        stored[index][UserDefaultsKeys.accountEnabled] = false
+        defaults.set(stored, forKey: UserDefaultsKeys.accounts)
+
+        isApplyingDraft = true
+        draft.isEnabled = false
+        isApplyingDraft = false
+        hasUnsavedDraft = false
+        accounts = summaries(from: stored)
+
+        postEnabledChange(index: index)
+    }
+
+    private func enableSelectedAccount() {
+        guard
+            !passwordIsLoading,
+            !credentialsAreSaving,
+            let selection
+        else {
+            return
+        }
+
+        autosaveTask?.cancel()
+        autosaveTask = nil
+
+        var stored = storedAccounts()
+        guard let index = stored.firstIndex(where: {
+            stringValue($0[AKSIPAccountKeys.uuid]) == selection
+        }) else {
+            return
+        }
+
+        var account = stored[index]
+        applyDraft(to: &account)
+
+        let service = credentialService(
+            registrar: draft.registrar,
+            domain: draft.domain
+        )
+        let username = trimmed(draft.username)
+        let password = draft.password
+
+        let needsCredentialSave =
+            loadedPasswordService != service
+            || loadedPasswordAccount != username
+            || loadedPassword != password
+
+        guard needsCredentialSave else {
+            commitEnabledAccount(
+                account,
+                selection: selection,
+                service: service,
+                username: username,
+                password: password
+            )
+            return
+        }
+
+        credentialsAreSaving = true
+        credentialSaveGeneration &+= 1
+        let generation = credentialSaveGeneration
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            let success = await credentials.savePassword(
+                password,
+                service: service,
+                account: username
+            )
+
+            guard generation == credentialSaveGeneration else { return }
+            credentialsAreSaving = false
+
+            guard success else {
+                showsCredentialsError = true
+                return
+            }
+
+            commitEnabledAccount(
+                account,
+                selection: selection,
+                service: service,
+                username: username,
+                password: password
+            )
+        }
+    }
+
+    private func commitEnabledAccount(
+        _ accountValue: [String: Any],
+        selection: String,
+        service: String,
+        username: String,
+        password: String
+    ) {
+        var stored = storedAccounts()
+        guard let index = stored.firstIndex(where: {
+            stringValue($0[AKSIPAccountKeys.uuid]) == selection
+        }) else {
+            return
+        }
+
+        var account = accountValue
+        account[UserDefaultsKeys.accountEnabled] = true
+        stored[index] = account
+        defaults.set(stored, forKey: UserDefaultsKeys.accounts)
+        accounts = summaries(from: stored)
+
+        if self.selection == selection {
+            loadedPassword = password
+            loadedPasswordService = service
+            loadedPasswordAccount = username
+            hasUnsavedDraft = false
+
+            isApplyingDraft = true
+            draft.isEnabled = true
+            isApplyingDraft = false
+        }
+
+        postEnabledChange(index: index)
+    }
+
+    private func postEnabledChange(index: Int) {
+        NotificationCenter.default.post(
+            name: .AKPreferencesControllerDidChangeAccountEnabled,
+            object: preferencesController,
+            userInfo: [kAccountIndex: index]
+        )
     }
 
     private func loadSelectedDraft() {
@@ -307,21 +554,24 @@ final class AccountSettingsModel: NSObject {
         loadedPassword = ""
         loadedPasswordService = ""
         loadedPasswordAccount = ""
+        hasUnsavedDraft = false
+
         guard let selection else {
-            draft = AccountSettingsDraft()
+            applyDraft(AccountSettingsDraft())
             return
         }
 
         let stored = storedAccounts()
-        guard let account = stored.first(where: { stringValue($0[AKSIPAccountKeys.uuid]) == selection }) else {
-            draft = AccountSettingsDraft()
+        guard let account = stored.first(where: {
+            stringValue($0[AKSIPAccountKeys.uuid]) == selection
+        }) else {
+            applyDraft(AccountSettingsDraft())
             return
         }
 
         let registrar = stringValue(account[AKSIPAccountKeys.registrar])
         let domain = stringValue(account[AKSIPAccountKeys.domain])
         let username = stringValue(account[AKSIPAccountKeys.username])
-        let service = "SIP: \(registrar.isEmpty ? domain : registrar)"
 
         let updateContact = boolValue(account[AKSIPAccountKeys.updateContactHeader])
         let updateVia = boolValue(account[AKSIPAccountKeys.updateViaHeader])
@@ -335,40 +585,52 @@ final class AccountSettingsModel: NSObject {
             updateMode = .off
         }
 
-        draft = AccountSettingsDraft(
-            isEnabled: boolValue(account[UserDefaultsKeys.accountEnabled]),
-            descriptionText: stringValue(account[AKSIPAccountKeys.desc]),
-            fullName: stringValue(account[AKSIPAccountKeys.fullName]),
-            domain: domain,
-            username: username,
-            password: "",
-            sipAddress: stringValue(account[AKSIPAccountKeys.sipAddress]),
-            registrar: registrar,
-            reregistrationTime: positiveIntegerString(account[AKSIPAccountKeys.reregistrationTime]),
-            substitutesPlusCharacter: boolValue(account[UserDefaultsKeys.substitutePlusCharacter]),
-            plusCharacterSubstitution: stringValue(
-                account[UserDefaultsKeys.plusCharacterSubstitutionString],
-                defaultValue: "00"
-            ),
-            usesProxy: boolValue(account[AKSIPAccountKeys.useProxy]),
-            proxyHost: stringValue(account[AKSIPAccountKeys.proxyHost]),
-            proxyPort: positiveIntegerString(account[AKSIPAccountKeys.proxyPort]),
-            transport: stringValue(
-                account[AKSIPAccountKeys.transport],
-                defaultValue: AKSIPAccountKeys.transportUDP
-            ),
-            ipVersion: stringValue(
-                account[AKSIPAccountKeys.ipVersion],
-                defaultValue: AKSIPAccountKeys.ipVersion4
-            ),
-            ipUpdateMode: updateMode
+        applyDraft(
+            AccountSettingsDraft(
+                isEnabled: boolValue(account[UserDefaultsKeys.accountEnabled]),
+                descriptionText: stringValue(account[AKSIPAccountKeys.desc]),
+                fullName: stringValue(account[AKSIPAccountKeys.fullName]),
+                domain: domain,
+                username: username,
+                password: "",
+                sipAddress: stringValue(account[AKSIPAccountKeys.sipAddress]),
+                registrar: registrar,
+                reregistrationTime: positiveIntegerString(
+                    account[AKSIPAccountKeys.reregistrationTime]
+                ),
+                substitutesPlusCharacter: boolValue(
+                    account[UserDefaultsKeys.substitutePlusCharacter]
+                ),
+                plusCharacterSubstitution: stringValue(
+                    account[UserDefaultsKeys.plusCharacterSubstitutionString],
+                    defaultValue: "00"
+                ),
+                usesProxy: boolValue(account[AKSIPAccountKeys.useProxy]),
+                proxyHost: stringValue(account[AKSIPAccountKeys.proxyHost]),
+                proxyPort: positiveIntegerString(account[AKSIPAccountKeys.proxyPort]),
+                transport: stringValue(
+                    account[AKSIPAccountKeys.transport],
+                    defaultValue: AKSIPAccountKeys.transportUDP
+                ),
+                ipVersion: stringValue(
+                    account[AKSIPAccountKeys.ipVersion],
+                    defaultValue: AKSIPAccountKeys.ipVersion4
+                ),
+                ipUpdateMode: updateMode
+            )
         )
 
         loadPassword(
-            service: service,
+            service: credentialService(registrar: registrar, domain: domain),
             account: username,
             selection: selection
         )
+    }
+
+    private func applyDraft(_ value: AccountSettingsDraft) {
+        isApplyingDraft = true
+        draft = value
+        isApplyingDraft = false
     }
 
     private func loadPassword(
@@ -378,56 +640,94 @@ final class AccountSettingsModel: NSObject {
     ) {
         passwordIsLoading = true
         passwordLoadTask = Task { [weak self] in
-            let password = await Task.detached(priority: .userInitiated) {
-                AKKeychain.password(
-                    forService: service,
-                    account: account
-                )
-            }.value
+            guard let self else { return }
+
+            let password = await credentials.password(
+                service: service,
+                account: account
+            )
 
             guard
                 !Task.isCancelled,
-                let self,
                 self.selection == selection,
                 self.draft.username == account
             else {
                 return
             }
 
-            self.passwordIsLoading = false
-            self.loadedPassword = password
-            self.loadedPasswordService = service
-            self.loadedPasswordAccount = account
+            passwordIsLoading = false
+            loadedPassword = password
+            loadedPasswordService = service
+            loadedPasswordAccount = account
 
-            // Do not overwrite text the user may already have entered while
-            // the Keychain request was running.
-            if self.draft.password.isEmpty {
-                self.draft.password = password
+            if draft.password.isEmpty {
+                isApplyingDraft = true
+                draft.password = password
+                isApplyingDraft = false
+            }
+
+            if hasUnsavedDraft {
+                scheduleAutosave()
             }
         }
     }
 
-    private func saveDraft(into account: inout [String: Any]) {
-        let description = trimmed(draft.descriptionText)
-        let fullName = trimmed(draft.fullName)
-        let domain = trimmed(draft.domain)
-        let username = trimmed(draft.username)
-        let registrar = trimmed(draft.registrar)
-        let sipAddress = trimmed(draft.sipAddress)
-        let proxyHost = trimmed(draft.proxyHost)
+    private func saveCredentialsIfNeeded(
+        service: String,
+        account: String,
+        password: String,
+        selection: String
+    ) {
+        let unchanged =
+            loadedPasswordService == service
+            && loadedPasswordAccount == account
+            && loadedPassword == password
+        guard !unchanged else { return }
 
-        account[AKSIPAccountKeys.desc] = description
-        account[AKSIPAccountKeys.fullName] = fullName
-        account[AKSIPAccountKeys.domain] = domain
-        account[AKSIPAccountKeys.username] = username
-        account[AKSIPAccountKeys.reregistrationTime] = integerValue(draft.reregistrationTime)
-        account[UserDefaultsKeys.substitutePlusCharacter] = draft.substitutesPlusCharacter
-        account[UserDefaultsKeys.plusCharacterSubstitutionString] = draft.plusCharacterSubstitution
+        credentialsAreSaving = true
+        credentialSaveGeneration &+= 1
+        let generation = credentialSaveGeneration
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            let success = await credentials.savePassword(
+                password,
+                service: service,
+                account: account
+            )
+
+            guard generation == credentialSaveGeneration else { return }
+            credentialsAreSaving = false
+
+            guard success else {
+                showsCredentialsError = true
+                return
+            }
+
+            guard self.selection == selection else { return }
+            loadedPassword = password
+            loadedPasswordService = service
+            loadedPasswordAccount = account
+        }
+    }
+
+    private func applyDraft(to account: inout [String: Any]) {
+        account[AKSIPAccountKeys.desc] = trimmed(draft.descriptionText)
+        account[AKSIPAccountKeys.fullName] = trimmed(draft.fullName)
+        account[AKSIPAccountKeys.domain] = trimmed(draft.domain)
+        account[AKSIPAccountKeys.username] = trimmed(draft.username)
+        account[AKSIPAccountKeys.reregistrationTime] =
+            integerValue(draft.reregistrationTime)
+        account[UserDefaultsKeys.substitutePlusCharacter] =
+            draft.substitutesPlusCharacter
+        account[UserDefaultsKeys.plusCharacterSubstitutionString] =
+            draft.plusCharacterSubstitution
         account[AKSIPAccountKeys.useProxy] = draft.usesProxy
-        account[AKSIPAccountKeys.proxyHost] = proxyHost
+        account[AKSIPAccountKeys.proxyHost] = trimmed(draft.proxyHost)
         account[AKSIPAccountKeys.proxyPort] = integerValue(draft.proxyPort)
-        account[AKSIPAccountKeys.sipAddress] = sipAddress
-        account[AKSIPAccountKeys.registrar] = registrar
+        account[AKSIPAccountKeys.sipAddress] = trimmed(draft.sipAddress)
+        account[AKSIPAccountKeys.registrar] = trimmed(draft.registrar)
         account[AKSIPAccountKeys.transport] = draft.transport
         account[AKSIPAccountKeys.ipVersion] = draft.ipVersion
 
@@ -445,33 +745,30 @@ final class AccountSettingsModel: NSObject {
             account[AKSIPAccountKeys.updateViaHeader] = false
             account[AKSIPAccountKeys.updateSDP] = false
         }
-
-        let service = "SIP: \(registrar.isEmpty ? domain : registrar)"
-        let credentialsAreUnchanged =
-            loadedPasswordService == service
-            && loadedPasswordAccount == username
-            && loadedPassword == draft.password
-
-        if !credentialsAreUnchanged,
-           AKKeychain.addItem(
-               withService: service,
-               account: username,
-               password: draft.password
-           ) {
-            loadedPassword = draft.password
-            loadedPasswordService = service
-            loadedPasswordAccount = username
-        }
     }
 
-    private func summaries(from stored: [[String: Any]]) -> [AccountSettingsSummary] {
+    private func credentialService(
+        registrar: String,
+        domain: String
+    ) -> String {
+        let normalizedRegistrar = trimmed(registrar)
+        let normalizedDomain = trimmed(domain)
+        return "SIP: \(normalizedRegistrar.isEmpty ? normalizedDomain : normalizedRegistrar)"
+    }
+
+    private func summaries(
+        from stored: [[String: Any]]
+    ) -> [AccountSettingsSummary] {
         stored.map { account in
             let identifier = stringValue(account[AKSIPAccountKeys.uuid])
             let description = stringValue(account[AKSIPAccountKeys.desc])
             let explicitAddress = stringValue(account[AKSIPAccountKeys.sipAddress])
             let username = stringValue(account[AKSIPAccountKeys.username])
             let domain = stringValue(account[AKSIPAccountKeys.domain])
-            let fallbackAddress = SIPAddress(user: username, host: domain).stringValue
+            let fallbackAddress = SIPAddress(
+                user: username,
+                host: domain
+            ).stringValue
             let title = description.isEmpty
                 ? (explicitAddress.isEmpty ? fallbackAddress : explicitAddress)
                 : description
@@ -485,7 +782,9 @@ final class AccountSettingsModel: NSObject {
     }
 
     private func storedAccounts() -> [[String: Any]] {
-        defaults.array(forKey: UserDefaultsKeys.accounts) as? [[String: Any]] ?? []
+        defaults.array(
+            forKey: UserDefaultsKeys.accounts
+        ) as? [[String: Any]] ?? []
     }
 
     private func trimmed(_ value: String) -> String {
@@ -505,7 +804,10 @@ final class AccountSettingsModel: NSObject {
         (value as? NSNumber)?.boolValue ?? false
     }
 
-    private func stringValue(_ value: Any?, defaultValue: String = "") -> String {
+    private func stringValue(
+        _ value: Any?,
+        defaultValue: String = ""
+    ) -> String {
         value as? String ?? defaultValue
     }
 }
@@ -528,6 +830,20 @@ struct AccountSettingsView: View {
             }
         } message: {
             Text(model.removalAlertMessage)
+        }
+        .alert(
+            NSLocalizedString(
+                "Could not save account password.",
+                comment: "Account credentials save error."
+            ),
+            isPresented: credentialsErrorPresented
+        ) {
+            Button(
+                NSLocalizedString("OK", comment: "OK button."),
+                role: .cancel
+            ) {
+                model.dismissCredentialsError()
+            }
         }
     }
 
@@ -588,7 +904,10 @@ struct AccountSettingsView: View {
                         NSLocalizedString("Enable this account", comment: "Account settings toggle."),
                         isOn: enabled
                     )
-                    .disabled(!model.draft.isEnabled && model.passwordIsLoading)
+                    .disabled(
+                        model.credentialsAreSaving
+                            || (!model.draft.isEnabled && model.passwordIsLoading)
+                    )
 
                     if model.draft.isEnabled {
                         Label(
@@ -623,7 +942,11 @@ struct AccountSettingsView: View {
                             SecureField("", text: $model.draft.password)
                         }
                     }
-                    .disabled(model.draft.isEnabled)
+                    .disabled(
+                        model.draft.isEnabled
+                            || model.passwordIsLoading
+                            || model.credentialsAreSaving
+                    )
                 }
 
                 Section(NSLocalizedString("Network", comment: "Account settings section.")) {
@@ -685,7 +1008,11 @@ struct AccountSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
-                .disabled(model.draft.isEnabled)
+                .disabled(
+                        model.draft.isEnabled
+                            || model.passwordIsLoading
+                            || model.credentialsAreSaving
+                    )
 
                 Section(NSLocalizedString("Advanced", comment: "Account settings section.")) {
                     LabeledContent(NSLocalizedString("SIP Address", comment: "Account settings label.")) {
@@ -728,7 +1055,11 @@ struct AccountSettingsView: View {
                             .disabled(!model.draft.substitutesPlusCharacter)
                     }
                 }
-                .disabled(model.draft.isEnabled)
+                .disabled(
+                        model.draft.isEnabled
+                            || model.passwordIsLoading
+                            || model.credentialsAreSaving
+                    )
             }
             .formStyle(.grouped)
             .padding(.horizontal, 6)
@@ -754,6 +1085,17 @@ struct AccountSettingsView: View {
         Binding(
             get: { model.draft.isEnabled },
             set: model.setEnabled
+        )
+    }
+
+    private var credentialsErrorPresented: Binding<Bool> {
+        Binding(
+            get: { model.showsCredentialsError },
+            set: { isPresented in
+                if !isPresented {
+                    model.dismissCredentialsError()
+                }
+            }
         )
     }
 

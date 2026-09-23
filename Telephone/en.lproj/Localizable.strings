@@ -497,3 +497,6 @@
 
 /* General settings toggle. */
 "Show customer context during calls" = "Show customer context during calls";
+
+/* Account credentials save error. */
+"Could not save account password." = "Could not save account password.";

@@ -38,12 +38,35 @@ enum AccountWindowDisplayState: Equatable {
     }
 }
 
+struct RegistrarConnectionError: Equatable {
+    let registrar: String
+    let details: String?
+
+    var title: String {
+        String(
+            format: NSLocalizedString(
+                "Could not register with %@.",
+                comment: "Registrar connection error."
+            ),
+            registrar
+        )
+    }
+
+    var informativeText: String {
+        details ?? NSLocalizedString(
+            "Please check network connection and Registry Server settings.",
+            comment: "Registrar connection error informative text."
+        )
+    }
+}
+
 @MainActor
 @Observable
 final class AccountWindowModel {
     var state: AccountWindowDisplayState = .offline
     var showsCallComposer = false
     var authenticationFailure: AuthenticationFailureModel?
+    var registrarConnectionError: RegistrarConnectionError?
 }
 
 struct AccountWindowRootView: View {
@@ -93,6 +116,17 @@ struct AccountWindowRootView: View {
                     authenticationFailure
                 model.authenticationFailure = nil
             }
+        }
+        .alert(
+            model.registrarConnectionError?.title ?? "",
+            item: $model.registrarConnectionError
+        ) { _ in
+            Button(
+                NSLocalizedString("OK", comment: "OK button."),
+                role: .cancel
+            ) {}
+        } message: { error in
+            Text(error.informativeText)
         }
     }
 

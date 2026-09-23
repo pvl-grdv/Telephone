@@ -417,22 +417,9 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 }
 
 - (void)showRegistrarConnectionErrorSheetWithError:(NSString *)error {
-    NSAlert *alert = [[NSAlert alloc] init];
-    [alert setMessageText:[NSString stringWithFormat:
-                           NSLocalizedString(@"Could not register with %@.", @"Registrar connection error."),
-                           [[self account] registrar]]];
-    
-    if (error == nil) {
-        [alert setInformativeText:
-         [NSString stringWithFormat:
-          NSLocalizedString(@"Please check network connection and Registry Server settings.",
-                            @"Registrar connection error informative text."),
-          [[self account] registrar]]];
-    } else {
-        [alert setInformativeText:error];
-    }
-    
-    [self.windowController showAlert:alert];
+    [self.windowController
+        showRegistrarConnectionErrorWithRegistrar:self.account.registrar.stringValue
+                                            error:error];
 }
 
 

@@ -130,13 +130,19 @@ final class AccountWindowController: NSWindowController, NSWindowDelegate, NSMen
         model.authenticationFailure = nil
     }
 
-    func makeCallToDestination(_ destination: String) {
-        callDestinationComposer.makeCallToDestination(destination)
+    @objc(showRegistrarConnectionErrorWithRegistrar:error:)
+    func showRegistrarConnectionError(
+        registrar: String,
+        error: String?
+    ) {
+        model.registrarConnectionError = RegistrarConnectionError(
+            registrar: registrar,
+            details: error
+        )
     }
 
-    func showAlert(_ alert: NSAlert) {
-        guard let window else { return }
-        alert.beginSheetModal(for: window)
+    func makeCallToDestination(_ destination: String) {
+        callDestinationComposer.makeCallToDestination(destination)
     }
 
     func showWindowWithoutMakingKey() {

@@ -43,6 +43,7 @@ class UserDefaultsKeys: NSObject {
     static let useG711Only = "UseG711Only"
     static let lockCodec = "LockCodec"
     static let settingsVersion = "SettingsVersion"
+    static let settingsSection = "SettingsSection"
 
     static let accountEnabled = "AccountEnabled"
     static let substitutePlusCharacter = "SubstitutePlusCharacter"

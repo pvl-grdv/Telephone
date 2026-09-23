@@ -39,7 +39,16 @@ actor CallDestinationContactIndex {
         }
 
         let records = await Task.detached(priority: .userInitiated) {
-            Self.loadRecords()
+            let interval = PerformanceSignposts.contacts.beginInterval(
+                "LoadContactSuggestionIndex"
+            )
+            let records = Self.loadRecords()
+            PerformanceSignposts.contacts.endInterval(
+                "LoadContactSuggestionIndex",
+                interval,
+                "records=\(records.count)"
+            )
+            return records
         }.value
 
         cachedRecords = records

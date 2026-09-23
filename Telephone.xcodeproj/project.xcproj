@@ -285,11 +285,13 @@
               ],
             },
             { "path": "SettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "<PROJECT>/TelephoneTests/SettingsViewModelTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "AccountSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "GeneralSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SoundSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "NetworkSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PreferencesController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "PerformanceSignposts.swift", "target-membership": [ "Telephone/compile-sources" ] },
             {
               "path": "PreferencesControllerAccountsEventSource.swift",
               "encoding": "utf8",

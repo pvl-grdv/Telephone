@@ -16,25 +16,23 @@ final class PreferencesController: NSObject, SoundIOPreferences {
 
     private lazy var sceneController = PreferencesSceneController(model: model)
 
-    private lazy var model: SettingsViewModel = {
-        let accountModel = AccountSettingsModel(preferencesController: self)
-        let model = SettingsViewModel(
-            accountModel: accountModel,
-            soundModel: SoundSettingsModel(
+    private lazy var model = SettingsViewModel(
+        accountModelFactory: { [unowned self] in
+            AccountSettingsModel(preferencesController: self)
+        },
+        soundModelFactory: { [unowned self] in
+            SoundSettingsModel(
                 eventTarget: soundPreferencesViewEventTarget,
                 userAgent: userAgent
-            ),
-            networkModel: NetworkSettingsModel(
+            )
+        },
+        networkModelFactory: { [unowned self] in
+            NetworkSettingsModel(
                 userAgent: userAgent,
                 preferencesController: self
             )
-        )
-
-        accountModel.presentAddAccount = { [weak model] in
-            model?.showsAccountSetup = true
         }
-        return model
-    }()
+    )
 
     @objc(initWithDelegate:userAgent:soundPreferencesViewEventTarget:)
     init(
@@ -56,6 +54,7 @@ final class PreferencesController: NSObject, SoundIOPreferences {
     }
 
     func showWindowCentered() {
+        PerformanceSignposts.settings.emitEvent("OpenSettingsRequested")
         sceneController.show()
     }
 
@@ -65,11 +64,11 @@ final class PreferencesController: NSObject, SoundIOPreferences {
 
     @objc(reloadAccountAtIndex:)
     func reloadAccount(at index: Int) {
-        model.accountModel.reloadAccount(at: index)
+        model.reloadAccountIfLoaded(at: index)
     }
 
     func updateSoundIO() {
-        model.soundModel.updateSoundIO()
+        model.updateSoundIOIfLoaded()
     }
 
     private func observePreferenceChanges() {

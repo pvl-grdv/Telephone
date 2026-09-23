@@ -38,29 +38,118 @@ enum SettingsSection: Int, CaseIterable, Hashable {
 @MainActor
 @Observable
 final class SettingsViewModel {
-    var selection: SettingsSection = .general
+    var selection: SettingsSection {
+        didSet {
+            defaults.set(
+                selection.rawValue,
+                forKey: UserDefaultsKeys.settingsSection
+            )
+        }
+    }
     var showsAccountSetup = false
 
-    let accountModel: AccountSettingsModel
-    let soundModel: SoundSettingsModel
-    let networkModel: NetworkSettingsModel
+    @ObservationIgnored
+    private let defaults: UserDefaults
+    @ObservationIgnored
+    private let accountModelFactory: () -> AccountSettingsModel
+    @ObservationIgnored
+    private let soundModelFactory: () -> SoundSettingsModel
+    @ObservationIgnored
+    private let networkModelFactory: () -> NetworkSettingsModel
+
+    @ObservationIgnored
+    private var storedAccountModel: AccountSettingsModel?
+    @ObservationIgnored
+    private var storedSoundModel: SoundSettingsModel?
+    @ObservationIgnored
+    private var storedNetworkModel: NetworkSettingsModel?
 
     init(
-        accountModel: AccountSettingsModel,
-        soundModel: SoundSettingsModel,
-        networkModel: NetworkSettingsModel
+        defaults: UserDefaults = .standard,
+        accountModelFactory: @escaping () -> AccountSettingsModel,
+        soundModelFactory: @escaping () -> SoundSettingsModel,
+        networkModelFactory: @escaping () -> NetworkSettingsModel
     ) {
-        self.accountModel = accountModel
-        self.soundModel = soundModel
-        self.networkModel = networkModel
+        self.defaults = defaults
+        self.accountModelFactory = accountModelFactory
+        self.soundModelFactory = soundModelFactory
+        self.networkModelFactory = networkModelFactory
+
+        let rawValue = defaults.integer(
+            forKey: UserDefaultsKeys.settingsSection
+        )
+        selection = SettingsSection(rawValue: rawValue) ?? .general
+    }
+
+    var accountModel: AccountSettingsModel {
+        if let storedAccountModel {
+            return storedAccountModel
+        }
+
+        let interval = PerformanceSignposts.settings.beginInterval(
+            "CreateAccountsSettingsModel"
+        )
+        let model = accountModelFactory()
+        model.presentAddAccount = { [weak self] in
+            self?.showsAccountSetup = true
+        }
+        storedAccountModel = model
+        PerformanceSignposts.settings.endInterval(
+            "CreateAccountsSettingsModel",
+            interval
+        )
+        return model
+    }
+
+    var soundModel: SoundSettingsModel {
+        if let storedSoundModel {
+            return storedSoundModel
+        }
+
+        let interval = PerformanceSignposts.settings.beginInterval(
+            "CreateSoundSettingsModel"
+        )
+        let model = soundModelFactory()
+        storedSoundModel = model
+        PerformanceSignposts.settings.endInterval(
+            "CreateSoundSettingsModel",
+            interval
+        )
+        return model
+    }
+
+    var networkModel: NetworkSettingsModel {
+        if let storedNetworkModel {
+            return storedNetworkModel
+        }
+
+        let interval = PerformanceSignposts.settings.beginInterval(
+            "CreateNetworkSettingsModel"
+        )
+        let model = networkModelFactory()
+        storedNetworkModel = model
+        PerformanceSignposts.settings.endInterval(
+            "CreateNetworkSettingsModel",
+            interval
+        )
+        return model
+    }
+
+    func reloadAccountIfLoaded(at index: Int) {
+        storedAccountModel?.reloadAccount(at: index)
+    }
+
+    func updateSoundIOIfLoaded() {
+        storedSoundModel?.updateSoundIO()
     }
 
     func prepareToClose() {
-        accountModel.flushPendingChanges()
-        soundModel.stopPreview()
-        networkModel.discard()
+        storedAccountModel?.flushPendingChanges()
+        storedSoundModel?.stopPreview()
+        storedNetworkModel?.discard()
     }
 }
+
 struct SettingsRootView: View {
     @Bindable var model: SettingsViewModel
     let selectionChanged: (SettingsSection) -> Void
@@ -77,7 +166,11 @@ struct SettingsRootView: View {
             }
 
             Tab(value: SettingsSection.accounts) {
-                AccountSettingsView(model: model.accountModel)
+                if model.selection == .accounts {
+                    AccountSettingsView(model: model.accountModel)
+                } else {
+                    Color.clear
+                }
             } label: {
                 Label(
                     SettingsSection.accounts.title,
@@ -86,7 +179,11 @@ struct SettingsRootView: View {
             }
 
             Tab(value: SettingsSection.sound) {
-                SoundSettingsView(model: model.soundModel)
+                if model.selection == .sound {
+                    SoundSettingsView(model: model.soundModel)
+                } else {
+                    Color.clear
+                }
             } label: {
                 Label(
                     SettingsSection.sound.title,
@@ -95,7 +192,11 @@ struct SettingsRootView: View {
             }
 
             Tab(value: SettingsSection.network) {
-                NetworkSettingsView(model: model.networkModel)
+                if model.selection == .network {
+                    NetworkSettingsView(model: model.networkModel)
+                } else {
+                    Color.clear
+                }
             } label: {
                 Label(
                     SettingsSection.network.title,
@@ -113,7 +214,14 @@ struct SettingsRootView: View {
             AccountSetupSheet()
         }
         .onChange(of: model.selection, initial: true) { _, selection in
+            PerformanceSignposts.settings.emitEvent(
+                "SettingsSectionChanged",
+                "\(selection.rawValue)"
+            )
             selectionChanged(selection)
+        }
+        .onAppear {
+            PerformanceSignposts.settings.emitEvent("SettingsVisible")
         }
         .onDisappear {
             model.prepareToClose()

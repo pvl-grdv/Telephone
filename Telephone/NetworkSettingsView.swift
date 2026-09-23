@@ -192,6 +192,42 @@ struct NetworkSettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
+
+            Section {
+                HStack {
+                    Spacer()
+
+                    Button(
+                        NSLocalizedString(
+                            "Revert",
+                            comment: "Revert network settings button."
+                        )
+                    ) {
+                        model.discard()
+                    }
+                    .disabled(!model.hasChanges)
+
+                    Button(
+                        NSLocalizedString(
+                            "Apply",
+                            comment: "Apply network settings button."
+                        )
+                    ) {
+                        model.save()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!model.hasChanges)
+                }
+
+                Text(
+                    NSLocalizedString(
+                        "Applying network settings reconnects all accounts.",
+                        comment: "Network settings apply help text."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .padding()

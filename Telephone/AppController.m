@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
 @property(nonatomic, readonly) AccountControllers *accountControllers;
-@property(nonatomic, readonly) AccountSetupController *accountSetupController;
+@property(nonatomic, readonly) AccountSetupPresentationController *accountSetupPresentationController;
 @property(nonatomic) BOOL shouldRegisterAllAccounts;
 @property(nonatomic) BOOL shouldRestartUserAgentASAP;
 @property(nonatomic, getter=isTerminating) BOOL terminating;
@@ -68,13 +68,13 @@ NS_ASSUME_NONNULL_END
 
 @implementation AppController
 
-@synthesize accountSetupController = _accountSetupController;
+@synthesize accountSetupPresentationController = _accountSetupPresentationController;
 
-- (AccountSetupController *)accountSetupController {
-    if (_accountSetupController == nil) {
-        _accountSetupController = [[AccountSetupController alloc] init];
+- (AccountSetupPresentationController *)accountSetupPresentationController {
+    if (_accountSetupPresentationController == nil) {
+        _accountSetupPresentationController = [[AccountSetupPresentationController alloc] init];
     }
-    return _accountSetupController;
+    return _accountSetupPresentationController;
 }
 
 - (instancetype)init {
@@ -109,7 +109,7 @@ NS_ASSUME_NONNULL_END
 
     [notificationCenter addObserver:self
                            selector:@selector(accountSetupControllerDidAddAccount:)
-                               name:[AccountSetupController didAddAccountNotificationName]
+                               name:[AccountSetupPresentationController didAddAccountNotificationName]
                              object:nil];
     [notificationCenter addObserver:self
                            selector:@selector(SIPCallCalling:)
@@ -188,10 +188,6 @@ NS_ASSUME_NONNULL_END
     }
 }
 
-- (IBAction)showPreferencePanel:(id)sender {
-    [self.preferencesController showWindowCentered];
-}
-
 - (void)copySettings {
     [self.compositionRoot.helpMenuActionTarget copySettings];
 }
@@ -206,6 +202,10 @@ NS_ASSUME_NONNULL_END
 
 - (void)openFAQ {
     [self.compositionRoot.helpMenuActionTarget openFAQ];
+}
+
+- (id)preferencesControllerForSwiftUI {
+    return self.preferencesController;
 }
 
 - (void)updateDockTileBadgeLabel {
@@ -472,6 +472,7 @@ NS_ASSUME_NONNULL_END
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification {
     [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSFullScreenMenuItemEverywhere"];
+    [self.accountSetupPresentationController install];
 }
 
 - (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls {
@@ -503,7 +504,7 @@ NS_ASSUME_NONNULL_END
     NSApp.servicesProvider = self;
     NSArray *accounts = [NSUserDefaults.standardUserDefaults arrayForKey:UserDefaultsKeys.accounts];
     if (accounts.count == 0) {
-        [self.accountSetupController showCentered];
+        [self.accountSetupPresentationController showFirstRun];
         return;
     }
     for (NSUInteger i = 0; i < accounts.count; ++i) {

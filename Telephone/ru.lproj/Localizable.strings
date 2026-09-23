@@ -484,3 +484,12 @@
 
 /* Previous conversations count. */
 "%ld previous conversations" = "Предыдущих разговоров: %ld";
+
+/* Revert network settings button. */
+"Revert" = "Вернуть";
+
+/* Apply network settings button. */
+"Apply" = "Применить";
+
+/* Network settings apply help text. */
+"Applying network settings reconnects all accounts." = "Применение сетевых настроек переподключит все учётные записи.";

@@ -8,11 +8,13 @@ import SwiftUI
 
 @MainActor
 @objcMembers
-final class PreferencesController: NSWindowController, NSWindowDelegate, SoundIOPreferences {
+final class PreferencesController: NSObject, SoundIOPreferences {
     weak var delegate: PreferencesControllerDelegate?
 
     let userAgent: AKSIPUserAgent
     let soundPreferencesViewEventTarget: SoundPreferencesViewEventTarget
+
+    private var fallbackWindowController: NSWindowController?
 
     private lazy var model: SettingsViewModel = {
         let accountModel = AccountSettingsModel(preferencesController: self)
@@ -28,14 +30,22 @@ final class PreferencesController: NSWindowController, NSWindowDelegate, SoundIO
             )
         )
 
-        model.closeWindow = { [weak self] in
-            self?.window?.performClose(nil)
-        }
         accountModel.presentAddAccount = { [weak model] in
             model?.showsAccountSetup = true
         }
         return model
     }()
+
+    @nonobjc
+    var contentView: some View {
+        SettingsRootView(
+            model: model,
+            selectionChanged: { _ in }
+        )
+        .onAppear { [weak self] in
+            self?.dismissFallbackWindow()
+        }
+    }
 
     @objc(initWithDelegate:userAgent:soundPreferencesViewEventTarget:)
     init(
@@ -47,12 +57,46 @@ final class PreferencesController: NSWindowController, NSWindowDelegate, SoundIO
         self.userAgent = userAgent
         self.soundPreferencesViewEventTarget = soundPreferencesViewEventTarget
 
-        super.init(window: nil)
+        super.init()
 
+        observePreferenceChanges()
+    }
+
+    func showWindowCentered() {
+        let controller = fallbackWindowController
+            ?? makeFallbackWindowController()
+        fallbackWindowController = controller
+
+        guard let window = controller.window else { return }
+        if !window.isVisible {
+            window.center()
+        }
+        controller.showWindow(nil)
+    }
+
+    func showAccounts() {
+        model.selection = .accounts
+    }
+
+    @objc(reloadAccountAtIndex:)
+    func reloadAccount(at index: Int) {
+        model.accountModel.reloadAccount(at: index)
+    }
+
+    func updateSoundIO() {
+        model.soundModel.updateSoundIO()
+    }
+
+    private func dismissFallbackWindow() {
+        fallbackWindowController?.close()
+        fallbackWindowController = nil
+    }
+
+    private func makeFallbackWindowController() -> NSWindowController {
         let rootView = SettingsRootView(
             model: model,
             selectionChanged: { [weak self] section in
-                self?.window?.title = section.title
+                self?.fallbackWindowController?.window?.title = section.title
             }
         )
         let contentController = NSHostingController(rootView: rootView)
@@ -69,41 +113,8 @@ final class PreferencesController: NSWindowController, NSWindowDelegate, SoundIO
         )
         settingsWindow.isReleasedWhenClosed = false
         settingsWindow.contentViewController = contentController
-        settingsWindow.delegate = self
         settingsWindow.setContentSize(contentController.view.fittingSize)
-        window = settingsWindow
-
-        observePreferenceChanges()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    func showWindowCentered() {
-        guard let window else { return }
-
-        if !window.isVisible {
-            window.center()
-        }
-        showWindow(nil)
-    }
-
-    func showAccounts() {
-        model.requestSelection(.accounts)
-    }
-
-    @objc(reloadAccountAtIndex:)
-    func reloadAccount(at index: Int) {
-        model.accountModel.reloadAccount(at: index)
-    }
-
-    func updateSoundIO() {
-        model.soundModel.updateSoundIO()
-    }
-
-    func windowShouldClose(_ sender: NSWindow) -> Bool {
-        model.requestWindowClose()
+        return NSWindowController(window: settingsWindow)
     }
 
     private func observePreferenceChanges() {

@@ -52,10 +52,6 @@ final class AccountSetupController: NSWindowController, NSWindowDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 
-    class func didAddAccountNotificationName() -> String {
-        accountSetupDidAddNotificationName.rawValue
-    }
-
     func prepare() {
         model.reset()
     }

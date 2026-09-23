@@ -35,25 +35,15 @@ enum SettingsSection: Int, CaseIterable, Hashable {
     }
 }
 
-private enum PendingSettingsTransition {
-    case selection(SettingsSection)
-    case close
-}
-
 @MainActor
 @Observable
 final class SettingsViewModel {
     var selection: SettingsSection = .general
-    var showsNetworkSavePrompt = false
     var showsAccountSetup = false
 
     let accountModel: AccountSettingsModel
     let soundModel: SoundSettingsModel
     let networkModel: NetworkSettingsModel
-
-    var closeWindow: (() -> Void)?
-
-    private var pendingTransition: PendingSettingsTransition?
 
     init(
         accountModel: AccountSettingsModel,
@@ -65,65 +55,17 @@ final class SettingsViewModel {
         self.networkModel = networkModel
     }
 
-    func requestSelection(_ section: SettingsSection) {
-        guard section != selection else { return }
-
-        if selection == .network && networkModel.hasChanges {
-            pendingTransition = .selection(section)
-            showsNetworkSavePrompt = true
-        } else {
-            selection = section
-        }
-    }
-
-    func requestWindowClose() -> Bool {
-        if selection == .network && networkModel.hasChanges {
-            pendingTransition = .close
-            showsNetworkSavePrompt = true
-            return false
-        }
+    func prepareToClose() {
         soundModel.stopPreview()
-        return true
-    }
-
-    func saveNetworkAndContinue() {
-        networkModel.save()
-        completePendingTransition()
-    }
-
-    func discardNetworkAndContinue() {
         networkModel.discard()
-        completePendingTransition()
-    }
-
-    func cancelPendingTransition() {
-        pendingTransition = nil
-        showsNetworkSavePrompt = false
-    }
-
-    private func completePendingTransition() {
-        let transition = pendingTransition
-        pendingTransition = nil
-        showsNetworkSavePrompt = false
-
-        switch transition {
-        case .selection(let section):
-            selection = section
-        case .close:
-            soundModel.stopPreview()
-            closeWindow?()
-        case nil:
-            break
-        }
     }
 }
-
 struct SettingsRootView: View {
     @Bindable var model: SettingsViewModel
     let selectionChanged: (SettingsSection) -> Void
 
     var body: some View {
-        TabView(selection: selection) {
+        TabView(selection: $model.selection) {
             Tab(value: SettingsSection.general) {
                 GeneralSettingsView()
             } label: {
@@ -172,36 +114,9 @@ struct SettingsRootView: View {
         .onChange(of: model.selection, initial: true) { _, selection in
             selectionChanged(selection)
         }
-        .alert(
-            NSLocalizedString(
-                "Save changes to the network settings?",
-                comment: "Network settings change confirmation."
-            ),
-            isPresented: $model.showsNetworkSavePrompt
-        ) {
-            Button(NSLocalizedString("Save", comment: "Save button.")) {
-                model.saveNetworkAndContinue()
-            }
-            Button(NSLocalizedString("Cancel", comment: "Cancel button."), role: .cancel) {
-                model.cancelPendingTransition()
-            }
-            Button(NSLocalizedString("Don't Save", comment: "Don't save button."), role: .destructive) {
-                model.discardNetworkAndContinue()
-            }
-        } message: {
-            Text(
-                NSLocalizedString(
-                    "New network settings will be applied immediately, all accounts will be reconnected.",
-                    comment: "Network settings change confirmation informative text."
-                )
-            )
+        .onDisappear {
+            model.prepareToClose()
         }
-    }
 
-    private var selection: Binding<SettingsSection> {
-        Binding(
-            get: { model.selection },
-            set: { model.requestSelection($0) }
-        )
-    }
+}
 }

@@ -24,6 +24,7 @@
             { "path": "AuthenticationFailureController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AuthenticationFailureView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountSetupController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AccountSetupPresentationController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountSetupView.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {

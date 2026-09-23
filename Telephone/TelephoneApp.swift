@@ -13,21 +13,11 @@ struct TelephoneApp: App {
 
     var body: some Scene {
         Settings {
-            EmptyView()
+            (appController.preferencesControllerForSwiftUI()
+                as! PreferencesController)
+                .contentView
         }
         .commands {
-            CommandGroup(replacing: .appSettings) {
-                Button(
-                    NSLocalizedString(
-                        "Settings…",
-                        comment: "Application settings menu item."
-                    )
-                ) {
-                    appController.showPreferencePanel(nil)
-                }
-                .keyboardShortcut(",", modifiers: .command)
-            }
-
             CommandGroup(after: .pasteboard) {
                 Button(
                     NSLocalizedString(

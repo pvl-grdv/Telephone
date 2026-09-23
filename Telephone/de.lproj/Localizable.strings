@@ -484,3 +484,12 @@
 
 /* Previous conversations count. */
 "%ld previous conversations" = "%ld frühere Gespräche";
+
+/* Revert network settings button. */
+"Revert" = "Zurücksetzen";
+
+/* Apply network settings button. */
+"Apply" = "Anwenden";
+
+/* Network settings apply help text. */
+"Applying network settings reconnects all accounts." = "Beim Anwenden der Netzwerkeinstellungen werden alle Konten neu verbunden.";

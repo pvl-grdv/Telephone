@@ -14,8 +14,7 @@ final class PreferencesController: NSObject, SoundIOPreferences {
     let userAgent: AKSIPUserAgent
     let soundPreferencesViewEventTarget: SoundPreferencesViewEventTarget
 
-    private var fallbackWindowController: NSWindowController?
-    private var modernController: AnyObject?
+    private lazy var sceneController = PreferencesSceneController(model: model)
 
     private lazy var model: SettingsViewModel = {
         let accountModel = AccountSettingsModel(preferencesController: self)
@@ -53,29 +52,11 @@ final class PreferencesController: NSObject, SoundIOPreferences {
     }
 
     func install() {
-        if #available(macOS 26.0, *) {
-            let controller = PreferencesSceneController(model: model)
-            modernController = controller
-            controller.install()
-        }
+        sceneController.install()
     }
 
     func showWindowCentered() {
-        if #available(macOS 26.0, *),
-           let controller = modernController as? PreferencesSceneController {
-            controller.show()
-            return
-        }
-
-        let controller = fallbackWindowController
-            ?? makeFallbackWindowController()
-        fallbackWindowController = controller
-
-        guard let window = controller.window else { return }
-        if !window.isVisible {
-            window.center()
-        }
-        controller.showWindow(nil)
+        sceneController.show()
     }
 
     func showAccounts() {
@@ -89,36 +70,6 @@ final class PreferencesController: NSObject, SoundIOPreferences {
 
     func updateSoundIO() {
         model.soundModel.updateSoundIO()
-    }
-
-    private func dismissFallbackWindow() {
-        fallbackWindowController?.close()
-        fallbackWindowController = nil
-    }
-
-    private func makeFallbackWindowController() -> NSWindowController {
-        let rootView = SettingsRootView(
-            model: model,
-            selectionChanged: { [weak self] section in
-                self?.fallbackWindowController?.window?.title = section.title
-            }
-        )
-        let contentController = NSHostingController(rootView: rootView)
-
-        let settingsWindow = NSWindow(
-            contentRect: .zero,
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        settingsWindow.title = NSLocalizedString(
-            "Telephone Settings",
-            comment: "Settings default window title."
-        )
-        settingsWindow.isReleasedWhenClosed = false
-        settingsWindow.contentViewController = contentController
-        settingsWindow.setContentSize(contentController.view.fittingSize)
-        return NSWindowController(window: settingsWindow)
     }
 
     private func observePreferenceChanges() {
@@ -168,7 +119,6 @@ final class PreferencesController: NSObject, SoundIOPreferences {
 }
 
 
-@available(macOS 26.0, *)
 private struct PreferencesHostedScene: Scene {
     let model: SettingsViewModel
 
@@ -182,7 +132,6 @@ private struct PreferencesHostedScene: Scene {
     }
 }
 
-@available(macOS 26.0, *)
 @MainActor
 private final class PreferencesSceneController {
     private let representation:

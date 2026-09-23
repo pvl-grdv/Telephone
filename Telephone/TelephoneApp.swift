@@ -20,20 +20,6 @@ struct TelephoneApp: App {
         }
         .defaultLaunchBehavior(.suppressed)
         .commands {
-            if #unavailable(macOS 26.0) {
-                CommandGroup(replacing: .appSettings) {
-                    Button(
-                        NSLocalizedString(
-                            "Settings…",
-                            comment: "Application settings menu item."
-                        )
-                    ) {
-                        appController.showPreferencesForSwiftUI()
-                    }
-                    .keyboardShortcut(",", modifiers: .command)
-                }
-            }
-
             AccountsCommands(
                 model: appController.accountsCommandModelForSwiftUI()
                     as! AccountsCommandModel

@@ -207,10 +207,6 @@ NS_ASSUME_NONNULL_END
     return self.accountsCommandModel;
 }
 
-- (void)showPreferencesForSwiftUI {
-    [self.preferencesController showWindowCentered];
-}
-
 - (void)updateDockTileBadgeLabel {
     NSString *badgeString;
     NSInteger badgeNumber = self.accountControllers.unhandledIncomingCallsCount;

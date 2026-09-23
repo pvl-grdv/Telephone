@@ -23,7 +23,6 @@
           "children": [
             { "path": "AuthenticationFailureController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AuthenticationFailureView.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AccountSetupController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountSetupPresentationController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountSetupView.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
@@ -1702,7 +1701,7 @@
     "GCC_WARN_UNINITIALIZED_AUTOS": "YES_AGGRESSIVE",
     "GCC_WARN_UNUSED_FUNCTION": "YES",
     "GCC_WARN_UNUSED_VARIABLE": "YES",
-    "MACOSX_DEPLOYMENT_TARGET": "15.6",
+    "MACOSX_DEPLOYMENT_TARGET": "26.0",
     "MTL_ENABLE_DEBUG_INFO[config=Debug]": "YES",
     "MTL_ENABLE_DEBUG_INFO[config=Release]": "NO",
     "ONLY_ACTIVE_ARCH[config=Debug]": "YES",

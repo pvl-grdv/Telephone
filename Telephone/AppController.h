@@ -29,6 +29,5 @@
 - (void)openFAQ;
 
 - (id)accountsCommandModelForSwiftUI;
-- (void)showPreferencesForSwiftUI;
 
 @end

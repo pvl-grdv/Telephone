@@ -9,33 +9,21 @@ import SwiftUI
 @MainActor
 @objcMembers
 final class AccountSetupPresentationController: NSObject {
-    private lazy var fallback = AccountSetupController()
-
-    private var modernController: AnyObject?
+    private let controller = AccountSetupSceneController()
 
     class func didAddAccountNotificationName() -> String {
         accountSetupDidAddNotificationName.rawValue
     }
 
     func install() {
-        if #available(macOS 26.0, *) {
-            let controller = AccountSetupSceneController()
-            modernController = controller
-            controller.install()
-        }
+        controller.install()
     }
 
     func showFirstRun() {
-        if #available(macOS 26.0, *),
-           let controller = modernController as? AccountSetupSceneController {
-            controller.show()
-        } else {
-            fallback.showCentered()
-        }
+        controller.show()
     }
 }
 
-@available(macOS 26.0, *)
 private struct AccountSetupHostedScene: Scene {
     let windowID: String
 
@@ -56,7 +44,6 @@ private struct AccountSetupHostedScene: Scene {
     }
 }
 
-@available(macOS 26.0, *)
 @MainActor
 private final class AccountSetupSceneController {
     private static let windowID = "telephone-first-run-account-setup"
@@ -79,7 +66,6 @@ private final class AccountSetupSceneController {
     }
 }
 
-@available(macOS 26.0, *)
 private struct FirstRunAccountSetupView: View {
     let windowID: String
 

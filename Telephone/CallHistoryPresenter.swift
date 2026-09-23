@@ -79,23 +79,23 @@ private enum CallHistoryDeletion {
 @Observable
 private final class CallHistoryViewModel {
     var filter: CallHistoryFilter = .all {
-        didSet { normalizeSelection() }
+        didSet {
+            guard oldValue != filter else { return }
+            rebuildVisibleRecords()
+        }
     }
     var query = "" {
-        didSet { normalizeSelection() }
+        didSet {
+            guard oldValue != query else { return }
+            rebuildVisibleRecords()
+        }
     }
     var selection: String?
     var pendingDeletion: CallHistoryDeletion?
     var searchFocusRequest = 0
 
     private(set) var allRecords: [PresentationCallHistoryRecord] = []
-
-    var records: [PresentationCallHistoryRecord] {
-        let filteredByKind = allRecords.filter(filter.matches)
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedQuery.isEmpty else { return filteredByKind }
-        return filteredByKind.filter { $0.matchesSearch(trimmedQuery) }
-    }
+    private(set) var records: [PresentationCallHistoryRecord] = []
 
     var selectedRecord: PresentationCallHistoryRecord? {
         guard let selection else { return nil }
@@ -104,7 +104,7 @@ private final class CallHistoryViewModel {
 
     func show(_ records: [PresentationCallHistoryRecord]) {
         allRecords = records
-        normalizeSelection()
+        rebuildVisibleRecords()
     }
 
     func selectAndCall(_ record: PresentationCallHistoryRecord, action: (String) -> Void) {
@@ -140,10 +140,11 @@ private final class CallHistoryViewModel {
         switch pendingDeletion {
         case .record(let record):
             allRecords.removeAll { $0.identifier == record.identifier }
-            normalizeSelection()
+            rebuildVisibleRecords()
             deleteRecord(record.identifier)
         case .all:
             allRecords.removeAll()
+            records.removeAll()
             selection = nil
             deleteAll()
         }
@@ -151,6 +152,23 @@ private final class CallHistoryViewModel {
 
     func requestSearchFocus() {
         searchFocusRequest &+= 1
+    }
+
+    private func rebuildVisibleRecords() {
+        let filteredByKind = allRecords.filter(filter.matches)
+        let trimmedQuery = query.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        if trimmedQuery.isEmpty {
+            records = filteredByKind
+        } else {
+            records = filteredByKind.filter {
+                $0.matchesSearch(trimmedQuery)
+            }
+        }
+
+        normalizeSelection()
     }
 
     private func normalizeSelection() {

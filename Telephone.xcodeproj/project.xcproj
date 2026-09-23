@@ -659,6 +659,7 @@
           "children": [
             { "path": "Telephone-Bridging-Header.h" },
             { "path": "TelephoneApp.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "TelephoneAppIntents.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {

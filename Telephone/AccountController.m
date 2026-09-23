@@ -402,6 +402,22 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     }
 }
 
+- (BOOL)changeAccountStateRawValue:(NSInteger)state {
+    if (!self.isEnabled) {
+        return NO;
+    }
+
+    switch (state) {
+        case AccountAvailabilityStateOffline:
+        case AccountAvailabilityStateAvailable:
+        case AccountAvailabilityStateUnavailable:
+            [self changeAccountState:(AccountAvailabilityState)state];
+            return YES;
+        default:
+            return NO;
+    }
+}
+
 - (void)showRegistrarConnectionErrorSheetWithError:(NSString *)error {
     [self.presentationCoordinator
         showRegistrarConnectionErrorWithRegistrar:self.account.registrar.stringValue

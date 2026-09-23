@@ -218,6 +218,32 @@ NS_ASSUME_NONNULL_END
     [self.preferencesController showWindowCentered];
 }
 
+- (BOOL)makeCallFromAppIntentWithDestination:(NSString *)destination {
+    if (!self.isFinishedLaunching || ![self canMakeCall]) {
+        return NO;
+    }
+
+    SanitizedCallDestination *sanitized =
+        [[SanitizedCallDestination alloc] initWithString:destination];
+    if (sanitized == nil) {
+        return NO;
+    }
+
+    [self.accountControllers.enabled.firstObject
+        makeCallToDestinationRegisteringAccountIfNeeded:sanitized];
+    return YES;
+}
+
+- (BOOL)setAccountAvailabilityFromAppIntentWithUUID:(NSString *)uuid
+                                              state:(NSInteger)state {
+    for (AccountController *controller in self.accountControllers.enabled) {
+        if ([controller.account.uuid isEqualToString:uuid]) {
+            return [controller changeAccountStateRawValue:state];
+        }
+    }
+    return NO;
+}
+
 - (void)updateDockTileBadgeLabel {
     NSString *badgeString;
     NSInteger badgeNumber = self.accountControllers.unhandledIncomingCallsCount;

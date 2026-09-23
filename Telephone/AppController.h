@@ -20,6 +20,8 @@
 
 #import "AKSIPUserAgent.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface AppController : NSObject <NSApplicationDelegate, AKSIPUserAgentDelegate>
 
 - (void)updateDockTileBadgeLabel;
@@ -31,4 +33,12 @@
 - (id)accountsCommandModelForSwiftUI;
 - (void)showPreferencesForSwiftUI;
 
+- (BOOL)makeCallFromAppIntentWithDestination:(NSString *)destination
+    NS_SWIFT_NAME(makeCallFromAppIntent(destination:));
+- (BOOL)setAccountAvailabilityFromAppIntentWithUUID:(NSString * _Nonnull)uuid
+                                              state:(NSInteger)state
+    NS_SWIFT_NAME(setAccountAvailabilityFromAppIntent(uuid:state:));
+
 @end
+
+NS_ASSUME_NONNULL_END

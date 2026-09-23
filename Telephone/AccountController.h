@@ -80,4 +80,7 @@
 - (void)showUnavailableState;
 - (void)showConnectingState;
 
+// Applies AccountAvailabilityState by raw value for system integrations.
+- (BOOL)changeAccountStateRawValue:(NSInteger)state;
+
 @end

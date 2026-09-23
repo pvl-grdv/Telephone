@@ -218,12 +218,15 @@ struct SettingsRootView: View {
                 "SettingsSectionChanged",
                 "\(selection.rawValue)"
             )
+            PerformanceStateReporting.showSettingsSection(selection)
             selectionChanged(selection)
         }
         .onAppear {
             PerformanceSignposts.settings.emitEvent("SettingsVisible")
+            PerformanceStateReporting.showSettingsSection(model.selection)
         }
         .onDisappear {
+            PerformanceStateReporting.hideSettings()
             model.prepareToClose()
         }
 

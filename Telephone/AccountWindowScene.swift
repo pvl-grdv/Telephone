@@ -4,9 +4,11 @@
 //
 
 import AppKit
+import Observation
 import SwiftUI
 
 @MainActor
+@Observable
 final class AccountPresentationRegistry {
     static let shared = AccountPresentationRegistry()
 
@@ -18,22 +20,23 @@ final class AccountPresentationRegistry {
         }
     }
 
+    @ObservationIgnored
     private var controllers: [String: WeakController] = [:]
+
+    private(set) var generation = 0
 
     func register(_ controller: AccountPresentationCoordinator, key: String) {
         controllers[key] = WeakController(controller)
+        generation &+= 1
     }
 
     func unregister(key: String) {
         controllers.removeValue(forKey: key)
+        generation &+= 1
     }
 
     func controller(for key: String) -> AccountPresentationCoordinator? {
-        guard let controller = controllers[key]?.value else {
-            controllers[key] = nil
-            return nil
-        }
-        return controller
+        controllers[key]?.value
     }
 }
 
@@ -47,15 +50,26 @@ private struct AccountWindowsScene: Scene {
             id: AccountWindowSceneController.sceneID,
             for: String.self
         ) { key in
-            if let key = key.wrappedValue,
-               let controller = AccountPresentationRegistry.shared.controller(for: key) {
-                controller.contentView
-            } else {
-                EmptyView()
-            }
+            AccountWindowSceneContent(key: key.wrappedValue)
         }
         .defaultLaunchBehavior(.suppressed)
-        .restorationBehavior(.disabled)
+    }
+}
+
+private struct AccountWindowSceneContent: View {
+    @State private var registry = AccountPresentationRegistry.shared
+
+    let key: String?
+
+    var body: some View {
+        let _ = registry.generation
+
+        if let key,
+           let controller = registry.controller(for: key) {
+            controller.contentView
+        } else {
+            EmptyView()
+        }
     }
 }
 

@@ -21,7 +21,6 @@
 @import UserNotifications;
 @import UseCases;
 
-#import "AKNSWindow+Resizing.h"
 #import "AKSIPURI.h"
 #import "AKSIPURIFormatter.h"
 #import "AKSIPUserAgent.h"
@@ -62,7 +61,6 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 @implementation CallController
 
 @synthesize callTransferController = _callTransferController;
-@synthesize incomingCallViewController = _incomingCallViewController;
 
 - (void)setCall:(AKSIPCall *)call {
     if (_call != call) {
@@ -71,12 +69,10 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
         }
         _call = call;
         _call.delegate = self;
-        _incomingCallViewController.representedObject = _call;
-        _activeCallViewController.representedObject = _call;
-        _endedCallViewController.representedObject = _call;
+        [self.callContentViewController setCall:_call];
         if (_call != nil) {
             self.window.styleMask |= NSWindowStyleMaskClosable;
-            [_activeCallViewController allowHangUp];
+            [self.callContentViewController setHangUpEnabled:YES];
 
             // Keep the remote party identity available in every call state.
             // AccountController normally sets these before the call starts,
@@ -110,31 +106,6 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     return _callTransferController;
 }
 
-- (IncomingCallViewController *)incomingCallViewController {
-    if (_incomingCallViewController == nil) {
-        _incomingCallViewController = [[IncomingCallViewController alloc] initWithCallController:self];
-        [_incomingCallViewController setRepresentedObject:[self call]];
-    }
-    return _incomingCallViewController;
-}
-
-- (ActiveCallViewController *)activeCallViewController {
-    if (_activeCallViewController == nil) {
-        _activeCallViewController = [[ActiveCallViewController alloc] initWithNibName:@"ActiveCallView"
-                                                                       callController:self];
-        [_activeCallViewController setRepresentedObject:[self call]];
-    }
-    return _activeCallViewController;
-}
-
-- (EndedCallViewController *)endedCallViewController {
-    if (_endedCallViewController == nil) {
-        _endedCallViewController = [[EndedCallViewController alloc] initWithNibName:@"EndedCallView"
-                                                                     callController:self];
-        [_endedCallViewController setRepresentedObject:[self call]];
-    }
-    return _endedCallViewController;
-}
 
 - (void)setTitle:(NSString *)title {
     if (![_title isEqualToString:title]) {
@@ -142,6 +113,20 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
         if (self.isWindowLoaded) {
             [self updateWindowTitle];
         }
+    }
+}
+
+- (void)setDisplayedName:(NSString *)displayedName {
+    if (![_displayedName isEqualToString:displayedName]) {
+        _displayedName = [displayedName copy];
+        [self.callContentViewController setDisplayedName:_displayedName ?: @""];
+    }
+}
+
+- (void)setStatus:(NSString *)status {
+    if (![_status isEqualToString:status]) {
+        _status = [status copy];
+        [self.callContentViewController setStatus:_status ?: @""];
     }
 }
 
@@ -190,15 +175,22 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
 - (void)configureSwiftCallWindowForTransfer:(BOOL)isTransfer {
     self.callContentViewController =
-        [[CallContentViewController alloc] initWithAccountController:self.accountController
-                                             showsAccountFooter:!isTransfer];
+        [[CallContentViewController alloc] initWithCallController:self
+                                                accountController:self.accountController
+                                                      isTransfer:isTransfer];
 
-    NSSize contentSize = isTransfer ? NSMakeSize(320, 118) : NSMakeSize(300, 84);
+    NSSize contentSize = isTransfer ? NSMakeSize(360, 160) : NSMakeSize(420, 318);
+    NSWindowStyleMask styleMask =
+        NSWindowStyleMaskTitled |
+        NSWindowStyleMaskClosable |
+        NSWindowStyleMaskMiniaturizable;
+    if (!isTransfer) {
+        styleMask |= NSWindowStyleMaskResizable;
+    }
+
     NSWindow *window =
         [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, contentSize.width, contentSize.height)
-                                    styleMask:NSWindowStyleMaskTitled |
-                                              NSWindowStyleMaskClosable |
-                                              NSWindowStyleMaskMiniaturizable
+                                    styleMask:styleMask
                                       backing:NSBackingStoreBuffered
                                         defer:NO];
     window.animationBehavior = NSWindowAnimationBehaviorDefault;
@@ -206,6 +198,9 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     window.releasedWhenClosed = NO;
     window.delegate = self;
     window.contentViewController = self.callContentViewController;
+    if (!isTransfer) {
+        window.contentMinSize = NSMakeSize(380, 280);
+    }
 
     if (isTransfer) {
         self.title = NSLocalizedString(@"Call Transfer", @"Call transfer window title.");
@@ -225,9 +220,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 - (void)hangUpCall {
     [self setCallActive:NO];
 
-    if (_activeCallViewController != nil) {
-        [[self activeCallViewController] stopCallTimer];
-    }
+    [self.callContentViewController stopCallTimer];
     
     // If remote party hasn't sent back any replies, call hang-up will not happen immediately. Unsubscribe from any
     // notifications about the call state and set disconnected look to the call window.
@@ -242,9 +235,9 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
     [self showEndedCallView];
     
-    [self.activeCallViewController showHangUp];
-    [self.activeCallViewController disallowHangUp];
-    [self.incomingCallViewController setActionsEnabled:NO];
+    [self.callContentViewController setProgressVisible:NO];
+    [self.callContentViewController setHangUpEnabled:NO];
+    [self.callContentViewController setIncomingActionsEnabled:NO];
     
     [self removeUserNotification];
 
@@ -322,7 +315,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
     if ([[self call] isMicrophoneMuted]) {
         if (![self isCallOnHold]) {
-            [[self activeCallViewController] stopCallTimer];
+            [self.callContentViewController stopCallTimer];
             [self setStatus:NSLocalizedString(@"mic muted", @"Microphone muted status text.")];
         } else {
             [self setIntermediateStatus:NSLocalizedString(@"mic muted", @"Microphone muted status text.")];
@@ -341,7 +334,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
         [[self intermediateStatusTimer] invalidate];
     }
     
-    [[self activeCallViewController] stopCallTimer];
+    [self.callContentViewController stopCallTimer];
     [self setStatus:newIntermediateStatus];
     [self setIntermediateStatusTimer:
      [NSTimer scheduledTimerWithTimeInterval:3.0
@@ -361,7 +354,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
         [self setStatus:
          NSLocalizedString(@"mic muted", @"Microphone muted status text.")];
     } else if ([[self call] isActive]) {
-        [[self activeCallViewController] startCallTimer];
+        [self.callContentViewController startCallTimer];
     }
     
     [self setIntermediateStatusTimer:nil];
@@ -376,46 +369,37 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 - (void)prepareForCall {
     self.window.styleMask &= ~NSWindowStyleMaskClosable;
     [self showActiveCallView];
-    [self.activeCallViewController showProgress];
-    [self.activeCallViewController disallowHangUp];
+    [self.callContentViewController setProgressVisible:YES];
+    [self.callContentViewController setHangUpEnabled:NO];
 }
 
 - (void)showActiveCallView {
-    [self showViewController:self.activeCallViewController];
+    [self.callContentViewController showActiveState];
 }
 
 - (void)showEndedCallView {
     self.window.styleMask |= NSWindowStyleMaskClosable;
-    [self showViewController:self.endedCallViewController];
+    [self.callContentViewController showEndedState];
 }
 
 - (void)showIncomingCallView {
-    [self showViewController:self.incomingCallViewController];
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.incomingCallViewController focusAnswer];
-    });
+    [self.callContentViewController showIncomingState];
 }
 
-- (void)showViewController:(NSViewController *)viewController {
-    if (![self shouldShowViewController:viewController]) {
-        return;
-    }
-
-    [self.callContentViewController show:viewController];
-    [self.window ak_resizeForContentViewSize:self.callContentViewController.preferredWindowContentSize
-                                     animate:YES];
-
-    NSView *stateView = viewController.view;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (stateView.window == self.window) {
-            [self.window makeFirstResponder:stateView];
-        }
-    });
+- (void)showTransferDestinationState {
+    [self.callContentViewController showTransferDestinationState];
 }
 
-- (BOOL)shouldShowViewController:(NSViewController *)viewController {
-    return ![self.callContentViewController isShowing:viewController];
+- (void)focusTransferDestination {
+    [self.callContentViewController focusTransferDestination];
+}
+
+- (void)setTransferActionEnabled:(BOOL)enabled {
+    [self.callContentViewController setTransferActionEnabled:enabled];
+}
+
+- (void)callDidHoldForTransfer {
+    [self.callContentViewController callDidHoldForTransfer];
 }
 
 - (void)removeOrShowUserNotificationOnDisconnectIfNeeded {
@@ -481,7 +465,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 - (void)windowWillClose:(NSNotification *)notification {
     if ([self isCallActive]) {
         [self setCallActive:NO];
-        [[self activeCallViewController] stopCallTimer];
+        [self.callContentViewController stopCallTimer];
         
         if ([[[self call] delegate] isEqual:self]) {
             [[self call] setDelegate:nil];
@@ -492,9 +476,6 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     
     [self.delegate callControllerWillClose:self];
 
-    [_incomingCallViewController removeObservations];
-    [_activeCallViewController removeObservations];
-    [_endedCallViewController removeObservations];
 }
 
 - (NSRect)window:(NSWindow *)window willPositionSheet:(NSWindow *)sheet usingRect:(NSRect)rect {
@@ -510,7 +491,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     if (![[self call] isIncoming]) {
         NSNumber *sipEventCode = [notification userInfo][@"AKSIPEventCode"];
         if ([sipEventCode isEqualToNumber:@(PJSIP_SC_RINGING)]) {
-            [self.activeCallViewController showHangUp];
+            [self.callContentViewController setProgressVisible:NO];
             [self setStatus:NSLocalizedString(@"ringing", @"Remote party ringing.")];
         }
     }
@@ -520,15 +501,15 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     [self removeUserNotification];
     [self setCallStartTime:[NSDate timeIntervalSinceReferenceDate]];
     [self showActiveCallView];
-    [self.activeCallViewController showHangUp];
-    [self.activeCallViewController updateCallControls];
+    [self.callContentViewController setProgressVisible:NO];
+    [self.callContentViewController updateCallControls];
     [self setStatus:@"00:00"];
-    [[self activeCallViewController] startCallTimer];
+    [self.callContentViewController startCallTimer];
 }
 
 - (void)SIPCallDidDisconnect:(NSNotification *)notification {
     [self setCallActive:NO];
-    [[self activeCallViewController] stopCallTimer];
+    [self.callContentViewController stopCallTimer];
     
     NSString *preferredLocalization = [[NSBundle mainBundle] preferredLocalizations][0];
     
@@ -573,14 +554,14 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     
     // Disable the redial button to re-enable it after some delay to prevent accidental clicking on in instead of
     // clicking on the hang-up button. Don't forget to re-enable it below!
-    [[self endedCallViewController] setRedialEnabled:NO];
+    [self.callContentViewController setRedialEnabled:NO];
     
-    [self.activeCallViewController showHangUp];
-    [self.activeCallViewController disallowHangUp];
-    [self.incomingCallViewController setActionsEnabled:NO];
+    [self.callContentViewController setProgressVisible:NO];
+    [self.callContentViewController setHangUpEnabled:NO];
+    [self.callContentViewController setIncomingActionsEnabled:NO];
     
     [NSTimer scheduledTimerWithTimeInterval:kRedialButtonReenableTime
-                                     target:[self endedCallViewController]
+                                     target:self.callContentViewController
                                    selector:@selector(enableRedialButtonTick:)
                                    userInfo:nil
                                     repeats:NO];
@@ -600,7 +581,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 }
 
 - (void)SIPCallMediaDidBecomeActive:(NSNotification *)notification {
-    [self.activeCallViewController updateCallControls];
+    [self.callContentViewController updateCallControls];
     if ([self isCallOnHold]) {  // Call is being taken off hold.
         [self setCallOnHold:NO];
         
@@ -610,15 +591,15 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
 - (void)SIPCallDidLocalHold:(NSNotification *)notification {
     [self setCallOnHold:YES];
-    [self.activeCallViewController updateCallControls];
-    [[self activeCallViewController] stopCallTimer];
+    [self.callContentViewController updateCallControls];
+    [self.callContentViewController stopCallTimer];
     [self setStatus:NSLocalizedString(@"on hold", @"Call on local hold status text.")];
 }
 
 - (void)SIPCallDidRemoteHold:(NSNotification *)notification {
     [self setCallOnHold:YES];
-    [self.activeCallViewController updateCallControls];
-    [[self activeCallViewController] stopCallTimer];
+    [self.callContentViewController updateCallControls];
+    [self.callContentViewController stopCallTimer];
     [self setStatus:NSLocalizedString(@"on remote hold", @"Call on remote hold status text.")];
 }
 

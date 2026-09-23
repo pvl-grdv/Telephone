@@ -24,15 +24,10 @@
 
 
 @class AccountController, AKSIPCall, AKSIPURI, AKSIPUserAgent;
-@class IncomingCallViewController, ActiveCallViewController;
-@class EndedCallViewController, CallTransferController;
+@class CallTransferController;
 
 // A call controller.
-@interface CallController : NSWindowController <AKSIPCallDelegate> {
-  @protected
-    ActiveCallViewController *_activeCallViewController;
-    EndedCallViewController *_endedCallViewController;
-}
+@interface CallController : NSWindowController <AKSIPCallDelegate>
 
 @property(nonatomic, readonly, weak) id<CallControllerDelegate> delegate;
 
@@ -48,15 +43,6 @@
 // Call transfer controller.
 @property(nonatomic, readonly) CallTransferController *callTransferController;
 
-
-// Incoming call view controller.
-@property(nonatomic, readonly) IncomingCallViewController *incomingCallViewController;
-
-// Active call view controller.
-@property(nonatomic, readonly, strong) ActiveCallViewController *activeCallViewController;
-
-// Ended call view controller.
-@property(nonatomic, readonly, strong) EndedCallViewController *endedCallViewController;
 
 @property(nonatomic, copy) NSString *title;
 

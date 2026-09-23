@@ -20,6 +20,9 @@
 
 @interface CallController (Protected)
 
-- (void)showViewController:(NSViewController *)viewController;
+- (void)showTransferDestinationState;
+- (void)focusTransferDestination;
+- (void)setTransferActionEnabled:(BOOL)enabled;
+- (void)callDidHoldForTransfer;
 
 @end

@@ -3,6 +3,7 @@
 //  Telephone
 //
 
+import Foundation
 import SwiftUI
 
 struct CallWindowView: View {
@@ -21,6 +22,7 @@ struct CallWindowView: View {
     let cancelTransfer: () -> Void
     let completeTransfer: () -> Void
     let customerContextChanged: () -> Void
+    let sendDTMF: (String) -> Void
 
     var body: some View {
         Group {
@@ -43,9 +45,14 @@ struct CallWindowView: View {
 
     private var regularContent: some View {
         VStack(spacing: 0) {
-            callStateContent
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+            DTMFInputSurface(
+                focusRequest: model.callSurfaceFocusRequest,
+                sendDTMF: sendDTMF
+            ) {
+                callStateContent
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
 
             Divider()
 
@@ -110,11 +117,16 @@ struct CallWindowView: View {
                 )
             }
         case .transferActive:
-            TransferActiveSection(
-                model: model,
-                cancel: cancelTransfer,
-                complete: completeTransfer
-            )
+            DTMFInputSurface(
+                focusRequest: model.callSurfaceFocusRequest,
+                sendDTMF: sendDTMF
+            ) {
+                TransferActiveSection(
+                    model: model,
+                    cancel: cancelTransfer,
+                    complete: completeTransfer
+                )
+            }
             .padding(14)
         case .transferEnded:
             TransferEndedSection(
@@ -126,6 +138,48 @@ struct CallWindowView: View {
         case .incoming, .active, .ended:
             EmptyView()
         }
+    }
+}
+
+private let dtmfCharacters =
+    CharacterSet(charactersIn: "0123456789*#abcdrABCDR")
+
+private struct DTMFInputSurface<Content: View>: View {
+    @FocusState private var isFocused: Bool
+
+    let focusRequest: Int
+    let sendDTMF: (String) -> Void
+    let content: Content
+
+    init(
+        focusRequest: Int,
+        sendDTMF: @escaping (String) -> Void,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.focusRequest = focusRequest
+        self.sendDTMF = sendDTMF
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .focusable(interactions: .edit)
+            .focused($isFocused)
+            .focusEffectDisabled()
+            .onChange(of: focusRequest) {
+                isFocused = true
+            }
+            .onKeyPress(
+                characters: dtmfCharacters,
+                phases: .down
+            ) { press in
+                guard isFocused else {
+                    return .ignored
+                }
+
+                sendDTMF(press.characters)
+                return .handled
+            }
     }
 }
 

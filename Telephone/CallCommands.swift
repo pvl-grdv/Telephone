@@ -33,8 +33,7 @@ struct CallCommands: Commands {
                         comment: "Mute. Call menu item."
                     ),
                 action: { target?.toggleMicrophoneMute() },
-                enabled: state?.phase == .active
-                    && state?.muteEnabled == true,
+                enabled: CallCommandAvailability.mute(state),
                 key: "m",
                 modifiers: [.command, .shift]
             )
@@ -50,7 +49,7 @@ struct CallCommands: Commands {
                         comment: "Hold. Call menu item."
                     ),
                 action: { target?.toggleCallHold() },
-                enabled: holdEnabled
+                enabled: CallCommandAvailability.hold(state)
             )
 
             commandButton(
@@ -59,8 +58,7 @@ struct CallCommands: Commands {
                     comment: "Transfer. Call menu item."
                 ),
                 action: { target?.showCallTransfer() },
-                enabled: state?.phase == .active
-                    && state?.transferEnabled == true
+                enabled: CallCommandAvailability.transfer(state)
             )
 
             commandButton(
@@ -69,7 +67,7 @@ struct CallCommands: Commands {
                     comment: "Call back menu item."
                 ),
                 action: { target?.redial() },
-                enabled: redialEnabled,
+                enabled: CallCommandAvailability.redial(state),
                 key: "r"
             )
 
@@ -81,8 +79,7 @@ struct CallCommands: Commands {
                     comment: "Call answer menu item."
                 ),
                 action: { target?.acceptCall() },
-                enabled: state?.phase == .incoming
-                    && state?.incomingActionsEnabled == true,
+                enabled: CallCommandAvailability.answer(state),
                 key: "\r",
                 modifiers: []
             )
@@ -98,7 +95,7 @@ struct CallCommands: Commands {
                         comment: "End call menu item."
                     ),
                 action: { target?.hangUpCall() },
-                enabled: hangUpEnabled,
+                enabled: CallCommandAvailability.hangUp(state),
                 key: "."
             )
 
@@ -111,31 +108,6 @@ struct CallCommands: Commands {
                 ),
                 isOn: $keepOnTop
             )
-        }
-    }
-
-    private var holdEnabled: Bool {
-        guard let state else { return false }
-        return (state.phase == .active || state.phase == .transferActive)
-            && state.holdEnabled
-    }
-
-    private var redialEnabled: Bool {
-        guard let state else { return false }
-        return (state.phase == .ended || state.phase == .transferEnded)
-            && state.redialEnabled
-    }
-
-    private var hangUpEnabled: Bool {
-        guard let state else { return false }
-
-        switch state.phase {
-        case .incoming:
-            return state.incomingActionsEnabled
-        case .active, .transferActive:
-            return state.hangUpEnabled
-        default:
-            return false
         }
     }
 

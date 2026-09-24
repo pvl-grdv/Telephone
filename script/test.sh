@@ -11,3 +11,4 @@ run_tests() {
 
 run_tests Domain
 run_tests UseCasesTests
+run_tests TelephonePresentationTests

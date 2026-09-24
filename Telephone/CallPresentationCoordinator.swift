@@ -20,7 +20,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     private var accountInfoObservation: NSKeyValueObservation?
     private var callTimer: Foundation.Timer?
     private var enteredDTMF = NSMutableString()
-    private var didNotifyWindowClose = false
+    private var closeNotificationGate = CallWindowCloseNotificationGate()
     private var activeCallInterval: OSSignpostIntervalState?
 
     class func installScene() {
@@ -119,7 +119,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
     func showWindow() {
         guard !model.isTransfer else { return }
-        didNotifyWindowClose = false
+        closeNotificationGate.reset()
         CallWindowSceneController.shared.show(key: id)
     }
 
@@ -380,9 +380,13 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     }
 
     private func windowDidDisappear() {
-        guard !model.isTransfer, !didNotifyWindowClose else { return }
+        guard
+            !model.isTransfer,
+            closeNotificationGate.consume()
+        else {
+            return
+        }
 
-        didNotifyWindowClose = true
         customerContextCoordinator?.saveNow(ignoringPreference: true)
         callController?.callWindowDidClose()
     }

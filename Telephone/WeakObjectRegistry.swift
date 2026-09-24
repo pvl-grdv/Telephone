@@ -36,6 +36,15 @@ final class WeakObjectRegistry<Key: Hashable, Value: AnyObject> {
     }
 
     func value(for key: Key) -> Value? {
-        storage[key]?.value
+        guard let box = storage[key] else {
+            return nil
+        }
+
+        guard let value = box.value else {
+            storage.removeValue(forKey: key)
+            return nil
+        }
+
+        return value
     }
 }

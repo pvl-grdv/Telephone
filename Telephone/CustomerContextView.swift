@@ -80,6 +80,12 @@ struct CustomerContextView: View {
 
                 TextEditor(text: $model.customerNote)
                     .font(.body)
+                    .accessibilityLabel(
+                        NSLocalizedString(
+                            "Notes for this call",
+                            comment: "Call note editor accessibility label."
+                        )
+                    )
                     .scrollContentBackground(.hidden)
                     .padding(3)
                     .frame(
@@ -138,6 +144,7 @@ struct CustomerContextView: View {
 
             TextField("", text: text)
                 .textFieldStyle(.roundedBorder)
+                .accessibilityLabel(label)
         }
     }
 

@@ -35,7 +35,7 @@ final class CallWindowModel {
     var identityDetail = ""
     var contactOrganization = ""
     var status = ""
-    var windowTitle = NSLocalizedString("Call", comment: "Window title.")
+    var windowTitle = NSLocalizedString("Call Window Title", comment: "Call window title.")
     var windowDismissEnabled = true
 
     var showsProgress = false

@@ -45,7 +45,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
                 "Call Transfer",
                 comment: "Call transfer window title."
             )
-            : NSLocalizedString("Call", comment: "Window title.")
+            : NSLocalizedString("Call Window Title", comment: "Call window title.")
         self.model = model
 
         transferCoordinator = CallTransferCoordinator(
@@ -139,7 +139,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
     func setWindowTitle(_ value: String) {
         model.windowTitle = value.isEmpty
-            ? NSLocalizedString("Call", comment: "Window title.")
+            ? NSLocalizedString("Call Window Title", comment: "Call window title.")
             : value
     }
 

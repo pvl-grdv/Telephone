@@ -1,0 +1,4962 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%ld previous · %@": {
+      "comment": "Previous conversations count and most recent date.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld previous · %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld vorherige · %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ранее: %ld · %@"
+          }
+        }
+      }
+    },
+    "%ld previous conversations": {
+      "comment": "Previous conversations count.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld previous conversations"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld frühere Gespräche"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предыдущих разговоров: %ld"
+          }
+        }
+      }
+    },
+    "About Telephone": {
+      "comment": "Fork identity, validation, and modern call-history UI.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Telephone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über Telephone"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "О программе Telephone"
+          }
+        }
+      }
+    },
+    "Account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккаунт"
+          }
+        }
+      }
+    },
+    "Account Information": {
+      "comment": "Account settings section.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account Information"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account-Informationen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Информация"
+          }
+        }
+      }
+    },
+    "Account Setup": {
+      "comment": "Account setup window title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account Setup"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account einrichten"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новый аккаунт"
+          }
+        }
+      }
+    },
+    "Account State": {
+      "comment": "Account state toolbar item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account State"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account-Status"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус аккаунта"
+          }
+        }
+      }
+    },
+    "Account Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account Status"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontostatus"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус аккаунта"
+          }
+        }
+      }
+    },
+    "Accounts": {
+      "comment": "Accounts preferences window title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accounts"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accounts"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккаунты"
+          }
+        }
+      }
+    },
+    "Add Account": {
+      "comment": "Add account button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Account"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account hinzufügen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить аккаунт"
+          }
+        }
+      }
+    },
+    "Add client details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add client details"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundendetails hinzufügen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить данные клиента"
+          }
+        }
+      }
+    },
+    "Address Not Found": {
+      "comment": "Address not found.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address Not Found"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse nicht gefunden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Адрес не найден"
+          }
+        }
+      }
+    },
+    "Advanced": {
+      "comment": "Account settings section.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erweitert"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дополнительно"
+          }
+        }
+      }
+    },
+    "All": {
+      "comment": "All call history filter.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Все"
+          }
+        }
+      }
+    },
+    "All active calls will be disconnected.": {
+      "comment": "Telephone quit confirmation informative text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All active calls will be disconnected."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle aktiven Gespräche werden beendet."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Будут прекращены все незавершенные звонки."
+          }
+        }
+      }
+    },
+    "Answer": {
+      "comment": "Call answer button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annehmen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ответить"
+          }
+        }
+      }
+    },
+    "Apply": {
+      "comment": "Apply network settings button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anwenden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Применить"
+          }
+        }
+      }
+    },
+    "Applying network settings reconnects all accounts.": {
+      "comment": "Network settings apply help text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applying network settings reconnects all accounts."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Anwenden der Netzwerkeinstellungen werden alle Konten neu verbunden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Применение сетевых настроек переподключит все учётные записи."
+          }
+        }
+      }
+    },
+    "Are you sure you want to delete all records?": {
+      "comment": "Call history all records removal alert.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to delete all records?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wollen Sie alle Datensätze wirklich löschen?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вы действительно хотите удалить все записи?"
+          }
+        }
+      }
+    },
+    "Are you sure you want to delete the record “%@”?": {
+      "comment": "Call history record removal alert.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to delete the record “%@”?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wollen Sie den Datensatz „%@“ wirklich löschen?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вы действительно хотите удалить запись «%@»?"
+          }
+        }
+      }
+    },
+    "Are you sure you want to quit Telephone?": {
+      "comment": "Telephone quit confirmation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to quit Telephone?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wollen Sie Telefon wirklich beenden?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вы действительно хотите выйти из Телефона?"
+          }
+        }
+      }
+    },
+    "Audio": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аудио"
+          }
+        }
+      }
+    },
+    "Authentication Failure": {
+      "comment": "Authentication failure window title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authentication Failure"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authentifizierung fehlgeschlagen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка аутентификации"
+          }
+        }
+      }
+    },
+    "Automatically close call windows": {
+      "comment": "General settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically close call windows"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruffenster automatisch schließen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматически закрывать окно звонка"
+          }
+        }
+      }
+    },
+    "Automatically format phone numbers": {
+      "comment": "General settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically format phone numbers"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonnummern automatisch formatieren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Форматировать телефонные номера"
+          }
+        }
+      }
+    },
+    "Available": {
+      "comment": "Account registration Available menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verfügbar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступен"
+          }
+        }
+      }
+    },
+    "Based on Telephone by Alexey Kuznetsov and 64 Characters.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on Telephone by Alexey Kuznetsov and 64 Characters."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basierend auf Telephone von Alexey Kuznetsov und 64 Characters."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На основе Telephone, созданного Alexey Kuznetsov и 64 Characters."
+          }
+        }
+      }
+    },
+    "busy": {
+      "comment": "Busy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "busy"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Besetzt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "занято"
+          }
+        }
+      }
+    },
+    "Call": {
+      "comment": "Phone App Schema call action title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anrufen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Позвонить"
+          }
+        }
+      }
+    },
+    "Call Back": {
+      "comment": "Call back button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call Back"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurückrufen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перезвонить"
+          }
+        }
+      }
+    },
+    "call declined": {
+      "comment": "Call declined.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "call declined"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf abgelehnt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "звонок отклонен"
+          }
+        }
+      }
+    },
+    "call ended": {
+      "comment": "Call ended.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "call ended"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf beendet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "звонок завершен"
+          }
+        }
+      }
+    },
+    "Call Ended": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call Ended"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf beendet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звонок завершён"
+          }
+        }
+      }
+    },
+    "Call Failed": {
+      "comment": "Call failed.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call Failed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf fehlgeschlagen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось дозвониться"
+          }
+        }
+      }
+    },
+    "Call Number": {
+      "comment": "Call history context menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anrufen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Позвонить"
+          }
+        }
+      }
+    },
+    "Call Transfer": {
+      "comment": "Call transfer window title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call Transfer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf weiterleiten"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевод вызова"
+          }
+        }
+      }
+    },
+    "call transferred": {
+      "comment": "Call transferred.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "call transferred"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf weitergeleitet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "звонок переведен"
+          }
+        }
+      }
+    },
+    "Call waiting": {
+      "comment": "General settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call waiting"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anklopfen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ожидание вызова"
+          }
+        }
+      }
+    },
+    "Call Window Title": {
+      "comment": "Call window title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звонок"
+          }
+        }
+      }
+    },
+    "Call with Telephone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call with Telephone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Telephone anrufen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Позвонить через Telephone"
+          }
+        }
+      }
+    },
+    "calling": {
+      "comment": "John Smith calling. Somebody is calling us right now. Call status string. Deliberately in lower case, translators should do the same, if possible.\n   John Smith calling. Somebody is calling us right now. User notification description. Deliberately in lower case, translators should do the same, if possible.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calling"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ruft an"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "звонит"
+          }
+        }
+      }
+    },
+    "calling %@...": {
+      "comment": "Outgoing call in progress. Calling specific phone type (mobile, home, etc).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calling %@..."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "звоним на %@..."
+          }
+        }
+      }
+    },
+    "calling from %@": {
+      "comment": "John Smith calling from 1234567. Somebody is calling us right now from some source. User notification description. Deliberately in lower case, translators should do the same, if possible.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calling from %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "звонит с %@"
+          }
+        }
+      }
+    },
+    "calling...": {
+      "comment": "Outgoing call in progress.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calling..."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anrufen ..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "звоним..."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "comment": "Cancel button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмена"
+          }
+        }
+      }
+    },
+    "Changes the availability status of a Telephone SIP account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes the availability status of a Telephone SIP account."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ändert den Verfügbarkeitsstatus eines Telephone-SIP-Kontos."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменяет статус доступности SIP-аккаунта Telephone."
+          }
+        }
+      }
+    },
+    "Choose Destination": {
+      "comment": "Choose a contact destination.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Destination"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel auswählen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбрать адрес"
+          }
+        }
+      }
+    },
+    "Clear Outbound Proxy": {
+      "comment": "Clear outbound proxy button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Outbound Proxy"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outbound-Proxy löschen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очистить исходящий прокси"
+          }
+        }
+      }
+    },
+    "Client": {
+      "comment": "Local customer context section title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunde"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клиент"
+          }
+        }
+      }
+    },
+    "Client details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client details"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundendetails"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Данные клиента"
+          }
+        }
+      }
+    },
+    "Close": {
+      "comment": "Close button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыть"
+          }
+        }
+      }
+    },
+    "Commit %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коммит %@"
+          }
+        }
+      }
+    },
+    "Connect using proxy": {
+      "comment": "Account proxy toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect using proxy"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über Proxy verbinden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Соединяться через прокси"
+          }
+        }
+      }
+    },
+    "Connecting...": {
+      "comment": "Account registration Connecting... menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting..."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinden ..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Соединение..."
+          }
+        }
+      }
+    },
+    "Copy Number": {
+      "comment": "Call history context menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Number"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nummer kopieren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопировать номер"
+          }
+        }
+      }
+    },
+    "Copy Settings": {
+      "comment": "Copy application settings help menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Settings"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen kopieren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Копировать настройки"
+          }
+        }
+      }
+    },
+    "Could not fetch products.": {
+      "comment": "Products fetch error.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not fetch products."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Produkte konnten nicht heruntergeladen werden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось получить список продуктов."
+          }
+        }
+      }
+    },
+    "Could not make purchase.": {
+      "comment": "Product purchase error.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not make purchase."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Kauf konnte nicht abgeschlossen werden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Покупка не удалась."
+          }
+        }
+      }
+    },
+    "Could not register with %@.": {
+      "comment": "Registrar connection error.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not register with %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konnte nicht bei %@ registrieren."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось зарегистрироваться на %@."
+          }
+        }
+      }
+    },
+    "Could not restore purchases.": {
+      "comment": "Purchase restoration error.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not restore purchases."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Käufe konnten nicht wiederhergestellt werden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось восстановить покупки."
+          }
+        }
+      }
+    },
+    "Could not save account password.": {
+      "comment": "Account credentials save error.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save account password."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Passwort des Accounts konnte nicht gespeichert werden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось сохранить пароль учётной записи."
+          }
+        }
+      }
+    },
+    "Could not start SIP user agent.": {
+      "comment": "SIP user agent start error.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not start SIP user agent."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konnte SIP user agent nicht starten."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось запустить SIP-подсистему."
+          }
+        }
+      }
+    },
+    "CRM keys": {
+      "comment": "Local customer CRM keys field placeholder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM keys"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM-Schlüssel"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключи CRM"
+          }
+        }
+      }
+    },
+    "Decline": {
+      "comment": "Call decline button.\n   Decline. Call menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decline"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ablehnen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отклонить"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "comment": "Delete button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить"
+          }
+        }
+      }
+    },
+    "Delete “%@”?": {
+      "comment": "Account removal confirmation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete “%@”?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wollen Sie „%@“ wirklich löschen?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить «%@»?"
+          }
+        }
+      }
+    },
+    "Delete All…": {
+      "comment": "Call history context menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete All…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle löschen …"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить все…"
+          }
+        }
+      }
+    },
+    "Delete…": {
+      "comment": "Call history context menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen …"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить…"
+          }
+        }
+      }
+    },
+    "Description": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beschreibung"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Название"
+          }
+        }
+      }
+    },
+    "Destination": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Адрес"
+          }
+        }
+      }
+    },
+    "Dial": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dial"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Набрать"
+          }
+        }
+      }
+    },
+    "Dial with Telephone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dial with Telephone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Telephone wählen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Набрать через Telephone"
+          }
+        }
+      }
+    },
+    "Disable account to change settings.": {
+      "comment": "Enabled account editing hint.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable account to change settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deaktivieren Sie den Account, um Einstellungen zu ändern."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выключите аккаунт, чтобы поменять настройки."
+          }
+        }
+      }
+    },
+    "Domain": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Domain"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Domain"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Домен"
+          }
+        }
+      }
+    },
+    "Don't Save": {
+      "comment": "Don't save button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't Save"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht Sichern"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не сохранять"
+          }
+        }
+      }
+    },
+    "Done": {
+      "comment": "Account setup confirmation button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить"
+          }
+        }
+      }
+    },
+    "Email addresses": {
+      "comment": "Local customer email field placeholder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email addresses"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-Mail-Adressen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Электронная почта"
+          }
+        }
+      }
+    },
+    "Enable this account": {
+      "comment": "Account settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable this account"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Account aktivieren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить аккаунт"
+          }
+        }
+      }
+    },
+    "Enabling this option may solve some audio problems.": {
+      "comment": "Account IP address update help text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enabling this option may solve some audio problems."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivierung dieser Option kann manche Tonprobleme lösen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Может решить некоторые проблемы со звуком."
+          }
+        }
+      }
+    },
+    "End Call": {
+      "comment": "End Call. Call menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End Call"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf beenden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завершить звонок"
+          }
+        }
+      }
+    },
+    "Enter account details you received from your SIP provider.": {
+      "comment": "Account setup help text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter account details you received from your SIP provider."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie die Account-Daten ein, die Sie von Ihrem SIP-Provider erhalten haben. Oder die Daten des IP-Telefons einer FritzBox."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите данные аккаунта, полученного от SIP-провайдера."
+          }
+        }
+      }
+    },
+    "Error %ld": {
+      "comment": "Error #.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error %ld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehler %ld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка %ld"
+          }
+        }
+      }
+    },
+    "Failed to communicate with STUN server.": {
+      "comment": "Failed to communicate with STUN server.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to communicate with STUN server."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommunikationsfehler mit STUN-Server."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Невозможно связаться со STUN-сервером."
+          }
+        }
+      }
+    },
+    "Filter": {
+      "comment": "Call history filter picker label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фильтр"
+          }
+        }
+      }
+    },
+    "Filter Call History": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter Call History"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anrufliste filtern"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фильтр истории звонков"
+          }
+        }
+      }
+    },
+    "Find…": {
+      "comment": "Focus call history search menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suchen …"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти…"
+          }
+        }
+      }
+    },
+    "Fork modifications © 2026 Pavel Gordeev": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fork modifications © 2026 Pavel Gordeev"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Änderungen im Fork © 2026 Pavel Gordeev"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменения форка © 2026 Pavel Gordeev"
+          }
+        }
+      }
+    },
+    "Fork Repository": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fork Repository"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fork-Repository"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Репозиторий форка"
+          }
+        }
+      }
+    },
+    "Full Name": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Name"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vollständiger Name"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имя с фамилией"
+          }
+        }
+      }
+    },
+    "General": {
+      "comment": "General preferences window title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Основные"
+          }
+        }
+      }
+    },
+    "GPLv3 License": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GPLv3 License"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GPLv3-Lizenz"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лицензия GPLv3"
+          }
+        }
+      }
+    },
+    "Hold": {
+      "comment": "Hold. Call menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halten"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поставить на ожидание"
+          }
+        }
+      }
+    },
+    "Incoming": {
+      "comment": "Incoming call history filter.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incoming"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingehend"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Входящие"
+          }
+        }
+      }
+    },
+    "Incoming Call": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incoming Call"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingehender Anruf"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Входящий звонок"
+          }
+        }
+      }
+    },
+    "Independently maintained fork": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Independently maintained fork"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unabhängig gepflegter Fork"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Независимо поддерживаемый форк"
+          }
+        }
+      }
+    },
+    "IP Version": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP Version"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP-Version"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия IP"
+          }
+        }
+      }
+    },
+    "john": {
+      "comment": "Account setup username placeholder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "john"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "john"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pavel"
+          }
+        }
+      }
+    },
+    "John Smith": {
+      "comment": "Account setup full name placeholder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "John Smith"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "John Smith"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pavel Smirnov"
+          }
+        }
+      }
+    },
+    "Keep on Top": {
+      "comment": "Keep call window on top menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep on Top"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immer im Vordergrund halten"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Держать сверху"
+          }
+        }
+      }
+    },
+    "Leave empty to use any available port.": {
+      "comment": "Network settings help text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave empty to use any available port."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn leer, wird automatisch ein verfügbarer Port verwendet."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Для автоматического назначения порта оставьте поле пустым."
+          }
+        }
+      }
+    },
+    "Loading client details…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading client details…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundendetails werden geladen…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузка данных клиента…"
+          }
+        }
+      }
+    },
+    "Local SIP Port": {
+      "comment": "Network settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local SIP Port"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokaler SIP-Port"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Локальный SIP-порт"
+          }
+        }
+      }
+    },
+    "Log In": {
+      "comment": "Authentication failure submit button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log In"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmelden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повторить"
+          }
+        }
+      }
+    },
+    "Login failed.": {
+      "comment": "Authentication failure title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Login failed."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldung fehlgeschlagen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аутентификация не прошла."
+          }
+        }
+      }
+    },
+    "mic muted": {
+      "comment": "Microphone muted status text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mic muted"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon stumm"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "микрофон выключен"
+          }
+        }
+      }
+    },
+    "mic unmuted": {
+      "comment": "Microphone unmuted status text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mic unmuted"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon aktiv"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "микрофон работает"
+          }
+        }
+      }
+    },
+    "Missed": {
+      "comment": "Missed call history filter.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verpasst"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропущенные"
+          }
+        }
+      }
+    },
+    "Monthly": {
+      "comment": "Product name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monthly"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monatlich"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ежемесячно"
+          }
+        }
+      }
+    },
+    "Mute": {
+      "comment": "Mute. Call menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mute"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon aus"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выключить микрофон"
+          }
+        }
+      }
+    },
+    "Network": {
+      "comment": "Network preferences window title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netzwerk"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сеть"
+          }
+        }
+      }
+    },
+    "New network settings will be applied immediately, all accounts will be reconnected.": {
+      "comment": "Network settings change confirmation informative text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New network settings will be applied immediately, all accounts will be reconnected."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die neuen Netzwerkeinstellungen werden sofort aktiv, alle Accounts werden neu verbunden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки вступят в силу сразу, все аккаунты будут переподсоединены."
+          }
+        }
+      }
+    },
+    "No Account Selected": {
+      "comment": "Empty account settings title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Account Selected"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Account ausgewählt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккаунт не выбран"
+          }
+        }
+      }
+    },
+    "No Calls": {
+      "comment": "Empty call history title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Calls"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Anrufe"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет звонков"
+          }
+        }
+      }
+    },
+    "No Matching Calls": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Matching Calls"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine passenden Anrufe"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет подходящих звонков"
+          }
+        }
+      }
+    },
+    "No previous conversations": {
+      "comment": "Customer has no previous conversations in Telephone.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No previous conversations"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine früheren Gespräche"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ранее не общались"
+          }
+        }
+      }
+    },
+    "No Results": {
+      "comment": "Call history search has no matches title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Results"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Ergebnisse"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ничего не найдено"
+          }
+        }
+      }
+    },
+    "Notes for this call": {
+      "comment": "Call note editor placeholder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes for this call"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notizen zu diesem Gespräch"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заметки по этому разговору"
+          }
+        }
+      }
+    },
+    "Off": {
+      "comment": "Account IP address update mode.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выкл."
+          }
+        }
+      }
+    },
+    "off hold": {
+      "comment": "Call has been taken off hold status text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "off hold"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf wiederaufgenommen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "продолжается"
+          }
+        }
+      }
+    },
+    "Offline": {
+      "comment": "Account registration Offline menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Офлайн"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ОК"
+          }
+        }
+      }
+    },
+    "on hold": {
+      "comment": "Call on local hold status text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on hold"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf gehalten"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "на ожидании"
+          }
+        }
+      }
+    },
+    "on remote hold": {
+      "comment": "Call on remote hold status text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on remote hold"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf vom Gesprächspartner gehalten"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "поставили на ожидание"
+          }
+        }
+      }
+    },
+    "Open FAQ…": {
+      "comment": "Open FAQ help menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open FAQ…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FAQ öffnen …"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть FAQ…"
+          }
+        }
+      }
+    },
+    "Open Fork Repository…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Fork Repository…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fork-Repository öffnen…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть репозиторий форка…"
+          }
+        }
+      }
+    },
+    "Open Homepage…": {
+      "comment": "Open homepage help menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Homepage…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Homepage öffnen …"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть домашнюю страницу…"
+          }
+        }
+      }
+    },
+    "Open Original FAQ…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Original FAQ…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ursprüngliche FAQ öffnen…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть FAQ исходного проекта…"
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen öffnen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть настройки"
+          }
+        }
+      }
+    },
+    "Open Telephone Settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Telephone Settings"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone-Einstellungen öffnen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть настройки Telephone"
+          }
+        }
+      }
+    },
+    "Opens Telephone settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens Telephone settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet die Telephone-Einstellungen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открывает настройки Telephone."
+          }
+        }
+      }
+    },
+    "Organization": {
+      "comment": "Local customer organization field placeholder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organization"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organisation"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Организация"
+          }
+        }
+      }
+    },
+    "Original Project": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Project"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ursprüngliches Projekt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исходный проект"
+          }
+        }
+      }
+    },
+    "Outbound Proxy": {
+      "comment": "Network settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outbound Proxy"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIP-Proxy"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Общий прокси"
+          }
+        }
+      }
+    },
+    "Outgoing": {
+      "comment": "Outgoing call history filter.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outgoing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgehend"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исходящие"
+          }
+        }
+      }
+    },
+    "Partial": {
+      "comment": "Account IP address update mode.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teilweise"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Частично"
+          }
+        }
+      }
+    },
+    "Password": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пароль"
+          }
+        }
+      }
+    },
+    "Pause media during connected calls": {
+      "comment": "General settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause media during connected calls"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medien während verbundener Anrufe pausieren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приостанавливать медиа во время разговора"
+          }
+        }
+      }
+    },
+    "Phone number or SIP address": {
+      "comment": "Call destination field placeholder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phone number or SIP address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonnummer oder SIP-Adresse"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефон или SIP-адрес"
+          }
+        }
+      }
+    },
+    "Place ringtones in ~/Library/Sounds": {
+      "comment": "Sound settings help text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place ringtones in ~/Library/Sounds"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichern Sie Klingeltöne in ~/Library/Sounds"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рингтоны поместите в папку ~/Библиотеки/Sounds"
+          }
+        }
+      }
+    },
+    "Places a phone or SIP call using Telephone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Places a phone or SIP call using Telephone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tätigt einen Telefon- oder SIP-Anruf mit Telephone."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Совершает телефонный или SIP-звонок через Telephone."
+          }
+        }
+      }
+    },
+    "Please check network connection and Registry Server settings.": {
+      "comment": "Registrar connection error informative text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please check network connection and Registry Server settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitte überprüfen Sie Ihre Netzwerkverbindung und die Registrierungsserver-Einstellungen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пожалуйста, проверьте настройки сети и сервера регистраций."
+          }
+        }
+      }
+    },
+    "Please check your network connection and STUN server settings.": {
+      "comment": "SIP user agent start error informative text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please check your network connection and STUN server settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitte überprüfen Sie Ihre Netzwerkverbindung und die STUN-Server-Einstellungen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пожалуйста, проверьте настройки сети и STUN-сервера."
+          }
+        }
+      }
+    },
+    "Port": {
+      "comment": "Network settings port field.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порт"
+          }
+        }
+      }
+    },
+    "Port must be between 1 and 65535, or left empty.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port must be between 1 and 65535, or left empty."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Port muss zwischen 1 und 65535 liegen oder leer bleiben."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порт должен быть от 1 до 65535 или поле должно быть пустым."
+          }
+        }
+      }
+    },
+    "Previous note: %@": {
+      "comment": "Most recent previous customer note.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous note: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorherige Notiz: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предыдущая заметка: %@"
+          }
+        }
+      }
+    },
+    "Programs: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programs: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programme: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Программы: %@"
+          }
+        }
+      }
+    },
+    "Quit": {
+      "comment": "Quit button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beenden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выйти"
+          }
+        }
+      }
+    },
+    "Reference keys": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference keys"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referenzschlüssel"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключи клиента"
+          }
+        }
+      }
+    },
+    "Registry Server": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registry Server"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер регистраций"
+          }
+        }
+      }
+    },
+    "Remember this password in my Keychain": {
+      "comment": "Authentication failure Keychain toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember this password in my Keychain"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort im Schlüsselbund speichern"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запомнить пароль"
+          }
+        }
+      }
+    },
+    "Remove Account": {
+      "comment": "Remove account button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Account"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account entfernen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить аккаунт"
+          }
+        }
+      }
+    },
+    "Replace “+” with": {
+      "comment": "Account settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace “+” with"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„+“ ersetzen durch"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заменять «+» на"
+          }
+        }
+      }
+    },
+    "Required": {
+      "comment": "Required field placeholder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erforderlich"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обязательно"
+          }
+        }
+      }
+    },
+    "Reregister every": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reregister every"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrierung alle"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Регистрация каждые"
+          }
+        }
+      }
+    },
+    "Resume": {
+      "comment": "Resume. Call menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsetzen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить разговор"
+          }
+        }
+      }
+    },
+    "Revert": {
+      "comment": "Revert network settings button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücksetzen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вернуть"
+          }
+        }
+      }
+    },
+    "ringing": {
+      "comment": "Remote party ringing.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ringing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es klingelt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "идет оповещение"
+          }
+        }
+      }
+    },
+    "Ringtone": {
+      "comment": "Sound settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ringtone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klingelton"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рингтон"
+          }
+        }
+      }
+    },
+    "Ringtone Output": {
+      "comment": "Sound settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ringtone Output"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klingeltonausgabe"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выход рингтона"
+          }
+        }
+      }
+    },
+    "Save": {
+      "comment": "Save button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichern"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить"
+          }
+        }
+      }
+    },
+    "Save changes to the network settings?": {
+      "comment": "Network settings change confirmation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save changes to the network settings?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Änderungen an den Netzwerkeinstellungen sichern?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить сетевые настройки?"
+          }
+        }
+      }
+    },
+    "Search Call History": {
+      "comment": "Call history search field placeholder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Call History"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anrufliste durchsuchen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск в истории звонков"
+          }
+        }
+      }
+    },
+    "seconds": {
+      "comment": "Account settings unit.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "seconds"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekunden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "секунд"
+          }
+        }
+      }
+    },
+    "Select an account to edit its settings.": {
+      "comment": "Empty account settings description.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an account to edit its settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie einen Account aus, um seine Einstellungen zu bearbeiten."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите аккаунт, чтобы изменить его настройки."
+          }
+        }
+      }
+    },
+    "Separate multiple email addresses with commas.": {
+      "comment": "Customer email field help.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separate multiple email addresses with commas."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehrere E-Mail-Adressen durch Kommas trennen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Несколько адресов укажите через запятую."
+          }
+        }
+      }
+    },
+    "Separate multiple keys with commas.": {
+      "comment": "CRM keys field help.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separate multiple keys with commas."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehrere Schlüssel durch Kommas trennen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Несколько ключей укажите через запятую."
+          }
+        }
+      }
+    },
+    "Server": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер"
+          }
+        }
+      }
+    },
+    "Set Account Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Account Status"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontostatus festlegen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменить статус аккаунта"
+          }
+        }
+      }
+    },
+    "Set Telephone Account Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Telephone Account Status"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone-Kontostatus festlegen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменить статус аккаунта Telephone"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "comment": "Application settings menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen …"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки…"
+          }
+        }
+      }
+    },
+    "Show %d more…": {
+      "comment": "Show more call history records button.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show %d more…"
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d mehr anzeigen …"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d weitere anzeigen …"
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать еще %d…"
+          }
+        }
+      }
+    },
+    "Show customer context during calls": {
+      "comment": "General settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show customer context during calls"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundenkontext während Anrufen anzeigen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показывать данные клиента во время звонков"
+          }
+        }
+      }
+    },
+    "Show Log File in Finder": {
+      "comment": "Show log file help menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Log File in Finder"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokolldatei im Finder anzeigen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать лог-файл в Файндере"
+          }
+        }
+      }
+    },
+    "SIP Account Setup": {
+      "comment": "Account setup title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIP Account Setup"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIP-Account einrichten"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новый SIP-аккаунт"
+          }
+        }
+      }
+    },
+    "SIP Address": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIP Address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIP-Adresse"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIP-адрес"
+          }
+        }
+      }
+    },
+    "SIP Transport": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIP Transport"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIP-Transport"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIP-транспорт"
+          }
+        }
+      }
+    },
+    "Sound": {
+      "comment": "Sound preferences window title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звук"
+          }
+        }
+      }
+    },
+    "Sound Input": {
+      "comment": "Sound settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound Input"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toneingabe"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуковой вход"
+          }
+        }
+      }
+    },
+    "Sound Output": {
+      "comment": "Sound settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound Output"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tonausgabe"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуковой выход"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус"
+          }
+        }
+      }
+    },
+    "STUN Server": {
+      "comment": "Network settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "STUN Server"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "STUN-Server"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "STUN-сервер"
+          }
+        }
+      }
+    },
+    "Telephone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone"
+          }
+        }
+      }
+    },
+    "Telephone Account": {
+      "comment": "App Intents and Shortcuts metadata.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone Account"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone-Konto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккаунт Telephone"
+          }
+        }
+      }
+    },
+    "Telephone couldn't determine who to call.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone couldn't determine who to call."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone konnte das Anrufziel nicht bestimmen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone не удалось определить адрес звонка."
+          }
+        }
+      }
+    },
+    "Telephone couldn't place this call.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone couldn't place this call."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone konnte diesen Anruf nicht starten."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone не удалось совершить звонок."
+          }
+        }
+      }
+    },
+    "Telephone couldn't update this account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone couldn't update this account."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone konnte dieses Konto nicht aktualisieren."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone не удалось изменить статус аккаунта."
+          }
+        }
+      }
+    },
+    "Telephone is not ready.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone is not ready."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone ist noch nicht bereit."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone ещё не готов."
+          }
+        }
+      }
+    },
+    "Telephone Settings": {
+      "comment": "Settings default window title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone Settings"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon-Einstellungen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки Телефона"
+          }
+        }
+      }
+    },
+    "Telephone supports audio calls only.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone supports audio calls only."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone unterstützt nur Audioanrufe."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone поддерживает только аудиозвонки."
+          }
+        }
+      }
+    },
+    "Telephone supports one destination per call.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone supports one destination per call."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone unterstützt ein Ziel pro Anruf."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone поддерживает одного адресата на звонок."
+          }
+        }
+      }
+    },
+    "Telephone was unable to login to %@. Change user name or password and try again.": {
+      "comment": "Registrar authentication failed.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone was unable to login to %@. Change user name or password and try again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon konnte sich nicht in %@ anmelden. Ändern Sie Benutzername oder Passwort und versuchen Sie es erneut."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефон не смог зарегистрироваться на сервере %@. Проверьте имя пользователя и пароль."
+          }
+        }
+      }
+    },
+    "The error was: “%ld %@”.": {
+      "comment": "Error description.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The error was: “%1$ld %2$@”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlerbeschreibung: „%1$ld %2$@“."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@, ошибка %1$ld."
+          }
+        }
+      }
+    },
+    "This action cannot be undone.": {
+      "comment": "Call history record removal alert informative text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action cannot be undone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Vorgang kann nicht rückgängig gemacht werden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Результат этого действия нельзя отменить."
+          }
+        }
+      }
+    },
+    "This build is an independently maintained fork of Telephone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This build is an independently maintained fork of Telephone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Version ist ein unabhängig gepflegter Fork von Telephone."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта версия — независимо поддерживаемый форк Telephone."
+          }
+        }
+      }
+    },
+    "This will delete your currently set up account “%@”.": {
+      "comment": "Account removal confirmation informative text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This will delete your currently set up account “%@”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihr Account „%@“ wird gelöscht."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настроенный аккаунт «%@» будет удален."
+          }
+        }
+      }
+    },
+    "Transfer": {
+      "comment": "Transfer call button and menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiterleiten"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевести"
+          }
+        }
+      }
+    },
+    "Transfer to:": {
+      "comment": "Call transfer destination label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiterleiten an:"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевести на:"
+          }
+        }
+      }
+    },
+    "Try a different call filter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a different call filter."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versuchen Sie einen anderen Anruffilter."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Попробуйте другой фильтр звонков."
+          }
+        }
+      }
+    },
+    "Try a different search or filter.": {
+      "comment": "Empty call history search description.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a different search or filter."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versuchen Sie eine andere Suche oder einen anderen Filter."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Попробуйте изменить поиск или фильтр."
+          }
+        }
+      }
+    },
+    "UDP packets are probably blocked. It is impossible to make or receive calls without that. Make sure that your local firewall and the firewall at your router allow UDP protocol.": {
+      "comment": "Failed to communicate with STUN server informative text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UDP packets are probably blocked. It is impossible to make or receive calls without that. Make sure that your local firewall and the firewall at your router allow UDP protocol."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UDP-Pakete werden anscheinend blockiert. Sie können weder Anrufe tätigen noch empfangen. Stellen Sie sicher, daß Ihre lokale Firewall und die Firewall Ihres Routers das UDP-Protokoll erlaubt."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорее всего, прохождение UDP-пакетов заблокировано, а без этого невозможно совершать звонки. Убедитесь, что на компьютере и на маршрутизаторе разрешен протокол UDP."
+          }
+        }
+      }
+    },
+    "Unavailable": {
+      "comment": "Account registration Unavailable menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht verfügbar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Недоступен"
+          }
+        }
+      }
+    },
+    "Unknown device": {
+      "comment": "Audio device name is unknown.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown device"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekanntes Gerät"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неизвестное устройство"
+          }
+        }
+      }
+    },
+    "Unknown error": {
+      "comment": "Unknown error.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown error"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannter Fehler"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неизвестная ошибка"
+          }
+        }
+      }
+    },
+    "Unknown product": {
+      "comment": "Unknown product name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown product"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekanntes Produkt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неизвестный продукт"
+          }
+        }
+      }
+    },
+    "Unmute": {
+      "comment": "Unmute. Call menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unmute"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon an"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить микрофон"
+          }
+        }
+      }
+    },
+    "Update IP address": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update IP address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP-Adresse aktualisieren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновлять IP-адрес"
+          }
+        }
+      }
+    },
+    "Use DNS SRV": {
+      "comment": "Network settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use DNS SRV"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DNS SRV verwenden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использовать DNS SRV"
+          }
+        }
+      }
+    },
+    "Use ICE": {
+      "comment": "Network settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use ICE"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ICE verwenden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использовать ICE"
+          }
+        }
+      }
+    },
+    "Use only G.711 codec": {
+      "comment": "Sound settings toggle.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use only G.711 codec"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur G.711-Codec verwenden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использовать только кодек G.711"
+          }
+        }
+      }
+    },
+    "Use System Setting": {
+      "comment": "Audio device menu item.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use System Setting"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemeinstellung verwenden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использовать системный"
+          }
+        }
+      }
+    },
+    "Use the account proxy instead.": {
+      "comment": "Network settings help text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the account proxy instead."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stattdessen nutzen Sie den Account-Proxy."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Используйте прокси-сервер аккаунта."
+          }
+        }
+      }
+    },
+    "User Name": {
+      "comment": "Account settings label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Name"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzername"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пользователь"
+          }
+        }
+      }
+    },
+    "Version %@ (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ (%@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ (%@)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия %@ (%@)"
+          }
+        }
+      }
+    },
+    "Video": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видео"
+          }
+        }
+      }
+    },
+    "Who would you like to call?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who would you like to call?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wen möchten Sie anrufen?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кому вы хотите позвонить?"
+          }
+        }
+      }
+    },
+    "Yearly": {
+      "comment": "Product name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yearly"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jährlich"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ежегодно"
+          }
+        }
+      }
+    },
+    "Your call history will appear here.": {
+      "comment": "Empty call history description.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your call history will appear here."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihr Anrufverlauf wird hier angezeigt."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Здесь появится история звонков."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

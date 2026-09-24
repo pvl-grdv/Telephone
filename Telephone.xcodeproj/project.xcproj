@@ -687,69 +687,7 @@
           "children": [
             { "path": "Info.plist", "encoding": "utf8" },
             { "path": "Telephone.entitlements" },
-            {
-              "kind": "variant-group",
-              "name": "InfoPlist.strings",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "en.lproj/InfoPlist.strings",
-                  "encoding": "utf8",
-                }, {
-                  "path": "ru.lproj/InfoPlist.strings",
-                  "encoding": "utf8",
-                }, {
-                  "path": "de.lproj/InfoPlist.strings",
-                  "encoding": "utf8",
-                },
-              ],
-            }, {
-              "kind": "variant-group",
-              "name": "Localizable.strings",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "en.lproj/Localizable.strings",
-                  "encoding": "utf8",
-                }, {
-                  "path": "ru.lproj/Localizable.strings",
-                  "encoding": "utf8",
-                }, {
-                  "path": "de.lproj/Localizable.strings",
-                  "encoding": "utf8",
-                },
-              ],
-            }, {
-              "kind": "variant-group",
-              "name": "Localizable.stringsdict",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "de.lproj/Localizable.stringsdict",
-                },
-              ],
-            }, {
-              "kind": "variant-group",
-              "name": "SIPResponses.strings",
-              "target-membership": [
-                "Telephone/resources",
-              ],
-              "children": [
-                {
-                  "path": "en.lproj/SIPResponses.strings",
-                  "encoding": "utf8",
-                }, {
-                  "path": "ru.lproj/SIPResponses.strings",
-                  "encoding": "utf8",
-                },
-              ],
-            }, {
+            { "path": "InfoPlist.xcstrings", "target-membership": [ "Telephone/resources" ] }, { "path": "Localizable.xcstrings", "target-membership": [ "Telephone/resources" ] }, {}, { "path": "SIPResponses.xcstrings", "target-membership": [ "Telephone/resources" ] }, {
             },
 {
             }, {

@@ -377,7 +377,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
 - (void)showActiveCallView {
     if (![self isKindOfClass:[CallTransferController class]]) {
-        self.title = NSLocalizedString(@"Call", @"Active call window title.");
+        self.title = NSLocalizedString(@"Call Window Title", @"Active call window title.");
     }
     [self.callPresentationCoordinator showActiveState];
 }

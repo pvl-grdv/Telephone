@@ -1,0 +1,924 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Accepted": {
+      "comment": "202 Accepted.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Принято для обработки"
+          }
+        }
+      }
+    },
+    "Address Incomplete": {
+      "comment": "484 Address Incomplete.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address Incomplete"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неполный адрес"
+          }
+        }
+      }
+    },
+    "Alternative Service": {
+      "comment": "380 Alternative Service.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternative Service"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступны альтернативные услуги"
+          }
+        }
+      }
+    },
+    "Ambiguous": {
+      "comment": "485 Ambiguous.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ambiguous"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Адрес неоднозначен"
+          }
+        }
+      }
+    },
+    "Bad Event": {
+      "comment": "489 Bad Event.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad Event"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad Event"
+          }
+        }
+      }
+    },
+    "Bad Extension": {
+      "comment": "420 Bad Extension.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad Extension"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неизвестное расширение"
+          }
+        }
+      }
+    },
+    "Bad Gateway": {
+      "comment": "502 Bad Gateway.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad Gateway"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер получил некорректный ответ от запрашиваемого сервера"
+          }
+        }
+      }
+    },
+    "Bad Request": {
+      "comment": "400 Bad Request.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad Request"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неправильно сформированный запрос"
+          }
+        }
+      }
+    },
+    "Busy Everywhere": {
+      "comment": "600 Busy Everywhere.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busy Everywhere"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Занято по всем направлениям"
+          }
+        }
+      }
+    },
+    "Busy Here": {
+      "comment": "486 Busy Here.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busy Here"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Занято"
+          }
+        }
+      }
+    },
+    "Call Is Being Forwarded": {
+      "comment": "181 Call Is Being Forwarded.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call Is Being Forwarded"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звонок переадресуется"
+          }
+        }
+      }
+    },
+    "Call/Transaction Does Not Exist": {
+      "comment": "481 Call/Transaction Does Not Exist.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call/Transaction Does Not Exist"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не существует такого звонка или транзакции"
+          }
+        }
+      }
+    },
+    "Decline": {
+      "comment": "603 Decline.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decline"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звонок отклонен"
+          }
+        }
+      }
+    },
+    "Does Not Exist Anywhere": {
+      "comment": "604 Does Not Exist Anywhere.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Does Not Exist Anywhere"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет такого пользователя"
+          }
+        }
+      }
+    },
+    "Extension Required": {
+      "comment": "421 Extension Required.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extension Required"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не указано расширение"
+          }
+        }
+      }
+    },
+    "Forbidden": {
+      "comment": "403 Forbidden.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forbidden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрещено"
+          }
+        }
+      }
+    },
+    "Gone": {
+      "comment": "410 Gone.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gone"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Больше не доступно"
+          }
+        }
+      }
+    },
+    "Interval Too Brief": {
+      "comment": "423 Interval Too Brief.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interval Too Brief"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Недостаточный временной интервал"
+          }
+        }
+      }
+    },
+    "Loop Detected": {
+      "comment": "482 Loop Detected.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loop Detected"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Замкнутый маршрут"
+          }
+        }
+      }
+    },
+    "Message Too Large": {
+      "comment": "513 Message Too Large.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message Too Large"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слишком большое сообщение"
+          }
+        }
+      }
+    },
+    "Method Not Allowed": {
+      "comment": "405 Method Not Allowed.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Method Not Allowed"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Метод не поддерживается"
+          }
+        }
+      }
+    },
+    "Moved Permanently": {
+      "comment": "301 Moved Permanently.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved Permanently"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Больше не доступен по этому адресу"
+          }
+        }
+      }
+    },
+    "Moved Temporarily": {
+      "comment": "302 Moved Temporarily.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved Temporarily"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Временно сменил местоположение"
+          }
+        }
+      }
+    },
+    "Multiple Choices": {
+      "comment": "300 Multiple Choices.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple Choices"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Несколько вариантов"
+          }
+        }
+      }
+    },
+    "Not Acceptable": {
+      "comment": "406 Not Acceptable.\n   606 Not Acceptable.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Acceptable"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Недопустимо"
+          }
+        }
+      }
+    },
+    "Not Acceptable Here": {
+      "comment": "488 Not Acceptable Here.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Acceptable Here"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Недопустимо для данного адреса"
+          }
+        }
+      }
+    },
+    "Not Found": {
+      "comment": "404 Not Found.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Found"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не найдено"
+          }
+        }
+      }
+    },
+    "Not Implemented": {
+      "comment": "501 Not Implemented.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Implemented"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не поддерживается сервером"
+          }
+        }
+      }
+    },
+    "OK": {
+      "comment": "200 OK.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Payment Required": {
+      "comment": "402 Payment Required.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payment Required"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Требуется оплата"
+          }
+        }
+      }
+    },
+    "Precondition Failure": {
+      "comment": "580 Precondition Failure.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precondition Failure"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предварительная ошибка"
+          }
+        }
+      }
+    },
+    "Proxy Authentication Required": {
+      "comment": "407 Proxy Authentication Required.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proxy Authentication Required"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Необходима аутентификация на прокси-сервере"
+          }
+        }
+      }
+    },
+    "Queued": {
+      "comment": "182 Queued.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queued"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звонок поставлен в очередь"
+          }
+        }
+      }
+    },
+    "Request Entity Too Large": {
+      "comment": "413 Request Entity Too Large.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request Entity Too Large"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Размер запроса слишком велик"
+          }
+        }
+      }
+    },
+    "Request Pending": {
+      "comment": "491 Request Pending.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request Pending"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Для данного диалога уже существует запрос"
+          }
+        }
+      }
+    },
+    "Request Terminated": {
+      "comment": "487 Request Terminated.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request Terminated"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрос отменен"
+          }
+        }
+      }
+    },
+    "Request Timeout": {
+      "comment": "408 Request Timeout.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request Timeout"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Максимальное время обработки запроса истекло"
+          }
+        }
+      }
+    },
+    "Request Updated": {
+      "comment": "490 Request Updated.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request Updated"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрос обновлен"
+          }
+        }
+      }
+    },
+    "Request-URI Too Long": {
+      "comment": "414 Request-URI Too Long.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request-URI Too Long"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слишком длинный Request-URI"
+          }
+        }
+      }
+    },
+    "Ringing": {
+      "comment": "180 Ringing.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ringing"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Идет оповещение"
+          }
+        }
+      }
+    },
+    "Server Internal Error": {
+      "comment": "500 Server Internal Error.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Internal Error"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "Server Time-out": {
+      "comment": "504 Server Time-out.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Time-out"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тайм-аут сервера"
+          }
+        }
+      }
+    },
+    "Service Unavailable": {
+      "comment": "503 Service Unavailable.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Service Unavailable"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер не может обслужить запрос"
+          }
+        }
+      }
+    },
+    "Session Progress": {
+      "comment": "183 Session Progress.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session Progress"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В процессе"
+          }
+        }
+      }
+    },
+    "Session Timer Too Small": {
+      "comment": "422 Session Timer Too Small.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session Timer Too Small"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слишком короткий интервал обновления сессии"
+          }
+        }
+      }
+    },
+    "Temporarily Unavailable": {
+      "comment": "480 Temporarily Unavailable.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporarily Unavailable"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Временно недоступен"
+          }
+        }
+      }
+    },
+    "Too Many Hops": {
+      "comment": "483 Too Many Hops.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too Many Hops"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Превышено число промежуточных узлов"
+          }
+        }
+      }
+    },
+    "Trying": {
+      "comment": "100 Trying.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trying"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрос обрабатывается"
+          }
+        }
+      }
+    },
+    "Unauthorized": {
+      "comment": "401 Unauthorized.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unauthorized"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не авторизован"
+          }
+        }
+      }
+    },
+    "Undecipherable": {
+      "comment": "493 Undecipherable.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undecipherable"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Невозможно расшифровать"
+          }
+        }
+      }
+    },
+    "Unsupported Media Type": {
+      "comment": "415 Unsupported Media Type.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsupported Media Type"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неподдерживаемый кодек"
+          }
+        }
+      }
+    },
+    "Unsupported URI Scheme": {
+      "comment": "416 Unsupported URI Scheme.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsupported URI Scheme"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неподдерживаемая структура URI"
+          }
+        }
+      }
+    },
+    "Use Proxy": {
+      "comment": "305 Use Proxy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Proxy"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Следует связываться через прокси"
+          }
+        }
+      }
+    },
+    "Version Not Supported": {
+      "comment": "505 Version Not Supported.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version Not Supported"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия протокола не поддерживается"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

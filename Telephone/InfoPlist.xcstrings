@@ -1,0 +1,94 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефон"
+          }
+        }
+      }
+    },
+    "CFBundleName": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telephone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефон"
+          }
+        }
+      }
+    },
+    "NSContactsUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details from your contacts can be used for displaying names and phone labels and for phone number autocomplete."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Kontakte können benutzt werden, um Namen und Etiketten anzuzeigen und Telefonnummern automatisch zu vervollständigen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Информация из контактов может быть использована для отображения имен и типов телефонных номеров, а также для автоматического дополнения номеров при вводе."
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone is used for phone calls."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Mikrofon wird für Telefongespräche benutzt."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Микрофон используется для телефонных звонков."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

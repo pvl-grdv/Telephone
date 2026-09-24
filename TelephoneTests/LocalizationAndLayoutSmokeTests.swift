@@ -15,7 +15,10 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/AccountSettingsView.swift",
             "Telephone/AccountSetupView.swift",
             "Telephone/ApplicationDialogController.swift",
+            "Telephone/CallController.m",
             "Telephone/CallControlViews.swift",
+            "Telephone/CallPresentationCoordinator.swift",
+            "Telephone/CallWindowModel.swift",
             "Telephone/CallHistoryModel.swift",
             "Telephone/CallHistoryScreen.swift",
             "Telephone/CallTransferViews.swift",
@@ -37,16 +40,26 @@ struct LocalizationAndLayoutSmokeTests {
         }
         requiredKeys.formUnion(appIntentLocalizationKeys)
 
+        let catalogURL = repositoryRoot.appendingPathComponent(
+            "Telephone/Localizable.xcstrings"
+        )
+        let catalogKeys = try localizationKeys(in: catalogURL)
+
         for localization in ["en", "de", "ru"] {
-            let path = repositoryRoot.appendingPathComponent(
-                "Telephone/\(localization).lproj/Localizable.strings"
+            let availableKeys = try localizationKeys(
+                in: catalogURL,
+                localization: localization
             )
-            let availableKeys = try localizationKeys(in: path)
             let missing = requiredKeys.subtracting(availableKeys).sorted()
+            let untranslated = catalogKeys.subtracting(availableKeys).sorted()
 
             #expect(
                 missing.isEmpty,
                 "Missing \(localization) localization keys: \(missing)"
+            )
+            #expect(
+                untranslated.isEmpty,
+                "Untranslated \(localization) catalog keys: \(untranslated)"
             )
         }
     }
@@ -108,7 +121,7 @@ struct LocalizationAndLayoutSmokeTests {
 
     private func localizedKeys(in url: URL) throws -> Set<String> {
         let text = try String(contentsOf: url, encoding: .utf8)
-        let pattern = #"NSLocalizedString\(\s*"((?:\\.|[^"])*)""#
+        let pattern = #"NSLocalizedString\(\s*@?"((?:\\.|[^"])*)""#
         let expression = try NSRegularExpression(pattern: pattern)
         let range = NSRange(text.startIndex..., in: text)
 
@@ -125,20 +138,43 @@ struct LocalizationAndLayoutSmokeTests {
     }
 
     private func localizationKeys(in url: URL) throws -> Set<String> {
-        let text = try String(contentsOf: url, encoding: .utf8)
-        let pattern = #"(?m)^\s*"((?:\\.|[^"])*)"\s*="#
-        let expression = try NSRegularExpression(pattern: pattern)
-        let range = NSRange(text.startIndex..., in: text)
+        let data = try Data(contentsOf: url)
+        let object = try JSONSerialization.jsonObject(with: data)
+        guard
+            let catalog = object as? [String: Any],
+            let strings = catalog["strings"] as? [String: Any]
+        else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        return Set(strings.keys)
+    }
+
+    private func localizationKeys(
+        in url: URL,
+        localization: String
+    ) throws -> Set<String> {
+        let data = try Data(contentsOf: url)
+        let object = try JSONSerialization.jsonObject(with: data)
+        guard
+            let catalog = object as? [String: Any],
+            let strings = catalog["strings"] as? [String: Any]
+        else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
 
         return Set(
-            expression.matches(in: text, range: range).compactMap { match in
+            strings.compactMap { key, value in
                 guard
-                    let range = Range(match.range(at: 1), in: text)
+                    let entry = value as? [String: Any],
+                    let localizations = entry["localizations"]
+                        as? [String: Any],
+                    localizations[localization] != nil
                 else {
                     return nil
                 }
-                return String(text[range])
+                return key
             }
         )
     }
+
 }

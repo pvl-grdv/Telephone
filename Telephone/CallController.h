@@ -48,8 +48,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, copy, nullable) NSString *title;
 
-// Remote party dislpay name.
+// Remote party display name.
 @property(nonatomic, copy, nullable) NSString *displayedName;
+
+// Secondary caller identity, typically a formatted phone number or SIP address.
+@property(nonatomic, copy, nullable) NSString *identityDetail;
+
+// Remote party organization from Contacts or a future CRM provider.
+@property(nonatomic, copy, nullable) NSString *organizationFromAddressBook;
 
 // Call status.
 @property(nonatomic, copy, nullable) NSString *status;

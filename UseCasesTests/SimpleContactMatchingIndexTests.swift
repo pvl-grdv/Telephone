@@ -73,7 +73,12 @@ struct SimpleContactMatchingIndexTests {
 }
 
 private func makeContact(number: Int) -> Contact {
-    return Contact(name: "name-\(number)", phones: makePhones(number: number), emails: makeEmails(number: number))
+    Contact(
+        name: "name-\(number)",
+        organization: "organization-\(number)",
+        phones: makePhones(number: number),
+        emails: makeEmails(number: number)
+    )
 }
 
 private func makePhones(number: Int) -> [Contact.Phone] {

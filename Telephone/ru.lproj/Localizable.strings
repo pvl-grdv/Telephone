@@ -539,3 +539,17 @@
 "Open Original FAQ…" = "Открыть FAQ исходного проекта…";
 "Telephone" = "Telephone";
 "Commit %@" = "Коммит %@";
+"Loading client details…" = "Загрузка данных клиента…";
+"Add client details" = "Добавить данные клиента";
+"Reference keys" = "Ключи клиента";
+"Client details" = "Данные клиента";
+"Incoming Call" = "Входящий звонок";
+"Call Ended" = "Звонок завершён";
+"Programs: %@" = "Программы: %@";
+"Telephone supports audio calls only." = "Telephone поддерживает только аудиозвонки.";
+"Telephone couldn't determine who to call." = "Telephone не удалось определить адрес звонка.";
+"Audio" = "Аудио";
+"Video" = "Видео";
+"Telephone supports one destination per call." = "Telephone поддерживает одного адресата на звонок.";
+"Dial with Telephone" = "Набрать через Telephone";
+"Dial" = "Набрать";

@@ -47,17 +47,20 @@ extension CNContactStoreToContactsAdapter: Contacts {
 private let keys = [
     CNContactFormatter.descriptorForRequiredKeys(for: .fullName),
     CNContactEmailAddressesKey as CNKeyDescriptor,
-    CNContactPhoneNumbersKey as CNKeyDescriptor
+    CNContactPhoneNumbersKey as CNKeyDescriptor,
+    CNContactOrganizationNameKey as CNKeyDescriptor
 ]
 
 
 @objcMembers
 final class IncomingCallContact: NSObject, @unchecked Sendable {
     let name: String
+    let organization: String
     let label: String
 
-    init(name: String, label: String) {
+    init(name: String, organization: String, label: String) {
         self.name = name
+        self.organization = organization
         self.label = label
     }
 }
@@ -104,7 +107,11 @@ final class IncomingCallContactResolver: NSObject {
                 case let .phone(_, value), let .email(_, value):
                     label = value
                 }
-                return IncomingCallContact(name: contact.name, label: label)
+                return IncomingCallContact(
+                    name: contact.name,
+                    organization: contact.organization,
+                    label: label
+                )
             }
 
             await MainActor.run {

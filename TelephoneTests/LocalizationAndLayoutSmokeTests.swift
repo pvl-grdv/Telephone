@@ -76,6 +76,8 @@ struct LocalizationAndLayoutSmokeTests {
         "Telephone Account",
         "Account Status",
         "Call with Telephone",
+        "Dial with Telephone",
+        "Dial",
         "Places a phone or SIP call using Telephone.",
         "Destination",
         "Who would you like to call?",
@@ -91,6 +93,11 @@ struct LocalizationAndLayoutSmokeTests {
         "Telephone is not ready.",
         "Telephone couldn't place this call.",
         "Telephone couldn't update this account.",
+        "Telephone supports audio calls only.",
+        "Telephone couldn't determine who to call.",
+        "Telephone supports one destination per call.",
+        "Audio",
+        "Video",
     ]
 
     private var repositoryRoot: URL {

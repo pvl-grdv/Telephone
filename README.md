@@ -99,6 +99,47 @@ The bootstrap script records dependency versions in each installation prefix,
 so an existing checkout is rebuilt automatically when a pinned version changes.
 Telephone-specific PJSIP patches live in `ThirdParty/PJSIP/patches`.
 
+## Automation on macOS 27
+
+Telephone exposes normal App Intents for the Shortcuts app:
+
+- **Dial with Telephone** accepts a phone number or SIP address;
+- **Open Telephone Settings** opens the SwiftUI settings scene;
+- **Set Telephone Account Status** changes an enabled SIP account between
+  Available, Unavailable, and Offline.
+
+On macOS 27, Telephone also adopts the Phone `startCall` App Schema. This lets
+Siri understand Telephone as an app that can place an audio call to a person,
+instead of treating calling as an app-specific text command. Telephone supports
+one destination per call and audio calls only.
+
+After installing or rebuilding Telephone, launch the app once so the system can
+refresh its App Intents metadata. The app-specific actions can then be found in
+Shortcuts by searching for `Telephone`.
+
+## Caller identity and customer context
+
+Incoming-call presentation keeps SIP transport details out of the window title
+and shows one primary identity. Telephone enriches that identity asynchronously
+without delaying ringing:
+
+1. the formatted SIP caller address is available immediately;
+2. a meaningful SIP display name can replace the raw number;
+3. macOS Contacts can add a person's name, organization, and phone label;
+4. a configured CRM provider can promote the company name and return reference
+   keys, programs associated with those keys, and email addresses.
+
+The CRM interface is present, but this repository does not ship an Avantel CRM
+adapter or credentials. With no CRM provider configured, the provider is
+disabled and local customer context remains local to Telephone.
+
+For diagnosing a PBX integration, Telephone captures a small allowlist of
+identity and routing headers from the original incoming SIP INVITE, including
+`P-Asserted-Identity`, `Remote-Party-ID`, `Diversion`, `History-Info`,
+and selected `X-*` identity headers. They are retained on the call object and
+logged only at the more verbose PJSIP log level used for diagnostics. They are
+not treated as trusted CRM fields automatically.
+
 ## Profiling active calls
 
 Telephone marks connected calls with the `CallPerformance / ActiveCall`

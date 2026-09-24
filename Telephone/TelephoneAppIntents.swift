@@ -101,8 +101,198 @@ enum TelephoneAvailability: String, AppEnum {
     }
 }
 
-struct CallWithTelephoneIntent: AppIntent {
+@available(macOS 27.0, *)
+@AppEntity(schema: .phone.phonePerson)
+struct TelephonePhonePerson {
+    static let defaultQuery = TelephonePhonePersonQuery()
+
+    let id: String
+    var person: IntentPerson
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(displayName)")
+    }
+
+    init(person: IntentPerson) {
+        let identifier = Self.identifier(for: person)
+        id = identifier
+        self.person = person
+    }
+
+    init?(identifier: String) {
+        let components = identifier.split(
+            separator: ":",
+            maxSplits: 1,
+            omittingEmptySubsequences: false
+        )
+        guard components.count == 2 else {
+            return nil
+        }
+
+        let value = String(components[1])
+        let handle: IntentPerson.Handle
+        switch components[0] {
+        case "phone":
+            handle = IntentPerson.Handle(phoneNumber: value)
+        case "email":
+            handle = IntentPerson.Handle(emailAddress: value)
+        case "app":
+            handle = IntentPerson.Handle(applicationDefined: value)
+        default:
+            return nil
+        }
+
+        id = identifier
+        person = IntentPerson(handle: handle)
+    }
+
+    var callTarget: String? {
+        guard let handle = person.handle else {
+            return nil
+        }
+
+        switch handle.value {
+        case .phoneNumber(let value):
+            return value
+        case .emailAddress(let value):
+            return value
+        case .applicationDefined(let value):
+            return value
+        @unknown default:
+            return nil
+        }
+    }
+
+    private var displayName: String {
+        let value = Self.displayName(for: person).trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        return value.isEmpty ? (callTarget ?? id) : value
+    }
+
+    private static func identifier(for person: IntentPerson) -> String {
+        guard let handle = person.handle else {
+            return "app:\(displayName(for: person))"
+        }
+
+        switch handle.value {
+        case .phoneNumber(let value):
+            return "phone:\(value)"
+        case .emailAddress(let value):
+            return "email:\(value)"
+        case .applicationDefined(let value):
+            return "app:\(value)"
+        @unknown default:
+            return "app:\(displayName(for: person))"
+        }
+    }
+
+    private static func displayName(for person: IntentPerson) -> String {
+        switch person.name {
+        case .displayName(let value):
+            return value
+        case .components(let components):
+            return PersonNameComponentsFormatter.localizedString(
+                from: components,
+                style: .default,
+                options: []
+            )
+        case .unknown:
+            return ""
+        @unknown default:
+            return ""
+        }
+    }
+}
+
+@available(macOS 27.0, *)
+struct TelephonePhonePersonQuery: EntityQuery {
+    func entities(
+        for identifiers: [TelephonePhonePerson.ID]
+    ) async throws -> [TelephonePhonePerson] {
+        identifiers.compactMap(TelephonePhonePerson.init(identifier:))
+    }
+}
+
+@available(macOS 27.0, *)
+extension TelephonePhonePersonQuery: IntentValueQuery {
+    func values(
+        for input: [IntentPerson]
+    ) async throws -> [TelephonePhonePerson] {
+        input.map(TelephonePhonePerson.init(person:))
+    }
+}
+
+@available(macOS 27.0, *)
+@UnionValue
+enum TelephoneCallDestination {
+    case person(TelephonePhonePerson)
+    case people([TelephonePhonePerson])
+
+    var people: [TelephonePhonePerson] {
+        switch self {
+        case .person(let person):
+            [person]
+        case .people(let people):
+            people
+        }
+    }
+}
+
+@available(macOS 27.0, *)
+@AppEnum(schema: .phone.audioVisualMode)
+enum TelephoneCallAVMode: String {
+    case audio
+    case video
+
+    static let caseDisplayRepresentations:
+        [TelephoneCallAVMode: DisplayRepresentation] = [
+            .audio: "Audio",
+            .video: "Video",
+        ]
+}
+
+@available(macOS 27.0, *)
+@AppIntent(schema: .phone.startCall)
+struct StartTelephoneCallIntent: AudioRecordingIntent, AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Call with Telephone"
+    static let supportedModes: IntentModes = .foreground
+
+    var destination: TelephoneCallDestination
+    var audioVisualMode: TelephoneCallAVMode
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        guard audioVisualMode == .audio else {
+            return .result(
+                dialog: "Telephone supports audio calls only."
+            )
+        }
+
+        let targets = destination.people.compactMap(\.callTarget)
+        guard targets.count == 1, let target = targets.first else {
+            return .result(
+                dialog: "Telephone supports one destination per call."
+            )
+        }
+
+        guard let appController = NSApplication.shared.delegate as? AppController
+        else {
+            return .result(dialog: "Telephone is not ready.")
+        }
+
+        let success = appController.makeCallFromAppIntent(
+            destination: target
+        )
+        return success
+            ? .result(dialog: "Calling \(target).")
+            : .result(dialog: "Telephone couldn't place this call.")
+    }
+
+}
+
+struct CallWithTelephoneIntent: AppIntent {
+    static let title: LocalizedStringResource = "Dial with Telephone"
     static let description = IntentDescription(
         "Places a phone or SIP call using Telephone."
     )
@@ -196,9 +386,9 @@ struct TelephoneAppShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: CallWithTelephoneIntent(),
             phrases: [
-                "Call with \(.applicationName)",
+                "Dial with \(.applicationName)",
             ],
-            shortTitle: "Call",
+            shortTitle: "Dial",
             systemImageName: "phone"
         )
 

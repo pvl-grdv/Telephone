@@ -166,6 +166,17 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         model.displayedName = value
     }
 
+    func setIdentityDetail(_ value: String) {
+        model.identityDetail = value
+    }
+
+    func setContactOrganization(_ value: String) {
+        model.contactOrganization = value
+        if model.customerContextLoaded && model.customerCompany.isEmpty {
+            model.customerCompany = value
+        }
+    }
+
     func setStatus(_ value: String) {
         model.status = value
     }

@@ -192,6 +192,7 @@
     _localURI = info.localURI;
     _remoteURI = info.remoteURI;
     _remote = [[URI alloc] initWithURI:_remoteURI];
+    _incomingIdentityHeaders = @{};
 
     return self;
 }

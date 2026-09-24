@@ -54,6 +54,8 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     return [formatter stringForObjectValue:remoteURI.user] ?: remoteURI.user;
 }
 
+
+
 @interface AccountController () <AccountPresentationCoordinatorDelegate>
 
 @property(nonatomic, readonly) AKSIPUserAgent *userAgent;
@@ -576,14 +578,21 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     [SIPURIFormatter setTelephoneNumberFormatterSplitsLastFourDigits:
      [defaults boolForKey:UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits]];
 
-    NSString *displayedName = [SIPURIFormatter stringForObjectValue:[aCall remoteURI]];
+    NSString *callSource = FormattedIncomingCallSource(aCall, defaults);
+    CallerIdentityPresentation *identity =
+        [CallerIdentityPresentation
+            makeWithSIPDisplayName:aCall.remoteURI.displayName ?: @""
+                        callSource:callSource
+                       contactName:@""
+                      organization:@""
+                             label:@""];
     NSString *callingStatus = NSLocalizedString(@"calling",
                                                 @"John Smith calling. Somebody is calling us right "
                                                  "now. Call status string. Deliberately in lower case, "
                                                  "translators should do the same, if possible.");
 
-    [aCallController setTitle:([[aCall remoteURI] SIPAddress] ?: @"")];
-    [aCallController setDisplayedName:displayedName];
+    [aCallController setDisplayedName:identity.primary];
+    [aCallController setIdentityDetail:identity.detail];
     [aCallController setStatus:callingStatus];
     [aCallController setRedialURI:[aCall remoteURI]];
     [aCallController showIncomingCallView];
@@ -613,20 +622,20 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 
         if (contact != nil) {
             [aCallController setNameFromAddressBook:contact.name];
+            [aCallController setOrganizationFromAddressBook:contact.organization];
             [aCallController setPhoneLabelFromAddressBook:contact.label];
 
-            if (contact.name.length > 0) {
-                [aCallController setDisplayedName:contact.name];
-            }
-
             NSString *callSource = FormattedIncomingCallSource(aCall, defaults);
-            if (callSource.length > 0) {
-                if (contact.label.length > 0) {
-                    [aCallController setStatus:[NSString stringWithFormat:@"%@ · %@", contact.label, callSource]];
-                } else {
-                    [aCallController setStatus:callSource];
-                }
-            }
+            CallerIdentityPresentation *identity =
+                [CallerIdentityPresentation
+                    makeWithSIPDisplayName:aCall.remoteURI.displayName ?: @""
+                                callSource:callSource
+                               contactName:contact.name
+                              organization:contact.organization
+                                     label:contact.label];
+
+            [aCallController setDisplayedName:identity.primary];
+            [aCallController setIdentityDetail:identity.detail];
         }
 
         [self deliverIncomingCallNotificationForController:aCallController call:aCall defaults:defaults];
@@ -643,27 +652,17 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     }
 
     NSString *callSource = FormattedIncomingCallSource(aCall, defaults);
-    NSString *phoneLabel = aCallController.phoneLabelFromAddressBook;
-
-    NSString *notificationTitle;
-    NSString *notificationDescription;
-    if ([[aCallController nameFromAddressBook] length] > 0) {
-        notificationTitle = [aCallController nameFromAddressBook];
-        notificationDescription = phoneLabel.length > 0
-            ? [NSString stringWithFormat:@"%@ · %@", phoneLabel, callSource]
-            : callSource;
-    } else if ([[[aCall remoteURI] displayName] length] > 0) {
-        notificationTitle = [[aCall remoteURI] displayName];
-        notificationDescription = [NSString stringWithFormat:
-            NSLocalizedString(@"calling from %@",
-                              @"John Smith calling from 1234567. Somebody is calling us right now "
-                               "from some source. User notification description."),
-            callSource];
-    } else {
+    NSString *notificationTitle = aCallController.displayedName;
+    if (notificationTitle.length == 0) {
         notificationTitle = callSource;
-        notificationDescription = NSLocalizedString(@"calling",
-                                                     @"Somebody is calling us right now. "
-                                                      "User notification description.");
+    }
+
+    NSString *notificationDescription = aCallController.identityDetail;
+    if (notificationDescription.length == 0) {
+        notificationDescription = NSLocalizedString(
+            @"calling",
+            @"Somebody is calling us right now. User notification description."
+        );
     }
 
     UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];

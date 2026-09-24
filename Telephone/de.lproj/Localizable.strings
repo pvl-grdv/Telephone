@@ -539,3 +539,17 @@
 "Open Original FAQ…" = "Ursprüngliche FAQ öffnen…";
 "Telephone" = "Telephone";
 "Commit %@" = "Commit %@";
+"Loading client details…" = "Kundendetails werden geladen…";
+"Add client details" = "Kundendetails hinzufügen";
+"Reference keys" = "Referenzschlüssel";
+"Client details" = "Kundendetails";
+"Incoming Call" = "Eingehender Anruf";
+"Call Ended" = "Anruf beendet";
+"Programs: %@" = "Programme: %@";
+"Telephone supports audio calls only." = "Telephone unterstützt nur Audioanrufe.";
+"Telephone couldn't determine who to call." = "Telephone konnte das Anrufziel nicht bestimmen.";
+"Audio" = "Audio";
+"Video" = "Video";
+"Telephone supports one destination per call." = "Telephone unterstützt ein Ziel pro Anruf.";
+"Dial with Telephone" = "Mit Telephone wählen";
+"Dial" = "Wählen";

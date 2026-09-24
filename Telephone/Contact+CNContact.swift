@@ -22,7 +22,11 @@ import UseCases
 extension Contact {
     init(_ contact: CNContact) {
         self.init(
-            name: CNContactFormatter.string(from: contact, style: .fullName) ?? "",
+            name: CNContactFormatter.string(
+                from: contact,
+                style: .fullName
+            ) ?? "",
+            organization: contact.organizationName,
             phones: contact.phoneNumbers.map(Contact.Phone.init),
             emails: contact.emailAddresses.map(Contact.Email.init)
         )

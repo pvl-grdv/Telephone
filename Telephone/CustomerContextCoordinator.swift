@@ -9,6 +9,7 @@ import Foundation
 final class CustomerContextCoordinator {
     private weak var callController: CallController?
     private let model: CallWindowModel
+    private let crmProvider: any CRMProvider
 
     private var loadTask: Task<Void, Never>?
     private var saveTask: Task<Void, Never>?
@@ -17,10 +18,12 @@ final class CustomerContextCoordinator {
 
     init(
         callController: CallController,
-        model: CallWindowModel
+        model: CallWindowModel,
+        crmProvider: any CRMProvider = DisabledCRMProvider()
     ) {
         self.callController = callController
         self.model = model
+        self.crmProvider = crmProvider
     }
 
     func loadIfNeeded() {
@@ -42,12 +45,16 @@ final class CustomerContextCoordinator {
         model.customerContextLoaded = false
         let displayName = customerDisplayName
 
-        loadTask = Task { [weak self] in
-            let snapshot = await CustomerContextStore.shared.load(
+        loadTask = Task { [weak self, crmProvider] in
+            async let localSnapshot = CustomerContextStore.shared.load(
                 address: address,
                 displayName: displayName,
                 callIdentifier: callIdentifier
             )
+            async let crmProfile = crmProvider.customer(for: address)
+
+            let snapshot = await localSnapshot
+            let profile = await crmProfile
 
             guard
                 !Task.isCancelled,
@@ -58,7 +65,9 @@ final class CustomerContextCoordinator {
             }
 
             self.isApplyingSnapshot = true
-            self.model.customerCompany = snapshot.company
+            self.model.customerCompany = snapshot.company.isEmpty
+                ? self.model.contactOrganization
+                : snapshot.company
             self.model.customerKeys = snapshot.keys.joined(separator: ", ")
             self.model.customerEmails = snapshot.emails.joined(separator: ", ")
             self.model.customerNote = snapshot.currentCallNote
@@ -66,6 +75,18 @@ final class CustomerContextCoordinator {
                 snapshot.previousConversationCount
             self.model.lastCallDate = snapshot.lastCallDate
             self.model.recentCustomerNotes = snapshot.recentNotes
+            self.model.crmProfile = profile
+
+            if let profile, profile.hasContent {
+                let identity = CallerIdentityPresentation.promotingCompany(
+                    profile.company,
+                    currentPrimary: self.model.displayedName,
+                    currentDetail: self.model.identityDetail
+                )
+                self.model.displayedName = identity.primary
+                self.model.identityDetail = identity.detail
+            }
+
             self.model.customerContextLoaded = true
             self.isApplyingSnapshot = false
         }
@@ -101,6 +122,7 @@ final class CustomerContextCoordinator {
             loadTask = nil
             loadedKey = nil
             model.customerContextLoaded = false
+            model.crmProfile = nil
         }
     }
 

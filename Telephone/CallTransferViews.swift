@@ -17,6 +17,7 @@ struct TransferActiveSection: View {
             HStack(spacing: 8) {
                 CallIdentityView(
                     displayedName: model.displayedName,
+                    identityDetail: model.identityDetail,
                     status: model.status,
                     usesDTMFDisplay: model.usesDTMFDisplay
                 )
@@ -65,6 +66,7 @@ struct TransferEndedSection: View {
             HStack(spacing: 8) {
                 CallIdentityView(
                     displayedName: model.displayedName,
+                    identityDetail: model.identityDetail,
                     status: model.status,
                     usesDTMFDisplay: false
                 )

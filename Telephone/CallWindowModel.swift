@@ -32,6 +32,8 @@ final class CallWindowModel {
 
     var phase: Phase
     var displayedName = ""
+    var identityDetail = ""
+    var contactOrganization = ""
     var status = ""
     var windowTitle = NSLocalizedString("Call", comment: "Window title.")
     var windowDismissEnabled = true
@@ -65,7 +67,26 @@ final class CallWindowModel {
     var previousConversationCount = 0
     var lastCallDate: Date?
     var recentCustomerNotes: [CustomerContextNote] = []
+    var crmProfile: CRMCustomerProfile?
     var customerContextLoaded = false
+
+    var hasCustomerContextData: Bool {
+        !customerCompany.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ).isEmpty
+            || !customerKeys.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ).isEmpty
+            || !customerEmails.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ).isEmpty
+            || !customerNote.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ).isEmpty
+            || previousConversationCount > 0
+            || !recentCustomerNotes.isEmpty
+            || crmProfile?.hasContent == true
+    }
 
     func showIncomingState() {
         guard !isTransfer else { return }

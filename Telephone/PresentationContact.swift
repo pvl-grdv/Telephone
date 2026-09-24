@@ -55,28 +55,40 @@ extension PresentationContact {
     }
 
     private func isEqual(to contact: PresentationContact) -> Bool {
-        return title == contact.title &&
-            tooltip == contact.tooltip &&
-            label == contact.label &&
-            address == contact.address
+        title == contact.title
+            && tooltip == contact.tooltip
+            && label == contact.label
+            && address == contact.address
     }
 }
 
 extension PresentationContact {
     convenience init(contact: MatchedContact) {
+        let address: String
+        let label: String
+
         switch contact.address {
-        case let .phone(number, label):
-            if contact.name.isEmpty {
-                self.init(title: number, tooltip: "", label: label, address: number)
-            } else {
-                self.init(title: contact.name, tooltip: number, label: label, address: number)
-            }
-        case let .email(address, label):
-            if contact.name.isEmpty {
-                self.init(title: address, tooltip: "", label: label, address: address)
-            } else {
-                self.init(title: contact.name, tooltip: address, label: label, address: address)
-            }
+        case let .phone(number, value):
+            address = number
+            label = value
+        case let .email(value, addressLabel):
+            address = value
+            label = addressLabel
         }
+
+        let identity = CallerIdentityPresentation.make(
+            sipDisplayName: "",
+            callSource: address,
+            contactName: contact.name,
+            organization: contact.organization,
+            label: ""
+        )
+
+        self.init(
+            title: identity.primary,
+            tooltip: identity.detail,
+            label: label,
+            address: address
+        )
     }
 }

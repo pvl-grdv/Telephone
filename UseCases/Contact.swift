@@ -18,11 +18,18 @@
 
 public struct Contact {
     public let name: String
+    public let organization: String
     public let phones: [Phone]
     public let emails: [Email]
 
-    public init(name: String, phones: [Phone], emails: [Email]) {
+    public init(
+        name: String,
+        organization: String = "",
+        phones: [Phone],
+        emails: [Email]
+    ) {
         self.name = name
+        self.organization = organization
         self.phones = phones
         self.emails = emails
     }

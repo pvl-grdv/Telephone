@@ -59,10 +59,18 @@ private func update(_ map: inout [String: MatchedContact], withEmailsOf contact:
 
 private func update(_ map: inout [String: MatchedContact], withAddress address: String, of contact: Contact, phone: Contact.Phone) {
     guard !address.isEmpty else { return }
-    map[address] = MatchedContact(name: contact.name, address: .phone(number: phone.number, label: phone.label))
+    map[address] = MatchedContact(
+        name: contact.name,
+        organization: contact.organization,
+        address: .phone(number: phone.number, label: phone.label)
+    )
 }
 
 private func update(_ map: inout [String: MatchedContact], withAddress address: String, of contact: Contact, email: Contact.Email) {
     guard !address.isEmpty else { return }
-    map[address] = MatchedContact(name: contact.name, address: .email(address: email.address, label: email.label))
+    map[address] = MatchedContact(
+        name: contact.name,
+        organization: contact.organization,
+        address: .email(address: email.address, label: email.label)
+    )
 }

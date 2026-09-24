@@ -540,3 +540,17 @@
 "Open Original FAQ…" = "Open Original FAQ…";
 "Telephone" = "Telephone";
 "Commit %@" = "Commit %@";
+"Loading client details…" = "Loading client details…";
+"Add client details" = "Add client details";
+"Reference keys" = "Reference keys";
+"Client details" = "Client details";
+"Incoming Call" = "Incoming Call";
+"Call Ended" = "Call Ended";
+"Programs: %@" = "Programs: %@";
+"Telephone supports audio calls only." = "Telephone supports audio calls only.";
+"Telephone couldn't determine who to call." = "Telephone couldn't determine who to call.";
+"Audio" = "Audio";
+"Video" = "Video";
+"Telephone supports one destination per call." = "Telephone supports one destination per call.";
+"Dial with Telephone" = "Dial with Telephone";
+"Dial" = "Dial";

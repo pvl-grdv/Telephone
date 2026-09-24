@@ -18,10 +18,16 @@
 
 public struct MatchedContact: Equatable, Sendable {
     public let name: String
+    public let organization: String
     public let address: Address
 
-    public init(name: String, address: Address) {
+    public init(
+        name: String,
+        organization: String = "",
+        address: Address
+    ) {
         self.name = name
+        self.organization = organization
         self.address = address
     }
 

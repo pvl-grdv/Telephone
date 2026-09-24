@@ -8,31 +8,86 @@ import SwiftUI
 
 struct CustomerContextView: View {
     @Bindable var model: CallWindowModel
+    @State private var isExpanded = false
+
     let changed: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Label(
-                    NSLocalizedString(
-                        "Client",
-                        comment: "Local customer context section title."
-                    ),
-                    systemImage: "person.crop.circle"
-                )
-                .font(.caption.weight(.semibold))
-
-                Spacer(minLength: 4)
-
-                if model.customerContextLoaded {
-                    Text(historySummary)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                } else {
+        Group {
+            if !model.customerContextLoaded {
+                HStack(spacing: 8) {
                     ProgressView()
                         .controlSize(.mini)
+                    Text(
+                        NSLocalizedString(
+                            "Loading client details…",
+                            comment: "Customer context loading status."
+                        )
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else if model.hasCustomerContextData || isExpanded {
+                DisclosureGroup(isExpanded: $isExpanded) {
+                    editor
+                        .padding(.top, 8)
+                } label: {
+                    contextSummary
+                }
+            } else {
+                Button {
+                    isExpanded = true
+                } label: {
+                    Label(
+                        NSLocalizedString(
+                            "Add client details",
+                            comment: "Expand empty customer context."
+                        ),
+                        systemImage: "person.crop.circle.badge.plus"
+                    )
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+            }
+        }
+        .onChange(of: model.customerCompany) {
+            changed()
+        }
+        .onChange(of: model.customerKeys) {
+            changed()
+        }
+        .onChange(of: model.customerEmails) {
+            changed()
+        }
+        .onChange(of: model.customerNote) {
+            changed()
+        }
+    }
+
+    private var contextSummary: some View {
+        HStack(spacing: 6) {
+            Label(
+                summaryTitle,
+                systemImage: "person.crop.circle"
+            )
+            .font(.caption.weight(.semibold))
+            .lineLimit(1)
+
+            Spacer(minLength: 4)
+
+            Text(historySummary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+    }
+
+    private var editor: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let profile = model.crmProfile, profile.hasContent {
+                crmDetails(profile)
+                Divider()
             }
 
             Grid(
@@ -50,8 +105,8 @@ struct CustomerContextView: View {
 
                 customerFieldRow(
                     NSLocalizedString(
-                        "CRM keys",
-                        comment: "Local customer CRM keys field placeholder."
+                        "Reference keys",
+                        comment: "Local customer reference keys field placeholder."
                     ),
                     text: $model.customerKeys
                 )
@@ -64,7 +119,6 @@ struct CustomerContextView: View {
                     text: $model.customerEmails
                 )
             }
-            .disabled(!model.customerContextLoaded)
 
             HStack(alignment: .top, spacing: 8) {
                 Text(
@@ -98,7 +152,6 @@ struct CustomerContextView: View {
                         RoundedRectangle(cornerRadius: 5)
                             .stroke(.separator, lineWidth: 0.5)
                     }
-                    .disabled(!model.customerContextLoaded)
             }
 
             if let recent = model.recentCustomerNotes.first {
@@ -118,17 +171,58 @@ struct CustomerContextView: View {
                 .help(recent.body)
             }
         }
-        .onChange(of: model.customerCompany) {
-            changed()
-        }
-        .onChange(of: model.customerKeys) {
-            changed()
-        }
-        .onChange(of: model.customerEmails) {
-            changed()
-        }
-        .onChange(of: model.customerNote) {
-            changed()
+    }
+
+    @ViewBuilder
+    private func crmDetails(
+        _ profile: CRMCustomerProfile
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("CRM")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            if !profile.company.isEmpty {
+                LabeledContent(
+                    NSLocalizedString(
+                        "Organization",
+                        comment: "CRM organization label."
+                    ),
+                    value: profile.company
+                )
+                .font(.caption)
+            }
+
+            ForEach(
+                Array(profile.keys.enumerated()),
+                id: \.offset
+            ) { _, key in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(key.value)
+                        .font(.caption.weight(.medium))
+
+                    if !key.programs.isEmpty {
+                        Text(
+                            String(
+                                format: NSLocalizedString(
+                                    "Programs: %@",
+                                    comment: "Programs associated with CRM reference key."
+                                ),
+                                key.programs.joined(separator: ", ")
+                            )
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            if !profile.emails.isEmpty {
+                Text(profile.emails.joined(separator: ", "))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
         }
     }
 
@@ -146,6 +240,47 @@ struct CustomerContextView: View {
                 .textFieldStyle(.roundedBorder)
                 .accessibilityLabel(label)
         }
+    }
+
+    private var summaryTitle: String {
+        let crmCompany = model.crmProfile?.company.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ) ?? ""
+        if !crmCompany.isEmpty,
+           !identityAlreadyShows(crmCompany) {
+            return crmCompany
+        }
+
+        let company = model.customerCompany.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        if !company.isEmpty,
+           !identityAlreadyShows(company) {
+            return company
+        }
+
+        return NSLocalizedString(
+            "Client details",
+            comment: "Collapsed customer context title."
+        )
+    }
+
+    private func identityAlreadyShows(_ value: String) -> Bool {
+        if CallerIdentityPresentation.sameIdentityValue(
+            value,
+            model.displayedName
+        ) {
+            return true
+        }
+
+        return model.identityDetail
+            .components(separatedBy: " · ")
+            .contains {
+                CallerIdentityPresentation.sameIdentityValue(
+                    value,
+                    $0
+                )
+            }
     }
 
     private var historySummary: String {

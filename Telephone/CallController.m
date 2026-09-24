@@ -119,6 +119,21 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     }
 }
 
+- (void)setIdentityDetail:(NSString *)identityDetail {
+    if (![_identityDetail isEqualToString:identityDetail]) {
+        _identityDetail = [identityDetail copy];
+        [self.callPresentationCoordinator setIdentityDetail:_identityDetail ?: @""];
+    }
+}
+
+- (void)setOrganizationFromAddressBook:(NSString *)organizationFromAddressBook {
+    if (![_organizationFromAddressBook isEqualToString:organizationFromAddressBook]) {
+        _organizationFromAddressBook = [organizationFromAddressBook copy];
+        [self.callPresentationCoordinator
+            setContactOrganization:_organizationFromAddressBook ?: @""];
+    }
+}
+
 - (void)setStatus:(NSString *)status {
     if (![_status isEqualToString:status]) {
         _status = [status copy];
@@ -361,15 +376,22 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 }
 
 - (void)showActiveCallView {
+    if (![self isKindOfClass:[CallTransferController class]]) {
+        self.title = NSLocalizedString(@"Call", @"Active call window title.");
+    }
     [self.callPresentationCoordinator showActiveState];
 }
 
 - (void)showEndedCallView {
+    if (![self isKindOfClass:[CallTransferController class]]) {
+        self.title = NSLocalizedString(@"Call Ended", @"Ended call window title.");
+    }
     [self.callPresentationCoordinator setWindowDismissEnabled:YES];
     [self.callPresentationCoordinator showEndedState];
 }
 
 - (void)showIncomingCallView {
+    self.title = NSLocalizedString(@"Incoming Call", @"Incoming call window title.");
     [self.callPresentationCoordinator showIncomingState];
 }
 

@@ -22,6 +22,7 @@ struct IncomingCallSection: View {
         HStack(alignment: .center, spacing: 16) {
             CallIdentityView(
                 displayedName: model.displayedName,
+                identityDetail: model.identityDetail,
                 status: model.status,
                 usesDTMFDisplay: false
             )
@@ -72,6 +73,7 @@ struct ActiveCallSection: View {
             HStack(spacing: 8) {
                 CallIdentityView(
                     displayedName: model.displayedName,
+                    identityDetail: model.identityDetail,
                     status: model.status,
                     usesDTMFDisplay: model.usesDTMFDisplay
                 )
@@ -140,6 +142,7 @@ struct EndedCallSection: View {
         HStack(alignment: .center, spacing: 16) {
             CallIdentityView(
                 displayedName: model.displayedName,
+                identityDetail: model.identityDetail,
                 status: model.status,
                 usesDTMFDisplay: false
             )
@@ -161,15 +164,24 @@ struct EndedCallSection: View {
 
 struct CallIdentityView: View {
     let displayedName: String
+    let identityDetail: String
     let status: String
     let usesDTMFDisplay: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 3) {
             Text(displayedName)
                 .font(.headline)
                 .lineLimit(1)
                 .truncationMode(usesDTMFDisplay ? .head : .tail)
+
+            if !identityDetail.isEmpty {
+                Text(identityDetail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
 
             Text(status)
                 .font(.callout)

@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 import SwiftUI
 
 @MainActor
@@ -20,6 +21,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     private var callTimer: Foundation.Timer?
     private var enteredDTMF = NSMutableString()
     private var didNotifyWindowClose = false
+    private var activeCallInterval: OSSignpostIntervalState?
 
     class func installScene() {
         CallWindowSceneController.shared.install()
@@ -127,6 +129,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     }
 
     func invalidate() {
+        endActiveCallInterval()
         stopCallTimer()
         customerContextCoordinator?.invalidate()
         accountInfoObservation?.invalidate()
@@ -175,6 +178,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
     func showActiveState() {
         model.showActiveState()
+        beginActiveCallIntervalIfNeeded()
         updateCallControls()
         customerContextCoordinator?.loadIfNeeded()
         model.requestCallSurfaceFocus()
@@ -182,6 +186,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
     func showEndedState() {
         model.showEndedState()
+        endActiveCallInterval()
         stopCallTimer()
         customerContextCoordinator?.loadIfNeeded()
     }
@@ -296,6 +301,30 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
     func redial() {
         callController?.redial()
+    }
+
+    private func beginActiveCallIntervalIfNeeded() {
+        guard !model.isTransfer, activeCallInterval == nil else {
+            return
+        }
+
+        let signpostID = PerformanceSignposts.calls.makeSignpostID(from: self)
+        activeCallInterval = PerformanceSignposts.calls.beginInterval(
+            "ActiveCall",
+            id: signpostID
+        )
+    }
+
+    private func endActiveCallInterval() {
+        guard let activeCallInterval else {
+            return
+        }
+
+        PerformanceSignposts.calls.endInterval(
+            "ActiveCall",
+            activeCallInterval
+        )
+        self.activeCallInterval = nil
     }
 
     private func updateCallDuration() {

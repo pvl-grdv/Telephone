@@ -245,7 +245,8 @@
                     "Telephone/compile-sources",
                     "TelephoneTests/compile-sources",
                   ],
-                }, {
+                },
+                { "path": "<PROJECT>/TelephoneTests/PresentationAudioDeviceIdentityTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] }, {
                   "path": "PresentationAudioDevices.swift",
                   "encoding": "utf8",
                   "target-membership": [
@@ -1280,10 +1281,18 @@
       ],
     }, {
       "kind": "group",
+      "path": "TelephoneAppIntentsTests",
+      "children": [
+        { "path": "TelephoneAppIntentsTests.swift", "target-membership": [ "TelephoneAppIntentsTests/compile-sources" ] },
+        { "path": "Info.plist" },
+      ],
+    }, {
+      "kind": "group",
       "name": "Products",
       "children": [
         { "path": "<PRODUCTS>/Telephone.app", "id": "8D1107320486CEB800E47090", "type": "wrapper.application", "index": false },
         { "path": "<PRODUCTS>/TelephoneTests.xctest", "id": "AA3FAB851BBAAE630064B2C3", "type": "wrapper.cfbundle", "index": false },
+        { "path": "<PRODUCTS>/TelephoneAppIntentsTests.xctest", "id": "A17E27A10000000000000002", "type": "wrapper.cfbundle", "index": false },
         { "path": "<PRODUCTS>/Domain.framework", "id": "AA9D08031BFF7E6F0000F618", "type": "wrapper.framework", "index": false, "target-membership": [ { "build-phase": "Telephone/copy/Copy Files", "code-sign-on-copy": true, "header-preservation": "remove-on-copy" } ] },
         { "path": "<PRODUCTS>/DomainTests.xctest", "id": "AA9D080C1BFF7E6F0000F618", "type": "wrapper.cfbundle", "index": false },
         {
@@ -1434,6 +1443,41 @@
         "SWIFT_OBJC_BRIDGING_HEADER": "TelephoneTests/TelephoneTests-Bridging-Header.h",
         "SWIFT_STRICT_CONCURRENCY": "complete",
         "SWIFT_VERSION": "6.0",
+      },
+    }, {
+      "name": "TelephoneAppIntentsTests",
+      "id": "A17E27A10000000000000001",
+      "product": "Products/TelephoneAppIntentsTests.xctest",
+      "product-type": "bundle.ui-testing",
+      "last-swift-migration": "27.0",
+      "legacy-provisioning-style": "automatic",
+      "legacy-team-id": "B5WSA37RY8",
+      "dependencies": [
+        "Telephone",
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CLANG_ENABLE_MODULES": "YES",
+        "COMBINE_HIDPI_IMAGES": "YES",
+        "DEAD_CODE_STRIPPING": "YES",
+        "DEVELOPMENT_TEAM": "B5WSA37RY8",
+        "INFOPLIST_FILE": "TelephoneAppIntentsTests/Info.plist",
+        "LD_RUNPATH_SEARCH_PATHS": [
+          "$(inherited)",
+          "@executable_path/../Frameworks",
+          "@loader_path/../Frameworks",
+        ],
+        "MACOSX_DEPLOYMENT_TARGET": "27.0",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.tlphn.Telephone.AppIntentsTests",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
+        "SWIFT_STRICT_CONCURRENCY": "complete",
+        "SWIFT_VERSION": "6.0",
+        "TEST_TARGET_NAME": "Telephone",
       },
     }, {
       "name": "UseCases",

@@ -135,7 +135,7 @@ struct SoundSettingsView: View {
                     NSLocalizedString("Sound Input", comment: "Sound settings label."),
                     selection: inputSelection
                 ) {
-                    ForEach(model.inputDevices, id: \.name) { device in
+                    ForEach(model.inputDevices) { device in
                         Text(device.name).tag(device.name)
                     }
                 }
@@ -144,7 +144,7 @@ struct SoundSettingsView: View {
                     NSLocalizedString("Sound Output", comment: "Sound settings label."),
                     selection: outputSelection
                 ) {
-                    ForEach(model.outputDevices, id: \.name) { device in
+                    ForEach(model.outputDevices) { device in
                         Text(device.name).tag(device.name)
                     }
                 }
@@ -153,7 +153,7 @@ struct SoundSettingsView: View {
                     NSLocalizedString("Ringtone Output", comment: "Sound settings label."),
                     selection: ringtoneOutputSelection
                 ) {
-                    ForEach(model.outputDevices, id: \.name) { device in
+                    ForEach(model.outputDevices) { device in
                         Text(device.name).tag(device.name)
                     }
                 }

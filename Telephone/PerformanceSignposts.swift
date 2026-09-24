@@ -23,4 +23,11 @@ enum PerformanceSignposts {
             category: "ContactsPerformance"
         )
     )
+
+    static let calls = OSSignposter(
+        logger: Logger(
+            subsystem: subsystem,
+            category: "CallPerformance"
+        )
+    )
 }

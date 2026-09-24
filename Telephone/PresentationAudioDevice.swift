@@ -20,19 +20,35 @@ import Domain
 import Foundation
 import UseCases
 
-final class PresentationAudioDevice: NSObject {
+final class PresentationAudioDevice: NSObject, Identifiable {
+    let id: String
     @objc var isSystemDefault: Bool
     @objc var name: String
 
-    init(isSystemDefault: Bool, name: String) {
+    private init(id: String, isSystemDefault: Bool, name: String) {
+        self.id = id
         self.isSystemDefault = isSystemDefault
         self.name = name
+    }
+
+    convenience init(isSystemDefault: Bool, name: String) {
+        self.init(
+            id: isSystemDefault
+                ? "system-default"
+                : "audio-name:\(name)",
+            isSystemDefault: isSystemDefault,
+            name: name
+        )
     }
 }
 
 extension PresentationAudioDevice {
     convenience init(device: SystemAudioDevice) {
-        self.init(isSystemDefault: false, name: device.name)
+        self.init(
+            id: "coreaudio:\(device.uniqueIdentifier)",
+            isSystemDefault: false,
+            name: device.name
+        )
     }
 }
 

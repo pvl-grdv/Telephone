@@ -34,7 +34,7 @@ jobs:
             ThirdParty/Opus
             ThirdParty/LibreSSL
             ThirdParty/PJSIP
-          key: telephone-third-party-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('README.md', 'ThirdParty/PJSIP/patches/**', 'script/bootstrap_third_party.sh') }}
+          key: telephone-third-party-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('ThirdParty/PJSIP/patches/**', 'script/bootstrap_third_party.sh') }}
 
       - name: Run unit tests
         run: ./script/test.sh
@@ -56,10 +56,19 @@ jobs:
             ThirdParty/Opus
             ThirdParty/LibreSSL
             ThirdParty/PJSIP
-          key: telephone-third-party-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('README.md', 'ThirdParty/PJSIP/patches/**', 'script/bootstrap_third_party.sh') }}
+          key: telephone-third-party-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('ThirdParty/PJSIP/patches/**', 'script/bootstrap_third_party.sh') }}
 
       - name: Build and package
+        env:
+          TELEPHONE_BUILD_NUMBER: ${{ github.run_number }}
+          TELEPHONE_BUILD_COMMIT: ${{ github.sha }}
         run: ./script/package_local.sh "${{ github.sha }}"
+
+      - name: Verify build metadata
+        run: |
+          APP_INFO="build/Release/Telephone.app/Contents/Info.plist"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_INFO")" = "${{ github.run_number }}"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :TelephoneBuildCommit' "$APP_INFO")" = "${{ github.sha }}"
 
       - name: Compile App Intents tests
         run: bash ./script/test_app_intents.sh --build-only-unsigned
@@ -74,11 +83,12 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload app artifact
+        if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
-          name: Telephone-local-${{ github.sha }}
+          name: Telephone-${{ github.run_number }}-${{ github.sha }}
           path: |
             dist/*.zip
             dist/*.sha256
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7

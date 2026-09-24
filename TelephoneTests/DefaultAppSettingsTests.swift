@@ -30,6 +30,19 @@ struct DefaultAppSettingsTests {
         #expect(!settings.registeredDefaults.isEmpty)
     }
 
+    @Test func automaticCallWindowClosingIsEnabledByDefault() {
+        let settings = SettingsFake()
+        let sut = DefaultAppSettings(settings: settings, localization: "any")
+
+        sut.register()
+
+        #expect(
+            settings.registeredDefaults[
+                UserDefaultsKeys.autoCloseCallWindow
+            ] as! Bool
+        )
+    }
+
     @Test func customerContextIsEnabledByDefault() {
         let settings = SettingsFake()
         let sut = DefaultAppSettings(settings: settings, localization: "any")

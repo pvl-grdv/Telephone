@@ -57,7 +57,6 @@ final class DefaultAppSettings: NSObject {
 private func makeDefaults(for localization: String) -> [String: Any] {
     var result: [String: Any] = [
         UserDefaultsKeys.autoCloseCallWindow: true,
-        UserDefaultsKeys.autoCloseMissedCallWindow: true,
         UserDefaultsKeys.callWaiting: true,
         UserDefaultsKeys.consoleLogLevel: 0,
         UserDefaultsKeys.formatTelephoneNumbers: true,

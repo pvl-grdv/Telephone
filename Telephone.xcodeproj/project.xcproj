@@ -1401,6 +1401,7 @@
           "\"$(SRCROOT)/ThirdParty/Opus/lib\"",
         ],
         "MARKETING_VERSION": "1.6",
+        "TELEPHONE_BUILD_COMMIT": "local",
         "OTHER_LDFLAGS": [
           "-lpjsua-arm-apple-darwin",
           "-lpjsip-ua-arm-apple-darwin",

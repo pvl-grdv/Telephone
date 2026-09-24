@@ -74,6 +74,15 @@ Build and run the local app:
 
     $ ./script/build_and_run.sh
 
+CI stamps packaged builds with the GitHub Actions run number as
+`CFBundleVersion` and embeds the source commit shown in the About window.
+Local builds made through `script/build.sh` use the Git commit count and the
+current short commit SHA.
+
+Only builds from `master` (or manually dispatched workflows) are retained as
+downloadable Actions artifacts. These artifacts expire after 7 days; work
+branches still build and test, but do not retain app ZIPs.
+
 CI uses ad-hoc signing. For repeated local development, create a stable
 self-signed code-signing identity once so macOS Keychain/TCC can recognize
 subsequent builds:

@@ -53,6 +53,13 @@ struct AboutTelephoneView: View {
                 Text(versionText)
                     .font(.callout)
                     .foregroundStyle(.secondary)
+
+                if let buildCommitText {
+                    Text(buildCommitText)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.tertiary)
+                        .textSelection(.enabled)
+                }
             }
 
             VStack(spacing: 6) {
@@ -130,6 +137,29 @@ struct AboutTelephoneView: View {
         .frame(width: 460)
         .windowMinimizeBehavior(.disabled)
         .windowResizeBehavior(.disabled)
+    }
+
+    private var buildCommitText: String? {
+        let value = Bundle.main.object(
+            forInfoDictionaryKey: "TelephoneBuildCommit"
+        ) as? String ?? ""
+
+        guard
+            !value.isEmpty,
+            value != "local",
+            !value.hasPrefix("$(")
+        else {
+            return nil
+        }
+
+        let shortCommit = String(value.prefix(7))
+        return String(
+            format: NSLocalizedString(
+                "Commit %@",
+                comment: "About window source commit."
+            ),
+            shortCommit
+        )
     }
 
     private var versionText: String {

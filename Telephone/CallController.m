@@ -529,15 +529,15 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     
     [self removeOrShowUserNotificationOnDisconnectIfNeeded];
     
-    // Optionally close disconnected call window.
-    BOOL shouldCloseWindow = [self.defaults boolForKey:UserDefaultsKeys.autoCloseCallWindow];
-    BOOL shouldCloseMissedWindow = [self.defaults boolForKey:UserDefaultsKeys.autoCloseMissedCallWindow];
-    BOOL missed = [self isCallUnhandled];
-    
-    if (![self isKindOfClass:[CallTransferController class]]) {
-        if ((!missed && shouldCloseWindow) || (missed && shouldCloseMissedWindow)) {
-            [self performSelector:@selector(closeCallWindow) withObject:nil afterDelay:kCallWindowAutoCloseTime];
-        }
+    // Use the single visible preference for every disconnected call.
+    // Historically missed calls had a separate hidden preference, which
+    // could leave a missed-call window open even while the visible
+    // "Automatically close call windows" setting was enabled.
+    if ([self.defaults boolForKey:UserDefaultsKeys.autoCloseCallWindow] &&
+        ![self isKindOfClass:[CallTransferController class]]) {
+        [self performSelector:@selector(closeCallWindow)
+                   withObject:nil
+                   afterDelay:kCallWindowAutoCloseTime];
     }
 }
 

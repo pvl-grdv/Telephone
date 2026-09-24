@@ -36,7 +36,6 @@ class UserDefaultsKeys: NSObject {
     static let useDNSSRV = "UseDNSSRV"
     static let useQoS = "UseQoS"
     static let autoCloseCallWindow = "AutoCloseCallWindow"
-    static let autoCloseMissedCallWindow = "AutoCloseMissedCallWindow"
     static let keepCallWindowOnTop = "KeepCallWindowOnTop"
     static let callWaiting = "CallWaiting"
     static let showCustomerContext = "ShowCustomerContext"

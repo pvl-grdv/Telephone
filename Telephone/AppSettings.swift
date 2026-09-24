@@ -105,7 +105,6 @@ private func string(from account: Any, defaults: [String: Any]) -> String {
 
 private let settingsKeys = [
     UserDefaultsKeys.autoCloseCallWindow: "Bool",
-    UserDefaultsKeys.autoCloseMissedCallWindow: "Bool",
     UserDefaultsKeys.callWaiting: "Bool",
     UserDefaultsKeys.consoleLogLevel: "Int",
     UserDefaultsKeys.formatTelephoneNumbers: "Bool",

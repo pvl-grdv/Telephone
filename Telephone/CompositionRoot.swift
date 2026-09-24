@@ -212,7 +212,7 @@ final class CompositionRoot: NSObject {
 
         helpMenuActionTarget = HelpMenuActionTarget(
             logFileURL: logFileURL,
-            homepageURL: URL(string: "https://www.64characters.com/telephone/")!,
+            homepageURL: URL(string: "https://github.com/pvl-grdv/Telephone")!,
             faqURL: URL(string: "https://www.64characters.com/telephone/faq/")!,
             fileBrowser: NSWorkspace.shared,
             webBrowser: NSWorkspace.shared,

@@ -499,3 +499,42 @@
 
 /* Account credentials save error. */
 "Could not save account password." = "Не удалось сохранить пароль учётной записи.";
+
+/* Fork identity, validation, and modern call-history UI. */
+"About Telephone" = "О программе Telephone";
+"Independently maintained fork" = "Независимо поддерживаемый форк";
+"This build is an independently maintained fork of Telephone." = "Эта версия — независимо поддерживаемый форк Telephone.";
+"Based on Telephone by Alexey Kuznetsov and 64 Characters." = "На основе Telephone, созданного Alexey Kuznetsov и 64 Characters.";
+"Fork Repository" = "Репозиторий форка";
+"Original Project" = "Исходный проект";
+"GPLv3 License" = "Лицензия GPLv3";
+"Fork modifications © 2026 Pavel Gordeev" = "Изменения форка © 2026 Pavel Gordeev";
+"Version %@ (%@)" = "Версия %@ (%@)";
+"Port must be between 1 and 65535, or left empty." = "Порт должен быть от 1 до 65535 или поле должно быть пустым.";
+"Filter Call History" = "Фильтр истории звонков";
+"No Matching Calls" = "Нет подходящих звонков";
+"Try a different call filter." = "Попробуйте другой фильтр звонков.";
+"OK" = "ОК";
+
+/* App Intents and Shortcuts metadata. */
+"Telephone Account" = "Аккаунт Telephone";
+"Account Status" = "Статус аккаунта";
+"Call with Telephone" = "Позвонить через Telephone";
+"Places a phone or SIP call using Telephone." = "Совершает телефонный или SIP-звонок через Telephone.";
+"Destination" = "Адрес";
+"Who would you like to call?" = "Кому вы хотите позвонить?";
+"Open Telephone Settings" = "Открыть настройки Telephone";
+"Opens Telephone settings." = "Открывает настройки Telephone.";
+"Set Telephone Account Status" = "Изменить статус аккаунта Telephone";
+"Changes the availability status of a Telephone SIP account." = "Изменяет статус доступности SIP-аккаунта Telephone.";
+"Account" = "Аккаунт";
+"Status" = "Статус";
+"Call" = "Позвонить";
+"Open Settings" = "Открыть настройки";
+"Set Account Status" = "Изменить статус аккаунта";
+"Telephone is not ready." = "Telephone ещё не готов.";
+"Telephone couldn't place this call." = "Telephone не удалось совершить звонок.";
+"Telephone couldn't update this account." = "Telephone не удалось изменить статус аккаунта.";
+"Open Fork Repository…" = "Открыть репозиторий форка…";
+"Open Original FAQ…" = "Открыть FAQ исходного проекта…";
+"Telephone" = "Telephone";

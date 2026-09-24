@@ -16,49 +16,71 @@
 //  GNU General Public License for more details.
 //
 
-import Domain
-import DomainTestDoubles
 import Testing
 import UseCases
 import UseCasesTestDoubles
 
 @MainActor
 struct SettingsSoundIOSaveUseCaseTests {
-    @Test func savesDeviceNamesInSettingsWhenSoundIOIsNormalDevices() {
-        let input = "any-input"
-        let output = "any-output"
-        let ringtoneOutput = "other-output"
+    @Test func savesUIDsAndLegacyNamesForNormalDevices() {
         let settings = SettingsFake()
         let sut = SettingsSoundIOSaveUseCase(
             soundIO: SystemDefaultingSoundIO(
-                input: .device(name: input),
-                output: .device(name: output),
-                ringtoneOutput: .device(name: ringtoneOutput)
+                input: .device(
+                    uniqueIdentifier: "input-uid",
+                    name: "Input"
+                ),
+                output: .device(
+                    uniqueIdentifier: "output-uid",
+                    name: "Output"
+                ),
+                ringtoneOutput: .device(
+                    uniqueIdentifier: "ringtone-uid",
+                    name: "Ringtone"
+                )
             ),
             settings: settings
         )
 
         sut.execute()
 
-        #expect(settings[SettingsKeys.soundInput] == input)
-        #expect(settings[SettingsKeys.soundOutput] == output)
-        #expect(settings[SettingsKeys.ringtoneOutput] == ringtoneOutput)
+        #expect(settings[SettingsKeys.soundInputUID] == "input-uid")
+        #expect(settings[SettingsKeys.soundOutputUID] == "output-uid")
+        #expect(
+            settings[SettingsKeys.ringtoneOutputUID] == "ringtone-uid"
+        )
+        #expect(settings[SettingsKeys.soundInput] == "Input")
+        #expect(settings[SettingsKeys.soundOutput] == "Output")
+        #expect(settings[SettingsKeys.ringtoneOutput] == "Ringtone")
     }
 
-    @Test func deletesDeviceNamesFromSettingsWhenSoundIOIsSystemDefaultDevices() {
+    @Test func clearsUIDsAndNamesForSystemDefaults() {
         let settings = SettingsFake()
-        settings[SettingsKeys.soundInput] = "any-value"
-        settings[SettingsKeys.soundOutput] = "any-value"
-        settings[SettingsKeys.ringtoneOutput] = "any-value"
+        for key in [
+            SettingsKeys.soundInputUID,
+            SettingsKeys.soundOutputUID,
+            SettingsKeys.ringtoneOutputUID,
+            SettingsKeys.soundInput,
+            SettingsKeys.soundOutput,
+            SettingsKeys.ringtoneOutput,
+        ] {
+            settings[key] = "any-value"
+        }
+
         let sut = SettingsSoundIOSaveUseCase(
             soundIO: SystemDefaultingSoundIO(
-                input: .systemDefault, output: .systemDefault, ringtoneOutput: .systemDefault
+                input: .systemDefault,
+                output: .systemDefault,
+                ringtoneOutput: .systemDefault
             ),
             settings: settings
         )
 
         sut.execute()
 
+        #expect(settings[SettingsKeys.soundInputUID] == nil)
+        #expect(settings[SettingsKeys.soundOutputUID] == nil)
+        #expect(settings[SettingsKeys.ringtoneOutputUID] == nil)
         #expect(settings[SettingsKeys.soundInput] == nil)
         #expect(settings[SettingsKeys.soundOutput] == nil)
         #expect(settings[SettingsKeys.ringtoneOutput] == nil)

@@ -27,6 +27,15 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Restore third-party libraries
+        uses: actions/cache@v5
+        with:
+          path: |
+            ThirdParty/Opus
+            ThirdParty/LibreSSL
+            ThirdParty/PJSIP
+          key: telephone-third-party-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('README.md', 'ThirdParty/PJSIP/patches/**', 'script/bootstrap_third_party.sh') }}
+
       - name: Run unit tests
         run: ./script/test.sh
 

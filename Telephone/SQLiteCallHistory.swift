@@ -208,65 +208,7 @@ private extension SQLiteCallHistory {
         try execute("CREATE INDEX IF NOT EXISTS calls_account_date ON calls(account_uuid, date DESC)")
         try execute("CREATE INDEX IF NOT EXISTS calls_account_user ON calls(account_uuid, user)")
 
-        // These tables are intentionally part of the first SQLite schema so a
-        // future CRM sync can enrich callers without duplicating CRM fields in
-        // every call row.
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS parties (
-                id INTEGER PRIMARY KEY,
-                display_name TEXT NOT NULL DEFAULT '',
-                company TEXT NOT NULL DEFAULT '',
-                updated_at REAL NOT NULL DEFAULT 0
-            )
-            """
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS party_addresses (
-                id INTEGER PRIMARY KEY,
-                party_id INTEGER NOT NULL,
-                kind TEXT NOT NULL,
-                value TEXT NOT NULL,
-                normalized_value TEXT NOT NULL,
-                label TEXT NOT NULL DEFAULT '',
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
-                UNIQUE (kind, normalized_value)
-            )
-            """
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS party_attributes (
-                party_id INTEGER NOT NULL,
-                key TEXT NOT NULL,
-                value TEXT NOT NULL,
-                PRIMARY KEY (party_id, key),
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE
-            )
-            """
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS external_refs (
-                party_id INTEGER NOT NULL,
-                provider TEXT NOT NULL,
-                external_id TEXT NOT NULL,
-                PRIMARY KEY (provider, external_id),
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE
-            )
-            """
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS crm_sync_state (
-                provider TEXT PRIMARY KEY,
-                cursor TEXT,
-                last_sync REAL,
-                last_error TEXT
-            )
-            """
-        )
+        try TelephoneDatabaseSchema.createPartyTables(execute: execute)
         try execute(
             """
             CREATE TABLE IF NOT EXISTS legacy_call_history_migrations (
@@ -279,35 +221,8 @@ private extension SQLiteCallHistory {
     }
 
     func createSchemaVersion2() throws {
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS party_notes (
-                id INTEGER PRIMARY KEY,
-                party_id INTEGER NOT NULL,
-                call_identifier TEXT NOT NULL,
-                body TEXT NOT NULL,
-                created_at REAL NOT NULL,
-                updated_at REAL NOT NULL,
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
-                UNIQUE (party_id, call_identifier)
-            )
-            """
-        )
-        try execute(
-            "CREATE INDEX IF NOT EXISTS party_notes_party_date ON party_notes(party_id, updated_at DESC)"
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS party_keys (
-                id INTEGER PRIMARY KEY,
-                party_id INTEGER NOT NULL,
-                value TEXT NOT NULL,
-                normalized_value TEXT NOT NULL,
-                created_at REAL NOT NULL,
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
-                UNIQUE (party_id, normalized_value)
-            )
-            """
+        try TelephoneDatabaseSchema.createCustomerContextTables(
+            execute: execute
         )
     }
 

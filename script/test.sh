@@ -12,3 +12,6 @@ run_tests() {
 run_tests Domain
 run_tests UseCasesTests
 run_tests TelephonePresentationTests
+
+"$ROOT_DIR/script/bootstrap_third_party.sh"
+run_tests TelephoneTests

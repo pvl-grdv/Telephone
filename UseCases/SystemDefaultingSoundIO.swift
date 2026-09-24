@@ -35,12 +35,17 @@ public struct SystemDefaultingSoundIO {
         ringtoneOutput = Item(soundIO.ringtoneOutput)
     }
 
-    public enum Item {
+    public enum Item: Equatable {
         case systemDefault
-        case device(name: String)
+        case device(uniqueIdentifier: String, name: String)
 
         init(_ device: SystemAudioDevice) {
-            self = device.isNil ? .systemDefault : .device(name: device.name)
+            self = device.isNil
+                ? .systemDefault
+                : .device(
+                    uniqueIdentifier: device.uniqueIdentifier,
+                    name: device.name
+                )
         }
     }
 }

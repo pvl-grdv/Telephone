@@ -21,26 +21,55 @@ public struct SystemAudioDevices {
     public let input: [SystemAudioDevice]
     public let output: [SystemAudioDevice]
 
-    private let deviceNameToInputDevice: [String: SystemAudioDevice]
-    private let deviceNameToOutputDevice: [String: SystemAudioDevice]
+    private let inputByUniqueIdentifier: [String: SystemAudioDevice]
+    private let outputByUniqueIdentifier: [String: SystemAudioDevice]
+    private let inputByName: [String: SystemAudioDevice]
+    private let outputByName: [String: SystemAudioDevice]
 
     public init(devices: [SystemAudioDevice]) {
-        self.all = devices
+        all = devices
         input = devices.filter(\.hasInputs)
         output = devices.filter(\.hasOutputs)
-        deviceNameToInputDevice = deviceNameToDeviceMap(from: input)
-        deviceNameToOutputDevice = deviceNameToDeviceMap(from: output)
+        inputByUniqueIdentifier = deviceMap(
+            from: input,
+            key: \.uniqueIdentifier
+        )
+        outputByUniqueIdentifier = deviceMap(
+            from: output,
+            key: \.uniqueIdentifier
+        )
+        inputByName = deviceMap(from: input, key: \.name)
+        outputByName = deviceMap(from: output, key: \.name)
+    }
+
+    public func inputDevice(
+        uniqueIdentifier: String
+    ) -> SystemAudioDevice {
+        inputByUniqueIdentifier[uniqueIdentifier]
+            ?? NullSystemAudioDevice()
+    }
+
+    public func outputDevice(
+        uniqueIdentifier: String
+    ) -> SystemAudioDevice {
+        outputByUniqueIdentifier[uniqueIdentifier]
+            ?? NullSystemAudioDevice()
     }
 
     public func inputDevice(named name: String) -> SystemAudioDevice {
-        return deviceNameToInputDevice[name] ?? NullSystemAudioDevice()
+        inputByName[name] ?? NullSystemAudioDevice()
     }
 
     public func outputDevice(named name: String) -> SystemAudioDevice {
-        return deviceNameToOutputDevice[name] ?? NullSystemAudioDevice()
+        outputByName[name] ?? NullSystemAudioDevice()
     }
 }
 
-private func deviceNameToDeviceMap(from devices: [SystemAudioDevice]) -> [String: SystemAudioDevice] {
-    return devices.reduce(into: [:]) { $0[$1.name] = $1 }
+private func deviceMap(
+    from devices: [SystemAudioDevice],
+    key: KeyPath<any SystemAudioDevice, String>
+) -> [String: SystemAudioDevice] {
+    devices.reduce(into: [:]) { result, device in
+        result[device[keyPath: key]] = device
+    }
 }

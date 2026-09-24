@@ -29,38 +29,76 @@ struct SettingsSoundIO {
     init(devices: SystemAudioDevices, settings: KeyValueSettings) {
         self.devices = devices
         self.settings = settings
-        optionalInput = inputDeviceByName(withSettingsKey: SettingsKeys.soundInput)
-        optionalOutput = outputDeviceByName(withSettingsKey: SettingsKeys.soundOutput)
-        optionalRingtoneOutput = outputDeviceByName(withSettingsKey: SettingsKeys.ringtoneOutput)
+
+        optionalInput = device(
+            uniqueIdentifierKey: SettingsKeys.soundInputUID,
+            legacyNameKey: SettingsKeys.soundInput,
+            byUniqueIdentifier: {
+                devices.inputDevice(uniqueIdentifier: $0)
+            },
+            byName: {
+                devices.inputDevice(named: $0)
+            }
+        )
+        optionalOutput = device(
+            uniqueIdentifierKey: SettingsKeys.soundOutputUID,
+            legacyNameKey: SettingsKeys.soundOutput,
+            byUniqueIdentifier: {
+                devices.outputDevice(uniqueIdentifier: $0)
+            },
+            byName: {
+                devices.outputDevice(named: $0)
+            }
+        )
+        optionalRingtoneOutput = device(
+            uniqueIdentifierKey: SettingsKeys.ringtoneOutputUID,
+            legacyNameKey: SettingsKeys.ringtoneOutput,
+            byUniqueIdentifier: {
+                devices.outputDevice(uniqueIdentifier: $0)
+            },
+            byName: {
+                devices.outputDevice(named: $0)
+            }
+        )
     }
 
-    private func inputDeviceByName(withSettingsKey key: String) -> SystemAudioDevice {
-        return deviceByName(withSettingsKey: key, function: devices.inputDevice)
-    }
+    private func device(
+        uniqueIdentifierKey: String,
+        legacyNameKey: String,
+        byUniqueIdentifier: (String) -> SystemAudioDevice,
+        byName: (String) -> SystemAudioDevice
+    ) -> SystemAudioDevice {
+        if let uniqueIdentifier = settings.string(
+            forKey: uniqueIdentifierKey
+        ) {
+            let device = byUniqueIdentifier(uniqueIdentifier)
+            if !device.isNil {
+                return device
+            }
+        }
 
-    private func outputDeviceByName(withSettingsKey key: String) -> SystemAudioDevice {
-        return deviceByName(withSettingsKey: key, function: devices.outputDevice)
-    }
-
-    private func deviceByName(withSettingsKey key: String, function: (String) -> SystemAudioDevice) -> SystemAudioDevice {
-        if let name = settings.string(forKey: key) {
-            return function(name)
-        } else {
+        guard let name = settings.string(forKey: legacyNameKey) else {
             return NullSystemAudioDevice()
         }
+
+        let device = byName(name)
+        if !device.isNil {
+            settings[uniqueIdentifierKey] = device.uniqueIdentifier
+        }
+        return device
     }
 }
 
 extension SettingsSoundIO: SoundIO {
     var input: SystemAudioDevice {
-        return optionalInput
+        optionalInput
     }
 
     var output: SystemAudioDevice {
-        return optionalOutput
+        optionalOutput
     }
 
     var ringtoneOutput: SystemAudioDevice {
-        return optionalRingtoneOutput
+        optionalRingtoneOutput
     }
 }

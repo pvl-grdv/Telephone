@@ -17,9 +17,15 @@
 //
 
 public enum SettingsKeys {
+    // Legacy display-name keys are retained for downgrade compatibility.
     public static let soundInput = "SoundInput"
     public static let soundOutput = "SoundOutput"
     public static let ringtoneOutput = "RingtoneOutput"
+
+    // Stable CoreAudio identifiers used by current builds.
+    public static let soundInputUID = "SoundInputUID"
+    public static let soundOutputUID = "SoundOutputUID"
+    public static let ringtoneOutputUID = "RingtoneOutputUID"
     public static let ringingSound = "RingingSound"
 
     // Keep the persisted key for compatibility with existing installs.

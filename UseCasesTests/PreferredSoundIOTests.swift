@@ -29,13 +29,50 @@ struct PreferredSoundIOTests {
 
     // MARK: - Sound input
 
-    @Test func inputIsDeviceWithNameFromSettings() {
+    @Test func inputIsDeviceWithUIDFromSettings() {
+        let someDevice = factory.someInput
+        settings[SettingsKeys.soundInputUID] = someDevice.uniqueIdentifier
+
+        let sut = makeSoundIO()
+
+        #expect(sut.input == someDevice)
+    }
+
+    @Test func inputUIDDisambiguatesDevicesWithSameName() {
+        let first = SimpleSystemAudioDevice(
+            identifier: 101,
+            uniqueIdentifier: "same-name-1",
+            name: "USB Audio",
+            inputs: 1,
+            outputs: 0,
+            isBuiltIn: false
+        )
+        let second = SimpleSystemAudioDevice(
+            identifier: 102,
+            uniqueIdentifier: "same-name-2",
+            name: "USB Audio",
+            inputs: 1,
+            outputs: 0,
+            isBuiltIn: false
+        )
+        settings[SettingsKeys.soundInputUID] = second.uniqueIdentifier
+
+        let sut = makeSoundIO(devices: [first, second])
+
+        #expect(sut.input.uniqueIdentifier == second.uniqueIdentifier)
+    }
+
+    @Test func legacyInputNameMigratesToUID() {
         let someDevice = factory.someInput
         settings[SettingsKeys.soundInput] = someDevice.name
 
         let sut = makeSoundIO()
 
         #expect(sut.input == someDevice)
+        #expect(
+            settings[SettingsKeys.soundInputUID]
+                == someDevice.uniqueIdentifier
+        )
     }
 
     @Test func inputIsDefaultInputWhenThereIsNoSoundInputInSettings() {
@@ -46,8 +83,8 @@ struct PreferredSoundIOTests {
         #expect(sut.input == defaultIO.input)
     }
 
-    @Test func inputIsDefaultInputWhenSoundInputFromSettingsCanNotBeFoundInSystemDevices() {
-        settings[SettingsKeys.soundInput] = nonexistentDeviceName
+    @Test func inputIsDefaultInputWhenSoundInputUIDFromSettingsCanNotBeFoundInSystemDevices() {
+        settings[SettingsKeys.soundInputUID] = nonexistentDeviceUID
         let defaultIO = SimpleSystemSoundIO(input: factory.someInput, output: NullSystemAudioDevice())
 
         let sut = makeSoundIO(devices: factory.all, settings: settings, defaultIO: defaultIO)
@@ -61,16 +98,16 @@ struct PreferredSoundIOTests {
         #expect(sut.input == factory.firstBuiltInInput)
     }
 
-    @Test func inputIsBuiltInInputWhenSoundInputFromSettingsCanNotBeFoundInSystemDevicesAndThereIsNoDefaultInput() {
-        settings[SettingsKeys.soundInput] = nonexistentDeviceName
+    @Test func inputIsBuiltInInputWhenSoundInputUIDFromSettingsCanNotBeFoundInSystemDevicesAndThereIsNoDefaultInput() {
+        settings[SettingsKeys.soundInputUID] = nonexistentDeviceUID
 
         let sut = makeSoundIO()
 
         #expect(sut.input == factory.firstBuiltInInput)
     }
 
-    @Test func inputIsBuiltInInputWhenAudioDeviceMatchedByNameFromSettingsDoesNotHaveInputChannelsAndThereIsNoDefaultInput() {
-        settings[SettingsKeys.soundInput] = factory.outputOnly.name
+    @Test func inputIsBuiltInInputWhenAudioDeviceMatchedByUIDFromSettingsDoesNotHaveInputChannelsAndThereIsNoDefaultInput() {
+        settings[SettingsKeys.soundInputUID] = factory.outputOnly.uniqueIdentifier
 
         let sut = makeSoundIO()
 
@@ -85,9 +122,9 @@ struct PreferredSoundIOTests {
 
     // MARK: - Sound output
 
-    @Test func outputIsDeviceWithNameFromSettings() {
+    @Test func outputIsDeviceWithUIDFromSettings() {
         let someDevice = factory.someOutput
-        settings[SettingsKeys.soundOutput] = someDevice.name
+        settings[SettingsKeys.soundOutputUID] = someDevice.uniqueIdentifier
 
         let sut = makeSoundIO()
 
@@ -102,8 +139,8 @@ struct PreferredSoundIOTests {
         #expect(sut.output == defaultIO.output)
     }
 
-    @Test func outputIsDefaultOutputWhenSoundOutputFromSettingsCanNotBeFoundInSystemDevices() {
-        settings[SettingsKeys.soundOutput] = nonexistentDeviceName
+    @Test func outputIsDefaultOutputWhenSoundOutputUIDFromSettingsCanNotBeFoundInSystemDevices() {
+        settings[SettingsKeys.soundOutputUID] = nonexistentDeviceUID
         let defaultIO = SimpleSystemSoundIO(input: NullSystemAudioDevice(), output: factory.someOutput)
 
         let sut = makeSoundIO(devices: factory.all, settings: settings, defaultIO: defaultIO)
@@ -117,16 +154,16 @@ struct PreferredSoundIOTests {
         #expect(sut.output == factory.firstBuiltInOutput)
     }
 
-    @Test func outputIsBuiltInOutputWhenSoundOutputFromSettingsCanNotBeFoundInSystemDevicesAndThereIsNoDefaultOutput() {
-        settings[SettingsKeys.soundOutput] = nonexistentDeviceName
+    @Test func outputIsBuiltInOutputWhenSoundOutputUIDFromSettingsCanNotBeFoundInSystemDevicesAndThereIsNoDefaultOutput() {
+        settings[SettingsKeys.soundOutputUID] = nonexistentDeviceUID
 
         let sut = makeSoundIO()
 
         #expect(sut.output == factory.firstBuiltInOutput)
     }
 
-    @Test func outputIsBuiltInOutputWhenAudioDeviceMatchedByNameFromSettingsDoesNotHaveOutputChannelsAndThereIsNoDefaultOutput() {
-        settings[SettingsKeys.soundOutput] = factory.inputOnly.name
+    @Test func outputIsBuiltInOutputWhenAudioDeviceMatchedByUIDFromSettingsDoesNotHaveOutputChannelsAndThereIsNoDefaultOutput() {
+        settings[SettingsKeys.soundOutputUID] = factory.inputOnly.uniqueIdentifier
 
         let sut = makeSoundIO()
 
@@ -141,9 +178,9 @@ struct PreferredSoundIOTests {
 
     // MARK: - Ringtone output
 
-    @Test func ringtoneOutputIsDeviceWithNameFromSettings() {
+    @Test func ringtoneOutputIsDeviceWithUIDFromSettings() {
         let someDevice = factory.someOutput
-        settings[SettingsKeys.ringtoneOutput] = someDevice.name
+        settings[SettingsKeys.ringtoneOutputUID] = someDevice.uniqueIdentifier
 
         let sut = makeSoundIO()
 
@@ -158,8 +195,8 @@ struct PreferredSoundIOTests {
         #expect(sut.ringtoneOutput == defaultIO.output)
     }
 
-    @Test func ringtoneOutputIsDefaultOutputWhenRingtoneOutputFromSettingsCanNotBeFoundInSystemDevices() {
-        settings[SettingsKeys.ringtoneOutput] = nonexistentDeviceName
+    @Test func ringtoneOutputIsDefaultOutputWhenRingtoneOutputUIDFromSettingsCanNotBeFoundInSystemDevices() {
+        settings[SettingsKeys.ringtoneOutputUID] = nonexistentDeviceUID
         let defaultIO = SimpleSystemSoundIO(input: NullSystemAudioDevice(), output: factory.someOutput)
 
         let sut = makeSoundIO(devices: factory.all, settings: settings, defaultIO: defaultIO)
@@ -173,16 +210,16 @@ struct PreferredSoundIOTests {
         #expect(sut.ringtoneOutput == factory.firstBuiltInOutput)
     }
 
-    @Test func ringtoneOutputIsBuiltInOutputWhenRingtoneOutputFromSettingsCanNotBeFoundInSystemDevicesAndThereIsNoDefaultOutput() {
-        settings[SettingsKeys.ringtoneOutput] = nonexistentDeviceName
+    @Test func ringtoneOutputIsBuiltInOutputWhenRingtoneOutputUIDFromSettingsCanNotBeFoundInSystemDevicesAndThereIsNoDefaultOutput() {
+        settings[SettingsKeys.ringtoneOutputUID] = nonexistentDeviceUID
 
         let sut = makeSoundIO()
 
         #expect(sut.ringtoneOutput == factory.firstBuiltInOutput)
     }
 
-    @Test func ringtoneOutputIsBuiltInOutputWhenAudioDeviceMatchedByNameFromSettingsDoesNotHaveOutputChannelsAndThereIsNoDefaultOutput() {
-        settings[SettingsKeys.ringtoneOutput] = factory.inputOnly.name
+    @Test func ringtoneOutputIsBuiltInOutputWhenAudioDeviceMatchedByUIDFromSettingsDoesNotHaveOutputChannelsAndThereIsNoDefaultOutput() {
+        settings[SettingsKeys.ringtoneOutputUID] = factory.inputOnly.uniqueIdentifier
 
         let sut = makeSoundIO()
 
@@ -212,4 +249,4 @@ private extension PreferredSoundIOTests {
     }
 }
 
-private let nonexistentDeviceName = "Nonexistent"
+private let nonexistentDeviceUID = "nonexistent-uid"

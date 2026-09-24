@@ -5,15 +5,6 @@
 
 import Foundation
 
-protocol CredentialsStoring: Sendable {
-    func password(service: String, account: String) async -> String
-    func savePassword(
-        _ password: String,
-        service: String,
-        account: String
-    ) async -> Bool
-}
-
 actor CredentialsStore: CredentialsStoring {
     static let shared = CredentialsStore()
 
@@ -33,6 +24,16 @@ actor CredentialsStore: CredentialsStoring {
             withService: service,
             account: account,
             password: password
+        )
+    }
+
+    func deletePassword(
+        service: String,
+        account: String
+    ) -> Bool {
+        AKKeychain.removeItem(
+            forService: service,
+            account: account
         )
     }
 }

@@ -5,7 +5,6 @@
 
 import Foundation
 import Testing
-@testable import Telephone
 
 @MainActor
 struct AccountSettingsModelTests {
@@ -69,6 +68,120 @@ struct AccountSettingsModelTests {
             stored.first?[AKSIPAccountKeys.username] as? String
                 == "bob"
         )
+    }
+
+    @Test
+    func autosaveDoesNotWriteIntermediateCredentialIdentity() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials
+        )
+        await waitForPasswordLoad(model)
+
+        model.draft.username = "b"
+        for _ in 0..<40 {
+            await Task.yield()
+        }
+
+        #expect(await fixture.credentials.saveCount() == 0)
+
+        model.flushPendingChanges()
+        await waitForCredentialSave(fixture.credentials)
+
+        let saves = await fixture.credentials.savedCredentials()
+        #expect(saves.last?.account == "b")
+    }
+
+    @Test
+    func changingCredentialIdentityRemovesOldKeychainItem() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials
+        )
+        await waitForPasswordLoad(model)
+
+        model.draft.domain = "new.example.com"
+        model.draft.username = "bob"
+        model.flushPendingChanges()
+
+        await waitForCredentialSave(fixture.credentials)
+        await waitUntil {
+            !model.credentialsAreSaving
+        }
+
+        let deletions = await fixture.credentials.deletedCredentials()
+        #expect(
+            deletions.contains(
+                .init(
+                    service: "SIP: old.example.com",
+                    account: "alice"
+                )
+            )
+        )
+    }
+
+    @Test
+    func removingAccountDeletesStoredCredential() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials
+        )
+        await waitForPasswordLoad(model)
+
+        model.requestRemoval()
+        model.confirmRemoval()
+
+        for _ in 0..<200 {
+            if !(await fixture.credentials.deletedCredentials()).isEmpty {
+                break
+            }
+            await Task.yield()
+        }
+
+        #expect(
+            await fixture.credentials.deletedCredentials()
+                == [
+                    .init(
+                        service: "SIP: old.example.com",
+                        account: "alice"
+                    )
+                ]
+        )
+    }
+
+    @Test
+    func invalidProxyPortDoesNotEnableAccount() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials
+        )
+        await waitForPasswordLoad(model)
+
+        model.draft.usesProxy = true
+        model.draft.proxyPort = "70000"
+
+        #expect(model.proxyPortInvalid)
+
+        model.setEnabled(true)
+
+        #expect(!model.draft.isEnabled)
+        #expect(await fixture.credentials.saveCount() == 0)
     }
 
     @Test
@@ -187,9 +300,15 @@ private actor CredentialsStoreFake: CredentialsStoring {
         let password: String
     }
 
+    struct CredentialIdentity: Sendable, Equatable {
+        let service: String
+        let account: String
+    }
+
     private let loadedPassword: String
     private let saveSucceeds: Bool
     private var saves: [SavedCredential] = []
+    private var deletions: [CredentialIdentity] = []
 
     init(
         password: String,
@@ -221,11 +340,28 @@ private actor CredentialsStoreFake: CredentialsStoring {
         return saveSucceeds
     }
 
+    func deletePassword(
+        service: String,
+        account: String
+    ) async -> Bool {
+        deletions.append(
+            CredentialIdentity(
+                service: service,
+                account: account
+            )
+        )
+        return true
+    }
+
     func saveCount() -> Int {
         saves.count
     }
 
     func savedCredentials() -> [SavedCredential] {
         saves
+    }
+
+    func deletedCredentials() -> [CredentialIdentity] {
+        deletions
     }
 }

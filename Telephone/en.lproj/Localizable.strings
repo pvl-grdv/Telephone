@@ -500,3 +500,42 @@
 
 /* Account credentials save error. */
 "Could not save account password." = "Could not save account password.";
+
+/* Fork identity, validation, and modern call-history UI. */
+"About Telephone" = "About Telephone";
+"Independently maintained fork" = "Independently maintained fork";
+"This build is an independently maintained fork of Telephone." = "This build is an independently maintained fork of Telephone.";
+"Based on Telephone by Alexey Kuznetsov and 64 Characters." = "Based on Telephone by Alexey Kuznetsov and 64 Characters.";
+"Fork Repository" = "Fork Repository";
+"Original Project" = "Original Project";
+"GPLv3 License" = "GPLv3 License";
+"Fork modifications © 2026 Pavel Gordeev" = "Fork modifications © 2026 Pavel Gordeev";
+"Version %@ (%@)" = "Version %@ (%@)";
+"Port must be between 1 and 65535, or left empty." = "Port must be between 1 and 65535, or left empty.";
+"Filter Call History" = "Filter Call History";
+"No Matching Calls" = "No Matching Calls";
+"Try a different call filter." = "Try a different call filter.";
+"OK" = "OK";
+
+/* App Intents and Shortcuts metadata. */
+"Telephone Account" = "Telephone Account";
+"Account Status" = "Account Status";
+"Call with Telephone" = "Call with Telephone";
+"Places a phone or SIP call using Telephone." = "Places a phone or SIP call using Telephone.";
+"Destination" = "Destination";
+"Who would you like to call?" = "Who would you like to call?";
+"Open Telephone Settings" = "Open Telephone Settings";
+"Opens Telephone settings." = "Opens Telephone settings.";
+"Set Telephone Account Status" = "Set Telephone Account Status";
+"Changes the availability status of a Telephone SIP account." = "Changes the availability status of a Telephone SIP account.";
+"Account" = "Account";
+"Status" = "Status";
+"Call" = "Call";
+"Open Settings" = "Open Settings";
+"Set Account Status" = "Set Account Status";
+"Telephone is not ready." = "Telephone is not ready.";
+"Telephone couldn't place this call." = "Telephone couldn't place this call.";
+"Telephone couldn't update this account." = "Telephone couldn't update this account.";
+"Open Fork Repository…" = "Open Fork Repository…";
+"Open Original FAQ…" = "Open Original FAQ…";
+"Telephone" = "Telephone";

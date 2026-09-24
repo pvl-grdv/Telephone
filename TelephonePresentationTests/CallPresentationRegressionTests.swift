@@ -203,7 +203,7 @@ struct CallPresentationRegressionTests {
         first = nil
 
         var second: RegistryObject? = RegistryObject()
-        weak var weakSecond = second
+        weak let weakSecond = second
         registry.register(second!, key: "second")
         #expect(registry.registeredCount == 1)
 

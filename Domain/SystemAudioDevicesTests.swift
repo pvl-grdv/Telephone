@@ -42,6 +42,26 @@ final class SystemAudioDevicesTests: XCTestCase {
         XCTAssertTrue(sut.outputDevice(named: outputDevice.name) == outputDevice)
     }
 
+    func testCanGetInputDeviceByUniqueIdentifier() {
+        let inputDevice = factory.someInput
+
+        XCTAssertTrue(
+            sut.inputDevice(
+                uniqueIdentifier: inputDevice.uniqueIdentifier
+            ) == inputDevice
+        )
+    }
+
+    func testCanGetOutputDeviceByUniqueIdentifier() {
+        let outputDevice = factory.someOutput
+
+        XCTAssertTrue(
+            sut.outputDevice(
+                uniqueIdentifier: outputDevice.uniqueIdentifier
+            ) == outputDevice
+        )
+    }
+
     func testCanGetInputDevices() {
         XCTAssertTrue(sut.input == factory.allInput)
     }

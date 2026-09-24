@@ -3,111 +3,7 @@
 //  Telephone
 //
 
-import Cocoa
-import Observation
 import SwiftUI
-
-@MainActor
-@Observable
-final class NetworkSettingsModel: NSObject {
-    var transportPort = ""
-    var stunServerHost = ""
-    var stunServerPort = ""
-    var usesICE = false
-    var usesDNSSRV = false
-    var outboundProxyHost = ""
-    var outboundProxyPort = ""
-    var transportPortPlaceholder = ""
-
-    private let defaults = UserDefaults.standard
-    private let userAgent: AKSIPUserAgent
-    private weak var preferencesController: PreferencesController?
-
-    init(userAgent: AKSIPUserAgent, preferencesController: PreferencesController) {
-        self.userAgent = userAgent
-        self.preferencesController = preferencesController
-        super.init()
-        discard()
-        refreshTransportPortPlaceholder()
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(userAgentDidFinishStarting),
-            name: NSNotification.Name.AKSIPUserAgentDidFinishStarting,
-            object: nil
-        )
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-
-    var hasChanges: Bool {
-        normalizedPort(transportPort) != defaults.integer(forKey: UserDefaultsKeys.transportPort)
-            || normalizedHost(stunServerHost) != (defaults.string(forKey: UserDefaultsKeys.stunServerHost) ?? "")
-            || normalizedPort(stunServerPort) != defaults.integer(forKey: UserDefaultsKeys.stunServerPort)
-            || usesICE != defaults.bool(forKey: UserDefaultsKeys.useICE)
-            || usesDNSSRV != defaults.bool(forKey: UserDefaultsKeys.useDNSSRV)
-            || normalizedHost(outboundProxyHost) != (defaults.string(forKey: UserDefaultsKeys.outboundProxyHost) ?? "")
-            || normalizedPort(outboundProxyPort) != defaults.integer(forKey: UserDefaultsKeys.outboundProxyPort)
-    }
-
-    func save() {
-        defaults.set(normalizedPort(transportPort), forKey: UserDefaultsKeys.transportPort)
-        defaults.set(normalizedHost(stunServerHost), forKey: UserDefaultsKeys.stunServerHost)
-        defaults.set(normalizedPort(stunServerPort), forKey: UserDefaultsKeys.stunServerPort)
-        defaults.set(usesICE, forKey: UserDefaultsKeys.useICE)
-        defaults.set(usesDNSSRV, forKey: UserDefaultsKeys.useDNSSRV)
-        defaults.set(normalizedHost(outboundProxyHost), forKey: UserDefaultsKeys.outboundProxyHost)
-        defaults.set(normalizedPort(outboundProxyPort), forKey: UserDefaultsKeys.outboundProxyPort)
-
-        NotificationCenter.default.post(
-            name: .AKPreferencesControllerDidChangeNetworkSettings,
-            object: preferencesController
-        )
-        refreshTransportPortPlaceholder()
-    }
-
-    func discard() {
-        transportPort = stringValue(for: UserDefaultsKeys.transportPort)
-        stunServerHost = defaults.string(forKey: UserDefaultsKeys.stunServerHost) ?? ""
-        stunServerPort = stringValue(for: UserDefaultsKeys.stunServerPort)
-        usesICE = defaults.bool(forKey: UserDefaultsKeys.useICE)
-        usesDNSSRV = defaults.bool(forKey: UserDefaultsKeys.useDNSSRV)
-        outboundProxyHost = defaults.string(forKey: UserDefaultsKeys.outboundProxyHost) ?? ""
-        outboundProxyPort = stringValue(for: UserDefaultsKeys.outboundProxyPort)
-    }
-
-    func clearOutboundProxy() {
-        outboundProxyHost = ""
-        outboundProxyPort = ""
-    }
-
-    func refreshTransportPortPlaceholder() {
-        if userAgent.isStarted && userAgent.transportPort > 0 {
-            transportPortPlaceholder = String(userAgent.transportPort)
-        } else {
-            transportPortPlaceholder = ""
-        }
-    }
-
-    @objc private func userAgentDidFinishStarting(_ notification: Notification) {
-        refreshTransportPortPlaceholder()
-    }
-
-    private func stringValue(for key: String) -> String {
-        let value = defaults.integer(forKey: key)
-        return value > 0 ? String(value) : ""
-    }
-
-    private func normalizedPort(_ value: String) -> Int {
-        Int(value.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
-    }
-
-    private func normalizedHost(_ value: String) -> String {
-        value.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
 
 struct NetworkSettingsView: View {
     @Bindable var model: NetworkSettingsModel
@@ -130,6 +26,10 @@ struct NetworkSettingsView: View {
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+                if model.transportPortInvalid {
+                    PortValidationMessage()
+                }
             }
 
             Section {
@@ -141,6 +41,10 @@ struct NetworkSettingsView: View {
                         TextField("3478", text: $model.stunServerPort)
                             .frame(width: 90)
                     }
+                }
+
+                if model.stunServerPortInvalid {
+                    PortValidationMessage()
                 }
 
                 Toggle(
@@ -191,6 +95,10 @@ struct NetworkSettingsView: View {
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+                if model.outboundProxyPortInvalid {
+                    PortValidationMessage()
+                }
             }
 
             Section {
@@ -216,7 +124,7 @@ struct NetworkSettingsView: View {
                         model.save()
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!model.hasChanges)
+                    .disabled(!model.canApply)
                 }
 
                 Text(
@@ -234,5 +142,20 @@ struct NetworkSettingsView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .onAppear { model.refreshTransportPortPlaceholder() }
+    }
+}
+
+
+private struct PortValidationMessage: View {
+    var body: some View {
+        Label(
+            NSLocalizedString(
+                "Port must be between 1 and 65535, or left empty.",
+                comment: "Invalid SIP network port message."
+            ),
+            systemImage: "exclamationmark.circle"
+        )
+        .font(.caption)
+        .foregroundStyle(.red)
     }
 }

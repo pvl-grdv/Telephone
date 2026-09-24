@@ -251,14 +251,18 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     func startCallTimer() {
         guard callTimer?.isValid != true else { return }
 
-        callTimer = Foundation.Timer.scheduledTimer(
-            withTimeInterval: 0.2,
+        updateCallDuration()
+
+        let timer = Foundation.Timer.scheduledTimer(
+            withTimeInterval: 1.0,
             repeats: true
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.updateCallDuration()
             }
         }
+        timer.tolerance = 0.1
+        callTimer = timer
     }
 
     func stopCallTimer() {
@@ -350,7 +354,9 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
             )
         }
 
-        callController.status = value
+        if callController.status != value {
+            callController.status = value
+        }
     }
 
     private func handleDTMF(_ text: String) {

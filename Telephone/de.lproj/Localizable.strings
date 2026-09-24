@@ -499,3 +499,42 @@
 
 /* Account credentials save error. */
 "Could not save account password." = "Das Passwort des Accounts konnte nicht gespeichert werden.";
+
+/* Fork identity, validation, and modern call-history UI. */
+"About Telephone" = "Über Telephone";
+"Independently maintained fork" = "Unabhängig gepflegter Fork";
+"This build is an independently maintained fork of Telephone." = "Diese Version ist ein unabhängig gepflegter Fork von Telephone.";
+"Based on Telephone by Alexey Kuznetsov and 64 Characters." = "Basierend auf Telephone von Alexey Kuznetsov und 64 Characters.";
+"Fork Repository" = "Fork-Repository";
+"Original Project" = "Ursprüngliches Projekt";
+"GPLv3 License" = "GPLv3-Lizenz";
+"Fork modifications © 2026 Pavel Gordeev" = "Änderungen im Fork © 2026 Pavel Gordeev";
+"Version %@ (%@)" = "Version %@ (%@)";
+"Port must be between 1 and 65535, or left empty." = "Der Port muss zwischen 1 und 65535 liegen oder leer bleiben.";
+"Filter Call History" = "Anrufliste filtern";
+"No Matching Calls" = "Keine passenden Anrufe";
+"Try a different call filter." = "Versuchen Sie einen anderen Anruffilter.";
+"OK" = "OK";
+
+/* App Intents and Shortcuts metadata. */
+"Telephone Account" = "Telephone-Konto";
+"Account Status" = "Kontostatus";
+"Call with Telephone" = "Mit Telephone anrufen";
+"Places a phone or SIP call using Telephone." = "Tätigt einen Telefon- oder SIP-Anruf mit Telephone.";
+"Destination" = "Ziel";
+"Who would you like to call?" = "Wen möchten Sie anrufen?";
+"Open Telephone Settings" = "Telephone-Einstellungen öffnen";
+"Opens Telephone settings." = "Öffnet die Telephone-Einstellungen.";
+"Set Telephone Account Status" = "Telephone-Kontostatus festlegen";
+"Changes the availability status of a Telephone SIP account." = "Ändert den Verfügbarkeitsstatus eines Telephone-SIP-Kontos.";
+"Account" = "Konto";
+"Status" = "Status";
+"Call" = "Anrufen";
+"Open Settings" = "Einstellungen öffnen";
+"Set Account Status" = "Kontostatus festlegen";
+"Telephone is not ready." = "Telephone ist noch nicht bereit.";
+"Telephone couldn't place this call." = "Telephone konnte diesen Anruf nicht starten.";
+"Telephone couldn't update this account." = "Telephone konnte dieses Konto nicht aktualisieren.";
+"Open Fork Repository…" = "Fork-Repository öffnen…";
+"Open Original FAQ…" = "Ursprüngliche FAQ öffnen…";
+"Telephone" = "Telephone";

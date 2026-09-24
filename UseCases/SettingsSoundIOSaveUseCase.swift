@@ -31,19 +31,35 @@ public final class SettingsSoundIOSaveUseCase {
 
 extension SettingsSoundIOSaveUseCase: UseCase {
     public func execute() {
-        settings[SettingsKeys.soundInput] = soundIO.input.name
-        settings[SettingsKeys.soundOutput] = soundIO.output.name
-        settings[SettingsKeys.ringtoneOutput] = soundIO.ringtoneOutput.name
+        save(
+            soundIO.input,
+            uniqueIdentifierKey: SettingsKeys.soundInputUID,
+            legacyNameKey: SettingsKeys.soundInput
+        )
+        save(
+            soundIO.output,
+            uniqueIdentifierKey: SettingsKeys.soundOutputUID,
+            legacyNameKey: SettingsKeys.soundOutput
+        )
+        save(
+            soundIO.ringtoneOutput,
+            uniqueIdentifierKey: SettingsKeys.ringtoneOutputUID,
+            legacyNameKey: SettingsKeys.ringtoneOutput
+        )
     }
-}
 
-private extension SystemDefaultingSoundIO.Item {
-    var name: String? {
-        switch self {
+    private func save(
+        _ item: SystemDefaultingSoundIO.Item,
+        uniqueIdentifierKey: String,
+        legacyNameKey: String
+    ) {
+        switch item {
         case .systemDefault:
-            return nil
-        case .device(name: let name):
-            return name
+            settings[uniqueIdentifierKey] = nil
+            settings[legacyNameKey] = nil
+        case let .device(uniqueIdentifier, name):
+            settings[uniqueIdentifierKey] = uniqueIdentifier
+            settings[legacyNameKey] = name
         }
     }
 }

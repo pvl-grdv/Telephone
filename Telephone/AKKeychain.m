@@ -78,4 +78,19 @@
     return SecItemAdd((__bridge CFDictionaryRef)newItem, NULL) == errSecSuccess;
 }
 
++ (BOOL)removeItemForService:(nonnull NSString *)service
+                     account:(nonnull NSString *)account {
+    NSParameterAssert(service);
+    NSParameterAssert(account);
+
+    NSDictionary *query = @{
+        (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrService: service,
+        (__bridge id)kSecAttrAccount: account
+    };
+
+    OSStatus status = SecItemDelete((__bridge CFDictionaryRef)query);
+    return status == errSecSuccess || status == errSecItemNotFound;
+}
+
 @end

@@ -146,56 +146,9 @@ final class CustomerContextStore {
     }
 
     private func ensureSchema() throws {
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS parties (
-                id INTEGER PRIMARY KEY,
-                display_name TEXT NOT NULL DEFAULT '',
-                company TEXT NOT NULL DEFAULT '',
-                updated_at REAL NOT NULL DEFAULT 0
-            )
-            """
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS party_addresses (
-                id INTEGER PRIMARY KEY,
-                party_id INTEGER NOT NULL,
-                kind TEXT NOT NULL,
-                value TEXT NOT NULL,
-                normalized_value TEXT NOT NULL,
-                label TEXT NOT NULL DEFAULT '',
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
-                UNIQUE (kind, normalized_value)
-            )
-            """
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS party_notes (
-                id INTEGER PRIMARY KEY,
-                party_id INTEGER NOT NULL,
-                call_identifier TEXT NOT NULL,
-                body TEXT NOT NULL,
-                created_at REAL NOT NULL,
-                updated_at REAL NOT NULL,
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
-                UNIQUE (party_id, call_identifier)
-            )
-            """
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS party_keys (
-                id INTEGER PRIMARY KEY,
-                party_id INTEGER NOT NULL,
-                value TEXT NOT NULL,
-                normalized_value TEXT NOT NULL,
-                created_at REAL NOT NULL,
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
-                UNIQUE (party_id, normalized_value)
-            )
-            """
+        try TelephoneDatabaseSchema.createPartyTables(execute: execute)
+        try TelephoneDatabaseSchema.createCustomerContextTables(
+            execute: execute
         )
     }
 

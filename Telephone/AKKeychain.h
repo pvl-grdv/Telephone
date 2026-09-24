@@ -30,6 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
 // exists, its password will be replaced with the new one.
 + (BOOL)addItemWithService:(NSString *)service account:(NSString *)account password:(NSString *)password;
 
+// Removes an item from the Keychain. Missing items are treated as success.
++ (BOOL)removeItemForService:(NSString *)service account:(NSString *)account;
+
 @end
 
 NS_ASSUME_NONNULL_END

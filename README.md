@@ -32,16 +32,17 @@ A full Objective-C/AppKit-to-SwiftUI rewrite is not a goal by itself.
 
 Recent work in this fork includes:
 
-- moving call history and account settings to SwiftUI;
-- simplifying call/media handling while preserving existing SIP behavior;
-- improving caller identity handling and incoming-call reliability;
-- updating the project for Swift 6 and current macOS tooling;
+- moving call, account, settings, and call-history presentation to native SwiftUI scenes;
+- adding local customer context and SQLite-backed call history;
+- publishing App Intents and Shortcuts for calling, settings, and account status;
+- hardening CoreAudio selection, account credentials, and SIP network validation;
+- updating the project for Swift 6, strict concurrency, and current macOS tooling;
 - automating reproducible builds of Opus, LibreSSL, and PJSIP.
 
-Near-term work is focused on finishing the account setup migration to SwiftUI,
-continuing targeted cleanup of user-facing AppKit code where it reduces
-complexity, and improving call/media correctness without replacing the core SIP
-stack.
+The fork intentionally keeps the Telephone name and its upstream history, while
+clearly identifying itself as independently maintained in the README and About
+window. Product behavior and documentation in this repository should be treated
+as authoritative for this fork when they differ from upstream.
 
 This fork may continue to diverge from upstream as its maintenance needs evolve.
 
@@ -50,7 +51,7 @@ This fork may continue to diverge from upstream as its maintenance needs evolve.
 The personal fork currently targets:
 
 - Apple silicon
-- macOS 15.6 or newer
+- macOS 26 or newer
 
 ## Building
 
@@ -88,6 +89,17 @@ scripts fall back to ad-hoc signing.
 The bootstrap script records dependency versions in each installation prefix,
 so an existing checkout is rebuilt automatically when a pinned version changes.
 Telephone-specific PJSIP patches live in `ThirdParty/PJSIP/patches`.
+
+## Profiling active calls
+
+Telephone marks connected calls with the `CallPerformance / ActiveCall`
+signpost interval. With Telephone already running, record a SwiftUI Instruments
+trace with:
+
+    $ TRACE_DURATION=60s ./script/profile_active_call.sh
+
+The trace is written under `build/` by default and can be opened directly in
+Instruments. A real SIP call is required for representative call-window data.
 
 ## Development workflow
 

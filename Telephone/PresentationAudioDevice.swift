@@ -22,11 +22,18 @@ import UseCases
 
 final class PresentationAudioDevice: NSObject, Identifiable {
     let id: String
+    let uniqueIdentifier: String?
     @objc var isSystemDefault: Bool
     @objc var name: String
 
-    private init(id: String, isSystemDefault: Bool, name: String) {
+    private init(
+        id: String,
+        uniqueIdentifier: String?,
+        isSystemDefault: Bool,
+        name: String
+    ) {
         self.id = id
+        self.uniqueIdentifier = uniqueIdentifier
         self.isSystemDefault = isSystemDefault
         self.name = name
     }
@@ -36,6 +43,7 @@ final class PresentationAudioDevice: NSObject, Identifiable {
             id: isSystemDefault
                 ? "system-default"
                 : "audio-name:\(name)",
+            uniqueIdentifier: nil,
             isSystemDefault: isSystemDefault,
             name: name
         )
@@ -46,6 +54,7 @@ extension PresentationAudioDevice {
     convenience init(device: SystemAudioDevice) {
         self.init(
             id: "coreaudio:\(device.uniqueIdentifier)",
+            uniqueIdentifier: device.uniqueIdentifier,
             isSystemDefault: false,
             name: device.name
         )
@@ -53,30 +62,36 @@ extension PresentationAudioDevice {
 }
 
 extension PresentationAudioDevice {
-    convenience init(item: SystemDefaultingSoundIO.Item, systemDefaultDeviceName: String) {
+    convenience init(
+        item: SystemDefaultingSoundIO.Item,
+        systemDefaultDeviceName: String
+    ) {
         switch item {
         case .systemDefault:
-            self.init(isSystemDefault: true, name: systemDefaultDeviceName)
-        case .device(let name):
-            self.init(isSystemDefault: false, name: name)
+            self.init(
+                isSystemDefault: true,
+                name: systemDefaultDeviceName
+            )
+        case let .device(uniqueIdentifier, name):
+            self.init(
+                id: "coreaudio:\(uniqueIdentifier)",
+                uniqueIdentifier: uniqueIdentifier,
+                isSystemDefault: false,
+                name: name
+            )
         }
     }
 }
 
 extension PresentationAudioDevice {
     override func isEqual(_ object: Any?) -> Bool {
-        guard let device = object as? PresentationAudioDevice else { return false }
-        return isEqual(to: device)
+        guard let device = object as? PresentationAudioDevice else {
+            return false
+        }
+        return id == device.id
     }
 
     override var hash: Int {
-        var hasher = Hasher()
-        hasher.combine(isSystemDefault)
-        hasher.combine(name)
-        return hasher.finalize()
-    }
-
-    private func isEqual(to device: PresentationAudioDevice) -> Bool {
-        return isSystemDefault == device.isSystemDefault && name == device.name
+        id.hashValue
     }
 }

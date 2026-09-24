@@ -19,6 +19,8 @@ struct TelephoneApp: App {
         }
         .defaultLaunchBehavior(.suppressed)
         .commands {
+            AboutTelephoneCommands()
+
             CommandGroup(replacing: .appSettings) {
                 Button(
                     NSLocalizedString(
@@ -65,8 +67,8 @@ struct TelephoneApp: App {
 
                 Button(
                     NSLocalizedString(
-                        "Open Homepage…",
-                        comment: "Open homepage help menu item."
+                        "Open Fork Repository…",
+                        comment: "Open maintained fork repository help menu item."
                     )
                 ) {
                     appController.openHomepage()
@@ -74,13 +76,28 @@ struct TelephoneApp: App {
 
                 Button(
                     NSLocalizedString(
-                        "Open FAQ…",
-                        comment: "Open FAQ help menu item."
+                        "Open Original FAQ…",
+                        comment: "Open upstream Telephone FAQ help menu item."
                     )
                 ) {
                     appController.openFAQ()
                 }
             }
         }
+
+        Window(
+            NSLocalizedString(
+                "About Telephone",
+                comment: "About window title."
+            ),
+            id: AboutTelephoneScene.id
+        ) {
+            AboutTelephoneView()
+        }
+        .defaultLaunchBehavior(.suppressed)
+        .restorationBehavior(.disabled)
+        .windowResizability(.contentSize)
+        .windowIdealSize(.fitToContent)
+        .commandsRemoved()
     }
 }

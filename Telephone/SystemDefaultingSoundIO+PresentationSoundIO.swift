@@ -21,13 +21,22 @@ import UseCases
 extension SystemDefaultingSoundIO {
     init(_ soundIO: PresentationSoundIO) {
         self.init(
-            input: Item(soundIO.input), output: Item(soundIO.output), ringtoneOutput: Item(soundIO.ringtoneOutput)
+            input: Item(soundIO.input),
+            output: Item(soundIO.output),
+            ringtoneOutput: Item(soundIO.ringtoneOutput)
         )
     }
 }
 
 extension SystemDefaultingSoundIO.Item {
     init(_ device: PresentationAudioDevice) {
-        self = device.isSystemDefault ? .systemDefault : .device(name: device.name)
+        if device.isSystemDefault {
+            self = .systemDefault
+        } else {
+            self = .device(
+                uniqueIdentifier: device.uniqueIdentifier ?? device.id,
+                name: device.name
+            )
+        }
     }
 }

@@ -4,7 +4,6 @@
 //
 
 import Testing
-@testable import Telephone
 
 @MainActor
 struct CallHistoryViewModelTests {

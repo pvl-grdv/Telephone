@@ -30,7 +30,13 @@ final class CallHistoryViewEventTargetTests: XCTestCase {
         let didExecute = expectation(description: "Reloads updated history")
         let sut = makeSUT(recordsGet: UseCaseSpy(callBack: didExecute.fulfill))
 
-        sut.didUpdate(TruncatingCallHistory())
+        sut.didUpdate(
+            CallHistorySpy(
+                addCallback: {},
+                removeCallback: {},
+                removeAllCallback: {}
+            )
+        )
 
         wait(for: [didExecute], timeout: 1)
     }

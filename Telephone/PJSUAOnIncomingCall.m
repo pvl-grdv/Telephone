@@ -105,7 +105,7 @@ void PJSUAOnIncomingCall(pjsua_acc_id accountID, pjsua_call_id callID, pjsip_rx_
         IdentityHeaders(invite);
     if (identityHeaders.count > 0) {
         PJ_LOG(
-            4,
+            3,
             (
                 THIS_FILE,
                 "Incoming identity headers: %s",

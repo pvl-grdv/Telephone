@@ -91,7 +91,7 @@ struct CustomerContextView: View {
                     .frame(
                         minHeight: 62,
                         idealHeight: 86,
-                        maxHeight: .infinity
+                        maxHeight: 110
                     )
                     .background(.background, in: .rect(cornerRadius: 5))
                     .overlay {

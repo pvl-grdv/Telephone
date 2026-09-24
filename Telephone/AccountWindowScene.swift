@@ -25,6 +25,9 @@ private struct AccountWindowsScene: Scene {
             AccountWindowSceneContent(key: key.wrappedValue)
         }
         .defaultLaunchBehavior(.suppressed)
+        .defaultSize(width: 380, height: 300)
+        .windowResizability(.contentMinSize)
+        .windowIdealSize(.fitToContent)
     }
 }
 

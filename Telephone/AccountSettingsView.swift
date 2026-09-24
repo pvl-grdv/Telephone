@@ -1062,6 +1062,7 @@ struct AccountSettingsView: View {
                     )
             }
             .formStyle(.grouped)
+            .textFieldStyle(.roundedBorder)
             .padding(.horizontal, 6)
         } else {
             ContentUnavailableView {

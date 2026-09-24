@@ -33,19 +33,13 @@ struct CallWindowView: View {
         Group {
             if model.isTransfer {
                 transferContent
-                    .frame(width: 360, height: 160)
+                    .frame(width: 360)
             } else {
                 regularContent
-                    .frame(
-                        minWidth: 380,
-                        idealWidth: 420,
-                        maxWidth: .infinity,
-                        minHeight: 280,
-                        idealHeight: 318,
-                        maxHeight: .infinity
-                    )
+                    .frame(width: 420)
             }
         }
+        .windowResizeAnchor(.top)
         .navigationTitle(model.windowTitle)
         .windowDismissBehavior(
             model.windowDismissEnabled ? .enabled : .disabled

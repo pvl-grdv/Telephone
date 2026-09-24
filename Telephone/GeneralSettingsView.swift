@@ -60,6 +60,7 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .padding()
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 }

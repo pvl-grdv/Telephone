@@ -35,7 +35,10 @@ private struct CallWindowsScene: Scene {
             }
         }
         .defaultLaunchBehavior(.suppressed)
+        .defaultSize(width: 420, height: 120)
         .restorationBehavior(.disabled)
+        .windowResizability(.contentSize)
+        .windowIdealSize(.fitToContent)
         .windowBackgroundDragBehavior(.enabled)
         .windowLevel(keepOnTop ? .floating : .normal)
     }

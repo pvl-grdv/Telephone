@@ -35,6 +35,7 @@ struct IncomingCallSection: View {
                 )
             }
             .buttonStyle(.bordered)
+            .tint(.red)
             .keyboardShortcut(.cancelAction)
             .focused($focusedAction, equals: .decline)
             .disabled(!model.incomingActionsEnabled)
@@ -87,6 +88,7 @@ struct ActiveCallSection: View {
                         .frame(width: 16, height: 16)
                 }
                 .buttonStyle(.bordered)
+                .tint(.red)
                 .disabled(!model.hangUpEnabled)
                 .help(NSLocalizedString("End Call", comment: "End call button."))
                 .accessibilityLabel(
@@ -171,6 +173,7 @@ struct CallIdentityView: View {
 
             Text(status)
                 .font(.callout)
+                .monospacedDigit()
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }

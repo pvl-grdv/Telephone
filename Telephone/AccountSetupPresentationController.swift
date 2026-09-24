@@ -38,8 +38,10 @@ private struct AccountSetupHostedScene: Scene {
             FirstRunAccountSetupView(windowID: windowID)
         }
         .defaultLaunchBehavior(.suppressed)
+        .defaultSize(width: 520, height: 360)
         .restorationBehavior(.disabled)
         .windowResizability(.contentSize)
+        .windowIdealSize(.fitToContent)
         .commandsRemoved()
     }
 }

@@ -188,7 +188,8 @@ struct SoundSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .padding()
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .onAppear { model.activate() }
         .onDisappear { model.stopPreview() }
     }

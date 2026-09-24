@@ -128,6 +128,9 @@ private struct PreferencesHostedScene: Scene {
                 selectionChanged: { _ in }
             )
         }
+        .defaultSize(width: 600, height: 330)
+        .windowResizability(.contentSize)
+        .windowIdealSize(.fitToContent)
     }
 }
 

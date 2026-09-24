@@ -230,7 +230,9 @@ struct NetworkSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .padding()
+        .textFieldStyle(.roundedBorder)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .onAppear { model.refreshTransportPortPlaceholder() }
     }
 }

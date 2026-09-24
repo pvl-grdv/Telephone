@@ -33,6 +33,19 @@ enum SettingsSection: Int, CaseIterable, Hashable {
         case .network: "network"
         }
     }
+
+    var windowSize: CGSize {
+        switch self {
+        case .general:
+            CGSize(width: 600, height: 330)
+        case .accounts:
+            CGSize(width: 720, height: 560)
+        case .sound:
+            CGSize(width: 620, height: 420)
+        case .network:
+            CGSize(width: 640, height: 500)
+        }
+    }
 }
 
 @MainActor
@@ -155,7 +168,7 @@ struct SettingsRootView: View {
     let selectionChanged: (SettingsSection) -> Void
 
     var body: some View {
-        TabView(selection: $model.selection) {
+        TabView(selection: $model.selection.animation(.smooth(duration: 0.22))) {
             Tab(value: SettingsSection.general) {
                 GeneralSettingsView()
             } label: {
@@ -205,11 +218,10 @@ struct SettingsRootView: View {
             }
         }
         .frame(
-            minWidth: 650,
-            idealWidth: 720,
-            minHeight: 480,
-            idealHeight: 560
+            width: model.selection.windowSize.width,
+            height: model.selection.windowSize.height
         )
+        .windowResizeAnchor(.top)
         .sheet(isPresented: $model.showsAccountSetup) {
             AccountSetupSheet()
         }

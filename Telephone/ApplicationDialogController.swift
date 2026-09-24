@@ -146,8 +146,10 @@ private struct ApplicationDialogScene: Scene {
             }
         }
         .defaultLaunchBehavior(.suppressed)
+        .defaultSize(width: 430, height: 180)
         .restorationBehavior(.disabled)
         .windowResizability(.contentSize)
+        .windowIdealSize(.fitToContent)
         .windowLevel(.floating)
         .commandsRemoved()
     }

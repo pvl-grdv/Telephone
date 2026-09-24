@@ -260,6 +260,7 @@ struct AccountSetupView: View {
                 }
             }
             .formStyle(.grouped)
+            .textFieldStyle(.roundedBorder)
 
             HStack {
                 Spacer()
@@ -286,7 +287,7 @@ struct AccountSetupView: View {
             }
         }
         .padding(22)
-        .frame(minWidth: 480, idealWidth: 520, maxWidth: 560)
+        .frame(width: 520)
         .defaultFocus($focusedField, .fullName)
         .disabled(model.isSaving)
         .windowDismissBehavior(model.isSaving ? .disabled : .enabled)

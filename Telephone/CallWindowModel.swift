@@ -5,9 +5,10 @@
 
 import Foundation
 import Observation
+import UseCases
 
 struct CallCommandState: Equatable {
-    let phase: CallWindowModel.Phase
+    let phase: CallSession.Phase
     let muted: Bool
     let held: Bool
     let muteEnabled: Bool
@@ -18,9 +19,16 @@ struct CallCommandState: Equatable {
     let redialEnabled: Bool
 }
 
+struct CallControlSnapshot: Equatable {
+    let isConfirmed: Bool
+    let isMicrophoneMuted: Bool
+    let isOnLocalHold: Bool
+    let isOnRemoteHold: Bool
+}
+
 @MainActor
 @Observable
-final class CallWindowModel {
+final class CallSession {
     enum Phase: Equatable {
         case incoming
         case active
@@ -31,17 +39,8 @@ final class CallWindowModel {
     }
 
     var phase: Phase
-    var displayedName = ""
-    var identityDetail = ""
-    var contactOrganization = ""
-    var status = ""
-    var windowTitle = NSLocalizedString("Call Window Title", comment: "Call window title.")
-    var windowDismissEnabled = true
-
     var showsProgress = false
     var incomingActionsEnabled = true
-    var answerFocusRequest = 0
-    var callSurfaceFocusRequest = 0
 
     var hangUpEnabled = true
     var muteEnabled = false
@@ -49,16 +48,210 @@ final class CallWindowModel {
     var holdEnabled = false
     var held = false
     var transferEnabled = false
+    var redialEnabled = true
+
+    let isTransfer: Bool
+
+    @ObservationIgnored
+    private var call: Call?
+
+    @ObservationIgnored
+    private let controlSnapshot: (Call) -> CallControlSnapshot?
+
+    init(
+        isTransfer: Bool,
+        controlSnapshot: @escaping (Call) -> CallControlSnapshot? = { _ in nil }
+    ) {
+        self.isTransfer = isTransfer
+        self.controlSnapshot = controlSnapshot
+        phase = isTransfer ? .transferDestination : .active
+    }
+
+    func setCall(_ call: Call?) {
+        self.call = call
+        updateCallControls()
+    }
+
+    func showIncomingState() {
+        guard !isTransfer else { return }
+
+        phase = .incoming
+        incomingActionsEnabled = true
+        showsProgress = false
+    }
+
+    func showActiveState() {
+        phase = isTransfer ? .transferActive : .active
+    }
+
+    func showEndedState() {
+        phase = isTransfer ? .transferEnded : .ended
+        showsProgress = false
+    }
+
+    func showTransferDestinationState() {
+        guard isTransfer else { return }
+
+        phase = .transferDestination
+    }
+
+    func updateCallControls() {
+        guard
+            let call,
+            let controls = controlSnapshot(call)
+        else {
+            muted = false
+            muteEnabled = false
+            held = false
+            holdEnabled = false
+            transferEnabled = false
+            return
+        }
+
+        muted = controls.isMicrophoneMuted
+        muteEnabled = controls.isConfirmed
+        held = controls.isOnLocalHold
+        holdEnabled = controls.isConfirmed && !controls.isOnRemoteHold
+        transferEnabled =
+            !isTransfer && controls.isConfirmed && !controls.isOnRemoteHold
+    }
+
+    var commandState: CallCommandState {
+        CallCommandState(
+            phase: phase,
+            muted: muted,
+            held: held,
+            muteEnabled: muteEnabled,
+            holdEnabled: holdEnabled,
+            transferEnabled: transferEnabled,
+            incomingActionsEnabled: incomingActionsEnabled,
+            hangUpEnabled: hangUpEnabled,
+            redialEnabled: redialEnabled
+        )
+    }
+
+    private func matches(_ eventCall: Call) -> Bool {
+        guard let call else { return false }
+
+        return ObjectIdentifier(call as AnyObject)
+            == ObjectIdentifier(eventCall as AnyObject)
+    }
+}
+
+// AKSIPCall notifications are delivered on the main thread. The
+// @preconcurrency conformance bridges the legacy synchronous event-target
+// protocol to the main-actor session without adding an unnecessary async hop.
+extension CallSession: @preconcurrency CallEventTarget {
+    func didMake(_ call: Call) {
+        guard matches(call) else { return }
+
+        showActiveState()
+    }
+
+    func didReceive(_ call: Call) {
+        guard matches(call) else { return }
+
+        showIncomingState()
+    }
+
+    func isConnecting(_ call: Call) {
+        guard matches(call) else { return }
+
+        showActiveState()
+    }
+
+    func didConnect(_ call: Call) {
+        guard matches(call) else { return }
+
+        showActiveState()
+        showsProgress = false
+        updateCallControls()
+    }
+
+    func didDisconnect(_ call: Call) {
+        guard matches(call) else { return }
+
+        showEndedState()
+        incomingActionsEnabled = false
+        hangUpEnabled = false
+        updateCallControls()
+    }
+}
+
+@MainActor
+@Observable
+final class CallWindowModel {
+    let session: CallSession
+
+    var phase: CallSession.Phase {
+        get { session.phase }
+        set { session.phase = newValue }
+    }
+
+    var displayedName = ""
+    var identityDetail = ""
+    var contactOrganization = ""
+    var status = ""
+    var windowTitle = NSLocalizedString("Call Window Title", comment: "Call window title.")
+    var windowDismissEnabled = true
+
+    var showsProgress: Bool {
+        get { session.showsProgress }
+        set { session.showsProgress = newValue }
+    }
+
+    var incomingActionsEnabled: Bool {
+        get { session.incomingActionsEnabled }
+        set { session.incomingActionsEnabled = newValue }
+    }
+
+    var answerFocusRequest = 0
+    var callSurfaceFocusRequest = 0
+
+    var hangUpEnabled: Bool {
+        get { session.hangUpEnabled }
+        set { session.hangUpEnabled = newValue }
+    }
+
+    var muteEnabled: Bool {
+        get { session.muteEnabled }
+        set { session.muteEnabled = newValue }
+    }
+
+    var muted: Bool {
+        get { session.muted }
+        set { session.muted = newValue }
+    }
+
+    var holdEnabled: Bool {
+        get { session.holdEnabled }
+        set { session.holdEnabled = newValue }
+    }
+
+    var held: Bool {
+        get { session.held }
+        set { session.held = newValue }
+    }
+
+    var transferEnabled: Bool {
+        get { session.transferEnabled }
+        set { session.transferEnabled = newValue }
+    }
 
     var transferActionEnabled = false
     var transferCancelEnabled = true
     var transferPresentation: CallPresentationCoordinator?
-    var redialEnabled = true
+
+    var redialEnabled: Bool {
+        get { session.redialEnabled }
+        set { session.redialEnabled = newValue }
+    }
+
     var usesDTMFDisplay = false
 
     var accountDescription = ""
     var showsAccountInfo = false
-    let isTransfer: Bool
+    var isTransfer: Bool { session.isTransfer }
 
     var customerCompany = ""
     var customerKeys = ""
@@ -89,20 +282,15 @@ final class CallWindowModel {
     }
 
     func showIncomingState() {
-        guard !isTransfer else { return }
-
-        phase = .incoming
-        incomingActionsEnabled = true
-        showsProgress = false
+        session.showIncomingState()
     }
 
     func showActiveState() {
-        phase = isTransfer ? .transferActive : .active
+        session.showActiveState()
     }
 
     func showEndedState() {
-        phase = isTransfer ? .transferEnded : .ended
-        showsProgress = false
+        session.showEndedState()
 
         if !isTransfer {
             transferPresentation = nil
@@ -112,7 +300,7 @@ final class CallWindowModel {
     func showTransferDestinationState() {
         guard isTransfer else { return }
 
-        phase = .transferDestination
+        session.showTransferDestinationState()
         transferActionEnabled = false
     }
 
@@ -125,21 +313,14 @@ final class CallWindowModel {
     }
 
     var commandState: CallCommandState {
-        CallCommandState(
-            phase: phase,
-            muted: muted,
-            held: held,
-            muteEnabled: muteEnabled,
-            holdEnabled: holdEnabled,
-            transferEnabled: transferEnabled,
-            incomingActionsEnabled: incomingActionsEnabled,
-            hangUpEnabled: hangUpEnabled,
-            redialEnabled: redialEnabled
-        )
+        session.commandState
     }
 
-    init(isTransfer: Bool) {
-        self.isTransfer = isTransfer
-        phase = isTransfer ? .transferDestination : .active
+    init(session: CallSession) {
+        self.session = session
+    }
+
+    convenience init(isTransfer: Bool) {
+        self.init(session: CallSession(isTransfer: isTransfer))
     }
 }

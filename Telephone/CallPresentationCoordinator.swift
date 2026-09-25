@@ -13,6 +13,8 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     @nonobjc let id: String
 
     private weak var callController: CallController?
+    private let session: CallSession
+    private let callEventSource: AKSIPCallEventSource
     private let model: CallWindowModel
     private let transferCoordinator: CallTransferCoordinator
     private let customerContextCoordinator: CustomerContextCoordinator?
@@ -36,7 +38,23 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         id = callController.identifier
         self.callController = callController
 
-        let model = CallWindowModel(isTransfer: isTransfer)
+        let session = CallSession(isTransfer: isTransfer) { call in
+            guard let call = call as? AKSIPCall else { return nil }
+
+            return CallControlSnapshot(
+                isConfirmed: call.isConfirmed,
+                isMicrophoneMuted: call.isMicrophoneMuted,
+                isOnLocalHold: call.isOnLocalHold,
+                isOnRemoteHold: call.isOnRemoteHold
+            )
+        }
+        self.session = session
+        callEventSource = AKSIPCallEventSource(
+            center: .default,
+            target: session
+        )
+
+        let model = CallWindowModel(session: session)
         model.accountDescription = accountController.accountDescription
         model.showsAccountInfo =
             !isTransfer && accountController.callsShouldDisplayAccountInfo
@@ -152,10 +170,10 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     }
 
     func setCall(_ call: AKSIPCall?) {
+        session.setCall(call)
         transferCoordinator.resetForCallChange()
         enteredDTMF = NSMutableString()
         model.usesDTMFDisplay = false
-        updateCallControls()
 
         if call != nil {
             customerContextCoordinator?.loadIfNeeded()
@@ -243,20 +261,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     }
 
     func updateCallControls() {
-        guard let call = callController?.call else {
-            model.muteEnabled = false
-            model.holdEnabled = false
-            model.transferEnabled = false
-            return
-        }
-
-        let confirmed = call.isConfirmed
-        model.muted = call.isMicrophoneMuted
-        model.muteEnabled = confirmed
-        model.held = call.isOnLocalHold
-        model.holdEnabled = confirmed && !call.isOnRemoteHold
-        model.transferEnabled =
-            !model.isTransfer && confirmed && !call.isOnRemoteHold
+        session.updateCallControls()
     }
 
     func startCallTimer() {

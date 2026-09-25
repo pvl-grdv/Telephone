@@ -70,8 +70,72 @@ jobs:
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_INFO")" = "${{ github.run_number }}"
           test "$(/usr/libexec/PlistBuddy -c 'Print :TelephoneBuildCommit' "$APP_INFO")" = "${{ github.sha }}"
 
+      - name: Detect App Intents development signing
+        id: app-intents-signing
+        env:
+          APP_INTENTS_CERTIFICATE: ${{ secrets.APP_INTENTS_DEVELOPMENT_CERTIFICATE_P12_BASE64 }}
+          APP_INTENTS_CERTIFICATE_PASSWORD: ${{ secrets.APP_INTENTS_DEVELOPMENT_CERTIFICATE_PASSWORD }}
+          APP_INTENTS_DEVELOPMENT_TEAM_ID: ${{ secrets.APP_INTENTS_DEVELOPMENT_TEAM_ID }}
+        run: |
+          if [[ -n "$APP_INTENTS_CERTIFICATE" &&
+                -n "$APP_INTENTS_CERTIFICATE_PASSWORD" &&
+                -n "$APP_INTENTS_DEVELOPMENT_TEAM_ID" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Import App Intents development identity
+        if: steps.app-intents-signing.outputs.available == 'true'
+        env:
+          APP_INTENTS_CERTIFICATE: ${{ secrets.APP_INTENTS_DEVELOPMENT_CERTIFICATE_P12_BASE64 }}
+          APP_INTENTS_CERTIFICATE_PASSWORD: ${{ secrets.APP_INTENTS_DEVELOPMENT_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-intents-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 24)"
+          CERTIFICATE_PATH="$RUNNER_TEMP/app-intents-development.p12"
+
+          printf '%s' "$APP_INTENTS_CERTIFICATE" | base64 --decode > "$CERTIFICATE_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$APP_INTENTS_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+
+          DEFAULT_KEYCHAIN="$(security default-keychain -d user | tr -d '\"')"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" "$DEFAULT_KEYCHAIN"
+
+          IDENTITY_HASH="$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | awk 'NR == 1 { print $2 }')"
+          test -n "$IDENTITY_HASH"
+          echo "TELEPHONE_CODE_SIGN_IDENTITY=$IDENTITY_HASH" >> "$GITHUB_ENV"
+          echo "TELEPHONE_SIGNING_KEYCHAIN=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Run App Intents tests
+        if: steps.app-intents-signing.outputs.available == 'true'
+        env:
+          TELEPHONE_DEVELOPMENT_TEAM: ${{ secrets.APP_INTENTS_DEVELOPMENT_TEAM_ID }}
+        run: ./script/test_app_intents.sh --signed-development
+
       - name: Compile App Intents tests
-        run: bash ./script/test_app_intents.sh --build-only-unsigned
+        if: steps.app-intents-signing.outputs.available != 'true'
+        run: ./script/test_app_intents.sh --build-only-unsigned
+
+      - name: Explain App Intents runtime signing
+        if: steps.app-intents-signing.outputs.available != 'true'
+        run: |
+          {
+            echo "### App Intents runtime tests"
+            echo ""
+            echo "Runtime execution requires an Apple development identity shared by the app and UI-test runner."
+            echo "Configure APP_INTENTS_DEVELOPMENT_CERTIFICATE_P12_BASE64, APP_INTENTS_DEVELOPMENT_CERTIFICATE_PASSWORD, and APP_INTENTS_DEVELOPMENT_TEAM_ID to enable it."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run UI smoke tests
         run: ./script/test_ui.sh

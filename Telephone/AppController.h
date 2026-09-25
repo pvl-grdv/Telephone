@@ -33,6 +33,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (id)accountsCommandModelForSwiftUI;
 - (void)showPreferencesForSwiftUI;
 
+#if DEBUG
+- (void)showPreferencesForUITesting;
+- (void)showAccountSetupForUITesting;
+#endif
+
 - (BOOL)makeCallFromAppIntentWithDestination:(NSString *)destination
     NS_SWIFT_NAME(makeCallFromAppIntent(destination:));
 - (BOOL)setAccountAvailabilityFromAppIntentWithUUID:(NSString * _Nonnull)uuid

@@ -75,9 +75,17 @@ struct AccountSettingsView: View {
                 Button {
                     model.addAccount()
                 } label: {
-                    Image(systemName: "plus")
+                    Label(
+                        NSLocalizedString(
+                            "Add Account",
+                            comment: "Add account button."
+                        ),
+                        systemImage: "plus"
+                    )
+                    .labelStyle(.iconOnly)
                 }
                 .buttonStyle(.borderless)
+                .accessibilityIdentifier("settings.add-account")
                 .disabled(!model.canAddAccount)
                 .help(NSLocalizedString("Add Account", comment: "Add account button."))
 

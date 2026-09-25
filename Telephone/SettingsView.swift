@@ -18,6 +18,7 @@ struct SettingsRootView: View {
                     SettingsSection.general.title,
                     systemImage: SettingsSection.general.systemImage
                 )
+                .accessibilityIdentifier("settings.tab.general")
             }
 
             Tab(value: SettingsSection.accounts) {
@@ -31,6 +32,7 @@ struct SettingsRootView: View {
                     SettingsSection.accounts.title,
                     systemImage: SettingsSection.accounts.systemImage
                 )
+                .accessibilityIdentifier("settings.tab.accounts")
             }
 
             Tab(value: SettingsSection.sound) {
@@ -44,6 +46,7 @@ struct SettingsRootView: View {
                     SettingsSection.sound.title,
                     systemImage: SettingsSection.sound.systemImage
                 )
+                .accessibilityIdentifier("settings.tab.sound")
             }
 
             Tab(value: SettingsSection.network) {
@@ -57,6 +60,7 @@ struct SettingsRootView: View {
                     SettingsSection.network.title,
                     systemImage: SettingsSection.network.systemImage
                 )
+                .accessibilityIdentifier("settings.tab.network")
             }
         }
         .frame(

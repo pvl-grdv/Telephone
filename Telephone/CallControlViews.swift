@@ -38,6 +38,7 @@ struct IncomingCallSection: View {
             .buttonStyle(.bordered)
             .tint(.red)
             .keyboardShortcut(.cancelAction)
+            .accessibilityIdentifier("call.decline")
             .focused($focusedAction, equals: .decline)
             .disabled(!model.incomingActionsEnabled)
 
@@ -49,6 +50,7 @@ struct IncomingCallSection: View {
             }
             .buttonStyle(.borderedProminent)
             .keyboardShortcut(.defaultAction)
+            .accessibilityIdentifier("call.answer")
             .focused($focusedAction, equals: .answer)
             .disabled(!model.incomingActionsEnabled)
         }
@@ -93,6 +95,7 @@ struct ActiveCallSection: View {
                 .tint(.red)
                 .disabled(!model.hangUpEnabled)
                 .help(NSLocalizedString("End Call", comment: "End call button."))
+                .accessibilityIdentifier("call.end")
                 .accessibilityLabel(
                     NSLocalizedString("End Call", comment: "End call button.")
                 )
@@ -107,6 +110,7 @@ struct ActiveCallSection: View {
                         ? NSLocalizedString("Unmute", comment: "Unmute. Call menu item.")
                         : NSLocalizedString("Mute", comment: "Mute. Call menu item."),
                     isEnabled: model.muteEnabled,
+                    accessibilityIdentifier: "call.mute",
                     action: toggleMute
                 )
 
@@ -116,6 +120,7 @@ struct ActiveCallSection: View {
                         ? NSLocalizedString("Resume", comment: "Resume. Call menu item.")
                         : NSLocalizedString("Hold", comment: "Hold. Call menu item."),
                     isEnabled: model.holdEnabled,
+                    accessibilityIdentifier: "call.hold",
                     action: toggleHold
                 )
 
@@ -126,6 +131,7 @@ struct ActiveCallSection: View {
                         comment: "Transfer. Call menu item."
                     ),
                     isEnabled: model.transferEnabled,
+                    accessibilityIdentifier: "call.transfer",
                     action: showTransfer
                 )
             }
@@ -196,6 +202,7 @@ struct CallControlButton: View {
     let systemImage: String
     let help: String
     let isEnabled: Bool
+    let accessibilityIdentifier: String
     let action: () -> Void
 
     var body: some View {
@@ -206,6 +213,7 @@ struct CallControlButton: View {
         .buttonStyle(.bordered)
         .disabled(!isEnabled)
         .help(help)
+        .accessibilityIdentifier(accessibilityIdentifier)
         .accessibilityLabel(help)
     }
 }

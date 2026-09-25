@@ -678,6 +678,7 @@
             { "path": "TelephoneApp.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AboutTelephone.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "TelephoneAppIntents.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "UITestSupport.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallCommandAvailability.swift", "target-membership": [ "Telephone/compile-sources", "TelephonePresentationTests/compile-sources" ] },
             { "path": "CallCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
@@ -1249,6 +1250,7 @@
       "path": "TelephoneAppIntentsTests",
       "children": [
         { "path": "TelephoneAppIntentsTests.swift", "target-membership": [ "TelephoneAppIntentsTests/compile-sources" ] },
+        { "path": "TelephoneUISmokeTests.swift", "target-membership": [ "TelephoneAppIntentsTests/compile-sources" ] },
         { "path": "Info.plist" },
       ],
     }, {
@@ -1373,6 +1375,7 @@
         "RUNTIME_EXCEPTION_DEBUGGING_TOOL": "NO",
         "RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION": "NO",
         "RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION": "NO",
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS[config=Debug]": "DEBUG",
         "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
         "SWIFT_OBJC_BRIDGING_HEADER": "Telephone/Telephone-Bridging-Header.h",
         "SWIFT_STRICT_CONCURRENCY": "complete",

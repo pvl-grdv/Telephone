@@ -138,6 +138,7 @@ struct NetworkSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .accessibilityIdentifier("settings.network.content")
         .textFieldStyle(.roundedBorder)
         .padding(.horizontal, 12)
         .padding(.vertical, 8)

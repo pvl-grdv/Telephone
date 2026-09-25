@@ -73,6 +73,9 @@ jobs:
       - name: Compile App Intents tests
         run: bash ./script/test_app_intents.sh --build-only-unsigned
 
+      - name: Run UI smoke tests
+        run: ./script/test_ui.sh
+
       - name: Explain signing
         run: |
           {

@@ -207,7 +207,8 @@ struct AccountSetupView: View {
                         comment: "Account setup full name placeholder."
                     ),
                     invalid: model.fullNameInvalid,
-                    field: .fullName
+                    field: .fullName,
+                    accessibilityIdentifier: "account-setup.full-name"
                 )
 
                 setupField(
@@ -218,7 +219,8 @@ struct AccountSetupView: View {
                     text: $model.domain,
                     prompt: "example.com",
                     invalid: model.domainInvalid,
-                    field: .domain
+                    field: .domain,
+                    accessibilityIdentifier: "account-setup.domain"
                 )
 
                 setupField(
@@ -232,7 +234,8 @@ struct AccountSetupView: View {
                         comment: "Account setup username placeholder."
                     ),
                     invalid: model.usernameInvalid,
-                    field: .username
+                    field: .username,
+                    accessibilityIdentifier: "account-setup.username"
                 )
 
                 LabeledContent(
@@ -253,6 +256,7 @@ struct AccountSetupView: View {
                             )
                         )
                         .focused($focusedField, equals: .password)
+                        .accessibilityIdentifier("account-setup.password")
                         .onSubmit(submit)
 
                         validationIcon(model.passwordInvalid)
@@ -275,6 +279,7 @@ struct AccountSetupView: View {
                     action: cancel
                 )
                 .keyboardShortcut(.cancelAction)
+                .accessibilityIdentifier("account-setup.cancel")
 
                 Button(
                     NSLocalizedString(
@@ -284,10 +289,12 @@ struct AccountSetupView: View {
                     action: submit
                 )
                 .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("account-setup.done")
             }
         }
         .padding(22)
         .frame(width: 520)
+        .accessibilityIdentifier("account-setup.content")
         .defaultFocus($focusedField, .fullName)
         .disabled(model.isSaving)
         .windowDismissBehavior(model.isSaving ? .disabled : .enabled)
@@ -323,12 +330,14 @@ struct AccountSetupView: View {
         text: Binding<String>,
         prompt: String,
         invalid: Bool,
-        field: AccountSetupField
+        field: AccountSetupField,
+        accessibilityIdentifier: String
     ) -> some View {
         LabeledContent(title) {
             HStack(spacing: 8) {
                 TextField("", text: text, prompt: Text(prompt))
                     .focused($focusedField, equals: field)
+                    .accessibilityIdentifier(accessibilityIdentifier)
                     .onSubmit {
                         advanceFocus(after: field)
                     }

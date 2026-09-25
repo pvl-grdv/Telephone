@@ -218,6 +218,16 @@ NS_ASSUME_NONNULL_END
     [self.preferencesController showWindowCentered];
 }
 
+#if DEBUG
+- (void)showPreferencesForUITesting {
+    [self.preferencesController showWindowForUITesting];
+}
+
+- (void)showAccountSetupForUITesting {
+    [self.accountSetupPresentationController showFirstRun];
+}
+#endif
+
 - (BOOL)makeCallFromAppIntentWithDestination:(NSString *)destination {
     if (!self.isFinishedLaunching || ![self canMakeCall]) {
         return NO;
@@ -508,6 +518,12 @@ NS_ASSUME_NONNULL_END
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     [self.compositionRoot.defaultAppSettings registerDefaults];
     [self.compositionRoot.settingsMigration execute];
+
+    if ([TelephoneUITestSupport handleLaunchWithAppController:self]) {
+        [self setFinishedLaunching:YES];
+        return;
+    }
+
     [self configureUserAgent];
     [self configureUserNotifications];
     NSApp.servicesProvider = self;

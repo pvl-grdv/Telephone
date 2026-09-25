@@ -16,6 +16,11 @@ final class PreferencesController: NSObject, SoundIOPreferences {
 
     private lazy var sceneController = PreferencesSceneController(model: model)
 
+#if DEBUG
+    private lazy var uiTestSceneController =
+        PreferencesUITestSceneController(model: model)
+#endif
+
     private lazy var model = SettingsViewModel(
         accountModelFactory: { [unowned self] in
             AccountSettingsModel(preferencesController: self)
@@ -57,6 +62,12 @@ final class PreferencesController: NSObject, SoundIOPreferences {
         PerformanceSignposts.settings.emitEvent("OpenSettingsRequested")
         sceneController.show()
     }
+
+#if DEBUG
+    func showWindowForUITesting() {
+        uiTestSceneController.show()
+    }
+#endif
 
     func showAccounts() {
         model.selection = .accounts
@@ -157,3 +168,57 @@ private final class PreferencesSceneController {
         representation.environment.openSettings()
     }
 }
+
+
+#if DEBUG
+
+private struct PreferencesUITestHostedScene: Scene {
+    let model: SettingsViewModel
+
+    var body: some Scene {
+        Window(
+            NSLocalizedString(
+                "Telephone Settings",
+                comment: "Settings default window title."
+            ),
+            id: PreferencesUITestSceneController.sceneID
+        ) {
+            SettingsRootView(
+                model: model,
+                selectionChanged: { _ in }
+            )
+        }
+        .defaultLaunchBehavior(.suppressed)
+        .defaultSize(width: 600, height: 330)
+        .restorationBehavior(.disabled)
+        .windowResizability(.contentSize)
+        .windowIdealSize(.fitToContent)
+        .commandsRemoved()
+    }
+}
+
+@MainActor
+private final class PreferencesUITestSceneController {
+    static let sceneID = "telephone-ui-test-settings"
+
+    private let representation:
+        NSHostingSceneRepresentation<PreferencesUITestHostedScene>
+    private var installed = false
+
+    init(model: SettingsViewModel) {
+        representation = NSHostingSceneRepresentation {
+            PreferencesUITestHostedScene(model: model)
+        }
+    }
+
+    func show() {
+        if !installed {
+            installed = true
+            NSApplication.shared.addSceneRepresentation(representation)
+        }
+
+        representation.environment.openWindow(id: Self.sceneID)
+    }
+}
+
+#endif

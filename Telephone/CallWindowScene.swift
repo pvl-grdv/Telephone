@@ -19,7 +19,7 @@ private struct CallWindowsScene: Scene {
     var body: some Scene {
         WindowGroup(
             NSLocalizedString(
-                "Call",
+                "Call Window Title",
                 comment: "Call window scene title."
             ),
             id: CallWindowSceneController.sceneID,

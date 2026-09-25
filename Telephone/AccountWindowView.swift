@@ -6,6 +6,7 @@
 import Foundation
 import Observation
 import SwiftUI
+import UseCases
 
 enum AccountWindowDisplayState: Equatable {
     case offline
@@ -50,11 +51,25 @@ final class AccountSession {
     var shouldPresentRegistrationError = false
     var accountUnavailable = false
 
+    @ObservationIgnored
+    var userAgentDidFinishStarting: (() -> Void)?
+
     func resetRegistrationIntent() {
         attemptingToRegister = false
         attemptingToUnregister = false
         shouldPresentRegistrationError = false
     }
+}
+
+extension AccountSession: @preconcurrency UserAgentEventTarget {
+    func didFinishStarting(_ agent: UserAgent) {
+        userAgentDidFinishStarting?()
+    }
+
+    func didFinishStopping(_ agent: UserAgent) {}
+    func didDetectNAT(_ agent: UserAgent) {}
+    func didMakeCall(_ agent: UserAgent) {}
+    func didReceiveCall(_ agent: UserAgent) {}
 }
 
 struct RegistrarConnectionError: Equatable {

@@ -19,7 +19,6 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     private let transferCoordinator: CallTransferCoordinator
     private let customerContextCoordinator: CustomerContextCoordinator?
 
-    private var accountInfoObservation: NSKeyValueObservation?
     private let clock = ContinuousClock()
     private var callTimerTask: Task<Void, Never>?
     private var redialEnableTask: Task<Void, Never>?
@@ -85,17 +84,6 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         super.init()
 
         CallPresentationRegistry.shared.register(self, key: id)
-
-        guard !isTransfer else { return }
-
-        accountInfoObservation = accountController.observe(
-            \.callsShouldDisplayAccountInfo,
-            options: [.initial, .new]
-        ) { [weak self] _, change in
-            Task { @MainActor [weak self] in
-                self?.model.showsAccountInfo = change.newValue ?? false
-            }
-        }
     }
 
     @nonobjc
@@ -157,9 +145,11 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         cancelAutoClose()
         cancelIntermediateStatusRestore()
         customerContextCoordinator?.invalidate()
-        accountInfoObservation?.invalidate()
-        accountInfoObservation = nil
         CallPresentationRegistry.shared.unregister(key: id)
+    }
+
+    func setShowsAccountInfo(_ visible: Bool) {
+        model.showsAccountInfo = !model.isTransfer && visible
     }
 
     func setWindowTitle(_ value: String) {

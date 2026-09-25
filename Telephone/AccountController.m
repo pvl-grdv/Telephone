@@ -76,6 +76,14 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     _enabled = flag;
 }
 
+- (void)setCallsShouldDisplayAccountInfo:(BOOL)flag {
+    _callsShouldDisplayAccountInfo = flag;
+
+    for (CallController *callController in self.callControllers) {
+        [callController setShowsAccountInfo:flag];
+    }
+}
+
 - (BOOL)attemptingToRegisterAccount {
     return self.presentationCoordinator.attemptingToRegister;
 }
@@ -217,11 +225,6 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
      callHistoryViewEventTargetFactory:callHistoryViewEventTargetFactory
                                account:[[AccountControllerToAccountAdapter alloc] initWithController:self]
                               delegate:self];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(SIPUserAgentDidFinishStarting:)
-                                                 name:AKSIPUserAgentDidFinishStartingNotification
-                                               object:nil];
-    
     return self;
 }
 
@@ -233,8 +236,6 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     if ([[[self account] delegate] isEqual:self]) {
         [[self account] setDelegate:nil];
     }
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     [_presentationCoordinator invalidate];
 }
@@ -744,15 +745,14 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
 }
 
 
-#pragma mark - AKSIPUserAgent notifications
+#pragma mark - AKSIPUserAgent events
 
-- (void)SIPUserAgentDidFinishStarting:(NSNotification *)notification {
-    if (![[notification object] isStarted]) {
+- (void)userAgentDidFinishStarting {
+    if (![[self userAgent] isStarted]) {
         [self showOfflineState];
-        
         return;
     }
-    
+
     if ([self attemptingToRegisterAccount]) {
         [self registerAccount];
     } else if ([self attemptingToUnregisterAccount]) {

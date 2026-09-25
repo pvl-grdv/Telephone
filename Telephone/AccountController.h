@@ -58,6 +58,7 @@
 - (void)unregisterAccount;
 - (void)resetRegistrationIntent;
 - (void)disableAccount;
+- (void)userAgentDidFinishStarting;
 
 - (void)removeAccountFromUserAgent;
 

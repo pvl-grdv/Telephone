@@ -93,6 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showWindow:(nullable id)sender;
 - (void)close;
 - (void)callWindowDidClose;
+- (void)setShowsAccountInfo:(BOOL)visible;
 
 // Accepts an incoming call.
 - (void)acceptCall;

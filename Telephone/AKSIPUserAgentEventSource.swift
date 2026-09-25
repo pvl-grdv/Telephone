@@ -71,6 +71,8 @@ final class AKSIPUserAgentEventSource {
         nc.removeObserver(self, name: NSNotification.Name.AKSIPUserAgentDidFinishStarting, object: agent)
         nc.removeObserver(self, name: NSNotification.Name.AKSIPUserAgentDidFinishStopping, object: agent)
         nc.removeObserver(self, name: NSNotification.Name.AKSIPUserAgentDidDetectNAT, object: agent)
+        nc.removeObserver(self, name: NSNotification.Name.AKSIPCallCalling, object: nil)
+        nc.removeObserver(self, name: NSNotification.Name.AKSIPCallIncoming, object: nil)
     }
 
     @objc private func SIPUserAgentDidFinishStarting(_ notification: Notification) {

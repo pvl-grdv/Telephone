@@ -32,6 +32,7 @@ final class AccountPresentationCoordinator: NSObject {
     private let authenticationFailureController: AuthenticationFailureController
     private weak var accountDelegate: AccountPresentationCoordinatorDelegate?
     private let session: AccountSession
+    private let userAgentEventSource: AKSIPUserAgentEventSource
     private let model: AccountWindowModel
 
     private var callHistoryViewEventTarget: CallHistoryViewEventTarget?
@@ -69,7 +70,14 @@ final class AccountPresentationCoordinator: NSObject {
         accountDelegate = delegate
 
         let session = AccountSession()
+        session.userAgentDidFinishStarting = { [weak accountController] in
+            accountController?.userAgentDidFinishStarting()
+        }
         self.session = session
+        userAgentEventSource = AKSIPUserAgentEventSource(
+            target: session,
+            agent: userAgent
+        )
         model = AccountWindowModel(session: session)
 
         super.init()

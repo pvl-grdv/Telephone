@@ -138,6 +138,10 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     }
 }
 
+- (void)setShowsAccountInfo:(BOOL)visible {
+    [self.callPresentationCoordinator setShowsAccountInfo:visible];
+}
+
 - (BOOL)isCallUnhandled {
     return self.call.isMissed;
 }

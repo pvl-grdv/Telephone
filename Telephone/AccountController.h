@@ -56,6 +56,8 @@
 
 - (void)registerAccount;
 - (void)unregisterAccount;
+- (void)resetRegistrationIntent;
+- (void)disableAccount;
 
 - (void)removeAccountFromUserAgent;
 

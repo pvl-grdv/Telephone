@@ -39,6 +39,24 @@ enum AccountWindowDisplayState: Equatable {
     }
 }
 
+@MainActor
+@Observable
+final class AccountSession {
+    var state: AccountWindowDisplayState = .offline
+    var showsCallComposer = false
+
+    var attemptingToRegister = false
+    var attemptingToUnregister = false
+    var shouldPresentRegistrationError = false
+    var accountUnavailable = false
+
+    func resetRegistrationIntent() {
+        attemptingToRegister = false
+        attemptingToUnregister = false
+        shouldPresentRegistrationError = false
+    }
+}
+
 struct RegistrarConnectionError: Equatable {
     let registrar: String
     let details: String?
@@ -64,10 +82,28 @@ struct RegistrarConnectionError: Equatable {
 @MainActor
 @Observable
 final class AccountWindowModel {
-    var state: AccountWindowDisplayState = .offline
-    var showsCallComposer = false
+    let session: AccountSession
+
+    var state: AccountWindowDisplayState {
+        get { session.state }
+        set { session.state = newValue }
+    }
+
+    var showsCallComposer: Bool {
+        get { session.showsCallComposer }
+        set { session.showsCallComposer = newValue }
+    }
+
     var authenticationFailure: AuthenticationFailureModel?
     var registrarConnectionError: RegistrarConnectionError?
+
+    init(session: AccountSession) {
+        self.session = session
+    }
+
+    convenience init() {
+        self.init(session: AccountSession())
+    }
 }
 
 struct AccountWindowRootView: View {

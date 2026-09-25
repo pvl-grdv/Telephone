@@ -76,6 +76,38 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     _enabled = flag;
 }
 
+- (BOOL)attemptingToRegisterAccount {
+    return self.presentationCoordinator.attemptingToRegister;
+}
+
+- (void)setAttemptingToRegisterAccount:(BOOL)flag {
+    self.presentationCoordinator.attemptingToRegister = flag;
+}
+
+- (BOOL)attemptingToUnregisterAccount {
+    return self.presentationCoordinator.attemptingToUnregister;
+}
+
+- (void)setAttemptingToUnregisterAccount:(BOOL)flag {
+    self.presentationCoordinator.attemptingToUnregister = flag;
+}
+
+- (BOOL)shouldPresentRegistrationError {
+    return self.presentationCoordinator.shouldPresentRegistrationError;
+}
+
+- (void)setShouldPresentRegistrationError:(BOOL)flag {
+    self.presentationCoordinator.shouldPresentRegistrationError = flag;
+}
+
+- (BOOL)isAccountUnavailable {
+    return self.presentationCoordinator.accountUnavailable;
+}
+
+- (void)setAccountUnavailable:(BOOL)flag {
+    self.presentationCoordinator.accountUnavailable = flag;
+}
+
 - (BOOL)isAccountRegistered {
     return [[self account] isRegistered];
 }
@@ -223,6 +255,18 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
         [self setAttemptingToUnregisterAccount:YES];
     }
     [self setAccountRegistered:NO];
+}
+
+- (void)resetRegistrationIntent {
+    [self.presentationCoordinator resetRegistrationIntent];
+}
+
+- (void)disableAccount {
+    [[self callControllers] makeObjectsPerformSelector:@selector(close)];
+    [self removeAccountFromUserAgent];
+    [self setEnabled:NO];
+    [self resetRegistrationIntent];
+    [self hideWindow];
 }
 
 - (void)removeAccountFromUserAgent {

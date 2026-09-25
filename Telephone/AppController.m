@@ -357,17 +357,7 @@ NS_ASSUME_NONNULL_END
         
     } else {
         AccountController *controller = self.accountControllers[index];
-        
-        // Close all call windows hanging up all calls.
-        [[controller callControllers] makeObjectsPerformSelector:@selector(close)];
-        
-        // Remove account from the user agent.
-        [controller removeAccountFromUserAgent];
-        [controller setEnabled:NO];
-        [controller setAttemptingToRegisterAccount:NO];
-        [controller setAttemptingToUnregisterAccount:NO];
-        [controller setShouldPresentRegistrationError:NO];
-        [controller hideWindow];
+        [controller disableAccount];
     }
     
     [self.accountControllers updateCallsShouldDisplayAccountInfo];
@@ -454,9 +444,7 @@ NS_ASSUME_NONNULL_END
             for (AccountController *controller in self.accountControllers.enabled) {
                 if ([controller shouldPresentRegistrationError]) {
                     [self setShouldPresentUserAgentLaunchError:YES];
-                    [controller setAttemptingToRegisterAccount:NO];
-                    [controller setAttemptingToUnregisterAccount:NO];
-                    [controller setShouldPresentRegistrationError:NO];
+                    [controller resetRegistrationIntent];
                 }
             }
         }

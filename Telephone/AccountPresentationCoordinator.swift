@@ -31,7 +31,8 @@ final class AccountPresentationCoordinator: NSObject {
     private let account: Account
     private let authenticationFailureController: AuthenticationFailureController
     private weak var accountDelegate: AccountPresentationCoordinatorDelegate?
-    private let model = AccountWindowModel()
+    private let session: AccountSession
+    private let model: AccountWindowModel
 
     private var callHistoryViewEventTarget: CallHistoryViewEventTarget?
     private var callHistoryConfigured = false
@@ -67,6 +68,10 @@ final class AccountPresentationCoordinator: NSObject {
         )
         accountDelegate = delegate
 
+        let session = AccountSession()
+        self.session = session
+        model = AccountWindowModel(session: session)
+
         super.init()
 
         AccountPresentationRegistry.shared.register(self, key: windowKey)
@@ -96,6 +101,30 @@ final class AccountPresentationCoordinator: NSObject {
         .onAppear { [weak self] in
             self?.configureCallHistoryIfNeeded()
         }
+    }
+
+    var attemptingToRegister: Bool {
+        get { session.attemptingToRegister }
+        set { session.attemptingToRegister = newValue }
+    }
+
+    var attemptingToUnregister: Bool {
+        get { session.attemptingToUnregister }
+        set { session.attemptingToUnregister = newValue }
+    }
+
+    var shouldPresentRegistrationError: Bool {
+        get { session.shouldPresentRegistrationError }
+        set { session.shouldPresentRegistrationError = newValue }
+    }
+
+    var accountUnavailable: Bool {
+        get { session.accountUnavailable }
+        set { session.accountUnavailable = newValue }
+    }
+
+    func resetRegistrationIntent() {
+        session.resetRegistrationIntent()
     }
 
     func showAvailableState() {

@@ -72,10 +72,6 @@ NS_ASSUME_NONNULL_BEGIN
 // SIP URI for the redial.
 @property(nonatomic, copy, nullable) AKSIPURI *redialURI;
 
-// Timer to display intermediate call status. This status appears for the short period of time and then is being
-// replaced with the current call status.
-@property(nonatomic, strong, nullable) NSTimer *intermediateStatusTimer;
-
 // Call start time.
 @property(nonatomic, assign) NSTimeInterval callStartTime;
 
@@ -118,9 +114,6 @@ NS_ASSUME_NONNULL_BEGIN
 // Sets intermediate call status. This status appears for the short period of time and then is being replaced with the
 // current call status.
 - (void)setIntermediateStatus:(NSString * _Nonnull)newIntermediateStatus;
-
-// Method to be called when intermediate call status timer fires.
-- (void)intermediateStatusTimerTick:(NSTimer * _Nonnull)theTimer;
 
 - (void)prepareForCall;
 - (void)showEndedCallView;

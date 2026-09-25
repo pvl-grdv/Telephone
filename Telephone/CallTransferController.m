@@ -121,11 +121,6 @@
     [self setTransferActionEnabled:NO];
 }
 
-- (void)SIPCallDidConfirm:(NSNotification *)notification {
-    [super SIPCallDidConfirm:notification];
-    [self setTransferActionEnabled:YES];
-}
-
 - (void)SIPCallDidDisconnect:(NSNotification *)notification {
     [super SIPCallDidDisconnect:notification];
 
@@ -134,19 +129,9 @@
     }
 }
 
-- (void)SIPCallMediaDidBecomeActive:(NSNotification *)notification {
-    [super SIPCallMediaDidBecomeActive:notification];
-    [self setTransferActionEnabled:YES];
-}
-
 - (void)SIPCallDidLocalHold:(NSNotification *)notification {
     [super SIPCallDidLocalHold:notification];
     [self callDidHoldForTransfer];
-}
-
-- (void)SIPCallDidRemoteHold:(NSNotification *)notification {
-    [super SIPCallDidRemoteHold:notification];
-    [self setTransferActionEnabled:NO];
 }
 
 

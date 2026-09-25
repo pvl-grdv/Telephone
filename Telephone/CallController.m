@@ -51,9 +51,6 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 @property(nonatomic, strong) CallPresentationCoordinator *callPresentationCoordinator;
 @property(nonatomic, assign) BOOL didHandleWindowClose;
 
-// Closes call window.
-- (void)closeCallWindow;
-
 @end
 
 @implementation CallController
@@ -247,7 +244,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 
     // Optionally close call window.
     if ([self.defaults boolForKey:UserDefaultsKeys.autoCloseCallWindow] && ![self isKindOfClass:[CallTransferController class]]) {
-        [self performSelector:@selector(closeCallWindow) withObject:nil afterDelay:kCallWindowAutoCloseTime];
+        [self.callPresentationCoordinator scheduleAutoCloseAfter:kCallWindowAutoCloseTime];
     }
 }
 
@@ -261,9 +258,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     }
     
     // Cancel call window auto-close.
-    [NSObject cancelPreviousPerformRequestsWithTarget:self
-                                             selector:@selector(closeCallWindow)
-                                               object:nil];
+    [self.callPresentationCoordinator cancelAutoClose];
     
     // Replace plus character if needed.
     if ([[self accountController] substitutesPlusCharacter] &&
@@ -334,38 +329,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
 }
 
 - (void)setIntermediateStatus:(NSString *)newIntermediateStatus {
-    if ([self intermediateStatusTimer] != nil) {
-        [[self intermediateStatusTimer] invalidate];
-    }
-    
-    [self.callPresentationCoordinator stopCallTimer];
-    [self setStatus:newIntermediateStatus];
-    [self setIntermediateStatusTimer:
-     [NSTimer scheduledTimerWithTimeInterval:3.0
-                                      target:self
-                                    selector:@selector(intermediateStatusTimerTick:)
-                                    userInfo:nil
-                                     repeats:NO]];
-}
-
-- (void)intermediateStatusTimerTick:(NSTimer *)theTimer {
-    if ([[self call] isOnLocalHold]) {
-        [self setStatus:NSLocalizedString(@"on hold", @"Call on local hold status text.")];
-    } else if ([[self call] isOnRemoteHold]) {
-        [self setStatus:
-         NSLocalizedString(@"on remote hold", @"Call on remote hold status text.")];
-    } else if ([[self call] isMicrophoneMuted]) {
-        [self setStatus:
-         NSLocalizedString(@"mic muted", @"Microphone muted status text.")];
-    } else if ([[self call] isActive]) {
-        [self.callPresentationCoordinator startCallTimer];
-    }
-    
-    [self setIntermediateStatusTimer:nil];
-}
-
-- (void)closeCallWindow {
-    [self close];
+    [self.callPresentationCoordinator showIntermediateStatus:newIntermediateStatus];
 }
 
 - (void)prepareForCall {
@@ -543,11 +507,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     [self.callPresentationCoordinator setHangUpEnabled:NO];
     [self.callPresentationCoordinator setIncomingActionsEnabled:NO];
     
-    [NSTimer scheduledTimerWithTimeInterval:kRedialButtonReenableTime
-                                     target:self.callPresentationCoordinator
-                                   selector:@selector(enableRedialButtonTick:)
-                                   userInfo:nil
-                                    repeats:NO];
+    [self.callPresentationCoordinator scheduleRedialEnableAfter:kRedialButtonReenableTime];
     
     [self removeOrShowUserNotificationOnDisconnectIfNeeded];
     
@@ -557,9 +517,7 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     // "Automatically close call windows" setting was enabled.
     if ([self.defaults boolForKey:UserDefaultsKeys.autoCloseCallWindow] &&
         ![self isKindOfClass:[CallTransferController class]]) {
-        [self performSelector:@selector(closeCallWindow)
-                   withObject:nil
-                   afterDelay:kCallWindowAutoCloseTime];
+        [self.callPresentationCoordinator scheduleAutoCloseAfter:kCallWindowAutoCloseTime];
     }
 }
 

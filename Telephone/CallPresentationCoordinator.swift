@@ -20,7 +20,11 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     private let customerContextCoordinator: CustomerContextCoordinator?
 
     private var accountInfoObservation: NSKeyValueObservation?
-    private var callTimer: Foundation.Timer?
+    private let clock = ContinuousClock()
+    private var callTimerTask: Task<Void, Never>?
+    private var redialEnableTask: Task<Void, Never>?
+    private var autoCloseTask: Task<Void, Never>?
+    private var intermediateStatusTask: Task<Void, Never>?
     private var enteredDTMF = NSMutableString()
     private var closeNotificationGate = CallWindowCloseNotificationGate()
     private var activeCallInterval: OSSignpostIntervalState?
@@ -149,6 +153,9 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     func invalidate() {
         endActiveCallInterval()
         stopCallTimer()
+        cancelRedialEnable()
+        cancelAutoClose()
+        cancelIntermediateStatusRestore()
         customerContextCoordinator?.invalidate()
         accountInfoObservation?.invalidate()
         accountInfoObservation = nil
@@ -170,6 +177,9 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     }
 
     func setCall(_ call: AKSIPCall?) {
+        stopCallTimer()
+        cancelRedialEnable()
+        cancelIntermediateStatusRestore()
         session.setCall(call)
         transferCoordinator.resetForCallChange()
         enteredDTMF = NSMutableString()
@@ -217,6 +227,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         model.showEndedState()
         endActiveCallInterval()
         stopCallTimer()
+        cancelIntermediateStatusRestore()
         customerContextCoordinator?.loadIfNeeded()
     }
 
@@ -262,33 +273,99 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
     func updateCallControls() {
         session.updateCallControls()
+
+        if model.isTransfer {
+            transferCoordinator.setActionEnabled(session.holdEnabled)
+        }
     }
 
     func startCallTimer() {
-        guard callTimer?.isValid != true else { return }
+        guard callTimerTask == nil else { return }
 
         updateCallDuration()
 
-        let timer = Foundation.Timer.scheduledTimer(
-            withTimeInterval: 1.0,
-            repeats: true
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
+        let clock = clock
+        callTimerTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await clock.sleep(for: .seconds(1))
+                } catch {
+                    return
+                }
+
+                guard !Task.isCancelled else { return }
                 self?.updateCallDuration()
             }
         }
-        timer.tolerance = 0.1
-        callTimer = timer
     }
 
     func stopCallTimer() {
-        callTimer?.invalidate()
-        callTimer = nil
+        callTimerTask?.cancel()
+        callTimerTask = nil
     }
 
-    @objc
-    func enableRedialButtonTick(_ timer: Foundation.Timer) {
-        model.redialEnabled = true
+    @objc(scheduleRedialEnableAfter:)
+    func scheduleRedialEnable(after delay: TimeInterval) {
+        cancelRedialEnable()
+
+        let clock = clock
+        let duration = sleepDuration(for: delay)
+        redialEnableTask = Task { @MainActor [weak self] in
+            do {
+                try await clock.sleep(for: duration)
+            } catch {
+                return
+            }
+
+            guard let self, !Task.isCancelled else { return }
+            redialEnableTask = nil
+            model.redialEnabled = true
+        }
+    }
+
+    @objc(scheduleAutoCloseAfter:)
+    func scheduleAutoClose(after delay: TimeInterval) {
+        cancelAutoClose()
+
+        let clock = clock
+        let duration = sleepDuration(for: delay)
+        autoCloseTask = Task { @MainActor [weak self] in
+            do {
+                try await clock.sleep(for: duration)
+            } catch {
+                return
+            }
+
+            guard let self, !Task.isCancelled else { return }
+            autoCloseTask = nil
+            callController?.close()
+        }
+    }
+
+    func cancelAutoClose() {
+        autoCloseTask?.cancel()
+        autoCloseTask = nil
+    }
+
+    @objc(showIntermediateStatus:)
+    func showIntermediateStatus(_ value: String) {
+        cancelIntermediateStatusRestore()
+        stopCallTimer()
+        callController?.status = value
+
+        let clock = clock
+        let duration = sleepDuration(for: 3)
+        intermediateStatusTask = Task { @MainActor [weak self] in
+            do {
+                try await clock.sleep(for: duration)
+            } catch {
+                return
+            }
+
+            guard let self, !Task.isCancelled else { return }
+            intermediateStatusTask = nil
+            restoreStatusAfterIntermediateMessage()
+        }
     }
 
     func callDidHoldForTransfer() {
@@ -321,6 +398,45 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
     func redial() {
         callController?.redial()
+    }
+
+    private func cancelRedialEnable() {
+        redialEnableTask?.cancel()
+        redialEnableTask = nil
+    }
+
+    private func cancelIntermediateStatusRestore() {
+        intermediateStatusTask?.cancel()
+        intermediateStatusTask = nil
+    }
+
+    private func sleepDuration(for interval: TimeInterval) -> Duration {
+        .milliseconds(Int64((max(0, interval) * 1_000).rounded()))
+    }
+
+    private func restoreStatusAfterIntermediateMessage() {
+        guard let callController, let call = callController.call else {
+            return
+        }
+
+        if call.isOnLocalHold {
+            callController.status = NSLocalizedString(
+                "on hold",
+                comment: "Call on local hold status text."
+            )
+        } else if call.isOnRemoteHold {
+            callController.status = NSLocalizedString(
+                "on remote hold",
+                comment: "Call on remote hold status text."
+            )
+        } else if call.isMicrophoneMuted {
+            callController.status = NSLocalizedString(
+                "mic muted",
+                comment: "Microphone muted status text."
+            )
+        } else if call.isActive {
+            startCallTimer()
+        }
     }
 
     private func beginActiveCallIntervalIfNeeded() {

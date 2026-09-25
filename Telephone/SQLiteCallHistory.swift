@@ -19,25 +19,13 @@ import UseCases
 @CallHistoryActor
 final class SQLiteCallHistory {
     private let accountUUID: String
-    private nonisolated(unsafe) var database: OpaquePointer?
+    private var connection: SQLiteConnection?
 
     init(databaseURL: URL, accountUUID: String) {
         self.accountUUID = accountUUID
 
-        if sqlite3_open_v2(
-            databaseURL.path,
-            &database,
-            SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX,
-            nil
-        ) != SQLITE_OK {
-            let message = database.map { String(cString: sqlite3_errmsg($0)) } ?? "Unknown SQLite error"
-            NSLog("Could not open call history database: %@", message)
-            sqlite3_close(database)
-            database = nil
-            return
-        }
-
         do {
+            connection = try SQLiteConnection(url: databaseURL)
             try execute("PRAGMA foreign_keys = ON")
             try execute("PRAGMA journal_mode = WAL")
             try execute("PRAGMA synchronous = NORMAL")
@@ -45,15 +33,12 @@ final class SQLiteCallHistory {
             try migrateSchema()
         } catch {
             NSLog("Could not initialize call history database: %@", String(describing: error))
+            connection = nil
         }
     }
 
-    deinit {
-        sqlite3_close(database)
-    }
-
     func migrateLegacyPropertyList(at url: URL) {
-        guard database != nil, FileManager.default.fileExists(atPath: url.path) else { return }
+        guard connection != nil, FileManager.default.fileExists(atPath: url.path) else { return }
 
         do {
             if try hasMigrationMarker(for: url) {
@@ -76,7 +61,7 @@ final class SQLiteCallHistory {
 
 extension SQLiteCallHistory: CallHistory {
     var allRecords: [CallHistoryRecord] {
-        guard database != nil else { return [] }
+        guard connection != nil else { return [] }
 
         let sql = """
         SELECT user, host, display_name, date, duration, incoming, missed
@@ -87,18 +72,17 @@ extension SQLiteCallHistory: CallHistory {
 
         do {
             let statement = try prepare(sql)
-            defer { sqlite3_finalize(statement) }
             try bind(accountUUID, at: 1, to: statement)
 
             var result: [CallHistoryRecord] = []
-            while sqlite3_step(statement) == SQLITE_ROW {
+            while statement.step() == SQLITE_ROW {
                 let user = string(at: 0, from: statement)
                 let host = string(at: 1, from: statement)
                 let displayName = string(at: 2, from: statement)
-                let date = Date(timeIntervalSinceReferenceDate: sqlite3_column_double(statement, 3))
-                let duration = Int(sqlite3_column_int64(statement, 4))
-                let incoming = sqlite3_column_int(statement, 5) != 0
-                let missed = sqlite3_column_int(statement, 6) != 0
+                let date = Date(timeIntervalSinceReferenceDate: statement.double(at: 3))
+                let duration = Int(statement.int64(at: 4))
+                let incoming = statement.int(at: 5) != 0
+                let missed = statement.int(at: 6) != 0
 
                 result.append(
                     CallHistoryRecord(
@@ -128,7 +112,6 @@ extension SQLiteCallHistory: CallHistory {
     func remove(_ record: CallHistoryRecord) {
         do {
             let statement = try prepare("DELETE FROM calls WHERE account_uuid = ? AND identifier = ?")
-            defer { sqlite3_finalize(statement) }
             try bind(accountUUID, at: 1, to: statement)
             try bind(record.identifier, at: 2, to: statement)
             try stepDone(statement)
@@ -140,7 +123,6 @@ extension SQLiteCallHistory: CallHistory {
     func removeAll() {
         do {
             let statement = try prepare("DELETE FROM calls WHERE account_uuid = ?")
-            defer { sqlite3_finalize(statement) }
             try bind(accountUUID, at: 1, to: statement)
             try stepDone(statement)
         } catch {
@@ -157,7 +139,7 @@ private extension SQLiteCallHistory {
     func migrateSchema() throws {
         var version = try userVersion()
         guard version <= Self.schemaVersion else {
-            throw SQLiteCallHistoryError.unsupportedSchema(version)
+            throw SQLiteStoreError.unsupportedSchema(version)
         }
 
         if version == 0 {
@@ -179,11 +161,10 @@ private extension SQLiteCallHistory {
 
     func userVersion() throws -> Int {
         let statement = try prepare("PRAGMA user_version")
-        defer { sqlite3_finalize(statement) }
-        guard sqlite3_step(statement) == SQLITE_ROW else {
-            throw SQLiteCallHistoryError.sqlite("Could not read SQLite schema version")
+        guard statement.step() == SQLITE_ROW else {
+            throw SQLiteStoreError.sqlite("Could not read SQLite schema version")
         }
-        return Int(sqlite3_column_int(statement, 0))
+        return Int(statement.int(at: 0))
     }
 
     func createSchemaVersion1() throws {
@@ -234,11 +215,10 @@ private extension SQLiteCallHistory {
             WHERE party_id IS NULL
             """
         )
-        defer { sqlite3_finalize(statement) }
 
         var pending: [(rowID: Int64, partyID: Int64)] = []
-        while sqlite3_step(statement) == SQLITE_ROW {
-            let rowID = sqlite3_column_int64(statement, 0)
+        while statement.step() == SQLITE_ROW {
+            let rowID = statement.int64(at: 0)
             let user = string(at: 1, from: statement)
             let host = string(at: 2, from: statement)
             let displayName = string(at: 3, from: statement)
@@ -254,9 +234,8 @@ private extension SQLiteCallHistory {
             let update = try prepare(
                 "UPDATE calls SET party_id = ? WHERE rowid = ?"
             )
-            defer { sqlite3_finalize(update) }
-            sqlite3_bind_int64(update, 1, item.partyID)
-            sqlite3_bind_int64(update, 2, item.rowID)
+            sqlite3_bind_int64(update.handle, 1, item.partyID)
+            sqlite3_bind_int64(update.handle, 2, item.rowID)
             try stepDone(update)
         }
     }
@@ -276,12 +255,11 @@ private extension SQLiteCallHistory {
             LIMIT 1
             """
         )
-        defer { sqlite3_finalize(lookup) }
         try bind(address.kind, at: 1, to: lookup)
         try bind(address.normalizedValue, at: 2, to: lookup)
 
-        if sqlite3_step(lookup) == SQLITE_ROW {
-            let partyID = sqlite3_column_int64(lookup, 0)
+        if lookup.step() == SQLITE_ROW {
+            let partyID = lookup.int64(at: 0)
             if !displayName.isEmpty {
                 let update = try prepare(
                     """
@@ -294,10 +272,9 @@ private extension SQLiteCallHistory {
                     WHERE id = ?
                     """
                 )
-                defer { sqlite3_finalize(update) }
                 try bind(displayName, at: 1, to: update)
-                sqlite3_bind_double(update, 2, Date().timeIntervalSinceReferenceDate)
-                sqlite3_bind_int64(update, 3, partyID)
+                sqlite3_bind_double(update.handle, 2, Date().timeIntervalSinceReferenceDate)
+                sqlite3_bind_int64(update.handle, 3, partyID)
                 try stepDone(update)
             }
             return partyID
@@ -306,19 +283,18 @@ private extension SQLiteCallHistory {
         let createParty = try prepare(
             "INSERT INTO parties (display_name, updated_at) VALUES (?, ?)"
         )
-        defer { sqlite3_finalize(createParty) }
         try bind(displayName, at: 1, to: createParty)
         sqlite3_bind_double(
-            createParty,
+            createParty.handle,
             2,
             Date().timeIntervalSinceReferenceDate
         )
         try stepDone(createParty)
 
-        guard let database else {
-            throw SQLiteCallHistoryError.databaseUnavailable
+        guard let connection else {
+            throw SQLiteStoreError.databaseUnavailable
         }
-        let partyID = sqlite3_last_insert_rowid(database)
+        let partyID = connection.lastInsertRowID
 
         let createAddress = try prepare(
             """
@@ -327,8 +303,7 @@ private extension SQLiteCallHistory {
             VALUES (?, ?, ?, ?, '')
             """
         )
-        defer { sqlite3_finalize(createAddress) }
-        sqlite3_bind_int64(createAddress, 1, partyID)
+        sqlite3_bind_int64(createAddress.handle, 1, partyID)
         try bind(address.kind, at: 2, to: createAddress)
         try bind(address.value, at: 3, to: createAddress)
         try bind(address.normalizedValue, at: 4, to: createAddress)
@@ -361,18 +336,17 @@ private extension SQLiteCallHistory {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
         )
-        defer { sqlite3_finalize(statement) }
 
         try bind(record.identifier, at: 1, to: statement)
         try bind(accountUUID, at: 2, to: statement)
         try bind(record.uri.user, at: 3, to: statement)
         try bind(record.uri.host, at: 4, to: statement)
         try bind(record.uri.displayName, at: 5, to: statement)
-        sqlite3_bind_double(statement, 6, record.date.timeIntervalSinceReferenceDate)
-        sqlite3_bind_int64(statement, 7, sqlite3_int64(record.duration))
-        sqlite3_bind_int(statement, 8, record.isIncoming ? 1 : 0)
-        sqlite3_bind_int(statement, 9, record.isMissed ? 1 : 0)
-        sqlite3_bind_int64(statement, 10, partyID)
+        sqlite3_bind_double(statement.handle, 6, record.date.timeIntervalSinceReferenceDate)
+        sqlite3_bind_int64(statement.handle, 7, sqlite3_int64(record.duration))
+        sqlite3_bind_int(statement.handle, 8, record.isIncoming ? 1 : 0)
+        sqlite3_bind_int(statement.handle, 9, record.isMissed ? 1 : 0)
+        sqlite3_bind_int64(statement.handle, 10, partyID)
 
         try stepDone(statement)
     }
@@ -381,9 +355,8 @@ private extension SQLiteCallHistory {
         let statement = try prepare(
             "SELECT 1 FROM legacy_call_history_migrations WHERE account_uuid = ? LIMIT 1"
         )
-        defer { sqlite3_finalize(statement) }
         try bind(accountUUID, at: 1, to: statement)
-        return sqlite3_step(statement) == SQLITE_ROW
+        return statement.step() == SQLITE_ROW
     }
 
     func markMigrated(_ url: URL) throws {
@@ -394,10 +367,9 @@ private extension SQLiteCallHistory {
             VALUES (?, ?, ?)
             """
         )
-        defer { sqlite3_finalize(statement) }
         try bind(accountUUID, at: 1, to: statement)
         try bind(url.path, at: 2, to: statement)
-        sqlite3_bind_double(statement, 3, Date().timeIntervalSinceReferenceDate)
+        sqlite3_bind_double(statement.handle, 3, Date().timeIntervalSinceReferenceDate)
         try stepDone(statement)
     }
 
@@ -422,75 +394,39 @@ private extension SQLiteCallHistory {
     }
 
     func transaction(_ body: () throws -> Void) throws {
-        try execute("BEGIN IMMEDIATE")
-        do {
-            try body()
-            try execute("COMMIT")
-        } catch {
-            try? execute("ROLLBACK")
-            throw error
+        guard let connection else {
+            throw SQLiteStoreError.databaseUnavailable
         }
+        try connection.transaction(body)
     }
 
     func execute(_ sql: String) throws {
-        guard let database else { throw SQLiteCallHistoryError.databaseUnavailable }
-
-        var errorMessage: UnsafeMutablePointer<CChar>?
-        let result = sqlite3_exec(database, sql, nil, nil, &errorMessage)
-        guard result == SQLITE_OK else {
-            let message = errorMessage.map { String(cString: $0) } ?? String(cString: sqlite3_errmsg(database))
-            sqlite3_free(errorMessage)
-            throw SQLiteCallHistoryError.sqlite(message)
+        guard let connection else {
+            throw SQLiteStoreError.databaseUnavailable
         }
+        try connection.execute(sql)
     }
 
-    func prepare(_ sql: String) throws -> OpaquePointer {
-        guard let database else { throw SQLiteCallHistoryError.databaseUnavailable }
-
-        var statement: OpaquePointer?
-        guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK, let statement else {
-            throw SQLiteCallHistoryError.sqlite(String(cString: sqlite3_errmsg(database)))
+    func prepare(_ sql: String) throws -> SQLiteStatement {
+        guard let connection else {
+            throw SQLiteStoreError.databaseUnavailable
         }
-        return statement
+        return try connection.prepare(sql)
     }
 
-    func bind(_ value: String, at index: Int32, to statement: OpaquePointer) throws {
-        let result = value.withCString {
-            sqlite3_bind_text(statement, index, $0, -1, sqliteTransient)
-        }
-        guard result == SQLITE_OK else {
-            throw SQLiteCallHistoryError.sqlite(database.map { String(cString: sqlite3_errmsg($0)) } ?? "Bind failed")
-        }
+    func bind(
+        _ value: String,
+        at index: Int32,
+        to statement: SQLiteStatement
+    ) throws {
+        try statement.bind(value, at: index)
     }
 
-    func stepDone(_ statement: OpaquePointer) throws {
-        guard sqlite3_step(statement) == SQLITE_DONE else {
-            throw SQLiteCallHistoryError.sqlite(database.map { String(cString: sqlite3_errmsg($0)) } ?? "SQLite step failed")
-        }
+    func stepDone(_ statement: SQLiteStatement) throws {
+        try statement.stepDone()
     }
 
-    func string(at index: Int32, from statement: OpaquePointer) -> String {
-        guard let value = sqlite3_column_text(statement, index) else { return "" }
-        return String(cString: value)
+    func string(at index: Int32, from statement: SQLiteStatement) -> String {
+        statement.string(at: index)
     }
 }
-
-
-private enum SQLiteCallHistoryError: Error, CustomStringConvertible {
-    case databaseUnavailable
-    case unsupportedSchema(Int)
-    case sqlite(String)
-
-    var description: String {
-        switch self {
-        case .databaseUnavailable:
-            return "SQLite database is unavailable"
-        case let .unsupportedSchema(version):
-            return "SQLite schema version \(version) is newer than this Telephone build supports"
-        case let .sqlite(message):
-            return message
-        }
-    }
-}
-
-private let sqliteTransient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)

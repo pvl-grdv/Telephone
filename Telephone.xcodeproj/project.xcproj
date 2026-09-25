@@ -154,6 +154,7 @@
             },
             { "path": "CustomerContextStore.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "TelephoneDatabaseSchema.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "SQLiteSupport.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SQLiteCallHistory.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SQLiteCallHistoryFactory.swift", "target-membership": [ "Telephone/compile-sources" ] },
             {

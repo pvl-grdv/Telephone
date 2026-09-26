@@ -12,16 +12,14 @@ import UseCases
 extension AKSIPUserAgent {
     private final let storage = SIPUserAgentStorage()
 
-    public var delegate: (any AKSIPUserAgentDelegate)? {
-        get { storage.delegate }
-        set {
-            if let oldDelegate = storage.delegate, oldDelegate !== newValue {
-                unsubscribe(oldDelegate, from: self)
+    public weak var delegate: (any AKSIPUserAgentDelegate)? {
+        didSet {
+            if let oldValue, oldValue !== delegate {
+                unsubscribe(oldValue, from: self)
             }
-            if let newValue, storage.delegate !== newValue {
-                subscribe(newValue, to: self)
+            if let delegate, oldValue !== delegate {
+                subscribe(delegate, to: self)
             }
-            storage.delegate = newValue
         }
     }
 
@@ -45,7 +43,7 @@ extension AKSIPUserAgent {
     }
 
     public var hasUnansweredIncomingCalls: Bool {
-        storage.accounts.contains(\.hasUnansweredIncomingCalls)
+        storage.accounts.contains { $0.hasUnansweredIncomingCalls }
     }
 
     public var callData: UnsafeMutablePointer<AKSIPUserAgentCallData> {
@@ -77,12 +75,12 @@ extension AKSIPUserAgent {
         }
     }
 
-    public var STUNServerHost: String {
+    public var stunServerHost: String {
         get { storage.stunServerHost }
         set { storage.stunServerHost = newValue }
     }
 
-    public var STUNServerPort: UInt {
+    public var stunServerPort: UInt {
         get { storage.stunServerPort }
         set {
             storage.stunServerPort =
@@ -155,6 +153,7 @@ extension AKSIPUserAgent {
         storage.parser!
     }
 
+    @objc(sharedUserAgent)
     public class func shared() -> AKSIPUserAgent {
         SIPUserAgentShared.instance
     }
@@ -176,7 +175,7 @@ extension AKSIPUserAgent {
     }
 
     deinit {
-        if let delegate = storage.delegate {
+        if let delegate {
             unsubscribe(delegate, from: self)
         }
         storage.shutdown()
@@ -271,7 +270,7 @@ extension AKSIPUserAgent {
            delegate.responds(
             to: NSSelectorFromString("SIPUserAgentShouldAddAccount:")
            ),
-           delegate.sipUserAgentShouldAddAccount?(account) == false
+           delegate.SIPUserAgentShouldAddAccount?(account) == false
         {
             return false
         }
@@ -299,7 +298,7 @@ extension AKSIPUserAgent {
         config.rtp_cfg.port = 4_000
 
         if usesQoS {
-            config.rtp_cfg.qos_params.flags = PJ_QOS_PARAM_HAS_DSCP
+            config.rtp_cfg.qos_params.flags = UInt8(PJ_QOS_PARAM_HAS_DSCP.rawValue)
             config.rtp_cfg.qos_params.dscp_val = 46
         }
 
@@ -410,6 +409,7 @@ extension AKSIPUserAgent {
         pjsua_call_hangup_all()
     }
 
+    @objc(startRingbackForCall:)
     public func startRingback(for call: AKSIPCall) {
         guard storage.callData.indices.contains(call.identifier) else {
             return
@@ -430,6 +430,7 @@ extension AKSIPUserAgent {
         }
     }
 
+    @objc(stopRingbackForCall:)
     public func stopRingback(for call: AKSIPCall) {
         guard storage.callData.indices.contains(call.identifier) else {
             return
@@ -608,13 +609,13 @@ extension AKSIPUserAgent {
             )
         }
 
-        if !STUNServerHost.isEmpty {
+        if !stunServerHost.isEmpty {
             userAgentConfig.stun_srv_cnt = 1
-            let server = STUNServerPort == 3_478
-                ? ServiceAddress(host: STUNServerHost)
+            let server = stunServerPort == 3_478
+                ? ServiceAddress(host: stunServerHost)
                 : ServiceAddress(
-                    host: STUNServerHost,
-                    port: String(STUNServerPort)
+                    host: stunServerHost,
+                    port: String(stunServerPort)
                 )
             TelephonePJSUASetSTUNServer(
                 &userAgentConfig,
@@ -637,10 +638,10 @@ extension AKSIPUserAgent {
         mediaConfig.no_vad = detectsVoiceActivity ? 0 : 1
         mediaConfig.enable_ice = usesICE ? 1 : 0
         mediaConfig.snd_auto_close_time = 1
-        mediaConfig.ec_options = UInt32(PJMEDIA_ECHO_USE_SW_ECHO)
+        mediaConfig.ec_options = UInt32(PJMEDIA_ECHO_USE_SW_ECHO.rawValue)
 
         if usesQoS {
-            transportConfig.qos_params.flags = PJ_QOS_PARAM_HAS_DSCP
+            transportConfig.qos_params.flags = UInt8(PJ_QOS_PARAM_HAS_DSCP.rawValue)
             transportConfig.qos_params.dscp_val = 24
         }
 
@@ -712,7 +713,7 @@ extension AKSIPUserAgent {
 
         let strings = PJSIPStringStorage()
         var name = strings.make("ringback")
-        var port: OpaquePointer?
+        var port: UnsafeMutablePointer<pjmedia_port>?
 
         guard pjmedia_tonegen_create2(
             pool,
@@ -865,7 +866,7 @@ extension AKSIPUserAgent {
         pjsua_transport_config_default(&config)
 
         if usesQoS {
-            config.qos_params.flags = PJ_QOS_PARAM_HAS_DSCP
+            config.qos_params.flags = UInt8(PJ_QOS_PARAM_HAS_DSCP.rawValue)
             config.qos_params.dscp_val = 24
         }
 
@@ -941,7 +942,7 @@ extension AKSIPUserAgent {
 
         for index in 0..<Int(count) {
             var identifier = codecs[index].codec_id
-            let name = string(from: identifier)
+            let name = pjStringValue(identifier)
             let defaultPriority = codecPriority(for: name)
             let priority: UInt8
 
@@ -972,8 +973,6 @@ private enum SIPUserAgentShared {
 }
 
 private final class SIPUserAgentStorage {
-    weak var delegate: (any AKSIPUserAgentDelegate)?
-
     var state = AKSIPUserAgentState(rawValue: 0)!
     var detectedNATType = AKNATType(rawValue: 0)!
 
@@ -999,9 +998,9 @@ private final class SIPUserAgentStorage {
 
     let thread = WaitingThread()
 
-    var pool: OpaquePointer?
+    var pool: UnsafeMutablePointer<pj_pool_t>?
     var ringbackSlot = pjsua_conf_port_id(-1)
-    var ringbackPort: OpaquePointer?
+    var ringbackPort: UnsafeMutablePointer<pjmedia_port>?
     var ringbackCount = 0
 
     var udp4Transport = pjsua_transport_id(-1)

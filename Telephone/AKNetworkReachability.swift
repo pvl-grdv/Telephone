@@ -9,7 +9,7 @@ import Foundation
 import Network
 
 @objcMembers
-final class AKNetworkReachability: NSObject {
+final class AKNetworkReachability: NSObject, @unchecked Sendable {
     static let didChangeNotification =
         Notification.Name("AKNetworkReachabilityDidChange")
 

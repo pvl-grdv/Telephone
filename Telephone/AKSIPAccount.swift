@@ -8,38 +8,43 @@
 import Foundation
 import UseCases
 
-@objc @implementation
-extension AKSIPAccount {
-    public weak var delegate: (any AKSIPAccountDelegate)?
+let kAKSIPAccountDefaultSIPProxyPort = 0
+let kAKSIPAccountDefaultReregistrationTime = 300
+let kAKSIPAccountDefaultTransport: Transport = .udp
+let kAKSIPAccountRegistrationExpireTimeNotSpecified =
+    Int(PJSIP_EXPIRES_NOT_SPECIFIED)
 
-    public let uuid: String
-    public let uri: URI
-    public let fullName: String
+final class AKSIPAccount: NSObject, Account, @unchecked Sendable {
+    weak var delegate: (any AKSIPAccountDelegate)?
+
+    let uuid: String
+    let uri: URI
+    let fullName: String
     private final let sipAddressValue: String
 
-    public var sipAddress: String {
+    var sipAddress: String {
         sipAddressValue
     }
-    public let registrar: ServiceAddress
-    public let realm: String
-    public private(set) var username: String
-    public let domain: String
-    public let proxyHost: String
-    public let proxyPort: UInt
-    public let reregistrationTime: UInt
-    public let transport: Transport
-    public let usesIPv6: Bool
-    public let updatesContactHeader: Bool
-    public let updatesViaHeader: Bool
-    public let updatesSDP: Bool
+    let registrar: ServiceAddress
+    let realm: String
+    private(set) var username: String
+    let domain: String
+    let proxyHost: String
+    let proxyPort: UInt
+    let reregistrationTime: UInt
+    let transport: Transport
+    let usesIPv6: Bool
+    let updatesContactHeader: Bool
+    let updatesViaHeader: Bool
+    let updatesSDP: Bool
 
-    public private(set) var identifier = -1
-    public var thread: Thread?
+    private(set) var identifier = -1
+    var thread: Thread?
 
     private let parser: AKSIPURIParser
     private var calls: [AKSIPCall] = []
 
-    public var isRegistered: Bool {
+    var isRegistered: Bool {
         get {
             registrationStatus / 100 == 2
                 && registrationExpireTime != -1
@@ -63,23 +68,23 @@ extension AKSIPAccount {
         }
     }
 
-    public var registrationStatus: Int {
+    var registrationStatus: Int {
         accountInfo.map { Int($0.status.rawValue) } ?? 0
     }
 
-    public var registrationErrorCode: Int {
+    var registrationErrorCode: Int {
         accountInfo.map { Int($0.reg_last_err) } ?? 0
     }
 
-    public var registrationStatusText: String {
+    var registrationStatusText: String {
         accountInfo.map { pjStringValue($0.status_text) } ?? ""
     }
 
-    public var registrationExpireTime: Int {
+    var registrationExpireTime: Int {
         accountInfo.map { Int($0.expires) } ?? -1
     }
 
-    public var isOnline: Bool {
+    var isOnline: Bool {
         get {
             accountInfo.map { $0.online_status != 0 } ?? false
         }
@@ -93,11 +98,11 @@ extension AKSIPAccount {
         }
     }
 
-    public var onlineStatusText: String {
+    var onlineStatusText: String {
         accountInfo.map { pjStringValue($0.online_status_text) } ?? ""
     }
 
-    public var hasUnansweredIncomingCalls: Bool {
+    var hasUnansweredIncomingCalls: Bool {
         calls.contains { call in
             call.isActive
                 && call.isIncoming
@@ -105,8 +110,7 @@ extension AKSIPAccount {
         }
     }
 
-    @objc(initWithDictionary:parser:)
-    public init(
+    init(
         dictionary: [AnyHashable: Any],
         parser: AKSIPURIParser
     ) {
@@ -223,26 +227,24 @@ extension AKSIPAccount {
         super.init()
     }
 
-    public override var description: String {
+    override var description: String {
         sipAddressValue
     }
 
-    public func updateUsername(_ username: String) {
+    func updateUsername(_ username: String) {
         self.username = username
     }
 
-    public func updateIdentifier(_ identifier: Int) {
+    func updateIdentifier(_ identifier: Int) {
         self.identifier = identifier
     }
 
     @MainActor
-    @objc(makeCallTo:label:)
-    public func makeCall(to uri: URI, label: String) {
+    func makeCall(to uri: URI, label: String) {
         NSLog("Not calling %@", uri)
     }
 
-    @objc(makeCallTo:completion:)
-    public func makeCall(
+    func makeCall(
         to destination: AKSIPURI,
         completion: @escaping (AKSIPCall?) -> Void
     ) {
@@ -279,8 +281,7 @@ extension AKSIPAccount {
         )
     }
 
-    @objc(addCallWithInfo:)
-    public func addCall(info: PJSUACallInfo) -> AKSIPCall {
+    func addCall(info: PJSUACallInfo) -> AKSIPCall {
         if let existing = call(identifier: info.identifier) {
             return existing
         }
@@ -290,21 +291,19 @@ extension AKSIPAccount {
         return call
     }
 
-    @objc(callWithIdentifier:)
-    public func call(identifier: Int) -> AKSIPCall? {
+    func call(identifier: Int) -> AKSIPCall? {
         calls.first { $0.identifier == identifier }
     }
 
-    @objc(removeCall:)
-    public func remove(_ call: AKSIPCall) {
+    func remove(_ call: AKSIPCall) {
         calls.removeAll { $0 === call }
     }
 
-    public func removeAllCalls() {
+    func removeAllCalls() {
         calls.removeAll()
     }
 
-    public func activeCallsCount() -> Int {
+    func activeCallsCount() -> Int {
         calls.lazy.filter(\.isActive).count
     }
 

@@ -957,8 +957,8 @@ private struct SIPCallData {
 }
 
 private final class SIPUserAgentStorage {
-    var state = .stopped
-    var detectedNATType = AKNATType(rawValue: 0)!
+    var state: AKSIPUserAgentState = .stopped
+    var detectedNATType: AKNATType = PJ_STUN_NAT_TYPE_UNKNOWN
 
     var maxCalls = 0
     var nameServers: [String] = []

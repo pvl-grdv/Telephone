@@ -28,9 +28,7 @@ public final class PJSUACallInfo: @unchecked Sendable {
     ) {
         identifier = Int(info.id)
         accountIdentifier = Int(info.acc_id)
-        state = AKSIPCallState(
-            rawValue: UInt(info.state.rawValue)
-        )!
+        state = info.state
         stateText = swiftString(info.state_text)
         lastStatus = Int(info.last_status.rawValue)
         lastStatusText = swiftString(info.last_status_text)

@@ -17,7 +17,7 @@ extension AKSIPAccount {
     public let fullName: String
     private final let sipAddressValue: String
 
-    public var SIPAddress: String {
+    public var sipAddress: String {
         sipAddressValue
     }
     public let registrar: ServiceAddress
@@ -39,7 +39,7 @@ extension AKSIPAccount {
     private let parser: AKSIPURIParser
     private var calls: [AKSIPCall] = []
 
-    public var registered: Bool {
+    public var isRegistered: Bool {
         get {
             registrationStatus / 100 == 2
                 && registrationExpireTime != -1
@@ -52,9 +52,9 @@ extension AKSIPAccount {
                     pjsua_acc_id(identifier),
                     1
                 )
-                online = true
+                isOnline = true
             } else {
-                online = false
+                isOnline = false
                 _ = pjsua_acc_set_registration(
                     pjsua_acc_id(identifier),
                     0
@@ -79,7 +79,7 @@ extension AKSIPAccount {
         accountInfo.map { Int($0.expires) } ?? -1
     }
 
-    public var online: Bool {
+    public var isOnline: Bool {
         get {
             accountInfo.map { $0.online_status != 0 } ?? false
         }

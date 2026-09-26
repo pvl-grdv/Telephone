@@ -100,9 +100,9 @@ func PJSUAOnCallTransferStatus(
         call.transferStatus = Int(statusCode)
         call.transferStatusText = statusText
 
-        NotificationCenter.default.post(
-            name: .AKSIPCallTransferStatusDidChange,
-            object: call,
+        publishCallEvent(
+            .AKSIPCallTransferStatusDidChange,
+            call: call,
             userInfo: [
                 "AKFinalTransferNotification": isFinal,
             ]
@@ -124,18 +124,18 @@ func PJSUAOnNATDetect(
         return
     }
 
-    let natType = AKNATType(
-        rawValue: UInt(detection.nat_type.rawValue)
-    ) ?? AKNATType(rawValue: 0)!
+    let natType = detection.nat_type
 
     Task { @MainActor in
         let agent = AKSIPUserAgent.shared()
         agent.detectedNATType = natType
 
-        NotificationCenter.default.post(
+        let notification = Notification(
             name: .AKSIPUserAgentDidDetectNAT,
             object: agent
         )
+        NotificationCenter.default.post(notification)
+        agent.delegate?.sipUserAgentDidDetectNAT(notification)
     }
 }
 
@@ -180,10 +180,7 @@ func PJSUAOnIncomingCall(
         call.incomingIdentityHeaders = headers
         account.delegate?.sipAccount(account, didReceive: call)
 
-        NotificationCenter.default.post(
-            name: .AKSIPCallIncoming,
-            object: call
-        )
+        publishCallEvent(.AKSIPCallIncoming, call: call)
     }
 }
 
@@ -335,16 +332,11 @@ func PJSUAOnCallState(
         call.lastStatusText = snapshot.lastStatusText
         call.duration = duration
 
-        let center = NotificationCenter.default
-
         switch snapshot.state.rawValue {
         case 6:
             agent.stopRingback(for: call)
             call.account.remove(call)
-            center.post(
-                name: .AKSIPCallDidDisconnect,
-                object: call
-            )
+            publishCallEvent(.AKSIPCallDidDisconnect, call: call)
 
         case 3:
             if shouldStartRingback {
@@ -359,29 +351,20 @@ func PJSUAOnCallState(
                 ]
             }
 
-            center.post(
-                name: .AKSIPCallEarly,
-                object: call,
+            publishCallEvent(
+                .AKSIPCallEarly,
+                call: call,
                 userInfo: userInfo
             )
 
         case 1:
-            center.post(
-                name: .AKSIPCallCalling,
-                object: call
-            )
+            publishCallEvent(.AKSIPCallCalling, call: call)
 
         case 4:
-            center.post(
-                name: .AKSIPCallConnecting,
-                object: call
-            )
+            publishCallEvent(.AKSIPCallConnecting, call: call)
 
         case 5:
-            center.post(
-                name: .AKSIPCallDidConfirm,
-                object: call
-            )
+            publishCallEvent(.AKSIPCallDidConfirm, call: call)
 
         default:
             break
@@ -446,10 +429,7 @@ func PJSUAOnCallMediaState(_ callID: pjsua_call_id) {
         }
 
         if let name {
-            NotificationCenter.default.post(
-                name: name,
-                object: call
-            )
+            publishCallEvent(name, call: call)
         }
     }
 }
@@ -532,4 +512,49 @@ private func equalsIgnoringCase(
     _ rhs: String
 ) -> Bool {
     lhs.caseInsensitiveCompare(rhs) == .orderedSame
+}
+
+
+@MainActor
+private func publishCallEvent(
+    _ name: Notification.Name,
+    call: AKSIPCall,
+    userInfo: [AnyHashable: Any]? = nil
+) {
+    let notification = Notification(
+        name: name,
+        object: call,
+        userInfo: userInfo
+    )
+
+    NotificationCenter.default.post(notification)
+
+    guard let delegate = call.delegate else {
+        return
+    }
+
+    switch name {
+    case .AKSIPCallCalling:
+        delegate.sipCallCalling(notification)
+    case .AKSIPCallIncoming:
+        delegate.sipCallIncoming(notification)
+    case .AKSIPCallEarly:
+        delegate.sipCallEarly(notification)
+    case .AKSIPCallConnecting:
+        delegate.sipCallConnecting(notification)
+    case .AKSIPCallDidConfirm:
+        delegate.sipCallDidConfirm(notification)
+    case .AKSIPCallDidDisconnect:
+        delegate.sipCallDidDisconnect(notification)
+    case .AKSIPCallMediaDidBecomeActive:
+        delegate.sipCallMediaDidBecomeActive(notification)
+    case .AKSIPCallDidLocalHold:
+        delegate.sipCallDidLocalHold(notification)
+    case .AKSIPCallDidRemoteHold:
+        delegate.sipCallDidRemoteHold(notification)
+    case .AKSIPCallTransferStatusDidChange:
+        delegate.sipCallTransferStatusDidChange(notification)
+    default:
+        break
+    }
 }

@@ -504,7 +504,7 @@
         { "path": "AKSIPURIFormatter.h", "encoding": "utf8" },
         { "path": "AKSIPURIFormatter.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKTelephoneNumberFormatter.h", "encoding": "utf8" },
-        { "path": "AKTelephoneNumberFormatter.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "AKTelephoneNumberFormatter.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "ApplicationUserAttentionRequest.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
           "path": "ArrayDifference.swift",

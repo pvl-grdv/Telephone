@@ -43,6 +43,8 @@ static const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified =
 // The receiver's delegate.
 @property(nonatomic, weak) id <AKSIPAccountDelegate> delegate;
 
+@property(nonatomic, readonly, copy) NSString *uuid;
+
 // Full SIP URI for the account.
 // It is composed of |fullName| and |SIPAddress|, e.g. "John Smith" <john@company.com>
 @property(nonatomic, readonly) URI *uri;
@@ -60,7 +62,7 @@ static const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified =
 @property(nonatomic, readonly) NSString *realm;
 
 // Authentication user name.
-@property(nonatomic, readonly) NSString *username;
+@property(nonatomic, copy) NSString *username;
 
 @property(nonatomic, readonly, copy) NSString *domain;
 
@@ -99,7 +101,7 @@ static const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified =
 @property(nonatomic, readonly) BOOL updatesSDP;
 
 // The receiver's identifier at the user agent.
-@property(nonatomic, readonly) NSInteger identifier;
+@property(nonatomic) NSInteger identifier;
 
 // A Boolean value indicating whether the receiver is registered.
 @property(nonatomic, getter=isRegistered) BOOL registered NS_SWIFT_NAME(isRegistered);
@@ -134,6 +136,9 @@ static const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified =
 
 - (void)updateUsername:(NSString *)username NS_SWIFT_NAME(updateUsername(_:));
 - (void)updateIdentifier:(NSInteger)identifier NS_SWIFT_NAME(updateIdentifier(_:));
+
+// UseCases Account protocol entry point.
+- (void)makeCallTo:(URI *)uri label:(NSString *)label NS_SWIFT_NAME(makeCall(to:label:));
 
 // Makes a call to a given destination URI.
 - (void)makeCallTo:(AKSIPURI *)destination completion:(void (^)(AKSIPCall * _Nullable))completion NS_SWIFT_NAME(makeCall(to:completion:));

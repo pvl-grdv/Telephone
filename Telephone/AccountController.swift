@@ -76,7 +76,7 @@ final class AccountController:
     private let incomingCallContactResolver: IncomingCallContactResolver
     private var presentation: AccountPresentationCoordinator!
 
-    private var reRegistrationTimer: Timer?
+    private var reRegistrationTimer: Foundation.Timer?
     private var destinationToCall = ""
 
     private var accountAdded: Bool {
@@ -119,7 +119,7 @@ final class AccountController:
         )
     }
 
-    deinit {
+    isolated deinit {
         for controller in callControllers {
             controller.close()
         }
@@ -483,7 +483,7 @@ final class AccountController:
 
     private func handleRegistrationFailureIfNeeded() {
         if account.registrationStatus == 401,
-           account.registrationErrorCode == Int(PJSIP_EFAILEDCREDENTIAL)
+           account.registrationErrorCode == Int(TelephonePJSIPFailedCredentialError())
         {
             presentation.showAuthenticationFailure()
             return
@@ -540,7 +540,7 @@ final class AccountController:
     private func scheduleReRegistrationIfNeeded() {
         guard reRegistrationTimer == nil else { return }
 
-        reRegistrationTimer = Timer.scheduledTimer(
+        reRegistrationTimer = Foundation.Timer.scheduledTimer(
             withTimeInterval: TimeInterval(account.reregistrationTime),
             repeats: true
         ) { [weak self] _ in
@@ -821,4 +821,14 @@ final class AccountController:
 
 private func containsASCIILetter(_ value: String) -> Bool {
     value.range(of: "[A-Za-z]", options: .regularExpression) != nil
+}
+
+
+private func isTelephoneNumber(_ value: String) -> Bool {
+    let digits = value.first == "+"
+        ? value.dropFirst()
+        : Substring(value)
+
+    return !digits.isEmpty
+        && digits.allSatisfy { $0 >= "0" && $0 <= "9" }
 }

@@ -17,7 +17,7 @@ final class AccountControllers: NSObject {
     }
 
     var enabled: [AccountController] {
-        controllers.filter(\.isEnabled)
+        controllers.filter(\.enabled)
     }
 
     @objc(objectAtIndexedSubscript:)
@@ -71,7 +71,7 @@ final class AccountControllers: NSObject {
     func haveActiveCallControllers() -> Bool {
         enabled.contains { accountController in
             accountController.callControllers.contains { item in
-                (item as? CallController)?.isCallActive == true
+                (item as? CallController)?.callActive == true
             }
         }
     }
@@ -83,7 +83,7 @@ final class AccountControllers: NSObject {
                 in accountController.callControllers
             {
                 if callController.call?.isIncoming == true
-                    && callController.isCallUnhandled
+                    && callController.callUnhandled
                 {
                     count += 1
                 }
@@ -139,7 +139,7 @@ final class AccountControllers: NSObject {
 
     @objc(unregisterAllAccounts)
     func unregisterAllAccounts() {
-        for controller in enabled where controller.isAccountRegistered {
+        for controller in enabled where controller.accountRegistered {
             controller.unregisterAccount()
         }
     }

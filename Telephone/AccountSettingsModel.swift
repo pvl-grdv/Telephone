@@ -289,7 +289,7 @@ final class AccountSettingsModel: NSObject {
             name: .AKPreferencesControllerDidRemoveAccount,
             object: preferencesController,
             userInfo: [
-                kAccountIndex: index,
+                PreferencesNotificationKey.accountIndex: index,
                 AKSIPAccountKeys.uuid: uuid,
             ]
         )
@@ -343,8 +343,8 @@ final class AccountSettingsModel: NSObject {
             name: .AKPreferencesControllerDidSwapAccounts,
             object: preferencesController,
             userInfo: [
-                kSourceIndex: source,
-                kDestinationIndex: destination,
+                PreferencesNotificationKey.sourceIndex: source,
+                PreferencesNotificationKey.destinationIndex: destination,
             ]
         )
     }
@@ -602,7 +602,7 @@ final class AccountSettingsModel: NSObject {
         NotificationCenter.default.post(
             name: .AKPreferencesControllerDidChangeAccountEnabled,
             object: preferencesController,
-            userInfo: [kAccountIndex: index]
+            userInfo: [PreferencesNotificationKey.accountIndex: index]
         )
     }
 

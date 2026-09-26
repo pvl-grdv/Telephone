@@ -459,11 +459,11 @@
             { "path": "PJSUAOnIncomingCall.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJSUAOnCallState.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJSUAOnCallMediaState.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "PJSUAOnCallTransferStatus.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "PJSUAOnCallReplaced.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "PJSUAOnAccountRegistrationState.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+
+
+            { "path": "PJSUACallbacks.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJSUAOnAccountFindForIncoming.m", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "PJSUAOnNATDetect.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+
             {
               "path": "UserAgentError.swift",
               "encoding": "utf8",

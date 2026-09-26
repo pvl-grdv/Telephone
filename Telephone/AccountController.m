@@ -26,7 +26,6 @@
 #import "AKSIPURIFormatter.h"
 #import "AKTelephoneNumberFormatter.h"
 
-#import "CallTransferController.h"
 
 #import "Telephone-Swift.h"
 

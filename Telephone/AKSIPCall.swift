@@ -52,7 +52,7 @@ extension AKSIPCall {
         state.rawValue == 5
     }
 
-    public private(set) var isMicrophoneMuted = false
+    public var isMicrophoneMuted = false
 
     public var isOnLocalHold: Bool {
         mediaStatusRawValue == 2
@@ -219,6 +219,7 @@ extension AKSIPCall {
         setHeld(!isOnLocalHold)
     }
 
+    @nonobjc
     private var mediaStatusRawValue: UInt32? {
         guard let media = firstMediaInfo() else {
             return nil
@@ -227,6 +228,7 @@ extension AKSIPCall {
         return media.status.rawValue
     }
 
+    @nonobjc
     private func firstMediaInfo() -> pjsua_call_media_info? {
         guard identifier >= 0 else {
             return nil
@@ -244,6 +246,7 @@ extension AKSIPCall {
         return media.first
     }
 
+    @nonobjc
     private func muteMicrophone() {
         guard !isMicrophoneMuted, isConfirmed else {
             return
@@ -263,6 +266,7 @@ extension AKSIPCall {
         }
     }
 
+    @nonobjc
     private func unmuteMicrophone() {
         guard isMicrophoneMuted, isConfirmed else {
             return
@@ -282,6 +286,7 @@ extension AKSIPCall {
         }
     }
 
+    @nonobjc
     private func hold() {
         guard isConfirmed, !isOnRemoteHold else {
             return
@@ -293,6 +298,7 @@ extension AKSIPCall {
         )
     }
 
+    @nonobjc
     private func unhold() {
         guard isConfirmed else {
             return
@@ -305,6 +311,7 @@ extension AKSIPCall {
         )
     }
 
+    @nonobjc
     private func sendInfoDTMF(_ digit: Character) {
         let messageBody = "Signal=\(digit)\r\nDuration=300"
 

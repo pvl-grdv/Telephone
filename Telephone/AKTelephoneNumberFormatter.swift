@@ -48,6 +48,7 @@ extension AKTelephoneNumberFormatter {
         return true
     }
 
+    @objc(telephoneNumberFromString:)
     public func telephoneNumber(from string: String) -> String {
         extractedTelephoneNumber(from: string) ?? ""
     }

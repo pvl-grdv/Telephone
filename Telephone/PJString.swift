@@ -19,7 +19,7 @@ func withPJString<Result>(
     }
 }
 
-func string(from value: pj_str_t) -> String {
+func pjStringValue(_ value: pj_str_t) -> String {
     guard let pointer = value.ptr, value.slen > 0 else {
         return ""
     }

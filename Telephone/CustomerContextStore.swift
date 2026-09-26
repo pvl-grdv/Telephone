@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 import UseCases
 
@@ -52,7 +53,7 @@ final class CustomerContextStore {
                 withIntermediateDirectories: true
             )
         } catch {
-            NSLog("Could not create Telephone application support directory: %@", String(describing: error))
+            customerContextLogger.error("Could not create application support directory: \(String(describing: error), privacy: .private)")
             return
         }
 
@@ -66,7 +67,7 @@ final class CustomerContextStore {
             try execute("PRAGMA busy_timeout = 2000")
             try ensureSchema()
         } catch {
-            NSLog("Could not initialize customer context database: %@", String(describing: error))
+            customerContextLogger.error("Could not initialize customer context database: \(String(describing: error), privacy: .private)")
             connection = nil
         }
     }
@@ -88,7 +89,7 @@ final class CustomerContextStore {
                 callIdentifier: callIdentifier
             )
         } catch {
-            NSLog("Could not load customer context: %@", String(describing: error))
+            customerContextLogger.error("Could not load customer context: \(String(describing: error), privacy: .private)")
             return CustomerContextSnapshot()
         }
     }
@@ -125,7 +126,7 @@ final class CustomerContextStore {
                 )
             }
         } catch {
-            NSLog("Could not save customer context: %@", String(describing: error))
+            customerContextLogger.error("Could not save customer context: \(String(describing: error), privacy: .private)")
         }
     }
 
@@ -503,3 +504,8 @@ final class CustomerContextStore {
         statement.string(at: index)
     }
 }
+
+private let customerContextLogger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "com.tlphn.Telephone",
+    category: "CustomerContext"
+)

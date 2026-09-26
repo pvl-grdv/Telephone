@@ -2,7 +2,7 @@
 //  PresentationProtocols.swift
 //  Telephone
 //
-//  Small Swift protocols used by presentation controllers.
+//  Small main-actor protocols used by application controllers.
 //
 
 import Foundation
@@ -34,16 +34,3 @@ extension PreferencesControllerDelegate {
         _ notification: Notification
     ) {}
 }
-
-protocol SoundIOPreferences: AnyObject {
-    func updateSoundIO()
-}
-
-protocol SoundIOPresenterOutput: AnyObject {
-    func update(
-        soundIO: PresentationSoundIO,
-        devices: PresentationAudioDevices
-    )
-}
-
-protocol SoundPreferencesView: SoundIOPresenterOutput {}

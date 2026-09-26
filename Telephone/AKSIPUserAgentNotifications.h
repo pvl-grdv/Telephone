@@ -22,11 +22,11 @@
 
 // Posted when the user agent finishes starting. However, it may not be started if an error occurred during user agent
 // start-up. You can check user agent state via the |state| property.
-extern NSString * const AKSIPUserAgentDidFinishStartingNotification;
+static NSString * const AKSIPUserAgentDidFinishStartingNotification = @"AKSIPUserAgentDidFinishStarting";
 //
 // Posted when the user agent finishes stopping.
-extern NSString * const AKSIPUserAgentDidFinishStoppingNotification;
+static NSString * const AKSIPUserAgentDidFinishStoppingNotification = @"AKSIPUserAgentDidFinishStopping";
 //
 // Posted when the user agent detects NAT type, which can be accessed via
 // the |detectedNATType| property.
-extern NSString * const AKSIPUserAgentDidDetectNATNotification;
+static NSString * const AKSIPUserAgentDidDetectNATNotification = @"AKSIPUserAgentDidDetectNAT";

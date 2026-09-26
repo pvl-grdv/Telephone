@@ -101,6 +101,7 @@ extension AKSIPAccount {
         }
     }
 
+    @objc(initWithDictionary:parser:)
     public init(
         dictionary: NSDictionary,
         parser: AKSIPURIParser
@@ -231,10 +232,12 @@ extension AKSIPAccount {
     }
 
     @MainActor
+    @objc(makeCallTo:label:)
     public func makeCall(to uri: URI, label: String) {
         NSLog("Not calling %@", uri)
     }
 
+    @objc(makeCallTo:completion:)
     public func makeCall(
         to destination: AKSIPURI,
         completion: @escaping (AKSIPCall?) -> Void
@@ -271,6 +274,7 @@ extension AKSIPAccount {
         )
     }
 
+    @objc(addCallWithInfo:)
     public func addCall(info: PJSUACallInfo) -> AKSIPCall {
         if let existing = call(identifier: info.identifier) {
             return existing
@@ -281,6 +285,7 @@ extension AKSIPAccount {
         return call
     }
 
+    @objc(callWithIdentifier:)
     public func call(identifier: Int) -> AKSIPCall? {
         calls.first { $0.identifier == identifier }
     }

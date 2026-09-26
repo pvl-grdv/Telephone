@@ -7,14 +7,14 @@
 
 import Foundation
 
-public final class AKSIPURIParser {
-    public weak var agent: AKSIPUserAgent?
+final class AKSIPURIParser {
+    weak var agent: AKSIPUserAgent?
 
-    public init(userAgent: AKSIPUserAgent) {
+    init(userAgent: AKSIPUserAgent) {
         agent = userAgent
     }
 
-    public func sipURI(from string: String) -> AKSIPURI? {
+    func sipURI(from string: String) -> AKSIPURI? {
         guard agent?.isStarted == true else {
             return nil
         }

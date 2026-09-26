@@ -8,6 +8,7 @@
 import Foundation
 import SystemConfiguration
 
+@MainActor
 @objc
 protocol NameServersChangeEventTarget: AnyObject {
     func nameServersDidChange(_ nameServers: NameServers)
@@ -95,6 +96,7 @@ final class NameServers: NSObject {
         return addresses
     }
 
+    @MainActor
     fileprivate func notifyTarget() {
         target?.nameServersDidChange(self)
     }
@@ -111,5 +113,7 @@ private func nameServersStoreDidChange(
         .fromOpaque(info)
         .takeUnretainedValue()
 
-    nameServers.notifyTarget()
+    MainActor.assumeIsolated {
+        nameServers.notifyTarget()
+    }
 }

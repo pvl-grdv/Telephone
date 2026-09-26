@@ -7,22 +7,22 @@
 
 import Foundation
 
-public final class PJSUACallInfo: @unchecked Sendable {
-    public let identifier: Int
-    public let accountIdentifier: Int
-    public let state: AKSIPCallState
-    public let stateText: String
-    public let lastStatus: Int
-    public let lastStatusText: String
-    public let localURI: AKSIPURI
-    public let remoteURI: AKSIPURI
+final class PJSUACallInfo: @unchecked Sendable {
+    let identifier: Int
+    let accountIdentifier: Int
+    let state: AKSIPCallState
+    let stateText: String
+    let lastStatus: Int
+    let lastStatusText: String
+    let localURI: AKSIPURI
+    let remoteURI: AKSIPURI
     private final let incomingValue: Bool
 
-    public var isIncoming: Bool {
+    var isIncoming: Bool {
         incomingValue
     }
 
-    public init(
+    init(
         info: pjsua_call_info,
         parser: AKSIPURIParser
     ) {

@@ -257,17 +257,18 @@ extension AKSIPAccount {
             transport: transport
         )
 
+        let completion = SIPCallCompletion(completion)
         let request = SIPCallRequest(
             destination: destination,
             accountIdentifier: pjsua_acc_id(identifier),
             parser: parser
-        ) { [weak self] info in
+        ) { [weak self, completion] info in
             guard let self, let info else {
-                completion(nil)
+                completion.call(nil)
                 return
             }
 
-            completion(addCall(info: info))
+            completion.call(addCall(info: info))
         }
 
         perform(
@@ -361,6 +362,19 @@ extension AKSIPAccount {
         }
 
         return info
+    }
+}
+
+private final class SIPCallCompletion: @unchecked Sendable {
+    private let body: (AKSIPCall?) -> Void
+
+    init(_ body: @escaping (AKSIPCall?) -> Void) {
+        self.body = body
+    }
+
+    @MainActor
+    func call(_ call: AKSIPCall?) {
+        body(call)
     }
 }
 

@@ -170,10 +170,10 @@ extern const NSInteger kAKSIPUserAgentInvalidIdentifier;
 - (void)handleIPAddressChange;
 
 // Adds an account to the user agent.
-- (BOOL)addAccount:(AKSIPAccount *)anAccount withPassword:(NSString *)aPassword;
+- (BOOL)addAccount:(AKSIPAccount *)anAccount withPassword:(NSString *)aPassword NS_SWIFT_NAME(addAccount(_:withPassword:));
 
 // Removes an account from the user agent.
-- (BOOL)removeAccount:(AKSIPAccount *)account;
+- (BOOL)removeAccount:(AKSIPAccount *)account NS_SWIFT_NAME(removeAccount(_:));
 
 // Returns a SIP account with a given identifier.
 - (AKSIPAccount *)accountWithIdentifier:(NSInteger)identifier;

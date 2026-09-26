@@ -17,7 +17,6 @@
 #import "AKSIPUserAgent.h"
 #import "PreferencesControllerDelegate.h"
 #import "PreferencesControllerNotifications.h"
-#import "SIPResponseLocalization.h"
 #import "SoundIOPreferences.h"
 #import "SoundIOPresenterOutput.h"
 #import "SoundPreferencesView.h"

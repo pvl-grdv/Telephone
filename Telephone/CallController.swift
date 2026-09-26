@@ -108,14 +108,14 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
 
     let userAgent: AKSIPUserAgent
     let defaults: UserDefaults
-    let presentation: CallPresentationCoordinator
+    private(set) var presentation: CallPresentationCoordinator!
 
     private var didHandleWindowClose = false
 
     @objc(initWithWindowNibName:accountController:userAgent:delegate:)
     init(
         windowNibName: String,
-        accountController: AccountController?,
+        accountController: AccountController,
         userAgent: AKSIPUserAgent,
         delegate: (any CallControllerDelegate)?
     ) {
@@ -130,12 +130,9 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
         self.delegate = delegate
         defaults = .standard
 
-        // The coordinator needs the fully initialized controller, so a
-        // temporary value is installed and replaced immediately after super.
-        presentation = CallPresentationCoordinator.placeholder()
         super.init()
 
-        presentation.replacePlaceholder(
+        presentation = CallPresentationCoordinator(
             callController: self,
             accountController: accountController,
             isTransfer: isTransfer

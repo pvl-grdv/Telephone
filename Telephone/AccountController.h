@@ -20,7 +20,7 @@
 
 #import "AKSIPAccount.h"
 
-#import "CallController.h"
+#import "CallControllerDelegate.h"
 
 @class AKSIPURI;
 @class AsyncCallHistoryViewEventTargetFactory;

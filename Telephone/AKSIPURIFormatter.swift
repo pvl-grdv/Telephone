@@ -7,11 +7,11 @@
 
 import Foundation
 
-public final class AKSIPURIFormatter: Formatter {
-    public var formatsTelephoneNumbers = false
-    public var telephoneNumberFormatterSplitsLastFourDigits = false
+final class AKSIPURIFormatter: Formatter {
+    var formatsTelephoneNumbers = false
+    var telephoneNumberFormatterSplitsLastFourDigits = false
 
-    public override func string(for obj: Any?) -> String? {
+    override func string(for obj: Any?) -> String? {
         guard let uri = obj as? AKSIPURI else {
             return nil
         }
@@ -38,7 +38,7 @@ public final class AKSIPURIFormatter: Formatter {
         return uri.sipAddress
     }
 
-    public override func getObjectValue(
+    override func getObjectValue(
         _ obj: AutoreleasingUnsafeMutablePointer<AnyObject?>?,
         for string: String,
         errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?
@@ -47,7 +47,7 @@ public final class AKSIPURIFormatter: Formatter {
         return true
     }
 
-    public func sipURI(from string: String) -> AKSIPURI {
+    func sipURI(from string: String) -> AKSIPURI {
         parsedDestination(from: string)
     }
 }

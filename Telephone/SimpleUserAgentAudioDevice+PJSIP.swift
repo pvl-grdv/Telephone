@@ -17,6 +17,7 @@
 //
 
 import Domain
+import Foundation
 import UseCases
 
 extension SimpleUserAgentAudioDevice {

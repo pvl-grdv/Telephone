@@ -15,7 +15,7 @@ extension AKSIPAccount {
     public let uuid: String
     public let uri: URI
     public let fullName: String
-    public let sipAddress: String
+    public let SIPAddress: String
     public let registrar: ServiceAddress
     public let realm: String
     public private(set) var username: String
@@ -35,8 +35,8 @@ extension AKSIPAccount {
     private let parser: AKSIPURIParser
     private var calls: [AKSIPCall] = []
 
-    public var isRegistered: Bool {
-        get {
+    public var registered: Bool {
+        @objc(isRegistered) get {
             registrationStatus / 100 == 2
                 && registrationExpireTime != -1
         }
@@ -48,9 +48,9 @@ extension AKSIPAccount {
                     pjsua_acc_id(identifier),
                     1
                 )
-                isOnline = true
+                online = true
             } else {
-                isOnline = false
+                online = false
                 _ = pjsua_acc_set_registration(
                     pjsua_acc_id(identifier),
                     0
@@ -75,8 +75,8 @@ extension AKSIPAccount {
         accountInfo.map { Int($0.expires) } ?? -1
     }
 
-    public var isOnline: Bool {
-        get {
+    public var online: Bool {
+        @objc(isOnline) get {
             accountInfo.map { $0.online_status != 0 } ?? false
         }
         set {
@@ -103,7 +103,7 @@ extension AKSIPAccount {
 
     @objc(initWithDictionary:parser:)
     public init(
-        dictionary: NSDictionary,
+        dictionary: [AnyHashable: Any],
         parser: AKSIPURIParser
     ) {
         let uuid = stringValue(
@@ -156,7 +156,7 @@ extension AKSIPAccount {
             displayName: fullName,
             transport: transport
         )
-        sipAddress = address.stringValue
+        SIPAddress = address.stringValue
 
         let configuredRegistrar = stringValue(
             dictionary[AKSIPAccountKeys.registrar]
@@ -220,7 +220,7 @@ extension AKSIPAccount {
     }
 
     public override var description: String {
-        sipAddress
+        SIPAddress
     }
 
     public func updateUsername(_ username: String) {
@@ -290,7 +290,8 @@ extension AKSIPAccount {
         calls.first { $0.identifier == identifier }
     }
 
-    public func removeCall(_ call: AKSIPCall) {
+    @objc(removeCall:)
+    public func remove(_ call: AKSIPCall) {
         calls.removeAll { $0 === call }
     }
 
@@ -303,7 +304,7 @@ extension AKSIPAccount {
     }
 
     @objc
-    private func threadMakeCall(_ request: SIPCallRequest) {
+    private final func threadMakeCall(_ request: SIPCallRequest) {
         autoreleasepool {
             var callIdentifier = pjsua_call_id(-1)
 
@@ -342,7 +343,7 @@ extension AKSIPAccount {
     }
 
     @nonobjc
-    private var accountInfo: pjsua_acc_info? {
+    private final var accountInfo: pjsua_acc_info? {
         guard identifier >= 0 else {
             return nil
         }

@@ -20,19 +20,19 @@
 
 // Sent when preferences controller removes an accont.
 // |userInfo| dictionary keys: kAccountIndex, AKSIPAccountKeys.uuid.
-extern NSString * const AKPreferencesControllerDidRemoveAccountNotification;
+static NSString * const AKPreferencesControllerDidRemoveAccountNotification = @"AKPreferencesControllerDidRemoveAccount";
 
 // Sent when preferences controller enables or disables an account.
 // |userInfo| dictionary key: kAccountIndex.
-extern NSString * const AKPreferencesControllerDidChangeAccountEnabledNotification;
+static NSString * const AKPreferencesControllerDidChangeAccountEnabledNotification = @"AKPreferencesControllerDidChangeAccountEnabled";
 
 // Sent when preferences controller changes account order.
 // |userInfo| dictionary keys: kSourceIndex, kDestinationIndex.
-extern NSString * const AKPreferencesControllerDidSwapAccountsNotification;
+static NSString * const AKPreferencesControllerDidSwapAccountsNotification = @"AKPreferencesControllerDidSwapAccounts";
 
 // Sent when preferences controller changes network settings.
-extern NSString * const AKPreferencesControllerDidChangeNetworkSettingsNotification;
+static NSString * const AKPreferencesControllerDidChangeNetworkSettingsNotification = @"AKPreferencesControllerDidChangeNetworkSettings";
 
-extern NSString * const kAccountIndex;
-extern NSString * const kSourceIndex;
-extern NSString * const kDestinationIndex;
+static NSString * const kAccountIndex = @"AccountIndex";
+static NSString * const kSourceIndex = @"SourceIndex";
+static NSString * const kDestinationIndex = @"DestinationIndex";

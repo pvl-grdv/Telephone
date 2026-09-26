@@ -8,37 +8,32 @@
 import Foundation
 import UseCases
 
-@objc @implementation
-extension AKSIPURI {
+public final class AKSIPURI: NSObject, NSCopying {
     public var user: String
     public var host: String
     public var displayName: String
     public var port: Int
 
-    @objc(SIPAddress)
     public var sipAddress: String {
         SIPAddress(user: user, host: host).stringValue
     }
 
-    @objc(SIPURIWithUser:host:displayName:)
-    public class func sipURI(
+    public static func sipURI(
         user: String,
         host: String,
         displayName: String
-    ) -> Self {
-        self.init(
+    ) -> AKSIPURI {
+        AKSIPURI(
             user: user,
             host: host,
             displayName: displayName
         )
     }
 
-    @objc(SIPURIWithString:)
-    public class func sipURI(string: String) -> Self? {
-        self.init(string: string)
+    public static func sipURI(string: String) -> AKSIPURI? {
+        AKSIPURI(string: string)
     }
 
-    @objc(initWithUser:host:displayName:port:)
     public init(
         user: String,
         host: String,
@@ -52,7 +47,6 @@ extension AKSIPURI {
         super.init()
     }
 
-    @objc(initWithUser:host:displayName:)
     public convenience init(
         user: String,
         host: String,
@@ -70,7 +64,6 @@ extension AKSIPURI {
         self.init(user: "", host: "", displayName: "")
     }
 
-    @objc(initWithString:)
     public convenience init?(string: String) {
         guard let uri = URI(string) else {
             return nil
@@ -117,7 +110,6 @@ extension AKSIPURI {
         return hasher.finalize()
     }
 
-    @objc(copyWithZone:)
     public func copy(with zone: NSZone? = nil) -> Any {
         AKSIPURI(
             user: user,

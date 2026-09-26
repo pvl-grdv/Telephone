@@ -2,18 +2,19 @@
 //  AKNSString+Escaping.swift
 //  Telephone
 //
+//  Small Swift string escaping helpers.
+//
 
 import Foundation
 
-@objc(AKStringEscapingAdditions) @implementation
-extension NSString {
-    @objc(ak_escapeFirstCharacterFromString:)
+extension String {
     func ak_escapeFirstCharacter(from string: String) -> String {
         guard let character = string.first else {
-            return self as String
+            return self
         }
+
         let value = String(character)
-        return (self as String).replacingOccurrences(
+        return replacingOccurrences(
             of: value,
             with: "\\" + value
         )
@@ -24,13 +25,23 @@ extension NSString {
     }
 
     func ak_escapeParentheses() -> String {
-        let closing = (self as String).replacingOccurrences(
-            of: ")",
-            with: "\\)"
-        )
-        return closing.replacingOccurrences(
-            of: "(",
-            with: "\\("
-        )
+        replacingOccurrences(of: ")", with: "\\)")
+            .replacingOccurrences(of: "(", with: "\\(")
+    }
+}
+
+extension NSString {
+    var swiftString: String { self as String }
+
+    func ak_escapeFirstCharacter(from string: String) -> String {
+        swiftString.ak_escapeFirstCharacter(from: string)
+    }
+
+    func ak_escapeQuotes() -> String {
+        swiftString.ak_escapeQuotes()
+    }
+
+    func ak_escapeParentheses() -> String {
+        swiftString.ak_escapeParentheses()
     }
 }

@@ -7,8 +7,7 @@
 
 import Foundation
 
-@objc @implementation
-extension AKTelephoneNumberFormatter {
+public final class AKTelephoneNumberFormatter: Formatter {
     public var splitsLastFourDigits = false
 
     public override func string(for obj: Any?) -> String? {
@@ -48,7 +47,6 @@ extension AKTelephoneNumberFormatter {
         return true
     }
 
-    @objc(telephoneNumberFromString:)
     public func telephoneNumber(from string: String) -> String {
         extractedTelephoneNumber(from: string) ?? ""
     }

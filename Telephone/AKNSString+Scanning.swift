@@ -2,15 +2,22 @@
 //  AKNSString+Scanning.swift
 //  Telephone
 //
+//  Small Swift string scanning helpers.
+//
 
 import Foundation
 
-@objc(AKStringScanningAdditions) @implementation
-extension NSString {
+extension String {
     var ak_hasLetters: Bool {
-        (self as String).range(
+        range(
             of: "[A-Za-z]",
             options: .regularExpression
         ) != nil
+    }
+}
+
+extension NSString {
+    var ak_hasLetters: Bool {
+        (self as String).ak_hasLetters
     }
 }

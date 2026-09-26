@@ -7,8 +7,7 @@
 
 import Foundation
 
-@objc @implementation
-extension PJSUACallInfo {
+public final class PJSUACallInfo: @unchecked Sendable {
     public let identifier: Int
     public let accountIdentifier: Int
     public let state: AKSIPCallState
@@ -40,7 +39,6 @@ extension PJSUACallInfo {
         remoteURI = parser.sipURI(from: swiftString(info.remote_info))
             ?? AKSIPURI()
         incomingValue = info.role == PJSIP_ROLE_UAS
-        super.init()
     }
 }
 
@@ -57,5 +55,3 @@ private func swiftString(_ value: pj_str_t) -> String {
     ) ?? ""
 }
 
-
-extension PJSUACallInfo: @unchecked Sendable {}

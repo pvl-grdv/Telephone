@@ -7,8 +7,7 @@
 
 import Foundation
 
-@objc @implementation
-extension AKSIPURIFormatter {
+public final class AKSIPURIFormatter: Formatter {
     public var formatsTelephoneNumbers = false
     public var telephoneNumberFormatterSplitsLastFourDigits = false
 
@@ -48,7 +47,6 @@ extension AKSIPURIFormatter {
         return true
     }
 
-    @objc(SIPURIFromString:)
     public func sipURI(from string: String) -> AKSIPURI {
         parsedDestination(from: string)
     }

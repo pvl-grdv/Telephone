@@ -8,8 +8,7 @@
 import Foundation
 import Security
 
-@objc @implementation
-extension AKKeychain {
+final class AKKeychain {
     class func password(
         forService service: String,
         account: String

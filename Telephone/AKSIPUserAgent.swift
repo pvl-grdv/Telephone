@@ -75,11 +75,13 @@ extension AKSIPUserAgent {
         }
     }
 
+    @objc(STUNServerHost)
     public var stunServerHost: String {
         get { storage.stunServerHost }
         set { storage.stunServerHost = newValue }
     }
 
+    @objc(STUNServerPort)
     public var stunServerPort: UInt {
         get { storage.stunServerPort }
         set {
@@ -270,7 +272,7 @@ extension AKSIPUserAgent {
            delegate.responds(
             to: NSSelectorFromString("SIPUserAgentShouldAddAccount:")
            ),
-           delegate.SIPUserAgentShouldAddAccount?(account) == false
+           delegate.sipUserAgentShouldAdd?(account) == false
         {
             return false
         }

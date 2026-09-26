@@ -52,3 +52,6 @@ private func swiftString(_ value: pj_str_t) -> String {
         freeWhenDone: false
     ) ?? ""
 }
+
+
+extension PJSUACallInfo: @unchecked Sendable {}

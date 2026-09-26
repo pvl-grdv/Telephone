@@ -17,7 +17,7 @@ enum AKSIPUserAgentState: Int {
     case stopping
 }
 
-let kAKSIPUserAgentInvalidIdentifier = Int(PJSUA_INVALID_ID)
+let kAKSIPUserAgentInvalidIdentifier = -1
 
 @MainActor
 protocol AKSIPCallDelegate: AnyObject {

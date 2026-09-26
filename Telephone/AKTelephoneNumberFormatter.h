@@ -18,6 +18,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 
 // Instances of AKTelephoneNumberFormatter create formatted telephone numbers from strings of contiguous digits, and
 // convert strings with non-contiguous digits to strings that consist of contiguous digits only.
@@ -29,6 +31,8 @@
 
 // Wrapper for |getObjectValue:forString:errorDescription:|. Scans |string| for numbers and returns them as a contiguous
 // digits string.
-- (NSString *)telephoneNumberFromString:(NSString *)string;
+- (NSString *)telephoneNumberFromString:(NSString *)string NS_SWIFT_NAME(telephoneNumber(from:));
 
 @end
+
+NS_ASSUME_NONNULL_END

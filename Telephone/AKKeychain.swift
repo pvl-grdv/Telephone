@@ -10,7 +10,7 @@ import Security
 
 @objc @implementation
 extension AKKeychain {
-    static func password(
+    class func password(
         forService service: String,
         account: String
     ) -> String {
@@ -35,7 +35,7 @@ extension AKKeychain {
         return String(data: data, encoding: .utf8) ?? ""
     }
 
-    static func addItem(
+    class func addItem(
         withService service: String,
         account: String,
         password: String
@@ -65,7 +65,7 @@ extension AKKeychain {
         return SecItemAdd(newItem as CFDictionary, nil) == errSecSuccess
     }
 
-    static func removeItem(
+    class func removeItem(
         forService service: String,
         account: String
     ) -> Bool {

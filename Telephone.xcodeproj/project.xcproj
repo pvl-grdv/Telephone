@@ -502,7 +502,7 @@
         { "path": "AKNetworkReachability.h", "encoding": "utf8" },
         { "path": "AKNetworkReachability.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKSIPURIFormatter.h", "encoding": "utf8" },
-        { "path": "AKSIPURIFormatter.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "AKSIPURIFormatter.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKTelephoneNumberFormatter.h", "encoding": "utf8" },
         { "path": "AKTelephoneNumberFormatter.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "ApplicationUserAttentionRequest.swift", "target-membership": [ "Telephone/compile-sources" ] },

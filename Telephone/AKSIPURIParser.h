@@ -24,11 +24,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface AKSIPURIParser : NSObject
 
-@property(nonatomic, readonly, weak) AKSIPUserAgent *agent;
+@property(nonatomic, readonly, weak, nullable) AKSIPUserAgent *agent;
 
-- (instancetype)initWithUserAgent:(AKSIPUserAgent *)agent;
+- (instancetype)initWithUserAgent:(AKSIPUserAgent *)agent NS_SWIFT_NAME(init(userAgent:));
 
-- (nullable AKSIPURI *)SIPURIFromString:(NSString *)string;
+- (nullable AKSIPURI *)SIPURIFromString:(NSString *)string NS_SWIFT_NAME(sipURI(from:));
 
 @end
 

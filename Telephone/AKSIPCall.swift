@@ -8,77 +8,66 @@
 import Foundation
 import UseCases
 
-@objc @implementation
-extension AKSIPCall {
-    public let account: AKSIPAccount
-    public var identifier: Int
+final class AKSIPCall: NSObject, Call, @unchecked Sendable {
+    let account: AKSIPAccount
+    var identifier: Int
 
-    public weak var delegate: (any AKSIPCallDelegate)? {
-        didSet {
-            if let oldValue {
-                unsubscribe(oldValue, from: self)
-            }
-            if let delegate {
-                subscribe(delegate, to: self)
-            }
-        }
-    }
+    weak var delegate: (any AKSIPCallDelegate)?
 
-    public var state: AKSIPCallState
-    public var stateText: String
-    public var lastStatus: Int
-    public var lastStatusText: String
-    public var transferStatus = -1
-    public var transferStatusText = ""
-    public var duration = 0
+    var state: AKSIPCallState
+    var stateText: String
+    var lastStatus: Int
+    var lastStatusText: String
+    var transferStatus = -1
+    var transferStatusText = ""
+    var duration = 0
 
-    public let date: Date
-    public let localURI: AKSIPURI
-    public let remoteURI: AKSIPURI
+    let date: Date
+    let localURI: AKSIPURI
+    let remoteURI: AKSIPURI
 
     private final let incomingValue: Bool
     private final var missedValue: Bool
     private final var microphoneMutedValue = false
 
-    public var isIncoming: Bool {
+    var isIncoming: Bool {
         incomingValue
     }
 
-    public var isMissed: Bool {
+    var isMissed: Bool {
         get { missedValue }
         set { missedValue = newValue }
     }
 
-    public var remote: URI {
+    var remote: URI {
         URI(remoteURI)
     }
 
-    public var isActive: Bool {
+    var isActive: Bool {
         guard identifier >= 0 else { return false }
         return pjsua_call_is_active(pjsua_call_id(identifier)) != 0
     }
 
-    public var isConfirmed: Bool {
+    var isConfirmed: Bool {
         state.rawValue == 5
     }
 
-    public var isMicrophoneMuted: Bool {
+    var isMicrophoneMuted: Bool {
         get { microphoneMutedValue }
         set { microphoneMutedValue = newValue }
     }
 
-    public var isOnLocalHold: Bool {
+    var isOnLocalHold: Bool {
         mediaStatusRawValue == 2
     }
 
-    public var isOnRemoteHold: Bool {
+    var isOnRemoteHold: Bool {
         mediaStatusRawValue == 3
     }
 
-    public var incomingIdentityHeaders: [String: String]
+    var incomingIdentityHeaders: [String: String]
 
-    @objc(initWithSIPAccount:info:)
-    public init(
+    init(
         account: AKSIPAccount,
         info: PJSUACallInfo
     ) {
@@ -97,17 +86,11 @@ extension AKSIPCall {
         super.init()
     }
 
-    deinit {
-        if let delegate {
-            unsubscribe(delegate, from: self)
-        }
-    }
-
-    public override var description: String {
+    override var description: String {
         "\(localURI) <=> \(remoteURI)"
     }
 
-    public func answer() {
+    func answer() {
         let status = pjsua_call_answer(
             pjsua_call_id(identifier),
             200,
@@ -122,7 +105,7 @@ extension AKSIPCall {
         }
     }
 
-    public func hangUp() {
+    func hangUp() {
         guard identifier >= 0, state.rawValue != 6 else {
             return
         }
@@ -141,8 +124,7 @@ extension AKSIPCall {
         }
     }
 
-    @objc(attendedTransferToCall:)
-    public func attendedTransfer(to destinationCall: AKSIPCall) {
+    func attendedTransfer(to destinationCall: AKSIPCall) {
         transferStatus = -1
         transferStatusText = ""
 
@@ -158,7 +140,7 @@ extension AKSIPCall {
         }
     }
 
-    public func sendRingingNotification() {
+    func sendRingingNotification() {
         let status = pjsua_call_answer(
             pjsua_call_id(identifier),
             180,
@@ -171,7 +153,7 @@ extension AKSIPCall {
         }
     }
 
-    public func replyWithTemporarilyUnavailable() {
+    func replyWithTemporarilyUnavailable() {
         if pjsua_call_answer(
             pjsua_call_id(identifier),
             480,
@@ -182,7 +164,7 @@ extension AKSIPCall {
         }
     }
 
-    public func replyWithBusyHere() {
+    func replyWithBusyHere() {
         if pjsua_call_answer(
             pjsua_call_id(identifier),
             486,
@@ -193,8 +175,7 @@ extension AKSIPCall {
         }
     }
 
-    @objc(sendDTMFDigits:)
-    public func sendDTMF(_ digits: String) {
+    func sendDTMF(_ digits: String) {
         let status = withPJString(digits) { pjDigits in
             pjsua_call_dial_dtmf(
                 pjsua_call_id(identifier),
@@ -211,7 +192,7 @@ extension AKSIPCall {
         }
     }
 
-    public func setMuted(_ muted: Bool) {
+    func setMuted(_ muted: Bool) {
         if muted {
             muteMicrophone()
         } else {
@@ -219,7 +200,7 @@ extension AKSIPCall {
         }
     }
 
-    public func setHeld(_ held: Bool) {
+    func setHeld(_ held: Bool) {
         if held {
             hold()
         } else {
@@ -227,11 +208,11 @@ extension AKSIPCall {
         }
     }
 
-    public func toggleMicrophoneMute() {
+    func toggleMicrophoneMute() {
         setMuted(!microphoneMutedValue)
     }
 
-    public func toggleHold() {
+    func toggleHold() {
         setHeld(mediaStatusRawValue != 2)
     }
 
@@ -350,51 +331,4 @@ extension AKSIPCall {
             }
         }
     }
-}
-
-private let callDelegateSubscriptions: [(Selector, Notification.Name)] = [
-    (NSSelectorFromString("SIPCallCalling:"), .AKSIPCallCalling),
-    (NSSelectorFromString("SIPCallIncoming:"), .AKSIPCallIncoming),
-    (NSSelectorFromString("SIPCallEarly:"), .AKSIPCallEarly),
-    (NSSelectorFromString("SIPCallConnecting:"), .AKSIPCallConnecting),
-    (NSSelectorFromString("SIPCallDidConfirm:"), .AKSIPCallDidConfirm),
-    (NSSelectorFromString("SIPCallDidDisconnect:"), .AKSIPCallDidDisconnect),
-    (
-        NSSelectorFromString("SIPCallMediaDidBecomeActive:"),
-        .AKSIPCallMediaDidBecomeActive
-    ),
-    (NSSelectorFromString("SIPCallDidLocalHold:"), .AKSIPCallDidLocalHold),
-    (NSSelectorFromString("SIPCallDidRemoteHold:"), .AKSIPCallDidRemoteHold),
-    (
-        NSSelectorFromString("SIPCallTransferStatusDidChange:"),
-        .AKSIPCallTransferStatusDidChange
-    ),
-]
-
-private func subscribe(
-    _ delegate: any AKSIPCallDelegate,
-    to call: AKSIPCall
-) {
-    let center = NotificationCenter.default
-
-    for (selector, name) in callDelegateSubscriptions
-    where delegate.responds(to: selector) {
-        center.addObserver(
-            delegate,
-            selector: selector,
-            name: name,
-            object: call
-        )
-    }
-}
-
-private func unsubscribe(
-    _ delegate: any AKSIPCallDelegate,
-    from call: AKSIPCall
-) {
-    NotificationCenter.default.removeObserver(
-        delegate,
-        name: nil,
-        object: call
-    )
 }

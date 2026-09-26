@@ -18,6 +18,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class AKSIPURI;
 
 // Instances of AKSIPURIFormatter create string representations of AKSIPURI, and convert textual representations of SIP
@@ -31,6 +33,8 @@
 @property(nonatomic, assign) BOOL telephoneNumberFormatterSplitsLastFourDigits;
 
 // Wrapper for |getObjectValue:forString:errorDescription:|. Returns AKSIPURI object converted from a given string.
-- (AKSIPURI *)SIPURIFromString:(NSString *)SIPURIString;
+- (AKSIPURI *)SIPURIFromString:(NSString *)SIPURIString NS_SWIFT_NAME(sipURI(from:));
 
 @end
+
+NS_ASSUME_NONNULL_END

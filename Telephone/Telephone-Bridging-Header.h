@@ -5,8 +5,8 @@
 #import <pjsua-lib/pjsua.h>
 
 #import "AccountController.h"
+#import "CallControllerDelegate.h"
 #import "AppController.h"
-#import "CallTransferController.h"
 #import "AKSIPAccount.h"
 #import "AKKeychain.h"
 #import "AKSIPCall.h"

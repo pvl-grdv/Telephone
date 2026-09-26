@@ -63,10 +63,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface AKSIPUserAgent : NSObject
 
 // The receiver's delegate.
-@property(nonatomic, weak) id <AKSIPUserAgentDelegate> delegate;
+@property(nonatomic, weak, nullable) id <AKSIPUserAgentDelegate> delegate;
 
 // A Boolean value indicating whether the receiver has been started.
-@property(nonatomic, readonly, assign, getter=isStarted) BOOL started;
+@property(nonatomic, readonly, assign) BOOL isStarted;
 
 // Receiver's state.
 @property(readonly, assign) AKSIPUserAgentState state;
@@ -154,7 +154,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (AKSIPUserAgent *)sharedUserAgent;
 
 // Designated initializer. Initializes a SIP user agent and sets its delegate.
-- (instancetype)initWithDelegate:(id<AKSIPUserAgentDelegate>)aDelegate;
+- (instancetype)initWithDelegate:(nullable id<AKSIPUserAgentDelegate>)aDelegate;
 
 // Starts user agent.
 - (void)start;

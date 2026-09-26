@@ -8,64 +8,50 @@
 import Foundation
 import UseCases
 
-@objc @implementation
-extension AKSIPUserAgent {
+final class AKSIPUserAgent: NSObject {
     private final let storage = SIPUserAgentStorage()
 
-    public weak var delegate: (any AKSIPUserAgentDelegate)? {
-        didSet {
-            if let oldValue, oldValue !== delegate {
-                unsubscribe(oldValue, from: self)
-            }
-            if let delegate, oldValue !== delegate {
-                subscribe(delegate, to: self)
-            }
-        }
-    }
+    weak var delegate: (any AKSIPUserAgentDelegate)?
 
-    public var isStarted: Bool {
+    var isStarted: Bool {
         storage.state.rawValue == 2
     }
 
-    public var state: AKSIPUserAgentState {
+    var state: AKSIPUserAgentState {
         storage.state
     }
 
-    public var detectedNATType: AKNATType {
+    var detectedNATType: AKNATType {
         get { storage.detectedNATType }
         set { storage.detectedNATType = newValue }
     }
 
-    public var activeCallsCount: Int {
+    var activeCallsCount: Int {
         storage.accounts.reduce(0) {
             $0 + $1.activeCallsCount()
         }
     }
 
-    public var hasUnansweredIncomingCalls: Bool {
+    var hasUnansweredIncomingCalls: Bool {
         storage.accounts.contains { $0.hasUnansweredIncomingCalls }
     }
 
-    public var callData: UnsafeMutablePointer<AKSIPUserAgentCallData> {
-        storage.callData
-    }
-
-    public var maxCalls: Int {
+    var maxCalls: Int {
         get { storage.maxCalls }
         set { storage.maxCalls = newValue }
     }
 
-    public var nameServers: [String] {
+    var nameServers: [String] {
         get { storage.nameServers }
         set { storage.nameServers = Array(newValue.prefix(4)) }
     }
 
-    public var outboundProxyHost: String {
+    var outboundProxyHost: String {
         get { storage.outboundProxyHost }
         set { storage.outboundProxyHost = newValue }
     }
 
-    public var outboundProxyPort: UInt {
+    var outboundProxyPort: UInt {
         get { storage.outboundProxyPort }
         set {
             storage.outboundProxyPort =
@@ -75,14 +61,12 @@ extension AKSIPUserAgent {
         }
     }
 
-    @objc(STUNServerHost)
-    public var stunServerHost: String {
+    var stunServerHost: String {
         get { storage.stunServerHost }
         set { storage.stunServerHost = newValue }
     }
 
-    @objc(STUNServerPort)
-    public var stunServerPort: UInt {
+    var stunServerPort: UInt {
         get { storage.stunServerPort }
         set {
             storage.stunServerPort =
@@ -92,42 +76,42 @@ extension AKSIPUserAgent {
         }
     }
 
-    public var userAgentString: String {
+    var userAgentString: String {
         get { storage.userAgentString }
         set { storage.userAgentString = newValue }
     }
 
-    public var logFileName: String {
+    var logFileName: String {
         get { storage.logFileName }
         set { storage.logFileName = newValue }
     }
 
-    public var logLevel: UInt {
+    var logLevel: UInt {
         get { storage.logLevel }
         set { storage.logLevel = newValue }
     }
 
-    public var consoleLogLevel: UInt {
+    var consoleLogLevel: UInt {
         get { storage.consoleLogLevel }
         set { storage.consoleLogLevel = newValue }
     }
 
-    public var detectsVoiceActivity: Bool {
+    var detectsVoiceActivity: Bool {
         get { storage.detectsVoiceActivity }
         set { storage.detectsVoiceActivity = newValue }
     }
 
-    public var usesICE: Bool {
+    var usesICE: Bool {
         get { storage.usesICE }
         set { storage.usesICE = newValue }
     }
 
-    public var usesQoS: Bool {
+    var usesQoS: Bool {
         get { storage.usesQoS }
         set { storage.usesQoS = newValue }
     }
 
-    public var transportPort: UInt {
+    var transportPort: UInt {
         get { storage.transportPort }
         set {
             storage.transportPort =
@@ -135,7 +119,7 @@ extension AKSIPUserAgent {
         }
     }
 
-    public var usesG711Only: Bool {
+    var usesG711Only: Bool {
         get { storage.usesG711Only }
         set {
             guard storage.usesG711Only != newValue else {
@@ -146,25 +130,23 @@ extension AKSIPUserAgent {
         }
     }
 
-    public var locksCodec: Bool {
+    var locksCodec: Bool {
         get { storage.locksCodec }
         set { storage.locksCodec = newValue }
     }
 
-    public var parser: AKSIPURIParser {
+    var parser: AKSIPURIParser {
         storage.parser!
     }
 
-    @objc(sharedUserAgent)
-    public class func shared() -> AKSIPUserAgent {
+    class func shared() -> AKSIPUserAgent {
         SIPUserAgentShared.instance
     }
 
-    @objc(initWithDelegate:)
-    public init(delegate: (any AKSIPUserAgentDelegate)?) {
+    init(delegate: (any AKSIPUserAgentDelegate)?) {
         super.init()
 
-        storage.detectedNATType = AKNATType(rawValue: 0)!
+        storage.detectedNATType = PJ_STUN_NAT_TYPE_UNKNOWN
         storage.thread.qualityOfService = .userInitiated
         storage.thread.start()
         storage.parser = AKSIPURIParser(userAgent: self)
@@ -172,18 +154,15 @@ extension AKSIPUserAgent {
         self.delegate = delegate
     }
 
-    public override convenience init() {
+    override convenience init() {
         self.init(delegate: nil)
     }
 
     deinit {
-        if let delegate {
-            unsubscribe(delegate, from: self)
-        }
         storage.shutdown()
     }
 
-    public func start() {
+    func start() {
         guard storage.state.rawValue == 0 else {
             return
         }
@@ -193,19 +172,19 @@ extension AKSIPUserAgent {
             return
         }
 
-        storage.state = AKSIPUserAgentState(rawValue: 1)!
+        storage.state = .starting
 
         let request = SIPUserAgentStartRequest { [weak self] didStart in
             guard let self else { return }
 
-            storage.state = AKSIPUserAgentState(
-                rawValue: didStart ? 2 : 0
-            )!
+            storage.state = didStart ? .started : .stopped
 
-            NotificationCenter.default.post(
+            let notification = Notification(
                 name: .AKSIPUserAgentDidFinishStarting,
                 object: self
             )
+            NotificationCenter.default.post(notification)
+            delegate?.sipUserAgentDidFinishStarting(notification)
         }
 
         perform(
@@ -216,12 +195,12 @@ extension AKSIPUserAgent {
         )
     }
 
-    public func stop() {
+    func stop() {
         guard storage.state.rawValue == 2 else {
             return
         }
 
-        storage.state = AKSIPUserAgentState(rawValue: 3)!
+        storage.state = .stopping
 
         let request = SIPUserAgentStopRequest { [weak self] in
             self?.finishStopping()
@@ -235,12 +214,12 @@ extension AKSIPUserAgent {
         )
     }
 
-    public func stopAndWait() {
+    func stopAndWait() {
         guard storage.state.rawValue == 2 else {
             return
         }
 
-        storage.state = AKSIPUserAgentState(rawValue: 3)!
+        storage.state = .stopping
 
         perform(
             #selector(threadStopSynchronously),
@@ -251,7 +230,7 @@ extension AKSIPUserAgent {
         finishStopping()
     }
 
-    public func handleIPAddressChange() {
+    func handleIPAddressChange() {
         guard storage.state.rawValue == 2 else {
             return
         }
@@ -264,16 +243,12 @@ extension AKSIPUserAgent {
         )
     }
 
-    public func addAccount(
+    @MainActor
+    func addAccount(
         _ account: AKSIPAccount,
         withPassword password: String
     ) -> Bool {
-        if let delegate,
-           delegate.responds(
-            to: NSSelectorFromString("SIPUserAgentShouldAddAccount:")
-           ),
-           delegate.sipUserAgentShouldAdd?(account) == false
-        {
+        if let delegate, !delegate.sipUserAgentShouldAdd(account) {
             return false
         }
 
@@ -371,7 +346,8 @@ extension AKSIPUserAgent {
         return true
     }
 
-    public func removeAccount(_ account: AKSIPAccount) -> Bool {
+    @MainActor
+    func removeAccount(_ account: AKSIPAccount) -> Bool {
         guard isStarted, account.identifier >= 0 else {
             return false
         }
@@ -388,7 +364,7 @@ extension AKSIPUserAgent {
         return true
     }
 
-    public func account(
+    func account(
         withIdentifier identifier: Int
     ) -> AKSIPAccount? {
         storage.accounts.first {
@@ -396,7 +372,7 @@ extension AKSIPUserAgent {
         }
     }
 
-    public func call(
+    func call(
         withIdentifier identifier: Int
     ) -> AKSIPCall? {
         for account in storage.accounts {
@@ -407,12 +383,11 @@ extension AKSIPUserAgent {
         return nil
     }
 
-    public func hangUpAllCalls() {
+    func hangUpAllCalls() {
         pjsua_call_hangup_all()
     }
 
-    @objc(startRingbackForCall:)
-    public func startRingback(for call: AKSIPCall) {
+    func startRingback(for call: AKSIPCall) {
         guard storage.callData.indices.contains(call.identifier) else {
             return
         }
@@ -432,8 +407,7 @@ extension AKSIPUserAgent {
         }
     }
 
-    @objc(stopRingbackForCall:)
-    public func stopRingback(for call: AKSIPCall) {
+    func stopRingback(for call: AKSIPCall) {
         guard storage.callData.indices.contains(call.identifier) else {
             return
         }
@@ -456,7 +430,7 @@ extension AKSIPUserAgent {
         }
     }
 
-    public func setSoundInputDevice(
+    func setSoundInputDevice(
         _ input: Int,
         soundOutputDevice output: Int
     ) -> Bool {
@@ -474,11 +448,11 @@ extension AKSIPUserAgent {
         return pjsua_set_snd_dev(capture, playback) == 0
     }
 
-    public func stopSound() -> Bool {
+    func stopSound() -> Bool {
         isStarted && pjsua_set_null_snd_dev() == 0
     }
 
-    public func updateAudioDevices() {
+    func updateAudioDevices() {
         guard isStarted else {
             return
         }
@@ -488,7 +462,7 @@ extension AKSIPUserAgent {
         _ = pjmedia_snd_init(pjsua_get_pool_factory())
     }
 
-    public func string(
+    func string(
         forSIPResponseCode responseCode: Int
     ) -> String {
         SIPResponseLocalization.localizedString(
@@ -790,12 +764,14 @@ extension AKSIPUserAgent {
     private final func finishStopping() {
         pj_shutdown()
         storage.accounts.removeAll()
-        storage.state = AKSIPUserAgentState(rawValue: 0)!
+        storage.state = .stopped
 
-        NotificationCenter.default.post(
+        let notification = Notification(
             name: .AKSIPUserAgentDidFinishStopping,
             object: self
         )
+        NotificationCenter.default.post(notification)
+        delegate?.sipUserAgentDidFinishStopping(notification)
     }
 
     @nonobjc
@@ -974,8 +950,13 @@ private enum SIPUserAgentShared {
     static let instance = AKSIPUserAgent(delegate: nil)
 }
 
+private struct SIPCallData {
+    var ringbackOn: pj_bool_t = 0
+    var ringbackOff: pj_bool_t = 0
+}
+
 private final class SIPUserAgentStorage {
-    var state = AKSIPUserAgentState(rawValue: 0)!
+    var state = .stopped
     var detectedNATType = AKNATType(rawValue: 0)!
 
     var maxCalls = 0
@@ -1013,13 +994,13 @@ private final class SIPUserAgentStorage {
     var tls6Transport = pjsua_transport_id(-1)
 
     let callData:
-        UnsafeMutablePointer<AKSIPUserAgentCallData>
+        UnsafeMutablePointer<SIPCallData>
 
     init() {
         let count = Int(PJSUA_MAX_CALLS)
         callData = .allocate(capacity: count)
         callData.initialize(
-            repeating: AKSIPUserAgentCallData(),
+            repeating: SIPCallData(),
             count: count
         )
     }
@@ -1041,7 +1022,7 @@ private final class SIPUserAgentStorage {
 }
 
 private extension UnsafeMutablePointer
-where Pointee == AKSIPUserAgentCallData {
+where Pointee == SIPCallData {
     var indices: Range<Int> {
         0..<Int(PJSUA_MAX_CALLS)
     }
@@ -1106,48 +1087,4 @@ private func codecPriority(for identifier: String) -> UInt8 {
     default:
         0
     }
-}
-
-private let userAgentDelegateSubscriptions:
-    [(Selector, Notification.Name)] = [
-        (
-            NSSelectorFromString("SIPUserAgentDidFinishStarting:"),
-            .AKSIPUserAgentDidFinishStarting
-        ),
-        (
-            NSSelectorFromString("SIPUserAgentDidFinishStopping:"),
-            .AKSIPUserAgentDidFinishStopping
-        ),
-        (
-            NSSelectorFromString("SIPUserAgentDidDetectNAT:"),
-            .AKSIPUserAgentDidDetectNAT
-        ),
-    ]
-
-private func subscribe(
-    _ delegate: AKSIPUserAgentDelegate,
-    to agent: AKSIPUserAgent
-) {
-    let center = NotificationCenter.default
-
-    for (selector, name) in userAgentDelegateSubscriptions
-    where delegate.responds(to: selector) {
-        center.addObserver(
-            delegate,
-            selector: selector,
-            name: name,
-            object: agent
-        )
-    }
-}
-
-private func unsubscribe(
-    _ delegate: AKSIPUserAgentDelegate,
-    from agent: AKSIPUserAgent
-) {
-    NotificationCenter.default.removeObserver(
-        delegate,
-        name: nil,
-        object: agent
-    )
 }

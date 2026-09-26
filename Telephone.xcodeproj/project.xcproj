@@ -410,7 +410,7 @@
           "name": "SIP User Agent",
           "children": [
             { "path": "AKSIPUserAgent.h", "encoding": "utf8" },
-            { "path": "AKSIPUserAgent.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AKSIPUserAgent.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPUserAgentDelegate.h", "encoding": "utf8" },
             {
               "path": "AKSIPUserAgentEventSource.swift",

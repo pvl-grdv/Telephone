@@ -12,7 +12,7 @@ import UserNotifications
 @MainActor
 @objc(CallController)
 @objcMembers
-class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
+class CallController: NSObject, AKSIPCallDelegate {
     private static let autoCloseDelay: TimeInterval = 1.5
     private static let redialEnableDelay: TimeInterval = 1.0
 
@@ -410,7 +410,6 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
 
     // MARK: - AKSIPCallDelegate
 
-    @objc(SIPCallEarly:)
     func sipCallEarly(_ notification: Notification) {
         guard call?.isIncoming == false else { return }
 
@@ -424,7 +423,6 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
         }
     }
 
-    @objc(SIPCallDidConfirm:)
     func sipCallDidConfirm(_ notification: Notification) {
         removeUserNotification()
         callStartTime = Date.timeIntervalSinceReferenceDate
@@ -435,7 +433,6 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
         presentation.startCallTimer()
     }
 
-    @objc(SIPCallDidDisconnect:)
     func sipCallDidDisconnect(_ notification: Notification) {
         callActive = false
         presentation.stopCallTimer()
@@ -462,7 +459,6 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
         }
     }
 
-    @objc(SIPCallMediaDidBecomeActive:)
     func sipCallMediaDidBecomeActive(_ notification: Notification) {
         presentation.updateCallControls()
 
@@ -477,7 +473,6 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
         }
     }
 
-    @objc(SIPCallDidLocalHold:)
     func sipCallDidLocalHold(_ notification: Notification) {
         callOnHold = true
         presentation.updateCallControls()
@@ -488,7 +483,6 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
         )
     }
 
-    @objc(SIPCallDidRemoteHold:)
     func sipCallDidRemoteHold(_ notification: Notification) {
         callOnHold = true
         presentation.updateCallControls()
@@ -499,7 +493,6 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
         )
     }
 
-    @objc(SIPCallTransferStatusDidChange:)
     func sipCallTransferStatusDidChange(_ notification: Notification) {
         let final =
             notification.userInfo?["AKFinalTransferNotification"] as? Bool

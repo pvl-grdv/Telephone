@@ -18,6 +18,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 
 // A category for escaping strings.
 @interface NSString (AKStringEscapingAdditions)
@@ -33,3 +35,5 @@
 - (NSString *)ak_escapeParentheses;
 
 @end
+
+NS_ASSUME_NONNULL_END

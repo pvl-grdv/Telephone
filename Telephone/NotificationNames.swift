@@ -45,3 +45,10 @@ extension Notification.Name {
     static let AKPreferencesControllerDidChangeNetworkSettings =
         Notification.Name("AKPreferencesControllerDidChangeNetworkSettings")
 }
+
+
+enum PreferencesNotificationKey {
+    static let accountIndex = "AccountIndex"
+    static let sourceIndex = "SourceIndex"
+    static let destinationIndex = "DestinationIndex"
+}

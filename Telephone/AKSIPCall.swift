@@ -64,6 +64,7 @@ extension AKSIPCall {
 
     public var incomingIdentityHeaders: [String: String]
 
+    @objc(initWithSIPAccount:info:)
     public init(
         account: AKSIPAccount,
         info: PJSUACallInfo
@@ -127,6 +128,7 @@ extension AKSIPCall {
         }
     }
 
+    @objc(attendedTransferToCall:)
     public func attendedTransfer(to destinationCall: AKSIPCall) {
         transferStatus = -1
         transferStatusText = ""
@@ -178,6 +180,7 @@ extension AKSIPCall {
         }
     }
 
+    @objc(sendDTMFDigits:)
     public func sendDTMF(_ digits: String) {
         let status = withPJString(digits) { pjDigits in
             pjsua_call_dial_dtmf(

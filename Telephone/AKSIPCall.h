@@ -79,23 +79,23 @@ typedef NS_ENUM(NSUInteger, AKSIPCallState) {
 // Selected identity/routing headers captured from the incoming INVITE.
 @property(nonatomic, copy) NSDictionary<NSString *, NSString *> *incomingIdentityHeaders;
 
-- (instancetype)initWithSIPAccount:(AKSIPAccount *)account info:(PJSUACallInfo *)info;
+- (instancetype)initWithSIPAccount:(AKSIPAccount *)account info:(PJSUACallInfo *)info NS_SWIFT_NAME(init(account:info:));
 
 - (void)answer;
 - (void)hangUp;
 
-- (void)attendedTransferToCall:(AKSIPCall *)destinationCall;
+- (void)attendedTransferToCall:(AKSIPCall *)destinationCall NS_SWIFT_NAME(attendedTransfer(to:));
 
 - (void)sendRingingNotification;
 - (void)replyWithTemporarilyUnavailable;
 - (void)replyWithBusyHere;
 
-- (void)sendDTMFDigits:(NSString *)digits;
+- (void)sendDTMFDigits:(NSString *)digits NS_SWIFT_NAME(sendDTMF(_:));
 
 // Sets explicit media state. These calls are idempotent when the call is
 // already in the requested state.
-- (void)setMuted:(BOOL)muted;
-- (void)setHeld:(BOOL)held;
+- (void)setMuted:(BOOL)muted NS_SWIFT_NAME(setMuted(_:));
+- (void)setHeld:(BOOL)held NS_SWIFT_NAME(setHeld(_:));
 
 // Compatibility helpers for responder/menu actions.
 - (void)toggleMicrophoneMute;

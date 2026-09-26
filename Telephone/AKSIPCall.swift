@@ -40,11 +40,11 @@ extension AKSIPCall {
     private final var missedValue: Bool
     private final var microphoneMutedValue = false
 
-    public var incoming: Bool {
+    public var isIncoming: Bool {
         incomingValue
     }
 
-    public var missed: Bool {
+    public var isMissed: Bool {
         get { missedValue }
         set { missedValue = newValue }
     }
@@ -53,25 +53,25 @@ extension AKSIPCall {
         URI(remoteURI)
     }
 
-    public var active: Bool {
+    public var isActive: Bool {
         guard identifier >= 0 else { return false }
         return pjsua_call_is_active(pjsua_call_id(identifier)) != 0
     }
 
-    public var confirmed: Bool {
+    public var isConfirmed: Bool {
         state.rawValue == 5
     }
 
-    public var microphoneMuted: Bool {
+    public var isMicrophoneMuted: Bool {
         get { microphoneMutedValue }
         set { microphoneMutedValue = newValue }
     }
 
-    public var onLocalHold: Bool {
+    public var isOnLocalHold: Bool {
         mediaStatusRawValue == 2
     }
 
-    public var onRemoteHold: Bool {
+    public var isOnRemoteHold: Bool {
         mediaStatusRawValue == 3
     }
 

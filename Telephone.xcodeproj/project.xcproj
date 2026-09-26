@@ -451,7 +451,7 @@
             { "path": "AKSIPURI.h", "encoding": "utf8" },
             { "path": "AKSIPURI.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPURIParser.h" },
-            { "path": "AKSIPURIParser.m", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AKSIPURIParser.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJSUACallbacks.h", "encoding": "utf8" },
             { "path": "PJSUACallInfo.h" },
             { "path": "PJSUACallInfo.m", "target-membership": [ "Telephone/compile-sources" ] },

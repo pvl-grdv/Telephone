@@ -55,6 +55,9 @@ typedef NS_ENUM(NSUInteger, AKSIPCallState) {
 @interface AKSIPCall : NSObject <Call>
 
 @property(nonatomic, readonly) AKSIPAccount<Account> *account;
+@property(nonatomic, readonly) URI *remote;
+@property(nonatomic, readonly, getter=isIncoming) BOOL incoming;
+@property(nonatomic, getter=isMissed) BOOL missed;
 @property(nonatomic) NSInteger identifier;
 
 @property(nonatomic, weak) id<AKSIPCallDelegate> delegate;
@@ -72,7 +75,7 @@ typedef NS_ENUM(NSUInteger, AKSIPCallState) {
 @property(nonatomic, readonly) AKSIPURI *remoteURI;
 @property(nonatomic, readonly, getter=isActive) BOOL active;
 @property(nonatomic, readonly, getter=isConfirmed) BOOL confirmed;
-@property(nonatomic, readonly, getter=isMicrophoneMuted) BOOL microphoneMuted;
+@property(nonatomic, getter=isMicrophoneMuted) BOOL microphoneMuted;
 @property(nonatomic, readonly, getter=isOnLocalHold) BOOL onLocalHold;
 @property(nonatomic, readonly, getter=isOnRemoteHold) BOOL onRemoteHold;
 

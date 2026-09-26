@@ -54,7 +54,7 @@ typedef NS_ENUM(NSUInteger, AKSIPCallState) {
 
 @interface AKSIPCall : NSObject <Call>
 
-@property(nonatomic, readonly) AKSIPAccount<Account> *account;
+@property(nonatomic, readonly) AKSIPAccount *account;
 @property(nonatomic, readonly) URI *remote;
 @property(nonatomic, readonly, getter=isIncoming) BOOL incoming NS_SWIFT_NAME(isIncoming);
 @property(nonatomic, getter=isMissed) BOOL missed NS_SWIFT_NAME(isMissed);

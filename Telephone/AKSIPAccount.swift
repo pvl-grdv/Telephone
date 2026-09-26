@@ -15,7 +15,11 @@ extension AKSIPAccount {
     public let uuid: String
     public let uri: URI
     public let fullName: String
-    public let sipAddress: String
+    private final let sipAddressValue: String
+
+    public var SIPAddress: String {
+        sipAddressValue
+    }
     public let registrar: ServiceAddress
     public let realm: String
     public private(set) var username: String
@@ -35,7 +39,7 @@ extension AKSIPAccount {
     private let parser: AKSIPURIParser
     private var calls: [AKSIPCall] = []
 
-    public var isRegistered: Bool {
+    public var registered: Bool {
         get {
             registrationStatus / 100 == 2
                 && registrationExpireTime != -1
@@ -48,9 +52,9 @@ extension AKSIPAccount {
                     pjsua_acc_id(identifier),
                     1
                 )
-                isOnline = true
+                online = true
             } else {
-                isOnline = false
+                online = false
                 _ = pjsua_acc_set_registration(
                     pjsua_acc_id(identifier),
                     0
@@ -75,7 +79,7 @@ extension AKSIPAccount {
         accountInfo.map { Int($0.expires) } ?? -1
     }
 
-    public var isOnline: Bool {
+    public var online: Bool {
         get {
             accountInfo.map { $0.online_status != 0 } ?? false
         }
@@ -156,7 +160,7 @@ extension AKSIPAccount {
             displayName: fullName,
             transport: transport
         )
-        sipAddress = address.stringValue
+        sipAddressValue = address.stringValue
 
         let configuredRegistrar = stringValue(
             dictionary[AKSIPAccountKeys.registrar]
@@ -220,7 +224,7 @@ extension AKSIPAccount {
     }
 
     public override var description: String {
-        sipAddress
+        sipAddressValue
     }
 
     public func updateUsername(_ username: String) {

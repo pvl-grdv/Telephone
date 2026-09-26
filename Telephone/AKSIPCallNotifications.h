@@ -19,33 +19,33 @@
 @import Foundation;
 
 // Calling. After INVITE is sent.
-extern NSString * const AKSIPCallCallingNotification;
+static NSString * const AKSIPCallCallingNotification = @"AKSIPCallCalling";
 //
 // Incoming. After INVITE is received.
-extern NSString * const AKSIPCallIncomingNotification;
+static NSString * const AKSIPCallIncomingNotification = @"AKSIPCallIncoming";
 //
 // Early. After response with To tag.
 // Keys: @"AKSIPEventCode", @"AKSIPEventReason".
-extern NSString * const AKSIPCallEarlyNotification;
+static NSString * const AKSIPCallEarlyNotification = @"AKSIPCallEarly";
 //
 // Connecting. After 2xx is sent/received.
-extern NSString * const AKSIPCallConnectingNotification;
+static NSString * const AKSIPCallConnectingNotification = @"AKSIPCallConnecting";
 //
 // Confirmed. After ACK is sent/received.
-extern NSString * const AKSIPCallDidConfirmNotification;
+static NSString * const AKSIPCallDidConfirmNotification = @"AKSIPCallDidConfirm";
 //
 // Disconnected. Session is terminated.
-extern NSString * const AKSIPCallDidDisconnectNotification;
+static NSString * const AKSIPCallDidDisconnectNotification = @"AKSIPCallDidDisconnect";
 //
 // Call media is active.
-extern NSString * const AKSIPCallMediaDidBecomeActiveNotification;
+static NSString * const AKSIPCallMediaDidBecomeActiveNotification = @"AKSIPCallMediaDidBecomeActive";
 //
 // Call media is put on hold by local endpoint.
-extern NSString * const AKSIPCallDidLocalHoldNotification;
+static NSString * const AKSIPCallDidLocalHoldNotification = @"AKSIPCallDidLocalHold";
 //
 // Call media is put on hold by remote endpoint.
-extern NSString * const AKSIPCallDidRemoteHoldNotification;
+static NSString * const AKSIPCallDidRemoteHoldNotification = @"AKSIPCallDidRemoteHold";
 //
 // Call transfer status changed.
 // Key: @"AKFinalTransferNotification".
-extern NSString * const AKSIPCallTransferStatusDidChangeNotification;
+static NSString * const AKSIPCallTransferStatusDidChangeNotification = @"AKSIPCallTransferStatusDidChange";

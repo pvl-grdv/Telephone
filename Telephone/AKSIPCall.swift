@@ -36,34 +36,42 @@ extension AKSIPCall {
     public let localURI: AKSIPURI
     public let remoteURI: AKSIPURI
 
-    public let isIncoming: Bool
-    public var isMissed: Bool
+    private final let incomingValue: Bool
+    private final var missedValue: Bool
+    private final var microphoneMutedValue = false
+
+    public var incoming: Bool {
+        incomingValue
+    }
+
+    public var missed: Bool {
+        get { missedValue }
+        set { missedValue = newValue }
+    }
 
     public var remote: URI {
         URI(remoteURI)
     }
 
-    public var isActive: Bool {
+    public var active: Bool {
         guard identifier >= 0 else { return false }
         return pjsua_call_is_active(pjsua_call_id(identifier)) != 0
     }
 
-    public var isConfirmed: Bool {
+    public var confirmed: Bool {
         state.rawValue == 5
     }
 
-    private final var isMicrophoneMutedState = false
-
-    public var isMicrophoneMuted: Bool {
-        get { isMicrophoneMutedState }
-        set { isMicrophoneMutedState = newValue }
+    public var microphoneMuted: Bool {
+        get { microphoneMutedValue }
+        set { microphoneMutedValue = newValue }
     }
 
-    public var isOnLocalHold: Bool {
+    public var onLocalHold: Bool {
         mediaStatusRawValue == 2
     }
 
-    public var isOnRemoteHold: Bool {
+    public var onRemoteHold: Bool {
         mediaStatusRawValue == 3
     }
 
@@ -83,8 +91,8 @@ extension AKSIPCall {
         date = Date()
         localURI = info.localURI
         remoteURI = info.remoteURI
-        isIncoming = info.isIncoming
-        isMissed = info.isIncoming
+        incomingValue = info.isIncoming
+        missedValue = info.isIncoming
         incomingIdentityHeaders = [:]
         super.init()
     }
@@ -108,7 +116,7 @@ extension AKSIPCall {
         )
 
         if status == 0 {
-            isMissed = false
+            missedValue = false
         } else {
             NSLog("Error answering call %@", self)
         }
@@ -127,7 +135,7 @@ extension AKSIPCall {
         )
 
         if status == 0 {
-            isMissed = false
+            missedValue = false
         } else {
             NSLog("Error hanging up call %@", self)
         }
@@ -220,11 +228,11 @@ extension AKSIPCall {
     }
 
     public func toggleMicrophoneMute() {
-        setMuted(!isMicrophoneMuted)
+        setMuted(!microphoneMutedValue)
     }
 
     public func toggleHold() {
-        setHeld(!isOnLocalHold)
+        setHeld(mediaStatusRawValue != 2)
     }
 
     @nonobjc
@@ -256,7 +264,7 @@ extension AKSIPCall {
 
     @nonobjc
     private final func muteMicrophone() {
-        guard !isMicrophoneMuted, isConfirmed else {
+        guard !microphoneMutedValue, isConfirmed else {
             return
         }
 
@@ -268,7 +276,7 @@ extension AKSIPCall {
             0,
             media.stream.aud.conf_slot
         ) == 0 {
-            isMicrophoneMuted = true
+            microphoneMutedValue = true
         } else {
             NSLog("Error muting microphone in call %@", self)
         }
@@ -276,7 +284,7 @@ extension AKSIPCall {
 
     @nonobjc
     private final func unmuteMicrophone() {
-        guard isMicrophoneMuted, isConfirmed else {
+        guard microphoneMutedValue, isConfirmed else {
             return
         }
 
@@ -288,7 +296,7 @@ extension AKSIPCall {
             0,
             media.stream.aud.conf_slot
         ) == 0 {
-            isMicrophoneMuted = false
+            microphoneMutedValue = false
         } else {
             NSLog("Error unmuting microphone in call %@", self)
         }
@@ -296,7 +304,7 @@ extension AKSIPCall {
 
     @nonobjc
     private final func hold() {
-        guard isConfirmed, !isOnRemoteHold else {
+        guard state.rawValue == 5, mediaStatusRawValue != 3 else {
             return
         }
 
@@ -308,7 +316,7 @@ extension AKSIPCall {
 
     @nonobjc
     private final func unhold() {
-        guard isConfirmed else {
+        guard state.rawValue == 5 else {
             return
         }
 

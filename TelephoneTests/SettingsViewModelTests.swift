@@ -3,6 +3,7 @@
 //  TelephoneTests
 //
 
+import Foundation
 import Testing
 
 @MainActor

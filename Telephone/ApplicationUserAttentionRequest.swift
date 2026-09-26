@@ -17,6 +17,7 @@
 //
 
 import AppKit
+import UseCases
 
 @MainActor
 final class ApplicationUserAttentionRequest {

@@ -36,6 +36,9 @@ jobs:
             ThirdParty/PJSIP
           key: telephone-third-party-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('ThirdParty/PJSIP/patches/**', 'script/bootstrap_third_party.sh') }}
 
+      - name: Verify Swift-only application sources
+        run: bash ./script/check_swift_only.sh
+
       - name: Run unit tests
         run: ./script/test.sh
 

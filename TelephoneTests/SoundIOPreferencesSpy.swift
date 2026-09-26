@@ -16,6 +16,7 @@
 //  GNU General Public License for more details.
 //
 
+import Foundation
 final class SoundIOPreferencesSpy: NSObject {
     private(set) var didCallUpdateSoundIO = false
 }

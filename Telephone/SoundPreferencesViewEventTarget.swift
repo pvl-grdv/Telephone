@@ -16,6 +16,7 @@
 //  GNU General Public License for more details.
 //
 
+import Foundation
 import UseCases
 
 @MainActor
@@ -38,30 +39,25 @@ final class SoundPreferencesViewEventTarget: NSObject {
         self.ringtoneSoundPlayback = ringtoneSoundPlayback
     }
 
-    @objc(viewShouldReloadData:)
     func shouldReloadData(in view: SoundPreferencesView) {
         loadSettingsSoundIOInViewOrLogError(view: view)
     }
 
-    @objc(viewShouldReloadSoundIO:)
     func shouldReloadSoundIO(in view: SoundPreferencesView) {
         loadSettingsSoundIOInViewOrLogError(view: view)
     }
 
-    @objc(viewDidChangeSoundIO:)
     func didChangeSoundIO(_ soundIO: PresentationSoundIO) {
         updateSettings(withSoundIO: soundIO)
         userAgentSoundIOSelection.execute()
         updateRingtoneOutputOrLogError()
     }
 
-    @objc(viewDidChangeRingtoneName:)
     func didChangeRingtoneName(_ name: String) {
         updateSettings(withRingtoneSoundName: name)
         playRingtoneSoundOrLogError()
     }
 
-    @objc(viewWillDisappear:)
     func willDisappear(_ view: SoundPreferencesView) {
         ringtoneSoundPlayback.stop()
     }

@@ -17,6 +17,8 @@
 //
 
 import CoreAudio
+import Foundation
+import UseCases
 
 @MainActor
 final class CoreAudioSystemAudioDevicesChangeEventSource {

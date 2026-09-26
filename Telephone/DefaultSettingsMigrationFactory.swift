@@ -16,6 +16,8 @@
 //  GNU General Public License for more details.
 //
 
+import UseCases
+
 @MainActor
 final class DefaultSettingsMigrationFactory {
     private let settings: KeyValueSettings

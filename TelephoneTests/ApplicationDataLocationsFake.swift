@@ -16,6 +16,7 @@
 //  GNU General Public License for more details.
 //
 
+import Foundation
 final class ApplicationDataLocationsFake: ApplicationDataLocations {
     private let base = URL(string: NSTemporaryDirectory())!.appendingPathComponent("locations-fake")
 

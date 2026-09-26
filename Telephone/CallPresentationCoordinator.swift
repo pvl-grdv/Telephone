@@ -506,7 +506,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
         enteredDTMF.append(text)
         callController.displayedName = enteredDTMF as String
-        call.sendDTMFDigits(text)
+        call.sendDTMF(text)
     }
 
     private func windowDidDisappear() {

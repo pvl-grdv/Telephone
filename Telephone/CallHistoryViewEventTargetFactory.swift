@@ -11,6 +11,7 @@
 //  (at your option) any later version.
 //
 
+import Foundation
 import UseCases
 
 @MainActor

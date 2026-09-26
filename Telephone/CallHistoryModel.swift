@@ -3,6 +3,7 @@
 //  Telephone
 //
 
+import Foundation
 import Observation
 
 enum CallHistoryFilter: Int, CaseIterable, Hashable {

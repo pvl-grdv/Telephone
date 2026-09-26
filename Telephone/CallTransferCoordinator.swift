@@ -74,7 +74,7 @@ final class CallTransferCoordinator {
             return
         }
 
-        if !callController.isCallOnHold {
+        if !callController.callOnHold {
             callController.setCallHeld(true)
         }
 
@@ -112,7 +112,7 @@ final class CallTransferCoordinator {
             return
         }
 
-        if callController.isCallOnHold {
+        if callController.callOnHold {
             transferController.transferCall()
         } else {
             callController.toggleCallHold()

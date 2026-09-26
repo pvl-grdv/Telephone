@@ -28,12 +28,10 @@ final class AuthenticationFailureController: NSObject {
 
     @nonobjc
     func makeModel() -> AuthenticationFailureModel? {
-        guard
-            let accountController,
-            let account = accountController.account
-        else {
+        guard let accountController else {
             return nil
         }
+        let account = accountController.account
 
         let registrar = account.registrar.stringValue
         let username = account.username
@@ -62,27 +60,27 @@ final class AuthenticationFailureController: NSObject {
 
         guard
             !username.isEmpty,
-            let accountController,
-            let account = accountController.account
+            let accountController
         else {
             return
         }
+        let account = accountController.account
         accountController.removeAccountFromUserAgent()
         account.updateUsername(username)
 
         accountController.showConnectingState()
 
-        _ = userAgent.add(
+        _ = userAgent.addAccount(
             account,
             withPassword: password
         )
 
-        if !accountController.isAccountRegistered
+        if !accountController.accountRegistered
             && account.registrationExpireTime == kAKSIPAccountRegistrationExpireTimeNotSpecified
         {
             accountController.showUnavailableState()
-            accountController.showRegistrarConnectionErrorSheetWithError(
-                registrationError(for: account)
+            accountController.showRegistrarConnectionErrorSheet(
+                error: registrationError(for: account)
             )
         }
 
@@ -106,7 +104,7 @@ final class AuthenticationFailureController: NSObject {
         let statusText: String?
 
         if Bundle.main.preferredLocalizations.first == "ru" {
-            statusText = LocalizedStringForSIPResponseCode(status)
+            statusText = SIPResponseLocalization.localizedString(for: status)
         } else {
             statusText = account.registrationStatusText
         }

@@ -16,6 +16,7 @@
 //  GNU General Public License for more details.
 //
 
+import Foundation
 final class SoundPreferencesViewSpy: NSObject {
     private(set) var invokedSoundIO: PresentationSoundIO?
     private(set) var invokedDevices: PresentationAudioDevices?

@@ -9,7 +9,7 @@ import SwiftUI
 @MainActor
 @objcMembers
 final class PreferencesController: NSObject, SoundIOPreferences {
-    weak var delegate: PreferencesControllerDelegate?
+    @nonobjc weak var delegate: PreferencesControllerDelegate?
 
     let userAgent: AKSIPUserAgent
     let soundPreferencesViewEventTarget: SoundPreferencesViewEventTarget
@@ -39,7 +39,6 @@ final class PreferencesController: NSObject, SoundIOPreferences {
         }
     )
 
-    @objc(initWithDelegate:userAgent:soundPreferencesViewEventTarget:)
     init(
         delegate: PreferencesControllerDelegate,
         userAgent: AKSIPUserAgent,
@@ -112,19 +111,19 @@ final class PreferencesController: NSObject, SoundIOPreferences {
     }
 
     @objc private func accountDidRemove(_ notification: Notification) {
-        delegate?.preferencesControllerDidRemoveAccount?(notification)
+        delegate?.preferencesControllerDidRemoveAccount(notification)
     }
 
     @objc private func accountEnabledDidChange(_ notification: Notification) {
-        delegate?.preferencesControllerDidChangeAccountEnabled?(notification)
+        delegate?.preferencesControllerDidChangeAccountEnabled(notification)
     }
 
     @objc private func accountsDidSwap(_ notification: Notification) {
-        delegate?.preferencesControllerDidSwapAccounts?(notification)
+        delegate?.preferencesControllerDidSwapAccounts(notification)
     }
 
     @objc private func networkSettingsDidChange(_ notification: Notification) {
-        delegate?.preferencesControllerDidChangeNetworkSettings?(notification)
+        delegate?.preferencesControllerDidChangeNetworkSettings(notification)
     }
 }
 

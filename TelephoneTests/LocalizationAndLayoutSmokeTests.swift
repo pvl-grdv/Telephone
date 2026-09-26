@@ -15,7 +15,7 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/AccountSettingsView.swift",
             "Telephone/AccountSetupView.swift",
             "Telephone/ApplicationDialogController.swift",
-            "Telephone/CallController.m",
+            "Telephone/CallController.swift",
             "Telephone/CallControlViews.swift",
             "Telephone/CallPresentationCoordinator.swift",
             "Telephone/CallWindowModel.swift",

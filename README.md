@@ -12,32 +12,38 @@ the Internet or a company network using a SIP account.
 
 ## Goals of this fork
 
-The goal is to keep Telephone small, native, and useful on current Macs while
-modernizing it incrementally where that has a concrete maintenance or usability
-benefit.
+Telephone 2 is a small, native macOS evolution of the original app. The
+application layer is Swift, with SwiftUI owning user-facing presentation and
+AppKit used only where macOS-specific integration needs it.
 
 In particular, this fork aims to:
 
 - keep Telephone working on current macOS releases and Apple silicon;
-- modernize focused user-facing code with Swift and SwiftUI when it simplifies
-  the implementation;
-- preserve the proven SIP, PJSIP, and CoreAudio behavior unless a change is
-  needed to fix a specific problem;
+- keep application code readable, explicit, and approachable to Swift
+  developers;
+- preserve proven SIP and audio behavior while exposing it through a narrow
+  Swift-to-C boundary;
 - keep third-party dependencies pinned and reproducible;
-- prefer small, reviewable changes over a wholesale rewrite.
+- prefer small, reviewable migrations over a big-bang rewrite.
 
-A full Objective-C/AppKit-to-SwiftUI rewrite is not a goal by itself.
+PJSIP, Opus, and LibreSSL remain external C dependencies. Telephone does not
+rewrite those libraries; it keeps their unsafe/C details at the lowest practical
+boundary of the application.
 
 ## Current direction
 
-Recent work in this fork includes:
+Telephone 2 now includes:
 
-- moving call, account, settings, and call-history presentation to native SwiftUI scenes;
-- adding local customer context and SQLite-backed call history;
-- publishing App Intents and Shortcuts for calling, settings, and account status;
-- hardening CoreAudio selection, account credentials, and SIP network validation;
-- updating the project for Swift 6, strict concurrency, and current macOS tooling;
-- automating reproducible builds of Opus, LibreSSL, and PJSIP.
+- a Swift 6.4 application layer with complete strict-concurrency checking;
+- native SwiftUI scenes for calls, accounts, settings, transfer, and call
+  history;
+- a Swift SIP runtime and Swift PJSIP callbacks, with one narrow C callback
+  header at the library boundary;
+- SQLite-backed call history and local customer context;
+- App Intents and Shortcuts for calling, settings, and account status;
+- hardened CoreAudio selection, account credentials, and SIP network
+  validation;
+- reproducible builds of pinned Opus, LibreSSL, and PJSIP dependencies.
 
 The fork intentionally keeps the Telephone name and its upstream history, while
 clearly identifying itself as independently maintained in the README and About

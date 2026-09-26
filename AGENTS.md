@@ -24,7 +24,9 @@ These rules are authoritative for automated coding agents working on this reposi
 ## Change policy
 
 - Prefer small diffs and existing architecture.
-- Do not rewrite Objective-C/AppKit to Swift/SwiftUI solely for modernization.
+- Telephone application code is Swift-only. Do not add Objective-C or Objective-C++ source files under `Telephone/`; CI enforces this.
+- Keep PJSIP, Opus, and LibreSSL as external C dependencies. Isolate unsafe C details at the narrow PJSIP boundary instead of spreading pointer-level code through the app.
+- Prefer SwiftUI for presentation and focused AppKit integration where macOS requires it.
 - Do not add architecture layers unless the task requires them.
 - Preserve PJSIP/CoreAudio behavior unless the task explicitly targets that behavior.
 - For macOS API availability, trust the actual project target and CI compiler over assumptions based on iOS APIs.

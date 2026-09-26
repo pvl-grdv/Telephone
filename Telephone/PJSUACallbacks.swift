@@ -38,9 +38,9 @@ func PJSUAOnCallReplaced(
     NSLog(
         "Call %d with %@ is being replaced by call %d with %@",
         oldCallID,
-        string(from: oldInfo.remote_info),
+        pjStringValue(oldInfo.remote_info),
         newCallID,
-        string(from: newInfo.remote_info)
+        pjStringValue(newInfo.remote_info)
     )
 
     let snapshot = PJSUACallInfo(
@@ -68,7 +68,7 @@ func PJSUAOnCallTransferStatus(
     _ wantsFurtherNotifications: UnsafeMutablePointer<pj_bool_t>?
 ) {
     let statusText = statusText.map {
-        string(from: $0.pointee)
+        pjStringValue($0.pointee)
     } ?? ""
     let isFinal = isFinal != 0
 
@@ -481,10 +481,10 @@ func PJSUAOnAccountFindForIncoming(
         return
     }
 
-    let toUser = string(from: toURI.pointee.user)
-    let toHost = string(from: toURI.pointee.host)
-    let requestUser = string(from: requestURI.pointee.user)
-    let requestHost = string(from: requestURI.pointee.host)
+    let toUser = pjStringValue(toURI.pointee.user)
+    let toHost = pjStringValue(toURI.pointee.host)
+    let requestUser = pjStringValue(requestURI.pointee.user)
+    let requestHost = pjStringValue(requestURI.pointee.host)
 
     var bestScore = 0
     var bestIdentifier = pjsua_acc_id(-1)
@@ -496,7 +496,7 @@ func PJSUAOnAccountFindForIncoming(
         }
 
         guard let uri = AKSIPURI(
-            string: string(from: info.acc_uri)
+            string: pjStringValue(info.acc_uri)
         ) else {
             continue
         }

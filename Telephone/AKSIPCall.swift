@@ -43,30 +43,28 @@ extension AKSIPCall {
         URI(remoteURI)
     }
 
-    public var active: Bool {
-        @objc(isActive) get {
+    public var isActive: Bool {
         guard identifier >= 0 else { return false }
-            return pjsua_call_is_active(pjsua_call_id(identifier)) != 0
-        }
+        return pjsua_call_is_active(pjsua_call_id(identifier)) != 0
     }
 
     public var isConfirmed: Bool {
-        @objc(isConfirmed) get { state.rawValue == 5 }
+        state.rawValue == 5
     }
 
     private final var isMicrophoneMutedState = false
 
     public var isMicrophoneMuted: Bool {
-        @objc(isMicrophoneMuted) get { isMicrophoneMutedState }
+        get { isMicrophoneMutedState }
         set { isMicrophoneMutedState = newValue }
     }
 
     public var isOnLocalHold: Bool {
-        @objc(isOnLocalHold) get { mediaStatusRawValue == 2 }
+        mediaStatusRawValue == 2
     }
 
     public var isOnRemoteHold: Bool {
-        @objc(isOnRemoteHold) get { mediaStatusRawValue == 3 }
+        mediaStatusRawValue == 3
     }
 
     public var incomingIdentityHeaders: [String: String]

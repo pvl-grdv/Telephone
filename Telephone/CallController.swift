@@ -146,7 +146,7 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
         }
     }
 
-    deinit {
+    isolated deinit {
         presentation.invalidate()
         if call?.delegate === self {
             call?.delegate = nil
@@ -234,7 +234,7 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
     func redial() {
         guard
             userAgent.isStarted,
-            accountController?.isEnabled == true,
+            accountController?.enabled == true,
             accountController?.canMakeCalls == true,
             let redialURI
         else {

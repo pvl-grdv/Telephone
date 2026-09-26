@@ -48,6 +48,7 @@ extension AKSIPURIFormatter {
         return true
     }
 
+    @objc(SIPURIFromString:)
     public func sipURI(from string: String) -> AKSIPURI {
         parsedDestination(from: string)
     }

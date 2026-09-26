@@ -30,12 +30,10 @@
           "kind": "group",
           "name": "Account",
           "children": [
-            { "path": "AccountController.h", "encoding": "utf8" },
             { "path": "AccountController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountPresentationCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountWindowScene.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountWindowView.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AccountControllerToAccountAdapter.h", "encoding": "utf8" },
             { "path": "AccountControllerToAccountAdapter.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallDestinationContactIndex.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallDestinationComposer.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -75,7 +73,6 @@
           "kind": "group",
           "name": "Call",
           "children": [
-            { "path": "CallController.h", "encoding": "utf8" },
             { "path": "CallController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallPresentationCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallWindowCloseNotificationGate.swift", "target-membership": [ "Telephone/compile-sources", "TelephonePresentationTests/compile-sources" ] },
@@ -90,7 +87,6 @@
             { "path": "CallControlViews.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallTransferViews.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CustomerContextView.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "CallController+Protected.h", "encoding": "utf8" },
             { "path": "CallControllerDelegate.h", "encoding": "utf8" },
           ],
         }, {
@@ -186,7 +182,6 @@
           "kind": "group",
           "name": "Call Transfer",
           "children": [
-            { "path": "CallTransferController.h", "encoding": "utf8" },
             { "path": "CallTransferController.swift", "target-membership": [ "Telephone/compile-sources" ] },
 
           ],
@@ -222,7 +217,6 @@
           "kind": "group",
           "name": "MusicPlayer",
           "children": [
-            { "path": "SystemMediaPlayer.h", "encoding": "utf8" },
             { "path": "SystemMediaPlayer.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
@@ -482,7 +476,6 @@
           ],
         },
         { "path": "CompositionRoot.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "AccountControllers.h" },
         { "path": "AccountControllers.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AccountCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AppController.h", "encoding": "utf8" },
@@ -500,7 +493,6 @@
         { "path": "AKKeychain.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "CredentialsStoring.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "CredentialsStore.swift", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "AKNetworkReachability.h", "encoding": "utf8" },
         { "path": "AKNetworkReachability.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKSIPURIFormatter.h", "encoding": "utf8" },
         { "path": "AKSIPURIFormatter.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -567,7 +559,6 @@
           ],
         },
         { "path": "<PROJECT>/TelephoneTests/LogFileURLTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
-        { "path": "NameServers.h" },
         { "path": "NameServers.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "NotificationNames.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "NSCalendarDayChangeEventSource.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -616,7 +607,6 @@
           ],
         },
         { "path": "<PROJECT>/TelephoneTests/SettingsAccountsTests.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
-        { "path": "SIPResponseLocalization.h" },
         { "path": "SIPResponseLocalization.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
           "path": "TelephoneError.swift",

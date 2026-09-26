@@ -178,7 +178,7 @@ final class AppController:
     func applicationDidFinishLaunching(
         _ notification: Notification
     ) {
-        compositionRoot.defaultAppSettings.registerDefaults()
+        compositionRoot.defaultAppSettings.register()
         compositionRoot.settingsMigration.execute()
 
         if TelephoneUITestSupport.handleLaunch(appController: self) {
@@ -669,10 +669,10 @@ final class AppController:
                 )
             )
         )
-        userAgent.STUNServerHost = defaults.string(
+        userAgent.stunServerHost = defaults.string(
             forKey: UserDefaultsKeys.stunServerHost
         ) ?? ""
-        userAgent.STUNServerPort = UInt(
+        userAgent.stunServerPort = UInt(
             max(
                 0,
                 defaults.integer(

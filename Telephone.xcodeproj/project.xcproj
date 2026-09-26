@@ -617,7 +617,7 @@
         },
         { "path": "<PROJECT>/TelephoneTests/SettingsAccountsTests.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "SIPResponseLocalization.h" },
-        { "path": "SIPResponseLocalization.m", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "SIPResponseLocalization.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
           "path": "TelephoneError.swift",
           "encoding": "utf8",

@@ -24,3 +24,6 @@
 #import "SoundIOPreferences.h"
 #import "SoundIOPresenterOutput.h"
 #import "SoundPreferencesView.h"
+
+#import "AKNSString+Escaping.h"
+#import "AKNSString+Scanning.h"

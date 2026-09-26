@@ -26,7 +26,6 @@
 #import "AKSIPURIFormatter.h"
 #import "AKTelephoneNumberFormatter.h"
 
-#import "AccountControllerToAccountAdapter.h"
 #import "CallTransferController.h"
 #import "SIPResponseLocalization.h"
 

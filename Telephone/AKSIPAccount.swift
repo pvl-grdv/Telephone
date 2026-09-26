@@ -60,7 +60,7 @@ extension AKSIPAccount {
     }
 
     public var registrationStatus: Int {
-        accountInfo.map { Int($0.status) } ?? 0
+        accountInfo.map { Int($0.status.rawValue) } ?? 0
     }
 
     public var registrationErrorCode: Int {
@@ -308,7 +308,7 @@ extension AKSIPAccount {
                 pjsua_call_make_call(
                     request.accountIdentifier,
                     &destination,
-                    0,
+                    nil,
                     nil,
                     nil,
                     &callIdentifier
@@ -336,6 +336,7 @@ extension AKSIPAccount {
         }
     }
 
+    @nonobjc
     private var accountInfo: pjsua_acc_info? {
         guard identifier >= 0 else {
             return nil

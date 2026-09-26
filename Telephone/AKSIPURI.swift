@@ -8,17 +8,17 @@
 import Foundation
 import UseCases
 
-public final class AKSIPURI: NSObject, NSCopying {
-    public var user: String
-    public var host: String
-    public var displayName: String
-    public var port: Int
+final class AKSIPURI: NSObject, NSCopying {
+    var user: String
+    var host: String
+    var displayName: String
+    var port: Int
 
-    public var sipAddress: String {
+    var sipAddress: String {
         SIPAddress(user: user, host: host).stringValue
     }
 
-    public static func sipURI(
+    static func sipURI(
         user: String,
         host: String,
         displayName: String
@@ -30,11 +30,11 @@ public final class AKSIPURI: NSObject, NSCopying {
         )
     }
 
-    public static func sipURI(string: String) -> AKSIPURI? {
+    static func sipURI(string: String) -> AKSIPURI? {
         AKSIPURI(string: string)
     }
 
-    public init(
+    init(
         user: String,
         host: String,
         displayName: String,
@@ -47,7 +47,7 @@ public final class AKSIPURI: NSObject, NSCopying {
         super.init()
     }
 
-    public convenience init(
+    convenience init(
         user: String,
         host: String,
         displayName: String
@@ -60,11 +60,11 @@ public final class AKSIPURI: NSObject, NSCopying {
         )
     }
 
-    public override convenience init() {
+    override convenience init() {
         self.init(user: "", host: "", displayName: "")
     }
 
-    public convenience init?(string: String) {
+    convenience init?(string: String) {
         guard let uri = URI(string) else {
             return nil
         }
@@ -76,7 +76,7 @@ public final class AKSIPURI: NSObject, NSCopying {
         )
     }
 
-    public override var description: String {
+    override var description: String {
         let address = ServiceAddress(
             host: host,
             port: port > 0 ? String(port) : ""
@@ -90,7 +90,7 @@ public final class AKSIPURI: NSObject, NSCopying {
         ).stringValue
     }
 
-    public override func isEqual(_ object: Any?) -> Bool {
+    override func isEqual(_ object: Any?) -> Bool {
         guard let other = object as? AKSIPURI else {
             return false
         }
@@ -101,7 +101,7 @@ public final class AKSIPURI: NSObject, NSCopying {
             && displayName == other.displayName
     }
 
-    public override var hash: Int {
+    override var hash: Int {
         var hasher = Hasher()
         hasher.combine(user)
         hasher.combine(host)
@@ -110,7 +110,7 @@ public final class AKSIPURI: NSObject, NSCopying {
         return hasher.finalize()
     }
 
-    public func copy(with zone: NSZone? = nil) -> Any {
+    func copy(with zone: NSZone? = nil) -> Any {
         AKSIPURI(
             user: user,
             host: host,

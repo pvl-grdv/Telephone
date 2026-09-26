@@ -194,8 +194,8 @@
           "kind": "group",
           "name": "Categories",
           "children": [
-            { "path": "AKNSString+PJSUA.h", "encoding": "utf8" },
-            { "path": "AKNSString+PJSUA.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+
+
             { "path": "AKNSString+Scanning.h", "encoding": "utf8" },
             {
               "path": "AKNSString+Scanning.swift",

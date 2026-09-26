@@ -35,7 +35,6 @@ struct TelephoneApp: App {
 
             AccountsCommands(
                 model: appController.accountsCommandModelForSwiftUI()
-                    as! AccountsCommandModel
             )
 
             CallCommands()

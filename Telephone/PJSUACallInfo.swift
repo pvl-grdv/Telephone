@@ -18,7 +18,7 @@ extension PJSUACallInfo {
     public let localURI: AKSIPURI
     public let remoteURI: AKSIPURI
     @objc(isIncoming)
-    public let isIncoming: Bool
+    public let incoming: Bool
 
     public init(
         info: pjsua_call_info,
@@ -36,7 +36,7 @@ extension PJSUACallInfo {
             ?? AKSIPURI()
         remoteURI = parser.sipURI(from: swiftString(info.remote_info))
             ?? AKSIPURI()
-        isIncoming = info.role == PJSIP_ROLE_UAS
+        incoming = info.role == PJSIP_ROLE_UAS
         super.init()
     }
 }

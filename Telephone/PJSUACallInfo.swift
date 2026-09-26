@@ -19,7 +19,7 @@ extension PJSUACallInfo {
     public let remoteURI: AKSIPURI
     private final let incomingValue: Bool
 
-    public var incoming: Bool {
+    public var isIncoming: Bool {
         incomingValue
     }
 

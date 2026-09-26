@@ -275,7 +275,7 @@ NS_ASSUME_NONNULL_END
 
     NSString *description = dict[AKSIPAccountKeys.desc];
     if ([description length] == 0) {
-        description = account.SIPAddress;
+        description = account.sipAddress;
     }
 
     AccountController *controller = [[AccountController alloc] initWithSIPAccount:account

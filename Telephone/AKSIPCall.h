@@ -56,8 +56,8 @@ typedef NS_ENUM(NSUInteger, AKSIPCallState) {
 
 @property(nonatomic, readonly) AKSIPAccount *account;
 @property(nonatomic, readonly) URI *remote;
-@property(nonatomic, readonly, getter=isIncoming) BOOL incoming NS_SWIFT_NAME(isIncoming);
-@property(nonatomic, getter=isMissed) BOOL missed NS_SWIFT_NAME(isMissed);
+@property(nonatomic, readonly) BOOL isIncoming;
+@property(nonatomic) BOOL isMissed;
 @property(nonatomic) NSInteger identifier;
 
 @property(nonatomic, weak) id<AKSIPCallDelegate> delegate;
@@ -73,11 +73,11 @@ typedef NS_ENUM(NSUInteger, AKSIPCallState) {
 @property(nonatomic, readonly, copy) NSDate *date;
 @property(nonatomic, readonly) AKSIPURI *localURI;
 @property(nonatomic, readonly) AKSIPURI *remoteURI;
-@property(nonatomic, readonly, getter=isActive) BOOL active;
-@property(nonatomic, readonly, getter=isConfirmed) BOOL confirmed;
-@property(nonatomic, getter=isMicrophoneMuted) BOOL microphoneMuted;
-@property(nonatomic, readonly, getter=isOnLocalHold) BOOL onLocalHold;
-@property(nonatomic, readonly, getter=isOnRemoteHold) BOOL onRemoteHold;
+@property(nonatomic, readonly) BOOL isActive;
+@property(nonatomic, readonly) BOOL isConfirmed;
+@property(nonatomic) BOOL isMicrophoneMuted;
+@property(nonatomic, readonly) BOOL isOnLocalHold;
+@property(nonatomic, readonly) BOOL isOnRemoteHold;
 
 // Selected identity/routing headers captured from the incoming INVITE.
 @property(nonatomic, copy) NSDictionary<NSString *, NSString *> *incomingIdentityHeaders;

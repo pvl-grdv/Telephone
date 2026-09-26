@@ -26,7 +26,6 @@
 #import "AKSIPAccount.h"
 #import "AKSIPCall.h"
 
-#import "AccountController.h"
 #import "NameServers.h"
 
 #import "Telephone-Swift.h"

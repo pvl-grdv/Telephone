@@ -27,7 +27,6 @@
 #import "AKTelephoneNumberFormatter.h"
 
 #import "CallTransferController.h"
-#import "SIPResponseLocalization.h"
 
 #import "Telephone-Swift.h"
 
@@ -159,7 +158,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
                 NSString *statusText;
                 NSString *preferredLocalization = [[NSBundle mainBundle] preferredLocalizations][0];
                 if ([preferredLocalization isEqualToString:kRussian]) {
-                    statusText = LocalizedStringForSIPResponseCode([[self account] registrationStatus]);
+                    statusText = [SIPResponseLocalization localizedStringForCode:[[self account] registrationStatus]];
                 } else {
                     statusText = [[self account] registrationStatusText];
                 }
@@ -552,7 +551,7 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
                     NSString *statusText;
                     NSString *preferredLocalization = [[NSBundle mainBundle] preferredLocalizations][0];
                     if ([preferredLocalization isEqualToString:kRussian]) {
-                        statusText = LocalizedStringForSIPResponseCode([[self account] registrationStatus]);
+                        statusText = [SIPResponseLocalization localizedStringForCode:[[self account] registrationStatus]];
                     } else {
                         statusText = [[self account] registrationStatusText];
                     }

@@ -15,7 +15,7 @@ import UseCases
 @objcMembers
 final class AccountController:
     NSObject,
-    @preconcurrency AKSIPAccountDelegate,
+    AKSIPAccountDelegate,
     CallControllerDelegate,
     AccountPresentationCoordinatorDelegate
 {
@@ -375,7 +375,6 @@ final class AccountController:
 
     // MARK: - AKSIPAccountDelegate
 
-    @objc(SIPAccountRegistrationDidChange:)
     func sipAccountRegistrationDidChange(_ account: AKSIPAccount) {
         guard accountAdded else { return }
 
@@ -402,12 +401,10 @@ final class AccountController:
         shouldPresentRegistrationError = false
     }
 
-    @objc(SIPAccountWillRemove:)
     func sipAccountWillRemove(_ account: AKSIPAccount) {
         invalidateReRegistrationTimer()
     }
 
-    @objc(SIPAccount:didReceiveCall:)
     func sipAccount(
         _ account: AKSIPAccount,
         didReceive call: AKSIPCall

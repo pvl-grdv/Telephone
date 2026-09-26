@@ -436,7 +436,7 @@
               ],
             },
             { "path": "AKSIPCall.h", "encoding": "utf8" },
-            { "path": "AKSIPCall.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AKSIPCall.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPCallDelegate.h", "encoding": "utf8" },
             {
               "path": "AKSIPCallEventSource.swift",

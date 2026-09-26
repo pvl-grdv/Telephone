@@ -16,6 +16,8 @@
 //  GNU General Public License for more details.
 //
 
+import UseCases
+
 extension AKSIPUserAgent: ConditionalRingtonePlaybackUseCaseDelegate {
     public func playbackCanStop(_ playback: ConditionalRingtonePlaybackUseCase) -> Bool {
         return !hasUnansweredIncomingCalls

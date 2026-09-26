@@ -178,19 +178,19 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)removeAccount:(AKSIPAccount *)account NS_SWIFT_NAME(removeAccount(_:));
 
 // Returns a SIP account with a given identifier.
-- (nullable AKSIPAccount *)accountWithIdentifier:(NSInteger)identifier;
+- (nullable AKSIPAccount *)accountWithIdentifier:(NSInteger)identifier NS_SWIFT_NAME(account(withIdentifier:));
 
 // Returns a SIP call with a given identifier.
-- (nullable AKSIPCall *)callWithIdentifier:(NSInteger)identifier;
+- (nullable AKSIPCall *)callWithIdentifier:(NSInteger)identifier NS_SWIFT_NAME(call(withIdentifier:));
 
 // Hangs up all calls controlled by the receiver.
 - (void)hangUpAllCalls;
 
 // Starts local ringback sound for the specified call.
-- (void)startRingbackForCall:(AKSIPCall *)call;
+- (void)startRingbackForCall:(AKSIPCall *)call NS_SWIFT_NAME(startRingback(for:));
 
 // Stops local ringback sound for the specified call.
-- (void)stopRingbackForCall:(AKSIPCall *)call;
+- (void)stopRingbackForCall:(AKSIPCall *)call NS_SWIFT_NAME(stopRingback(for:));
 
 // Sets sound input and output.
 - (BOOL)setSoundInputDevice:(NSInteger)input soundOutputDevice:(NSInteger)output;

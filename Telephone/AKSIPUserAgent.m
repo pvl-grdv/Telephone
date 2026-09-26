@@ -745,7 +745,7 @@ static void AKSIPUserAgentOnIPChangeProgress(
     
     [[self accounts] addObject:anAccount];
     
-    [anAccount setOnline:YES];
+    [anAccount setIsOnline:YES];
 
     return YES;
 }

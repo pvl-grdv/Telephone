@@ -426,7 +426,7 @@
             { "path": "AKSIPUserAgent+ConditionalRingtonePlaybackUseCaseDelegate.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPUserAgent+UserAgent.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPAccount.h", "encoding": "utf8" },
-            { "path": "AKSIPAccount.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AKSIPAccount.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPAccountDelegate.h", "encoding": "utf8" },
             {
               "path": "AKSIPAccountKeys.swift",

@@ -214,6 +214,7 @@ final class AKSIPUserAgent: NSObject {
         )
     }
 
+    @MainActor
     func stopAndWait() {
         guard storage.state.rawValue == 2 else {
             return

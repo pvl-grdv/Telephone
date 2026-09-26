@@ -118,14 +118,14 @@ func PJSUAOnNATDetect(
         return
     }
 
-    let result = result.pointee
-    guard result.status == 0 else {
-        NSLog("NAT detection failed with status %d", result.status)
+    let detection = result.pointee
+    guard detection.status == 0 else {
+        NSLog("NAT detection failed with status %d", detection.status)
         return
     }
 
     let natType = AKNATType(
-        rawValue: UInt(result.nat_type.rawValue)
+        rawValue: UInt(detection.nat_type.rawValue)
     ) ?? AKNATType(rawValue: 0)!
 
     Task { @MainActor in

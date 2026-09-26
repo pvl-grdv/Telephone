@@ -319,14 +319,6 @@
             { "path": "<PROJECT>/TelephoneTests/PreferencesControllerAccountsEventSourceTests.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "PreferencesControllerDelegate.h", "encoding": "utf8" },
             { "path": "PreferencesControllerNotifications.h", "encoding": "utf8" },
-            {
-              "path": "PreferencesControllerNotifications.m",
-              "encoding": "utf8",
-              "target-membership": [
-                "Telephone/compile-sources",
-                "TelephoneTests/compile-sources",
-              ],
-            },
           ],
         }, {
           "kind": "group",
@@ -430,14 +422,6 @@
             },
             { "path": "<PROJECT>/TelephoneTests/AKSIPUserAgentEventSourceTests.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "AKSIPUserAgentNotifications.h", "encoding": "utf8" },
-            {
-              "path": "AKSIPUserAgentNotifications.m",
-              "encoding": "utf8",
-              "target-membership": [
-                "Telephone/compile-sources",
-                "TelephoneTests/compile-sources",
-              ],
-            },
             { "path": "AKSIPUserAgent+Calls.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPUserAgent+ConditionalRingtonePlaybackUseCaseDelegate.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPUserAgent+UserAgent.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
@@ -464,14 +448,6 @@
             },
             { "path": "<PROJECT>/TelephoneTests/AKSIPCallEventSourceTests.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "AKSIPCallNotifications.h", "encoding": "utf8" },
-            {
-              "path": "AKSIPCallNotifications.m",
-              "encoding": "utf8",
-              "target-membership": [
-                "Telephone/compile-sources",
-                "TelephoneTests/compile-sources",
-              ],
-            },
             { "path": "AKSIPURI.h", "encoding": "utf8" },
             { "path": "AKSIPURI.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPURIParser.h" },

@@ -16,26 +16,27 @@
 //  GNU General Public License for more details.
 //
 
+import AppKit
 import Contacts
 import Foundation
 import UseCases
 
 @MainActor
-final class CompositionRoot: NSObject {
-    @objc let userAgent: AKSIPUserAgent
-    @objc let preferencesController: PreferencesController
-    @objc let ringtonePlayback: RingtonePlaybackUseCase
-    @objc let userAgentStart: UseCase
-    @objc let settingsMigration: ProgressiveSettingsMigration
-    @objc let orphanLogFileRemoval: OrphanLogFileRemoval
-    @objc let workstationSleepStatus: WorkspaceSleepStatus
-    @objc let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
-    @objc let logFileURL: LogFileURL
-    @objc let defaultAppSettings: DefaultAppSettings
-    @objc let helpMenuActionTarget: HelpMenuActionTarget
-    @objc let accountControllers: AccountControllers
-    @objc let nameServers: NameServers
-    @objc let incomingCallContactResolver: IncomingCallContactResolver
+final class CompositionRoot {
+    let userAgent: AKSIPUserAgent
+    let preferencesController: PreferencesController
+    let ringtonePlayback: RingtonePlaybackUseCase
+    let userAgentStart: UseCase
+    let settingsMigration: ProgressiveSettingsMigration
+    let orphanLogFileRemoval: OrphanLogFileRemoval
+    let workstationSleepStatus: WorkspaceSleepStatus
+    let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
+    let logFileURL: LogFileURL
+    let defaultAppSettings: DefaultAppSettings
+    let helpMenuActionTarget: HelpMenuActionTarget
+    let accountControllers: AccountControllers
+    let nameServers: NameServers
+    let incomingCallContactResolver: IncomingCallContactResolver
     private let defaults: UserDefaults
 
     private let userAgentEventSource: AKSIPUserAgentEventSource

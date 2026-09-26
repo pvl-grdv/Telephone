@@ -22,7 +22,7 @@ final class CallTransferController: CallController {
 
         super.init(
             windowNibName: "CallTransfer",
-            accountController: sourceCallController.accountController,
+            accountController: sourceCallController.accountController!,
             userAgent: userAgent,
             delegate: sourceCallController.accountController
         )

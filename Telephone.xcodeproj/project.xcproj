@@ -223,7 +223,7 @@
           "name": "MusicPlayer",
           "children": [
             { "path": "SystemMediaPlayer.h", "encoding": "utf8" },
-            { "path": "SystemMediaPlayer.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "SystemMediaPlayer.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
           "kind": "group",
@@ -500,7 +500,7 @@
         { "path": "CredentialsStoring.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "CredentialsStore.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKNetworkReachability.h", "encoding": "utf8" },
-        { "path": "AKNetworkReachability.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "AKNetworkReachability.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKSIPURIFormatter.h", "encoding": "utf8" },
         { "path": "AKSIPURIFormatter.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKTelephoneNumberFormatter.h", "encoding": "utf8" },
@@ -567,7 +567,7 @@
         },
         { "path": "<PROJECT>/TelephoneTests/LogFileURLTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "NameServers.h" },
-        { "path": "NameServers.m", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "NameServers.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "NSCalendarDayChangeEventSource.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "NSPasteboard+Clipboard.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "NSUserDefaults+KeyValueSettings.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },

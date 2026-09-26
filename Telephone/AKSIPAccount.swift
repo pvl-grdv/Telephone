@@ -368,13 +368,13 @@ private final class SIPCallRequest: NSObject, @unchecked Sendable {
     let destination: URI
     let accountIdentifier: pjsua_acc_id
     let parser: AKSIPURIParser
-    let completion: @MainActor @Sendable (PJSUACallInfo?) -> Void
+    let completion: @MainActor (PJSUACallInfo?) -> Void
 
     init(
         destination: URI,
         accountIdentifier: pjsua_acc_id,
         parser: AKSIPURIParser,
-        completion: @escaping @MainActor @Sendable (PJSUACallInfo?) -> Void
+        completion: @escaping @MainActor (PJSUACallInfo?) -> Void
     ) {
         self.destination = destination
         self.accountIdentifier = accountIdentifier

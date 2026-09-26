@@ -25,19 +25,6 @@ final class AccountControllers: NSObject {
         set { controllers[index] = newValue }
     }
 
-    @objc(objectAtIndexedSubscript:)
-    func object(atIndexedSubscript index: Int) -> AccountController {
-        controllers[index]
-    }
-
-    @objc(setObject:atIndexedSubscript:)
-    func setObject(
-        _ object: AccountController,
-        atIndexedSubscript index: Int
-    ) {
-        controllers[index] = object
-    }
-
     @objc(indexOfController:)
     func index(of controller: AccountController) -> Int {
         controllers.firstIndex { $0 === controller } ?? NSNotFound

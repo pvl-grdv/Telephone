@@ -16,6 +16,7 @@
 //  GNU General Public License for more details.
 //
 
+import Foundation
 import UseCases
 
 @MainActor
@@ -30,7 +31,7 @@ final class ProgressiveSettingsMigration: NSObject {
 }
 
 extension ProgressiveSettingsMigration: SettingsMigration {
-    @objc func execute() {
+    func execute() {
         if settings.integer(forKey: UserDefaultsKeys.settingsVersion) == 0 {
             factory.makeAccountUUIDMigration().execute()
             settings.set(1, forKey: UserDefaultsKeys.settingsVersion)

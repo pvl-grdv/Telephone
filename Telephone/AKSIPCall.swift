@@ -36,17 +36,8 @@ extension AKSIPCall {
     public let localURI: AKSIPURI
     public let remoteURI: AKSIPURI
 
-    private final let incomingState: Bool
-    private final var missedState: Bool
-
-    public var incoming: Bool {
-        @objc(isIncoming) get { incomingState }
-    }
-
-    public var missed: Bool {
-        @objc(isMissed) get { missedState }
-        set { missedState = newValue }
-    }
+    public let isIncoming: Bool
+    public var isMissed: Bool
 
     public var remote: URI {
         URI(remoteURI)
@@ -59,23 +50,23 @@ extension AKSIPCall {
         }
     }
 
-    public var confirmed: Bool {
-        @objc(confirmed) get { state.rawValue == 5 }
+    public var isConfirmed: Bool {
+        @objc(isConfirmed) get { state.rawValue == 5 }
     }
 
-    private final var microphoneMutedState = false
+    private final var isMicrophoneMutedState = false
 
-    public var microphoneMuted: Bool {
-        @objc(microphoneMuted) get { microphoneMutedState }
-        set { microphoneMutedState = newValue }
+    public var isMicrophoneMuted: Bool {
+        @objc(isMicrophoneMuted) get { isMicrophoneMutedState }
+        set { isMicrophoneMutedState = newValue }
     }
 
-    public var onLocalHold: Bool {
-        @objc(onLocalHold) get { mediaStatusRawValue == 2 }
+    public var isOnLocalHold: Bool {
+        @objc(isOnLocalHold) get { mediaStatusRawValue == 2 }
     }
 
-    public var onRemoteHold: Bool {
-        @objc(onRemoteHold) get { mediaStatusRawValue == 3 }
+    public var isOnRemoteHold: Bool {
+        @objc(isOnRemoteHold) get { mediaStatusRawValue == 3 }
     }
 
     public var incomingIdentityHeaders: [String: String]
@@ -94,8 +85,8 @@ extension AKSIPCall {
         date = Date()
         localURI = info.localURI
         remoteURI = info.remoteURI
-        incomingState = info.isIncoming
-        missedState = info.isIncoming
+        isIncoming = info.isIncoming
+        isMissed = info.isIncoming
         incomingIdentityHeaders = [:]
         super.init()
     }
@@ -119,7 +110,7 @@ extension AKSIPCall {
         )
 
         if status == 0 {
-            missed = false
+            isMissed = false
         } else {
             NSLog("Error answering call %@", self)
         }
@@ -138,7 +129,7 @@ extension AKSIPCall {
         )
 
         if status == 0 {
-            missed = false
+            isMissed = false
         } else {
             NSLog("Error hanging up call %@", self)
         }
@@ -231,11 +222,11 @@ extension AKSIPCall {
     }
 
     public func toggleMicrophoneMute() {
-        setMuted(!microphoneMuted)
+        setMuted(!isMicrophoneMuted)
     }
 
     public func toggleHold() {
-        setHeld(!onLocalHold)
+        setHeld(!isOnLocalHold)
     }
 
     @nonobjc
@@ -267,7 +258,7 @@ extension AKSIPCall {
 
     @nonobjc
     private final func muteMicrophone() {
-        guard !microphoneMuted, confirmed else {
+        guard !isMicrophoneMuted, isConfirmed else {
             return
         }
 
@@ -279,7 +270,7 @@ extension AKSIPCall {
             0,
             media.stream.aud.conf_slot
         ) == 0 {
-            microphoneMuted = true
+            isMicrophoneMuted = true
         } else {
             NSLog("Error muting microphone in call %@", self)
         }
@@ -287,7 +278,7 @@ extension AKSIPCall {
 
     @nonobjc
     private final func unmuteMicrophone() {
-        guard isMicrophoneMuted, confirmed else {
+        guard isMicrophoneMuted, isConfirmed else {
             return
         }
 
@@ -299,7 +290,7 @@ extension AKSIPCall {
             0,
             media.stream.aud.conf_slot
         ) == 0 {
-            microphoneMuted = false
+            isMicrophoneMuted = false
         } else {
             NSLog("Error unmuting microphone in call %@", self)
         }
@@ -307,7 +298,7 @@ extension AKSIPCall {
 
     @nonobjc
     private final func hold() {
-        guard confirmed, !onRemoteHold else {
+        guard isConfirmed, !isOnRemoteHold else {
             return
         }
 
@@ -319,7 +310,7 @@ extension AKSIPCall {
 
     @nonobjc
     private final func unhold() {
-        guard confirmed else {
+        guard isConfirmed else {
             return
         }
 

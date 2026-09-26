@@ -46,7 +46,7 @@ final class AccountPresentationCoordinator: NSObject {
         AccountWindowSceneController.shared.install()
     }
 
-    @objc(initWithAccountDescription:accountController:userAgent:callHistoryViewEventTargetFactory:account:delegate:)
+    @nonobjc
     init(
         accountDescription: String,
         accountController: AccountController,

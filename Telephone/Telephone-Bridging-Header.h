@@ -16,8 +16,6 @@
 #import "AKSIPURIFormatter.h"
 #import "AKTelephoneNumberFormatter.h"
 #import "AKSIPUserAgent.h"
-#import "SystemMediaPlayer.h"
-#import "NameServers.h"
 #import "PreferencesControllerDelegate.h"
 #import "PreferencesControllerNotifications.h"
 #import "SIPResponseLocalization.h"

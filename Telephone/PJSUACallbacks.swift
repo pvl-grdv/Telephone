@@ -335,7 +335,7 @@ func PJSUAOnCallState(
         switch snapshot.state.rawValue {
         case 6:
             agent.stopRingback(for: call)
-            call.account.remove(call)
+            call.sipAccount.remove(call)
             publishCallEvent(.AKSIPCallDidDisconnect, call: call)
 
         case 3:

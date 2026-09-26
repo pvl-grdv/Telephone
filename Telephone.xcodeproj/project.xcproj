@@ -198,8 +198,7 @@
             { "path": "AKNSString+PJSUA.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKNSString+Scanning.h", "encoding": "utf8" },
             {
-              "path": "AKNSString+Scanning.m",
-              "encoding": "utf8",
+              "path": "AKNSString+Scanning.swift",
               "target-membership": [
                 "Telephone/compile-sources",
                 "TelephoneTests/compile-sources",
@@ -207,7 +206,7 @@
             },
             { "path": "<PROJECT>/TelephoneTests/AKNSString+ScanningTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "AKNSString+Escaping.h", "encoding": "utf8" },
-            { "path": "AKNSString+Escaping.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AKNSString+Escaping.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "Array+Creating.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "URI+AKSIPURI.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
           ],

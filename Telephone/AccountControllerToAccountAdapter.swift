@@ -8,6 +8,7 @@
 import Foundation
 import UseCases
 
+@objc(AccountControllerToAccountAdapter)
 final class AccountControllerToAccountAdapter:
     NSObject,
     Account,

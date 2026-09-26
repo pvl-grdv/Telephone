@@ -112,7 +112,6 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
 
     private var didHandleWindowClose = false
 
-    @objc(initWithWindowNibName:accountController:userAgent:delegate:)
     init(
         windowNibName: String,
         accountController: AccountController,

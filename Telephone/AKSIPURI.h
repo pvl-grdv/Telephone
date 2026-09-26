@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface AKSIPURI : NSObject <NSCopying>
 
-@property(nonatomic, readonly, copy) NSString *SIPAddress;
+@property(nonatomic, readonly, copy) NSString *SIPAddress NS_SWIFT_NAME(sipAddress);
 
 @property(nonatomic, copy) NSString *user;
 @property(nonatomic, copy) NSString *host;
@@ -30,13 +30,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, assign) NSInteger port;
 
-+ (instancetype)SIPURIWithUser:(NSString *)user host:(NSString *)host displayName:(NSString *)displayName;
-+ (nullable instancetype)SIPURIWithString:(NSString *)SIPURIString;
++ (instancetype)SIPURIWithUser:(NSString *)user host:(NSString *)host displayName:(NSString *)displayName NS_SWIFT_NAME(sipURI(user:host:displayName:));
++ (nullable instancetype)SIPURIWithString:(NSString *)SIPURIString NS_SWIFT_NAME(sipURI(string:));
 
-- (instancetype)initWithUser:(NSString *)user host:(NSString *)host displayName:(NSString *)displayName port:(NSInteger)port NS_DESIGNATED_INITIALIZER;
-- (instancetype)initWithUser:(NSString *)user host:(NSString *)host displayName:(NSString *)displayName;
+- (instancetype)initWithUser:(NSString *)user host:(NSString *)host displayName:(NSString *)displayName port:(NSInteger)port NS_DESIGNATED_INITIALIZER NS_SWIFT_NAME(init(user:host:displayName:port:));
+- (instancetype)initWithUser:(NSString *)user host:(NSString *)host displayName:(NSString *)displayName NS_SWIFT_NAME(init(user:host:displayName:));
 
-- (nullable instancetype)initWithString:(NSString *)SIPURIString;
+- (nullable instancetype)initWithString:(NSString *)SIPURIString NS_SWIFT_NAME(init(string:));
 
 @end
 

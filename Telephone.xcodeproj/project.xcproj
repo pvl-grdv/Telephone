@@ -482,7 +482,7 @@
         },
         { "path": "CompositionRoot.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AccountControllers.h" },
-        { "path": "AccountControllers.m", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "AccountControllers.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AccountCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AppController.h", "encoding": "utf8" },
         { "path": "AppController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },

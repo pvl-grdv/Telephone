@@ -22,7 +22,6 @@
 @import UseCases;
 
 #import "AKSIPCallDelegate.h"
-#import "AKSIPCallNotifications.h"
 
 
 NS_ASSUME_NONNULL_BEGIN

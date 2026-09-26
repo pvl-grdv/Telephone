@@ -16,7 +16,7 @@ import UseCases
 final class AccountController:
     NSObject,
     @preconcurrency AKSIPAccountDelegate,
-    @preconcurrency CallControllerDelegate,
+    CallControllerDelegate,
     AccountPresentationCoordinatorDelegate
 {
     let account: AKSIPAccount

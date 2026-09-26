@@ -16,7 +16,7 @@ class CallController: NSObject, @preconcurrency AKSIPCallDelegate {
     private static let autoCloseDelay: TimeInterval = 1.5
     private static let redialEnableDelay: TimeInterval = 1.0
 
-    weak var delegate: (any CallControllerDelegate)?
+    @nonobjc weak var delegate: (any CallControllerDelegate)?
     weak var accountController: AccountController?
 
     let identifier = UUID().uuidString

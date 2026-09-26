@@ -20,7 +20,6 @@
 #import <pjsua-lib/pjsua.h>
 
 #import "AKSIPUserAgentDelegate.h"
-#import "AKSIPUserAgentNotifications.h"
 
 
 // User agent states.

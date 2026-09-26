@@ -5,21 +5,14 @@
 #import <pjsua-lib/pjsua.h>
 #import "PJSUACallbacks.h"
 
-#import "CallControllerDelegate.h"
 #import "AppController.h"
 #import "AKSIPAccount.h"
 #import "AKKeychain.h"
 #import "AKSIPCall.h"
-#import "AKSIPCallNotifications.h"
 #import "AKSIPURI.h"
 #import "AKSIPURIFormatter.h"
 #import "AKTelephoneNumberFormatter.h"
 #import "AKSIPUserAgent.h"
-#import "PreferencesControllerDelegate.h"
-#import "PreferencesControllerNotifications.h"
-#import "SoundIOPreferences.h"
-#import "SoundIOPresenterOutput.h"
-#import "SoundPreferencesView.h"
 
 #import "AKNSString+Escaping.h"
 #import "AKNSString+Scanning.h"

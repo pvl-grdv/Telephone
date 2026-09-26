@@ -17,7 +17,7 @@ final class AppController:
     NSObject,
     NSApplicationDelegate,
     @preconcurrency AKSIPUserAgentDelegate,
-    @preconcurrency PreferencesControllerDelegate,
+    PreferencesControllerDelegate,
     @preconcurrency UNUserNotificationCenterDelegate,
     NameServersChangeEventTarget
 {

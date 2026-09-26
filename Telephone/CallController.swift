@@ -152,9 +152,6 @@ class CallController: NSObject, AKSIPCallDelegate {
         }
     }
 
-    override var description: String {
-        call?.description ?? super.description
-    }
 
     @objc(showWindow:)
     func showWindow(_ sender: Any?) {
@@ -293,7 +290,7 @@ class CallController: NSObject, AKSIPCallDelegate {
     @objc(setCallHeld:)
     func setCallHeld(_ held: Bool) {
         guard
-            call?.state.rawValue == 5,
+            call?.state == PJSIP_INV_STATE_CONFIRMED,
             call?.isOnRemoteHold == false
         else {
             return
@@ -308,7 +305,7 @@ class CallController: NSObject, AKSIPCallDelegate {
 
     @objc(setMicrophoneMuted:)
     func setMicrophoneMuted(_ muted: Bool) {
-        guard call?.state.rawValue == 5 else {
+        guard call?.state == PJSIP_INV_STATE_CONFIRMED else {
             return
         }
 

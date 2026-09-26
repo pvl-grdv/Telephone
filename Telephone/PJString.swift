@@ -24,10 +24,9 @@ func pjStringValue(_ value: pj_str_t) -> String {
         return ""
     }
 
-    return String(
-        bytesNoCopy: UnsafeMutableRawPointer(pointer),
-        length: Int(value.slen),
-        encoding: .utf8,
-        freeWhenDone: false
-    ) ?? ""
+    let bytes = UnsafeRawBufferPointer(
+        start: pointer,
+        count: Int(value.slen)
+    )
+    return String(decoding: bytes, as: UTF8.self)
 }

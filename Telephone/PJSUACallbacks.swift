@@ -246,8 +246,10 @@ private func incomingHeaderValue(
             return nil
         }
 
-        buffer[Int(length)] = 0
-        let line = String(cString: buffer)
+        let bytes = buffer.prefix(Int(length)).map {
+            UInt8(bitPattern: $0)
+        }
+        let line = String(decoding: bytes, as: UTF8.self)
 
         let value: Substring
         if let colon = line.firstIndex(of: ":") {
@@ -283,7 +285,7 @@ func PJSUAOnCallState(
     let duration = Int(info.connect_duration.sec)
 
     let provisionalCode =
-        snapshot.state.rawValue == 3
+        snapshot.state == PJSIP_INV_STATE_EARLY
             ? snapshot.lastStatus
             : nil
     let provisionalReason =
@@ -294,7 +296,7 @@ func PJSUAOnCallState(
     let firstMedia: pjsua_call_media_info? =
         Array(tuple: info.media).first
     let shouldStartRingback =
-        snapshot.state.rawValue == 3
+        snapshot.state == PJSIP_INV_STATE_EARLY
         && info.role.rawValue == PJSIP_ROLE_UAC.rawValue
         && snapshot.lastStatus == 180
         && firstMedia?.status.rawValue
@@ -305,7 +307,7 @@ func PJSUAOnCallState(
             withIdentifier: Int(callID)
         )
 
-        if call == nil, snapshot.state.rawValue == 1 {
+        if call == nil, snapshot.state == PJSIP_INV_STATE_CALLING {
             guard let account = agent.account(
                 withIdentifier: snapshot.accountIdentifier
             ) else {
@@ -332,13 +334,13 @@ func PJSUAOnCallState(
         call.lastStatusText = snapshot.lastStatusText
         call.duration = duration
 
-        switch snapshot.state.rawValue {
-        case 6:
+        switch snapshot.state {
+        case PJSIP_INV_STATE_DISCONNECTED:
             agent.stopRingback(for: call)
             call.sipAccount.remove(call)
             publishCallEvent(.AKSIPCallDidDisconnect, call: call)
 
-        case 3:
+        case PJSIP_INV_STATE_EARLY:
             if shouldStartRingback {
                 agent.startRingback(for: call)
             }
@@ -357,13 +359,13 @@ func PJSUAOnCallState(
                 userInfo: userInfo
             )
 
-        case 1:
+        case PJSIP_INV_STATE_CALLING:
             publishCallEvent(.AKSIPCallCalling, call: call)
 
-        case 4:
+        case PJSIP_INV_STATE_CONNECTING:
             publishCallEvent(.AKSIPCallConnecting, call: call)
 
-        case 5:
+        case PJSIP_INV_STATE_CONFIRMED:
             publishCallEvent(.AKSIPCallDidConfirm, call: call)
 
         default:

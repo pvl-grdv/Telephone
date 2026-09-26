@@ -45,12 +45,12 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
     }
 
     var isActive: Bool {
-        guard identifier >= 0 else { return false }
+        guard identifier != kAKSIPUserAgentInvalidIdentifier else { return false }
         return pjsua_call_is_active(pjsua_call_id(identifier)) != 0
     }
 
     var isConfirmed: Bool {
-        state.rawValue == 5
+        state == PJSIP_INV_STATE_CONFIRMED
     }
 
     var isMicrophoneMuted: Bool {
@@ -59,11 +59,11 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
     }
 
     var isOnLocalHold: Bool {
-        mediaStatusRawValue == 2
+        mediaStatus == PJSUA_CALL_MEDIA_LOCAL_HOLD
     }
 
     var isOnRemoteHold: Bool {
-        mediaStatusRawValue == 3
+        mediaStatus == PJSUA_CALL_MEDIA_REMOTE_HOLD
     }
 
     var incomingIdentityHeaders: [String: String]
@@ -107,7 +107,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
     }
 
     func hangUp() {
-        guard identifier >= 0, state.rawValue != 6 else {
+        guard identifier != kAKSIPUserAgentInvalidIdentifier, state != PJSIP_INV_STATE_DISCONNECTED else {
             return
         }
 
@@ -214,21 +214,17 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
     }
 
     func toggleHold() {
-        setHeld(mediaStatusRawValue != 2)
+        setHeld(mediaStatus != PJSUA_CALL_MEDIA_LOCAL_HOLD)
     }
 
     @nonobjc
-    private final var mediaStatusRawValue: UInt32? {
-        guard let media = firstMediaInfo() else {
-            return nil
-        }
-
-        return media.status.rawValue
+    private final var mediaStatus: pjsua_call_media_status? {
+        firstMediaInfo()?.status
     }
 
     @nonobjc
     private final func firstMediaInfo() -> pjsua_call_media_info? {
-        guard identifier >= 0 else {
+        guard identifier != kAKSIPUserAgentInvalidIdentifier else {
             return nil
         }
 
@@ -286,7 +282,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
 
     @nonobjc
     private final func hold() {
-        guard state.rawValue == 5, mediaStatusRawValue != 3 else {
+        guard state == PJSIP_INV_STATE_CONFIRMED, mediaStatus != PJSUA_CALL_MEDIA_REMOTE_HOLD else {
             return
         }
 
@@ -298,7 +294,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
 
     @nonobjc
     private final func unhold() {
-        guard state.rawValue == 5 else {
+        guard state == PJSIP_INV_STATE_CONFIRMED else {
             return
         }
 

@@ -52,9 +52,7 @@ final class AccountControllers: NSObject {
     @objc(callControllerByIdentifier:)
     func callController(byIdentifier identifier: String) -> CallController? {
         for accountController in enabled {
-            for case let callController as CallController
-                in accountController.callControllers
-            {
+            for callController in accountController.callControllers {
                 if callController.identifier == identifier {
                     return callController
                 }
@@ -66,18 +64,14 @@ final class AccountControllers: NSObject {
     @objc(haveActiveCallControllers)
     func haveActiveCallControllers() -> Bool {
         enabled.contains { accountController in
-            accountController.callControllers.contains { item in
-                (item as? CallController)?.callActive == true
-            }
+            accountController.callControllers.contains(where: \.callActive)
         }
     }
 
     @objc(unhandledIncomingCallsCount)
     func unhandledIncomingCallsCount() -> Int {
         enabled.reduce(into: 0) { count, accountController in
-            for case let callController as CallController
-                in accountController.callControllers
-            {
+            for callController in accountController.callControllers {
                 if callController.call?.isIncoming == true
                     && callController.callUnhandled
                 {
@@ -90,13 +84,11 @@ final class AccountControllers: NSObject {
     @objc(showIncomingCallWindows)
     func showIncomingCallWindows() {
         for accountController in enabled {
-            for case let callController as CallController
-                in accountController.callControllers
-            {
+            for callController in accountController.callControllers {
                 guard let call = callController.call else { continue }
 
-                if call.identifier >= 0
-                    && call.state.rawValue == 2
+                if call.identifier != kAKSIPUserAgentInvalidIdentifier
+                    && call.state == PJSIP_INV_STATE_INCOMING
                 {
                     callController.showWindow(nil)
                 }
@@ -116,9 +108,7 @@ final class AccountControllers: NSObject {
     @objc(hangUpCallsAndRemoveAccountsFromUserAgent)
     func hangUpCallsAndRemoveAccountsFromUserAgent() {
         for accountController in enabled {
-            for case let callController as CallController
-                in accountController.callControllers
-            {
+            for callController in accountController.callControllers {
                 callController.hangUpCall()
             }
 

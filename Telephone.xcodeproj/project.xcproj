@@ -455,6 +455,7 @@
             { "path": "PJSUACallbacks.h", "encoding": "utf8" },
             { "path": "PJSUACallInfo.h" },
             { "path": "PJSUACallInfo.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "PJString.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJSUAOnIncomingCall.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJSUAOnCallState.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJSUAOnCallMediaState.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },

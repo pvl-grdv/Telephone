@@ -11,11 +11,13 @@ import Foundation
 extension AKSIPURIParser {
     public weak var agent: AKSIPUserAgent?
 
+    @objc(initWithUserAgent:)
     public init(userAgent: AKSIPUserAgent) {
         agent = userAgent
         super.init()
     }
 
+    @objc(SIPURIFromString:)
     public func sipURI(from string: String) -> AKSIPURI? {
         guard agent?.isStarted == true else {
             return nil

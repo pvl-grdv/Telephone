@@ -17,6 +17,7 @@ extension PJSUACallInfo {
     public let lastStatusText: String
     public let localURI: AKSIPURI
     public let remoteURI: AKSIPURI
+    @objc(isIncoming)
     public let isIncoming: Bool
 
     public init(
@@ -29,7 +30,7 @@ extension PJSUACallInfo {
             rawValue: UInt(info.state.rawValue)
         )!
         stateText = swiftString(info.state_text)
-        lastStatus = Int(info.last_status)
+        lastStatus = Int(info.last_status.rawValue)
         lastStatusText = swiftString(info.last_status_text)
         localURI = parser.sipURI(from: swiftString(info.local_info))
             ?? AKSIPURI()

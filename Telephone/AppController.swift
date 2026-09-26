@@ -16,7 +16,7 @@ import UseCases
 final class AppController:
     NSObject,
     NSApplicationDelegate,
-    @preconcurrency AKSIPUserAgentDelegate,
+    AKSIPUserAgentDelegate,
     PreferencesControllerDelegate,
     @preconcurrency UNUserNotificationCenterDelegate,
     NameServersChangeEventTarget
@@ -270,8 +270,7 @@ final class AppController:
 
     // MARK: - AKSIPUserAgentDelegate
 
-    @objc(SIPUserAgentShouldAddAccount:)
-    func sipUserAgentShouldAddAccount(
+    func sipUserAgentShouldAdd(
         _ account: AKSIPAccount
     ) -> Bool {
         if userAgent.isStarted {
@@ -284,7 +283,6 @@ final class AppController:
         return false
     }
 
-    @objc(SIPUserAgentDidFinishStarting:)
     func sipUserAgentDidFinishStarting(
         _ notification: Notification
     ) {
@@ -322,7 +320,6 @@ final class AppController:
         shouldPresentUserAgentLaunchError = false
     }
 
-    @objc(SIPUserAgentDidFinishStopping:)
     func sipUserAgentDidFinishStopping(
         _ notification: Notification
     ) {
@@ -342,13 +339,11 @@ final class AppController:
         }
     }
 
-    @objc(SIPUserAgentDidDetectNAT:)
     func sipUserAgentDidDetectNAT(
         _ notification: Notification
     ) {
         guard
-            userAgent.detectedNATType.rawValue
-                == UInt(PJ_STUN_NAT_TYPE_BLOCKED.rawValue)
+            userAgent.detectedNATType == PJ_STUN_NAT_TYPE_BLOCKED
         else {
             return
         }

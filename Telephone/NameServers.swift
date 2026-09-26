@@ -117,3 +117,6 @@ private func nameServersStoreDidChange(
         nameServers.notifyTarget()
     }
 }
+
+
+extension NameServers: @unchecked Sendable {}

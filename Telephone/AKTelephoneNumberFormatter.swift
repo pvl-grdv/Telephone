@@ -7,10 +7,10 @@
 
 import Foundation
 
-public final class AKTelephoneNumberFormatter: Formatter {
-    public var splitsLastFourDigits = false
+final class AKTelephoneNumberFormatter: Formatter {
+    var splitsLastFourDigits = false
 
-    public override func string(for obj: Any?) -> String? {
+    override func string(for obj: Any?) -> String? {
         guard let value = obj as? String else {
             return nil
         }
@@ -32,7 +32,7 @@ public final class AKTelephoneNumberFormatter: Formatter {
         return value
     }
 
-    public override func getObjectValue(
+    override func getObjectValue(
         _ obj: AutoreleasingUnsafeMutablePointer<AnyObject?>?,
         for string: String,
         errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?
@@ -47,7 +47,7 @@ public final class AKTelephoneNumberFormatter: Formatter {
         return true
     }
 
-    public func telephoneNumber(from string: String) -> String {
+    func telephoneNumber(from string: String) -> String {
         extractedTelephoneNumber(from: string) ?? ""
     }
 }

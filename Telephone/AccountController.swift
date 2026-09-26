@@ -83,9 +83,7 @@ final class AccountController:
         account.identifier >= 0
     }
 
-    @objc(
-        initWithSIPAccount:accountDescription:userAgent:ringtonePlayback:sleepStatus:incomingCallContactResolver:callHistoryViewEventTargetFactory:
-    )
+    @nonobjc
     init(
         sipAccount account: AKSIPAccount,
         accountDescription: String,

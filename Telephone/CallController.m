@@ -101,6 +101,16 @@ static const NSTimeInterval kRedialButtonReenableTime = 1.0;
     return _callTransferController;
 }
 
+- (void)discardCallTransfer {
+    CallTransferController *transferController = _callTransferController;
+    if (transferController == nil) {
+        return;
+    }
+
+    _callTransferController = nil;
+    [transferController close];
+}
+
 
 - (void)setTitle:(NSString *)title {
     if (![_title isEqualToString:title]) {

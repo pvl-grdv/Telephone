@@ -151,6 +151,10 @@ final class AccountSettingsModel: NSObject {
         accounts.count < maximumAccountCount
     }
 
+    var accountListInteractionDisabled: Bool {
+        passwordIsLoading || credentialsAreSaving
+    }
+
     var selectedAccountTitle: String {
         guard let selection else { return "" }
         return accounts.first(where: { $0.id == selection })?.title ?? ""
@@ -225,13 +229,16 @@ final class AccountSettingsModel: NSObject {
     }
 
     func addAccount() {
+        guard !accountListInteractionDisabled else { return }
         flushPendingChanges()
         guard canAddAccount else { return }
         presentAddAccount?()
     }
 
     func requestRemoval() {
-        guard selection != nil else { return }
+        guard !accountListInteractionDisabled, selection != nil else {
+            return
+        }
         pendingRemovalID = selection
     }
 
@@ -240,7 +247,12 @@ final class AccountSettingsModel: NSObject {
     }
 
     func confirmRemoval() {
-        guard let identifier = pendingRemovalID else { return }
+        guard
+            !accountListInteractionDisabled,
+            let identifier = pendingRemovalID
+        else {
+            return
+        }
         pendingRemovalID = nil
 
         autosaveTask?.cancel()
@@ -300,6 +312,7 @@ final class AccountSettingsModel: NSObject {
     }
 
     func moveAccounts(from offsets: IndexSet, to destination: Int) {
+        guard !accountListInteractionDisabled else { return }
         guard offsets.count == 1, let source = offsets.first else { return }
         guard destination != source, destination != source + 1 else { return }
 
@@ -400,7 +413,6 @@ final class AccountSettingsModel: NSObject {
 
         guard
             !draft.isEnabled,
-            !passwordIsLoading,
             let selection
         else {
             return
@@ -422,7 +434,11 @@ final class AccountSettingsModel: NSObject {
             hasUnsavedDraft = false
         }
 
-        guard saveCredentials, credentialsAreDirty else {
+        guard
+            saveCredentials,
+            credentialsAreDirty,
+            !passwordIsLoading
+        else {
             return
         }
 
@@ -557,6 +573,7 @@ final class AccountSettingsModel: NSObject {
         guard let index = stored.firstIndex(where: {
             stringValue($0[AKSIPAccountKeys.uuid]) == selection
         }) else {
+            deleteCredentials(service: service, account: username)
             return
         }
 

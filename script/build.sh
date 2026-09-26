@@ -16,7 +16,27 @@ DEFAULT_BUILD_COMMIT="$(
 BUILD_COMMIT="${TELEPHONE_BUILD_COMMIT:-${DEFAULT_BUILD_COMMIT:-local}}"
 
 "$ROOT_DIR/script/bootstrap_third_party.sh"
-
 mkdir -p "$BUILD_DIR"
 
-exec xcodebuild   -project "$ROOT_DIR/Telephone.xcodeproj"   -target Telephone   -configuration "$CONFIGURATION"   -sdk macosx   ARCHS=arm64   ONLY_ACTIVE_ARCH=YES   SYMROOT="$BUILD_DIR"   OBJROOT="$BUILD_DIR/Intermediates.noindex"   DEVELOPMENT_TEAM=""   CODE_SIGNING_ALLOWED=NO   CURRENT_PROJECT_VERSION="$BUILD_NUMBER"   TELEPHONE_BUILD_COMMIT="$BUILD_COMMIT"   build
+XCODEBUILD_ARGS=(
+  -project "$ROOT_DIR/Telephone.xcodeproj"
+  -target Telephone
+  -configuration "$CONFIGURATION"
+  -sdk macosx
+  "ARCHS=arm64"
+  "ONLY_ACTIVE_ARCH=YES"
+  "SYMROOT=$BUILD_DIR"
+  "OBJROOT=$BUILD_DIR/Intermediates.noindex"
+  "DEVELOPMENT_TEAM="
+  "CODE_SIGNING_ALLOWED=NO"
+  "CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+  "TELEPHONE_BUILD_COMMIT=$BUILD_COMMIT"
+)
+
+if [[ -n "${TELEPHONE_MARKETING_VERSION:-}" ]]; then
+  XCODEBUILD_ARGS+=(
+    "MARKETING_VERSION=$TELEPHONE_MARKETING_VERSION"
+  )
+fi
+
+exec xcodebuild "${XCODEBUILD_ARGS[@]}" build

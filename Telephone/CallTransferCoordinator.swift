@@ -26,8 +26,12 @@ final class CallTransferCoordinator {
             : nil
     }
 
-    func resetForCallChange() {
+    func discardSourceTransferSession() {
+        guard !model.isTransfer else { return }
+
         waitingForHold = false
+        model.transferPresentation = nil
+        callController?.discardCallTransfer()
     }
 
     func showDestinationState() {

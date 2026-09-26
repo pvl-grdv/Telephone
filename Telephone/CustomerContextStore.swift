@@ -130,6 +130,11 @@ final class CustomerContextStore {
     }
 
     private func ensureSchema() throws {
+        let version = try databaseUserVersion()
+        guard version <= TelephoneDatabaseSchema.currentVersion else {
+            throw SQLiteStoreError.unsupportedSchema(version)
+        }
+
         try TelephoneDatabaseSchema.createPartyTables(execute: execute)
         try TelephoneDatabaseSchema.createCustomerContextTables(
             execute: execute
@@ -448,6 +453,16 @@ final class CustomerContextStore {
         sqlite3_bind_double(statement.handle, 4, now)
         sqlite3_bind_double(statement.handle, 5, now)
         try stepDone(statement)
+    }
+
+    private func databaseUserVersion() throws -> Int {
+        let statement = try prepare("PRAGMA user_version")
+        guard statement.step() == SQLITE_ROW else {
+            throw SQLiteStoreError.sqlite(
+                "Could not read SQLite schema version"
+            )
+        }
+        return Int(statement.int(at: 0))
     }
 
     private func tableExists(_ name: String) throws -> Bool {

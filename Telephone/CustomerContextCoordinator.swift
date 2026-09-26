@@ -14,6 +14,9 @@ final class CustomerContextCoordinator {
     private var loadTask: Task<Void, Never>?
     private var saveTask: Task<Void, Never>?
     private var loadedKey: String?
+    private var loadedAddress: CustomerPartyAddress?
+    private var loadedDisplayName = ""
+    private var callIdentifier = UUID().uuidString
     private var isApplyingSnapshot = false
 
     init(
@@ -36,20 +39,22 @@ final class CustomerContextCoordinator {
             return
         }
 
-        let callIdentifier = callController.identifier
+        let contextIdentifier = callIdentifier
         let key = "\(address.kind)|\(address.normalizedValue)|\(callIdentifier)"
         guard loadedKey != key else { return }
 
         loadTask?.cancel()
         loadedKey = key
-        model.customerContextLoaded = false
+        loadedAddress = address
         let displayName = customerDisplayName
+        loadedDisplayName = displayName
+        model.customerContextLoaded = false
 
         loadTask = Task { [weak self, crmProvider] in
             async let localSnapshot = CustomerContextStore.shared.load(
                 address: address,
                 displayName: displayName,
-                callIdentifier: callIdentifier
+                callIdentifier: contextIdentifier
             )
             async let crmProfile = crmProvider.customer(for: address)
 
@@ -92,6 +97,21 @@ final class CustomerContextCoordinator {
         }
     }
 
+    func callDidChange() {
+        saveNow(ignoringPreference: true)
+
+        loadTask?.cancel()
+        loadTask = nil
+        saveTask?.cancel()
+        saveTask = nil
+
+        loadedKey = nil
+        loadedAddress = nil
+        loadedDisplayName = ""
+        callIdentifier = UUID().uuidString
+        resetPresentation()
+    }
+
     func scheduleSave() {
         guard
             isEnabled,
@@ -131,9 +151,7 @@ final class CustomerContextCoordinator {
             (ignoringPreference || isEnabled),
             model.customerContextLoaded,
             !isApplyingSnapshot,
-            let callController,
-            let address = partyAddress,
-            !callController.identifier.isEmpty
+            let address = loadedAddress
         else {
             return
         }
@@ -141,8 +159,8 @@ final class CustomerContextCoordinator {
         saveTask?.cancel()
         saveTask = nil
 
-        let callIdentifier = callController.identifier
-        let displayName = customerDisplayName
+        let contextIdentifier = callIdentifier
+        let displayName = loadedDisplayName
         let company = model.customerCompany
         let keys = listValues(model.customerKeys)
         let emails = listValues(model.customerEmails)
@@ -152,7 +170,7 @@ final class CustomerContextCoordinator {
             await CustomerContextStore.shared.save(
                 address: address,
                 displayName: displayName,
-                callIdentifier: callIdentifier,
+                callIdentifier: contextIdentifier,
                 company: company,
                 keys: keys,
                 emails: emails,
@@ -162,10 +180,27 @@ final class CustomerContextCoordinator {
     }
 
     func invalidate() {
+        saveNow(ignoringPreference: true)
+
         loadTask?.cancel()
         loadTask = nil
         saveTask?.cancel()
         saveTask = nil
+        loadedKey = nil
+        loadedAddress = nil
+        model.customerContextLoaded = false
+    }
+
+    private func resetPresentation() {
+        model.customerCompany = ""
+        model.customerKeys = ""
+        model.customerEmails = ""
+        model.customerNote = ""
+        model.previousConversationCount = 0
+        model.lastCallDate = nil
+        model.recentCustomerNotes = []
+        model.crmProfile = nil
+        model.customerContextLoaded = false
     }
 
     private var isEnabled: Bool {

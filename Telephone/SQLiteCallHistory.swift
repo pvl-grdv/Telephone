@@ -134,11 +134,9 @@ extension SQLiteCallHistory: CallHistory {
 }
 
 private extension SQLiteCallHistory {
-    static let schemaVersion = 2
-
     func migrateSchema() throws {
         var version = try userVersion()
-        guard version <= Self.schemaVersion else {
+        guard version <= TelephoneDatabaseSchema.currentVersion else {
             throw SQLiteStoreError.unsupportedSchema(version)
         }
 
@@ -376,7 +374,9 @@ private extension SQLiteCallHistory {
     func legacyRecords(at url: URL) throws -> [CallHistoryRecord] {
         let data = try Data(contentsOf: url)
         let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-        guard let dictionaries = plist as? [[String: Any]] else { return [] }
+        guard let dictionaries = plist as? [[String: Any]] else {
+            throw SQLiteStoreError.invalidLegacyCallHistory
+        }
 
         return dictionaries.map {
             CallHistoryRecord(

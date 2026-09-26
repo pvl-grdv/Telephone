@@ -68,6 +68,7 @@ struct AccountSettingsView: View {
                 .onMove(perform: model.moveAccounts)
             }
             .listStyle(.sidebar)
+            .disabled(model.accountListInteractionDisabled)
 
             Divider()
 
@@ -86,7 +87,10 @@ struct AccountSettingsView: View {
                 }
                 .buttonStyle(.borderless)
                 .accessibilityIdentifier("settings.add-account")
-                .disabled(!model.canAddAccount)
+                .disabled(
+                    !model.canAddAccount
+                        || model.accountListInteractionDisabled
+                )
                 .help(NSLocalizedString("Add Account", comment: "Add account button."))
 
                 Button {
@@ -95,7 +99,10 @@ struct AccountSettingsView: View {
                     Image(systemName: "minus")
                 }
                 .buttonStyle(.borderless)
-                .disabled(!model.hasSelection)
+                .disabled(
+                    !model.hasSelection
+                        || model.accountListInteractionDisabled
+                )
                 .help(NSLocalizedString("Remove Account", comment: "Remove account button."))
 
                 Spacer()

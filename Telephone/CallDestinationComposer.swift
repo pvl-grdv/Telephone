@@ -79,7 +79,8 @@ private final class CallDestinationInputModel {
     private var contactsPermissionRequestInFlight = false
 
     @ObservationIgnored
-    private var suggestionTask: Task<Void, Never>?
+    private var suggestionTask:
+        Task<[CallDestinationSuggestionMatch], Never>?
 
     @ObservationIgnored
     private var isApplyingSelection = false
@@ -216,6 +217,8 @@ private final class CallDestinationInputModel {
     }
 
     func dismissSuggestions() {
+        suggestionTask?.cancel()
+        suggestionTask = nil
         suggestions = []
         highlightedSuggestionID = nil
     }
@@ -261,17 +264,20 @@ private final class CallDestinationInputModel {
             return
         }
 
-        suggestionTask = Task { [weak self] in
-            let matches = await Task.detached(priority: .userInitiated) {
-                Self.suggestionMatches(
-                    contacts: contactsCache,
-                    query: query,
-                    limit: 5
-                )
-            }.value
+        let task = Task.detached(priority: .userInitiated) {
+            Self.suggestionMatches(
+                contacts: contactsCache,
+                query: query,
+                limit: 5
+            )
+        }
+        suggestionTask = task
+
+        Task { [weak self] in
+            let matches = await task.value
 
             guard
-                !Task.isCancelled,
+                !task.isCancelled,
                 let self,
                 self.isFocused,
                 self.text.trimmingCharacters(
@@ -281,6 +287,7 @@ private final class CallDestinationInputModel {
                 return
             }
 
+            self.suggestionTask = nil
             self.applySuggestionMatches(matches)
         }
     }
@@ -351,6 +358,8 @@ private final class CallDestinationInputModel {
         var seen = Set<String>()
 
         for contact in contacts {
+            guard !Task.isCancelled else { return [] }
+
             let nameMatches = contactMatchesName(
                 contact,
                 query: query
@@ -396,11 +405,12 @@ private final class CallDestinationInputModel {
         let status = CNContactStore.authorizationStatus(for: .contacts)
 
         if status == .authorized {
-            if contactsCache == nil {
-                refreshContactsCache()
-            }
+            refreshContactsCache()
             return
         }
+
+        contactsCache = nil
+        dismissSuggestions()
 
         guard
             status == .notDetermined,

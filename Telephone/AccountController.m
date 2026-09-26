@@ -318,7 +318,9 @@ static NSString *FormattedIncomingCallSource(AKSIPCall *call, NSUserDefaults *de
     [aCallController setNameFromAddressBook:[destinationURI displayName]];
     [aCallController setPhoneLabelFromAddressBook:phoneLabel];
     [aCallController setEnteredCallDestination:enteredCallDestinationString];
-    [[self callControllers] addObject:aCallController];
+    if (![[self callControllers] containsObject:aCallController]) {
+        [[self callControllers] addObject:aCallController];
+    }
     
     // Set title.
     if ([[destinationURI host] length] > 0) {

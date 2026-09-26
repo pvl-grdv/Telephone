@@ -4,6 +4,8 @@
 //
 
 enum TelephoneDatabaseSchema {
+    static let currentVersion = 2
+
     static func createPartyTables(
         execute: (String) throws -> Void
     ) throws {

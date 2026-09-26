@@ -9,6 +9,7 @@ import SQLite3
 enum SQLiteStoreError: Error, CustomStringConvertible {
     case databaseUnavailable
     case unsupportedSchema(Int)
+    case invalidLegacyCallHistory
     case sqlite(String)
 
     var description: String {
@@ -17,6 +18,8 @@ enum SQLiteStoreError: Error, CustomStringConvertible {
             return "SQLite database is unavailable"
         case let .unsupportedSchema(version):
             return "SQLite schema version \(version) is newer than this Telephone build supports"
+        case .invalidLegacyCallHistory:
+            return "Legacy call history has an unexpected format"
         case let .sqlite(message):
             return message
         }

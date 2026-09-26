@@ -1345,7 +1345,7 @@
           "\"$(SRCROOT)/ThirdParty/LibreSSL/lib\"",
           "\"$(SRCROOT)/ThirdParty/Opus/lib\"",
         ],
-        "MARKETING_VERSION": "1.6",
+        "MARKETING_VERSION": "1.7",
         "TELEPHONE_BUILD_COMMIT": "local",
         "OTHER_LDFLAGS": [
           "-lpjsua-arm-apple-darwin",

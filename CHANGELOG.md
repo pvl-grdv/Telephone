@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.7
-- Minimum deployment target 15.6.
+- Minimum deployment target macOS 26.
 - Swift 6.
 - StoreKit 2.
 - Liquid Glass app icon.

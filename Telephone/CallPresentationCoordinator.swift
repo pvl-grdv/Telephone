@@ -170,8 +170,9 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         stopCallTimer()
         cancelRedialEnable()
         cancelIntermediateStatusRestore()
+        customerContextCoordinator?.callDidChange()
+        transferCoordinator.discardSourceTransferSession()
         session.setCall(call)
-        transferCoordinator.resetForCallChange()
         enteredDTMF = NSMutableString()
         model.usesDTMFDisplay = false
 
@@ -214,6 +215,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     }
 
     func showEndedState() {
+        transferCoordinator.discardSourceTransferSession()
         model.showEndedState()
         endActiveCallInterval()
         stopCallTimer()

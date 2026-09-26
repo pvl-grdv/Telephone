@@ -108,6 +108,14 @@ void PJSUAOnIncomingCall(pjsua_acc_id accountID, pjsua_call_id callID, pjsip_rx_
             3,
             (
                 THIS_FILE,
+                "Incoming identity headers captured: %lu",
+                (unsigned long)identityHeaders.count
+            )
+        );
+        PJ_LOG(
+            4,
+            (
+                THIS_FILE,
                 "Incoming identity headers: %s",
                 identityHeaders.description.UTF8String
             )

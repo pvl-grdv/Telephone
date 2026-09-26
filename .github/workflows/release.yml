@@ -41,14 +41,35 @@ jobs:
         shell: bash
         run: |
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
-            version="${GITHUB_REF_NAME#v}"
+            label="${GITHUB_REF_NAME#v}"
+            marketing_version="$label"
           else
-            version="${{ inputs.version }}"
+            label="${{ inputs.version }}"
+            marketing_version=""
+            if [[ "$label" != "dev" ]]; then
+              marketing_version="$label"
+            fi
           fi
-          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+          if [[ -n "$marketing_version" &&
+                ! "$marketing_version" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+            echo "Version must contain one to three numeric components." >&2
+            exit 1
+          fi
+
+          echo "value=$label" >> "$GITHUB_OUTPUT"
+          echo "marketing=$marketing_version" >> "$GITHUB_OUTPUT"
 
       - name: Build and package
+        env:
+          TELEPHONE_MARKETING_VERSION: ${{ steps.version.outputs.marketing }}
         run: ./script/package_local.sh "${{ steps.version.outputs.value }}"
+
+      - name: Verify release version
+        if: steps.version.outputs.marketing != ''
+        run: |
+          APP_INFO="build/Release/Telephone.app/Contents/Info.plist"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_INFO")" = "${{ steps.version.outputs.marketing }}"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v7

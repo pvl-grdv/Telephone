@@ -22,36 +22,11 @@
 @interface CallTransferController ()
 
 @property(nonatomic, weak) CallController *sourceCallController;
-@property(nonatomic, assign) BOOL sourceCallTransferred;
 
 @end
 
 
 @implementation CallTransferController
-
-- (void)setSourceCallController:(CallController *)callController {
-    if (_sourceCallController == callController) {
-        return;
-    }
-
-    NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-
-    if (_sourceCallController != nil) {
-        [center removeObserver:self
-                         name:AKSIPCallTransferStatusDidChangeNotification
-                       object:[_sourceCallController call]];
-    }
-
-    if (callController != nil) {
-        [center addObserver:self
-                   selector:@selector(sourceCallControllerSIPCallTransferStatusDidChange:)
-                       name:AKSIPCallTransferStatusDidChangeNotification
-                     object:[callController call]];
-    }
-
-    self.sourceCallTransferred = NO;
-    _sourceCallController = callController;
-}
 
 - (instancetype)initWithSourceCallController:(CallController *)callController
                                    userAgent:(AKSIPUserAgent *)userAgent {
@@ -65,7 +40,7 @@
         return nil;
     }
 
-    [self setSourceCallController:callController];
+    _sourceCallController = callController;
     [self showInitialState:self];
     return self;
 }
@@ -75,12 +50,14 @@
 }
 
 - (void)closeSheet:(id)sender {
-    if (self.sourceCallController.isCallActive &&
-        self.sourceCallController.isCallOnHold) {
-        [self.sourceCallController toggleCallHold];
+    CallController *sourceCallController = self.sourceCallController;
+    if (sourceCallController.isCallActive &&
+        sourceCallController.isCallOnHold) {
+        [sourceCallController toggleCallHold];
     }
 
-    [self.sourceCallController dismissCallTransfer];
+    [sourceCallController dismissCallTransfer];
+    [sourceCallController discardCallTransfer];
 }
 
 - (void)showInitialState:(id)sender {
@@ -123,10 +100,6 @@
 
 - (void)SIPCallDidDisconnect:(NSNotification *)notification {
     [super SIPCallDidDisconnect:notification];
-
-    if (self.sourceCallTransferred) {
-        [self closeSheet:self];
-    }
 }
 
 - (void)SIPCallDidLocalHold:(NSNotification *)notification {
@@ -134,20 +107,5 @@
     [self callDidHoldForTransfer];
 }
 
-
-#pragma mark - Source call transfer status
-
-- (void)sourceCallControllerSIPCallTransferStatusDidChange:(NSNotification *)notification {
-    AKSIPCall *sourceCall = notification.object;
-    BOOL isFinal = [notification.userInfo[@"AKFinalTransferNotification"] boolValue];
-
-    if (isFinal && sourceCall.transferStatus == PJSIP_SC_OK) {
-        self.sourceCallTransferred = YES;
-
-        if (!self.isCallActive) {
-            [self closeSheet:self];
-        }
-    }
-}
 
 @end

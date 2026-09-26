@@ -46,6 +46,7 @@ final class CNContactStoreContactsChangeEventSource {
     @objc private func contactsDidChange(_ notification: Notification) {
         Task { [target] in
             await target.contactsDidChange()
+            await CallDestinationContactIndex.shared.invalidate()
         }
     }
 }

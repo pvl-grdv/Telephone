@@ -95,6 +95,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)callWindowDidClose;
 - (void)setShowsAccountInfo:(BOOL)visible;
 
+// Ends and releases the current attended-transfer session, if there is one.
+- (void)discardCallTransfer;
+
 // Accepts an incoming call.
 - (void)acceptCall;
 

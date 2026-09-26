@@ -36,6 +36,33 @@ struct AccountSettingsModelTests {
     }
 
     @Test
+    func accountListIsLockedDuringCredentialWork() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials
+        )
+
+        #expect(model.accountListInteractionDisabled)
+        await waitForPasswordLoad(model)
+        #expect(!model.accountListInteractionDisabled)
+
+        model.draft.password = "replacement"
+        model.setEnabled(true)
+
+        #expect(model.accountListInteractionDisabled)
+        model.requestRemoval()
+        #expect(model.pendingRemovalID == nil)
+
+        await waitForCredentialSave(fixture.credentials)
+        await waitUntil { !model.credentialsAreSaving }
+        #expect(!model.accountListInteractionDisabled)
+    }
+
+    @Test
     func changedCredentialIdentityUsesNewServiceAndAccount() async {
         let fixture = makeFixture()
         defer { fixture.cleanup() }

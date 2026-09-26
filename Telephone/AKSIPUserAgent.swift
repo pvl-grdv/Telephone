@@ -760,7 +760,7 @@ final class AKSIPUserAgent: NSObject {
         }
     }
 
-    @nonobjc
+    @MainActor
     private final func finishStopping() {
         pj_shutdown()
         storage.accounts.removeAll()

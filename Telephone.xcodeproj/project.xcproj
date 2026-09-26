@@ -190,7 +190,6 @@
           "children": [
 
 
-            { "path": "AKNSString+Scanning.h", "encoding": "utf8" },
             {
               "path": "AKNSString+Scanning.swift",
               "target-membership": [
@@ -199,7 +198,6 @@
               ],
             },
             { "path": "<PROJECT>/TelephoneTests/AKNSString+ScanningTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
-            { "path": "AKNSString+Escaping.h", "encoding": "utf8" },
             { "path": "AKNSString+Escaping.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "Array+Creating.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "URI+AKSIPURI.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
@@ -397,9 +395,7 @@
           "kind": "group",
           "name": "SIP User Agent",
           "children": [
-            { "path": "AKSIPUserAgent.h", "encoding": "utf8" },
             { "path": "AKSIPUserAgent.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AKSIPUserAgentDelegate.h", "encoding": "utf8" },
             {
               "path": "AKSIPUserAgentEventSource.swift",
               "encoding": "utf8",
@@ -412,9 +408,7 @@
             { "path": "AKSIPUserAgent+Calls.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPUserAgent+ConditionalRingtonePlaybackUseCaseDelegate.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AKSIPUserAgent+UserAgent.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AKSIPAccount.h", "encoding": "utf8" },
             { "path": "AKSIPAccount.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AKSIPAccountDelegate.h", "encoding": "utf8" },
             {
               "path": "AKSIPAccountKeys.swift",
               "target-membership": [
@@ -422,9 +416,7 @@
                 "TelephoneTests/compile-sources",
               ],
             },
-            { "path": "AKSIPCall.h", "encoding": "utf8" },
             { "path": "AKSIPCall.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AKSIPCallDelegate.h", "encoding": "utf8" },
             {
               "path": "AKSIPCallEventSource.swift",
               "encoding": "utf8",
@@ -434,12 +426,9 @@
               ],
             },
             { "path": "<PROJECT>/TelephoneTests/AKSIPCallEventSourceTests.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
-            { "path": "AKSIPURI.h", "encoding": "utf8" },
             { "path": "AKSIPURI.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "AKSIPURIParser.h" },
             { "path": "AKSIPURIParser.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJSUACallbacks.h", "encoding": "utf8" },
-            { "path": "PJSUACallInfo.h" },
             { "path": "PJSUACallInfo.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJString.swift", "target-membership": [ "Telephone/compile-sources" ] },
 
@@ -448,6 +437,7 @@
 
 
             { "path": "PJSUACallbacks.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "SIPRuntimeTypes.swift", "target-membership": [ "Telephone/compile-sources" ] },
 
 
             {
@@ -470,7 +460,6 @@
         { "path": "CompositionRoot.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AccountControllers.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AccountCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "AppController.h", "encoding": "utf8" },
         { "path": "AppController.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "ApplicationDialogController.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
@@ -481,14 +470,11 @@
           ],
         },
         { "path": "<PROJECT>/TelephoneTests/AppSettingsTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
-        { "path": "AKKeychain.h", "encoding": "utf8" },
         { "path": "AKKeychain.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "CredentialsStoring.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "CredentialsStore.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKNetworkReachability.swift", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "AKSIPURIFormatter.h", "encoding": "utf8" },
         { "path": "AKSIPURIFormatter.swift", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "AKTelephoneNumberFormatter.h", "encoding": "utf8" },
         { "path": "AKTelephoneNumberFormatter.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "ApplicationUserAttentionRequest.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {

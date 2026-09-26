@@ -60,11 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 // The AKSIPUserAgent class implements SIP User Agent functionality. You can use it to create, configure, and start user
 // agent, add and remove accounts, and set sound devices for input and output. You need to restart the user agent after
 // you change its properties when it is already running.
-@interface AKSIPUserAgent : NSObject {
-  @private
-    AKSIPUserAgentCallData _callData[PJSUA_MAX_CALLS];
-    pj_thread_desc _descriptor;
-}
+@interface AKSIPUserAgent : NSObject
 
 // The receiver's delegate.
 @property(nonatomic, weak) id <AKSIPUserAgentDelegate> delegate;
@@ -90,7 +86,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // An array of DNS servers to use by the receiver. If set, DNS SRV will be
 // enabled. Only first kAKSIPUserAgentNameServersMax are used.
-@property(nonatomic, copy) NSArray *nameServers;
+@property(nonatomic, copy) NSArray<NSString *> *nameServers;
 
 // SIP proxy host to visit for all outgoing requests. Will be used for all
 // accounts. The final route set for outgoing requests consists of this proxy

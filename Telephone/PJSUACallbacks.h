@@ -30,3 +30,7 @@ void PJSUAOnCallReplaced(pjsua_call_id oldCallID, pjsua_call_id newCallID);
 void PJSUAOnAccountRegistrationState(pjsua_acc_id accountID);
 void PJSUAOnNATDetect(const pj_stun_nat_detect_result *result);
 void PJSUAOnAccountFindForIncoming(const pjsip_rx_data *rdata, pjsua_acc_id *acc_id);
+
+static inline pj_status_t TelephonePJSIPFailedCredentialError(void) {
+    return PJSIP_EFAILEDCREDENTIAL;
+}

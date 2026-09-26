@@ -36,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) NSString *lastStatusText;
 @property(nonatomic, readonly) AKSIPURI *localURI;
 @property(nonatomic, readonly) AKSIPURI *remoteURI;
-@property(nonatomic, readonly, getter=isIncoming) BOOL incoming;
+@property(nonatomic, readonly, getter=isIncoming) BOOL incoming NS_SWIFT_NAME(isIncoming);
 
 - (instancetype)initWithInfo:(pjsua_call_info)info parser:(AKSIPURIParser *)parser NS_DESIGNATED_INITIALIZER NS_SWIFT_NAME(init(info:parser:));
 - (instancetype)init NS_UNAVAILABLE;

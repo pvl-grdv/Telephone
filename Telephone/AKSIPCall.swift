@@ -36,30 +36,46 @@ extension AKSIPCall {
     public let localURI: AKSIPURI
     public let remoteURI: AKSIPURI
 
-    public let isIncoming: Bool
-    public var isMissed: Bool
+    private final let incomingState: Bool
+    private final var missedState: Bool
+
+    public var incoming: Bool {
+        @objc(isIncoming) get { incomingState }
+    }
+
+    public var missed: Bool {
+        @objc(isMissed) get { missedState }
+        set { missedState = newValue }
+    }
 
     public var remote: URI {
         URI(remoteURI)
     }
 
-    public var isActive: Bool {
+    public var active: Bool {
+        @objc(isActive) get {
         guard identifier >= 0 else { return false }
-        return pjsua_call_is_active(pjsua_call_id(identifier)) != 0
+            return pjsua_call_is_active(pjsua_call_id(identifier)) != 0
+        }
     }
 
-    public var isConfirmed: Bool {
-        state.rawValue == 5
+    public var confirmed: Bool {
+        @objc(confirmed) get { state.rawValue == 5 }
     }
 
-    public var isMicrophoneMuted = false
+    private final var microphoneMutedState = false
 
-    public var isOnLocalHold: Bool {
-        mediaStatusRawValue == 2
+    public var microphoneMuted: Bool {
+        @objc(microphoneMuted) get { microphoneMutedState }
+        set { microphoneMutedState = newValue }
     }
 
-    public var isOnRemoteHold: Bool {
-        mediaStatusRawValue == 3
+    public var onLocalHold: Bool {
+        @objc(onLocalHold) get { mediaStatusRawValue == 2 }
+    }
+
+    public var onRemoteHold: Bool {
+        @objc(onRemoteHold) get { mediaStatusRawValue == 3 }
     }
 
     public var incomingIdentityHeaders: [String: String]
@@ -78,8 +94,8 @@ extension AKSIPCall {
         date = Date()
         localURI = info.localURI
         remoteURI = info.remoteURI
-        isIncoming = info.isIncoming
-        isMissed = info.isIncoming
+        incomingState = info.isIncoming
+        missedState = info.isIncoming
         incomingIdentityHeaders = [:]
         super.init()
     }
@@ -103,7 +119,7 @@ extension AKSIPCall {
         )
 
         if status == 0 {
-            isMissed = false
+            missed = false
         } else {
             NSLog("Error answering call %@", self)
         }
@@ -122,7 +138,7 @@ extension AKSIPCall {
         )
 
         if status == 0 {
-            isMissed = false
+            missed = false
         } else {
             NSLog("Error hanging up call %@", self)
         }
@@ -215,15 +231,15 @@ extension AKSIPCall {
     }
 
     public func toggleMicrophoneMute() {
-        setMuted(!isMicrophoneMuted)
+        setMuted(!microphoneMuted)
     }
 
     public func toggleHold() {
-        setHeld(!isOnLocalHold)
+        setHeld(!onLocalHold)
     }
 
     @nonobjc
-    private var mediaStatusRawValue: UInt32? {
+    private final var mediaStatusRawValue: UInt32? {
         guard let media = firstMediaInfo() else {
             return nil
         }
@@ -232,7 +248,7 @@ extension AKSIPCall {
     }
 
     @nonobjc
-    private func firstMediaInfo() -> pjsua_call_media_info? {
+    private final func firstMediaInfo() -> pjsua_call_media_info? {
         guard identifier >= 0 else {
             return nil
         }
@@ -250,8 +266,8 @@ extension AKSIPCall {
     }
 
     @nonobjc
-    private func muteMicrophone() {
-        guard !isMicrophoneMuted, isConfirmed else {
+    private final func muteMicrophone() {
+        guard !microphoneMuted, confirmed else {
             return
         }
 
@@ -263,15 +279,15 @@ extension AKSIPCall {
             0,
             media.stream.aud.conf_slot
         ) == 0 {
-            isMicrophoneMuted = true
+            microphoneMuted = true
         } else {
             NSLog("Error muting microphone in call %@", self)
         }
     }
 
     @nonobjc
-    private func unmuteMicrophone() {
-        guard isMicrophoneMuted, isConfirmed else {
+    private final func unmuteMicrophone() {
+        guard isMicrophoneMuted, confirmed else {
             return
         }
 
@@ -283,15 +299,15 @@ extension AKSIPCall {
             0,
             media.stream.aud.conf_slot
         ) == 0 {
-            isMicrophoneMuted = false
+            microphoneMuted = false
         } else {
             NSLog("Error unmuting microphone in call %@", self)
         }
     }
 
     @nonobjc
-    private func hold() {
-        guard isConfirmed, !isOnRemoteHold else {
+    private final func hold() {
+        guard confirmed, !onRemoteHold else {
             return
         }
 
@@ -302,8 +318,8 @@ extension AKSIPCall {
     }
 
     @nonobjc
-    private func unhold() {
-        guard isConfirmed else {
+    private final func unhold() {
+        guard confirmed else {
             return
         }
 
@@ -315,7 +331,7 @@ extension AKSIPCall {
     }
 
     @nonobjc
-    private func sendInfoDTMF(_ digit: Character) {
+    private final func sendInfoDTMF(_ digit: Character) {
         let messageBody = "Signal=\(digit)\r\nDuration=300"
 
         withPJString("INFO") { method in

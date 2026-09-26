@@ -53,7 +53,7 @@ static const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified =
 @property(nonatomic, readonly) NSString *fullName;
 
 // SIP address of the registration URI.
-@property(nonatomic, readonly) NSString *SIPAddress NS_SWIFT_NAME(sipAddress);
+@property(nonatomic, readonly) NSString *sipAddress;
 
 // Registrar.
 @property(nonatomic, readonly) ServiceAddress *registrar;
@@ -104,7 +104,7 @@ static const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified =
 @property(nonatomic) NSInteger identifier;
 
 // A Boolean value indicating whether the receiver is registered.
-@property(nonatomic, getter=isRegistered) BOOL registered NS_SWIFT_NAME(isRegistered);
+@property(nonatomic) BOOL isRegistered;
 
 // The receiver's SIP registration status code.
 @property(nonatomic, readonly) NSInteger registrationStatus;
@@ -120,7 +120,7 @@ static const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified =
 
 // A Boolean value indicating whether the receiver is online in terms of SIP
 // presence.
-@property(nonatomic, getter=isOnline) BOOL online NS_SWIFT_NAME(isOnline);
+@property(nonatomic) BOOL isOnline;
 
 // Presence online status text.
 @property(nonatomic, readonly) NSString *onlineStatusText;

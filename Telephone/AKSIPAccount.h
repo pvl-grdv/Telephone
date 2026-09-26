@@ -28,10 +28,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 // SIP account defaults.
-extern const NSInteger kAKSIPAccountDefaultSIPProxyPort;
-extern const NSInteger kAKSIPAccountDefaultReregistrationTime;
-extern const Transport kAKSIPAccountDefaultTransport;
-extern const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified;
+static const NSInteger kAKSIPAccountDefaultSIPProxyPort = 0;
+static const NSInteger kAKSIPAccountDefaultReregistrationTime = 300;
+static const Transport kAKSIPAccountDefaultTransport = TransportUDP;
+static const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified =
+    PJSIP_EXPIRES_NOT_SPECIFIED;
 
 @class AKSIPCall, AKSIPURI;
 
@@ -50,7 +51,7 @@ extern const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified;
 @property(nonatomic, readonly) NSString *fullName;
 
 // SIP address of the registration URI.
-@property(nonatomic, readonly) NSString *SIPAddress;
+@property(nonatomic, readonly) NSString *SIPAddress NS_SWIFT_NAME(sipAddress);
 
 // Registrar.
 @property(nonatomic, readonly) ServiceAddress *registrar;
@@ -101,7 +102,7 @@ extern const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified;
 @property(nonatomic, readonly) NSInteger identifier;
 
 // A Boolean value indicating whether the receiver is registered.
-@property(nonatomic, getter=isRegistered) BOOL registered;
+@property(nonatomic, getter=isRegistered) BOOL registered NS_SWIFT_NAME(isRegistered);
 
 // The receiver's SIP registration status code.
 @property(nonatomic, readonly) NSInteger registrationStatus;
@@ -117,28 +118,28 @@ extern const NSInteger kAKSIPAccountRegistrationExpireTimeNotSpecified;
 
 // A Boolean value indicating whether the receiver is online in terms of SIP
 // presence.
-@property(nonatomic, getter=isOnline) BOOL online;
+@property(nonatomic, getter=isOnline) BOOL online NS_SWIFT_NAME(isOnline);
 
 // Presence online status text.
 @property(nonatomic, readonly) NSString *onlineStatusText;
 
 @property(nonatomic, readonly) BOOL hasUnansweredIncomingCalls;
 
-@property(nonatomic) NSThread *thread;
+@property(nonatomic, nullable) NSThread *thread;
 
 // Mandatory keys: AKSIPAccountKeys.uuid, AKSIPAccountKeys.fullName, AKSIPAccountKeys.realm, AKSIPAccountKeys.username,
 // AKSIPAccountKeys.domain.
-- (instancetype)initWithDictionary:(NSDictionary *)dict parser:(AKSIPURIParser *)parser NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithDictionary:(NSDictionary *)dict parser:(AKSIPURIParser *)parser NS_DESIGNATED_INITIALIZER NS_SWIFT_NAME(init(dictionary:parser:));
 - (instancetype)init NS_UNAVAILABLE;
 
-- (void)updateUsername:(NSString *)username;
-- (void)updateIdentifier:(NSInteger)identifier;
+- (void)updateUsername:(NSString *)username NS_SWIFT_NAME(updateUsername(_:));
+- (void)updateIdentifier:(NSInteger)identifier NS_SWIFT_NAME(updateIdentifier(_:));
 
 // Makes a call to a given destination URI.
-- (void)makeCallTo:(AKSIPURI *)destination completion:(void (^)(AKSIPCall *))completion;
+- (void)makeCallTo:(AKSIPURI *)destination completion:(void (^)(AKSIPCall * _Nullable))completion NS_SWIFT_NAME(makeCall(to:completion:));
 
-- (AKSIPCall *)addCallWithInfo:(PJSUACallInfo *)info;
-- (nullable AKSIPCall *)callWithIdentifier:(NSInteger)identifier;
+- (AKSIPCall *)addCallWithInfo:(PJSUACallInfo *)info NS_SWIFT_NAME(addCall(info:));
+- (nullable AKSIPCall *)callWithIdentifier:(NSInteger)identifier NS_SWIFT_NAME(call(identifier:));
 - (void)removeCall:(AKSIPCall *)call;
 - (void)removeAllCalls;
 - (NSInteger)activeCallsCount;

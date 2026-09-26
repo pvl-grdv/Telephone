@@ -9,7 +9,8 @@ import Foundation
 import UseCases
 
 final class AKSIPCall: NSObject, Call, @unchecked Sendable {
-    let account: AKSIPAccount
+    let sipAccount: AKSIPAccount
+    var account: any Account { sipAccount }
     var identifier: Int
 
     weak var delegate: (any AKSIPCallDelegate)?
@@ -71,7 +72,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         account: AKSIPAccount,
         info: PJSUACallInfo
     ) {
-        self.account = account
+        sipAccount = account
         identifier = info.identifier
         state = info.state
         stateText = info.stateText

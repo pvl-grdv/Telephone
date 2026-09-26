@@ -9,7 +9,7 @@ import Darwin
 import Foundation
 import UseCases
 
-final class SystemMediaPlayer: NSObject, MusicPlayer {
+final class SystemMediaPlayer: NSObject, MusicPlayer, @unchecked Sendable {
     private typealias IsPlayingCompletion =
         @convention(block) (UInt8) -> Void
     private typealias GetIsPlaying =

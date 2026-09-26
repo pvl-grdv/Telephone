@@ -76,7 +76,7 @@
           "name": "Call",
           "children": [
             { "path": "CallController.h", "encoding": "utf8" },
-            { "path": "CallController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallController.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallPresentationCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallWindowCloseNotificationGate.swift", "target-membership": [ "Telephone/compile-sources", "TelephonePresentationTests/compile-sources" ] },
             { "path": "CallTransferCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -187,7 +187,7 @@
           "name": "Call Transfer",
           "children": [
             { "path": "CallTransferController.h", "encoding": "utf8" },
-            { "path": "CallTransferController.m", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallTransferController.swift", "target-membership": [ "Telephone/compile-sources" ] },
 
           ],
         }, {

@@ -72,7 +72,7 @@ extension AKSIPAccount {
     }
 
     public var registrationStatusText: String {
-        accountInfo.map { string(from: $0.status_text) } ?? ""
+        accountInfo.map { pjStringValue($0.status_text) } ?? ""
     }
 
     public var registrationExpireTime: Int {
@@ -94,7 +94,7 @@ extension AKSIPAccount {
     }
 
     public var onlineStatusText: String {
-        accountInfo.map { string(from: $0.online_status_text) } ?? ""
+        accountInfo.map { pjStringValue($0.online_status_text) } ?? ""
     }
 
     public var hasUnansweredIncomingCalls: Bool {

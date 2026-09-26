@@ -16,6 +16,9 @@
 //  GNU General Public License for more details.
 //
 
+import AppKit
+import UseCases
+
 final class NSSoundToSoundAdapterFactory {
     func makeSound(configuration: SoundConfiguration, target: SoundEventTarget) throws -> Sound {
         if let sound = NSSound(named: configuration.name) {

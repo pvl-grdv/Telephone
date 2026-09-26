@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) AKSIPURI *remoteURI;
 @property(nonatomic, readonly, getter=isIncoming) BOOL incoming;
 
-- (instancetype)initWithInfo:(pjsua_call_info)info parser:(AKSIPURIParser *)parser NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithInfo:(pjsua_call_info)info parser:(AKSIPURIParser *)parser NS_DESIGNATED_INITIALIZER NS_SWIFT_NAME(init(info:parser:));
 - (instancetype)init NS_UNAVAILABLE;
 
 @end

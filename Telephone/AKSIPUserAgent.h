@@ -55,6 +55,8 @@ extern const NSInteger kAKSIPUserAgentInvalidIdentifier;
 
 @class AKSIPAccount, AKSIPCall, AKSIPURIParser;
 
+NS_ASSUME_NONNULL_BEGIN
+
 // The AKSIPUserAgent class implements SIP User Agent functionality. You can use it to create, configure, and start user
 // agent, add and remove accounts, and set sound devices for input and output. You need to restart the user agent after
 // you change its properties when it is already running.
@@ -176,10 +178,10 @@ extern const NSInteger kAKSIPUserAgentInvalidIdentifier;
 - (BOOL)removeAccount:(AKSIPAccount *)account NS_SWIFT_NAME(removeAccount(_:));
 
 // Returns a SIP account with a given identifier.
-- (AKSIPAccount *)accountWithIdentifier:(NSInteger)identifier;
+- (nullable AKSIPAccount *)accountWithIdentifier:(NSInteger)identifier;
 
 // Returns a SIP call with a given identifier.
-- (AKSIPCall *)callWithIdentifier:(NSInteger)identifier;
+- (nullable AKSIPCall *)callWithIdentifier:(NSInteger)identifier;
 
 // Hangs up all calls controlled by the receiver.
 - (void)hangUpAllCalls;
@@ -205,3 +207,5 @@ extern const NSInteger kAKSIPUserAgentInvalidIdentifier;
 - (NSString *)stringForSIPResponseCode:(NSInteger)responseCode;
 
 @end
+
+NS_ASSUME_NONNULL_END

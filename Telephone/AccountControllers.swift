@@ -20,6 +20,11 @@ final class AccountControllers: NSObject {
         controllers.filter(\.enabled)
     }
 
+    subscript(index: Int) -> AccountController {
+        get { controllers[index] }
+        set { controllers[index] = newValue }
+    }
+
     @objc(objectAtIndexedSubscript:)
     func object(atIndexedSubscript index: Int) -> AccountController {
         controllers[index]
@@ -45,6 +50,10 @@ final class AccountControllers: NSObject {
 
     @objc(removeControllerAtIndex:)
     func removeController(at index: Int) {
+        controllers.remove(at: index)
+    }
+
+    func remove(at index: Int) {
         controllers.remove(at: index)
     }
 

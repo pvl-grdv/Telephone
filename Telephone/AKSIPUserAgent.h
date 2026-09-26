@@ -51,7 +51,7 @@ typedef struct _AKSIPUserAgentCallData {
 } AKSIPUserAgentCallData;
 
 // An invalid identifier for all sorts of identifiers.
-extern const NSInteger kAKSIPUserAgentInvalidIdentifier;
+static const NSInteger kAKSIPUserAgentInvalidIdentifier = PJSUA_INVALID_ID;
 
 @class AKSIPAccount, AKSIPCall, AKSIPURIParser;
 

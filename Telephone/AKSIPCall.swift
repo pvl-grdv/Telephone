@@ -102,7 +102,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         if status == 0 {
             missedValue = false
         } else {
-            NSLog("Error answering call %@", self)
+            Log.sip.error("Could not answer call id=\(identifier, privacy: .public) status=\(status, privacy: .public)")
         }
     }
 
@@ -121,7 +121,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         if status == 0 {
             missedValue = false
         } else {
-            NSLog("Error hanging up call %@", self)
+            Log.sip.error("Could not hang up call id=\(identifier, privacy: .public) status=\(status, privacy: .public)")
         }
     }
 
@@ -137,7 +137,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         )
 
         if status != 0 {
-            NSLog("Error transferring call %@", self)
+            Log.sip.error("Could not transfer call id=\(identifier, privacy: .public) status=\(status, privacy: .public)")
         }
     }
 
@@ -150,29 +150,35 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         )
 
         if status != 0 {
-            NSLog("Error sending ringing notification in call %@", self)
+            Log.sip.error("Could not send ringing notification call=\(identifier, privacy: .public) status=\(status, privacy: .public)")
         }
     }
 
     func replyWithTemporarilyUnavailable() {
-        if pjsua_call_answer(
+        let status = pjsua_call_answer(
             pjsua_call_id(identifier),
             480,
             nil,
             nil
-        ) != 0 {
-            NSLog("Error replying with 480 Temporarily Unavailable")
+        )
+        if status != 0 {
+            Log.sip.error(
+                "Could not reply 480 call=\(identifier, privacy: .public) status=\(status, privacy: .public)"
+            )
         }
     }
 
     func replyWithBusyHere() {
-        if pjsua_call_answer(
+        let status = pjsua_call_answer(
             pjsua_call_id(identifier),
             486,
             nil,
             nil
-        ) != 0 {
-            NSLog("Error replying with 486 Busy Here")
+        )
+        if status != 0 {
+            Log.sip.error(
+                "Could not reply 486 call=\(identifier, privacy: .public) status=\(status, privacy: .public)"
+            )
         }
     }
 
@@ -256,7 +262,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         ) == 0 {
             microphoneMutedValue = true
         } else {
-            NSLog("Error muting microphone in call %@", self)
+            Log.sip.error("Could not mute microphone call=\(identifier, privacy: .public)")
         }
     }
 
@@ -276,7 +282,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         ) == 0 {
             microphoneMutedValue = false
         } else {
-            NSLog("Error unmuting microphone in call %@", self)
+            Log.sip.error("Could not unmute microphone call=\(identifier, privacy: .public)")
         }
     }
 
@@ -322,7 +328,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
                         &method,
                         &message
                     ) != 0 {
-                        NSLog("Error sending DTMF")
+                        Log.sip.error("Could not send INFO DTMF call=\(identifier, privacy: .public)")
                     }
                 }
             }

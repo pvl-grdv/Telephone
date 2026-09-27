@@ -45,7 +45,16 @@ extension DirectoryCreatingApplicationDataLocations: ApplicationDataLocations {
         do {
             try manager.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
         } catch {
-            print("Could not create directory at \(url): \(error)")
+            let nsError = error as NSError
+            Log.storage.error(
+                """
+                Could not create application data directory \
+                path=\(url.path, privacy: .private) \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
         }
         return url
     }

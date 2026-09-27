@@ -794,9 +794,14 @@ final class AccountController:
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error {
-                NSLog(
-                    "Could not deliver incoming-call notification: %@",
-                    error.localizedDescription
+                let nsError = error as NSError
+                Log.application.error(
+                    """
+                    Could not deliver incoming-call notification \
+                    domain=\(nsError.domain, privacy: .public) \
+                    code=\(nsError.code, privacy: .public) \
+                    description=\(nsError.localizedDescription, privacy: .private)
+                    """
                 )
             }
         }
@@ -806,9 +811,14 @@ final class AccountController:
         do {
             try ringtonePlayback.start()
         } catch {
-            NSLog(
-                "Could not start playing ringtone: %@",
-                error.localizedDescription
+            let nsError = error as NSError
+            Log.audio.error(
+                """
+                Could not start playing ringtone \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
             )
         }
     }

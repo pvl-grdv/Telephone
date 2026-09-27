@@ -21,7 +21,9 @@ import AppKit
 extension NSWorkspace: WebBrowser {
     func showPage(at url: URL) {
         if !open(url) {
-            print("Could not open URL: \(url)")
+            Log.systemIntegration.error(
+                "Could not open URL \(url.absoluteString, privacy: .private)"
+            )
         }
     }
 }

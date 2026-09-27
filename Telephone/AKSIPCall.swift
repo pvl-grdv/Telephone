@@ -102,7 +102,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         if status == 0 {
             missedValue = false
         } else {
-            Log.sip.error("Could not answer call id=\(identifier, privacy: .public) status=\(status, privacy: .public)")
+            Log.sip.error("Could not answer call id=\(self.identifier, privacy: .public) status=\(status, privacy: .public)")
         }
     }
 
@@ -121,7 +121,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         if status == 0 {
             missedValue = false
         } else {
-            Log.sip.error("Could not hang up call id=\(identifier, privacy: .public) status=\(status, privacy: .public)")
+            Log.sip.error("Could not hang up call id=\(self.identifier, privacy: .public) status=\(status, privacy: .public)")
         }
     }
 
@@ -137,7 +137,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         )
 
         if status != 0 {
-            Log.sip.error("Could not transfer call id=\(identifier, privacy: .public) status=\(status, privacy: .public)")
+            Log.sip.error("Could not transfer call id=\(self.identifier, privacy: .public) status=\(status, privacy: .public)")
         }
     }
 
@@ -150,7 +150,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         )
 
         if status != 0 {
-            Log.sip.error("Could not send ringing notification call=\(identifier, privacy: .public) status=\(status, privacy: .public)")
+            Log.sip.error("Could not send ringing notification call=\(self.identifier, privacy: .public) status=\(status, privacy: .public)")
         }
     }
 
@@ -163,7 +163,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         )
         if status != 0 {
             Log.sip.error(
-                "Could not reply 480 call=\(identifier, privacy: .public) status=\(status, privacy: .public)"
+                "Could not reply 480 call=\(self.identifier, privacy: .public) status=\(status, privacy: .public)"
             )
         }
     }
@@ -177,7 +177,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         )
         if status != 0 {
             Log.sip.error(
-                "Could not reply 486 call=\(identifier, privacy: .public) status=\(status, privacy: .public)"
+                "Could not reply 486 call=\(self.identifier, privacy: .public) status=\(status, privacy: .public)"
             )
         }
     }
@@ -262,7 +262,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         ) == 0 {
             microphoneMutedValue = true
         } else {
-            Log.sip.error("Could not mute microphone call=\(identifier, privacy: .public)")
+            Log.sip.error("Could not mute microphone call=\(self.identifier, privacy: .public)")
         }
     }
 
@@ -282,7 +282,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         ) == 0 {
             microphoneMutedValue = false
         } else {
-            Log.sip.error("Could not unmute microphone call=\(identifier, privacy: .public)")
+            Log.sip.error("Could not unmute microphone call=\(self.identifier, privacy: .public)")
         }
     }
 
@@ -328,7 +328,7 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
                         &method,
                         &message
                     ) != 0 {
-                        Log.sip.error("Could not send INFO DTMF call=\(identifier, privacy: .public)")
+                        Log.sip.error("Could not send INFO DTMF call=\(self.identifier, privacy: .public)")
                     }
                 }
             }

@@ -168,7 +168,9 @@ final class AppController:
             let destination = SanitizedCallDestination(url: url)
         else {
             if let url = urls.first {
-                NSLog("Ignoring unsupported call URL: %@", url as NSURL)
+                Log.application.debug(
+                    "Ignoring unsupported call URL \(url.absoluteString, privacy: .private)"
+                )
             }
             return
         }
@@ -296,8 +298,8 @@ final class AppController:
             shouldRegisterAllAccounts = false
             shouldRestartUserAgentASAP = false
         } else {
-            NSLog(
-                "Could not start SIP user agent. Check network and STUN settings."
+            Log.sip.error(
+                "Could not start SIP user agent; check network and STUN settings"
             )
 
             shouldRegisterAllAccounts = false
@@ -522,7 +524,9 @@ final class AppController:
             let destination =
                 pasteboard.string(forType: .string)
         else {
-            NSLog("Could not read call destination from pasteboard")
+            Log.application.error(
+                "Could not read call destination from pasteboard"
+            )
             return
         }
 
@@ -746,9 +750,14 @@ final class AppController:
                     options: [.alert]
                 )
             } catch {
-                NSLog(
-                    "Could not request notification authorization: %@",
-                    error.localizedDescription
+                let nsError = error as NSError
+                Log.application.error(
+                    """
+                    Could not request notification authorization \
+                    domain=\(nsError.domain, privacy: .public) \
+                    code=\(nsError.code, privacy: .public) \
+                    description=\(nsError.localizedDescription, privacy: .private)
+                    """
                 )
             }
         }

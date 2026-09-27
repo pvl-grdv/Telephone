@@ -39,7 +39,7 @@ final class SystemMediaPlayer: NSObject, MusicPlayer, @unchecked Sendable {
         )
 
         guard let mediaRemoteHandle else {
-            NSLog(
+            Log.media.notice(
                 "System media control unavailable: could not load MediaRemote"
             )
             return
@@ -60,7 +60,7 @@ final class SystemMediaPlayer: NSObject, MusicPlayer, @unchecked Sendable {
         }
 
         if getIsPlaying == nil || sendCommand == nil {
-            NSLog(
+            Log.media.notice(
                 "System media control unavailable: required MediaRemote symbols are missing"
             )
         }

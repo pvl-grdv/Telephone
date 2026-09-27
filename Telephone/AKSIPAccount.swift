@@ -241,7 +241,9 @@ final class AKSIPAccount: NSObject, Account, @unchecked Sendable {
 
     @MainActor
     func makeCall(to uri: URI, label: String) {
-        NSLog("Not calling %@", uri)
+        Log.sip.debug(
+            "Ignoring unsupported call target \(String(describing: uri), privacy: .private)"
+        )
     }
 
     func makeCall(

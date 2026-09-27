@@ -25,11 +25,9 @@ final class SQLiteCallHistory {
         self.accountUUID = accountUUID
 
         do {
-            connection = try SQLiteConnection(url: databaseURL)
-            try execute("PRAGMA foreign_keys = ON")
-            try execute("PRAGMA journal_mode = WAL")
-            try execute("PRAGMA synchronous = NORMAL")
-            try execute("PRAGMA busy_timeout = 2000")
+            connection = try SQLiteConnectionPool.shared.connection(
+                at: databaseURL
+            )
             try migrateSchema()
         } catch {
             let nsError = error as NSError
@@ -80,7 +78,17 @@ final class SQLiteCallHistory {
 
 extension SQLiteCallHistory: CallHistory {
     var allRecords: [CallHistoryRecord] {
-        guard connection != nil else { return [] }
+        let interval = PerformanceSignposts.database.beginInterval(
+            "LoadCallHistory"
+        )
+        guard connection != nil else {
+            PerformanceSignposts.database.endInterval(
+                "LoadCallHistory",
+                interval,
+                "database=unavailable"
+            )
+            return []
+        }
 
         let sql = """
         SELECT user, host, display_name, date, duration, incoming, missed
@@ -113,8 +121,18 @@ extension SQLiteCallHistory: CallHistory {
                     )
                 )
             }
+            PerformanceSignposts.database.endInterval(
+                "LoadCallHistory",
+                interval,
+                "records=\(result.count)"
+            )
             return result
         } catch {
+            PerformanceSignposts.database.endInterval(
+                "LoadCallHistory",
+                interval,
+                "result=error"
+            )
             let nsError = error as NSError
             Log.callHistory.error(
                 """

@@ -5,6 +5,7 @@
 
 import Foundation
 import SQLite3
+import UseCases
 
 enum SQLiteStoreError: Error, CustomStringConvertible {
     case databaseUnavailable
@@ -23,6 +24,28 @@ enum SQLiteStoreError: Error, CustomStringConvertible {
         case let .sqlite(message):
             return message
         }
+    }
+}
+
+@CallHistoryActor
+final class SQLiteConnectionPool {
+    static let shared = SQLiteConnectionPool()
+
+    private var connections: [String: SQLiteConnection] = [:]
+
+    func connection(at url: URL) throws -> SQLiteConnection {
+        let key = url.standardizedFileURL.path
+        if let connection = connections[key] {
+            return connection
+        }
+
+        let connection = try SQLiteConnection(url: url)
+        try connection.execute("PRAGMA foreign_keys = ON")
+        try connection.execute("PRAGMA journal_mode = WAL")
+        try connection.execute("PRAGMA synchronous = NORMAL")
+        try connection.execute("PRAGMA busy_timeout = 2000")
+        connections[key] = connection
+        return connection
     }
 }
 

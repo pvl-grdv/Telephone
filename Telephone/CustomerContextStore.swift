@@ -67,11 +67,9 @@ final class CustomerContextStore {
         let databaseURL = root.appendingPathComponent("Telephone.sqlite3")
 
         do {
-            connection = try SQLiteConnection(url: databaseURL)
-            try execute("PRAGMA foreign_keys = ON")
-            try execute("PRAGMA journal_mode = WAL")
-            try execute("PRAGMA synchronous = NORMAL")
-            try execute("PRAGMA busy_timeout = 2000")
+            connection = try SQLiteConnectionPool.shared.connection(
+                at: databaseURL
+            )
             try ensureSchema()
         } catch {
             let nsError = error as NSError
@@ -92,18 +90,39 @@ final class CustomerContextStore {
         displayName: String,
         callIdentifier: String
     ) -> CustomerContextSnapshot {
-        guard connection != nil else { return CustomerContextSnapshot() }
+        let interval = PerformanceSignposts.database.beginInterval(
+            "LoadCustomerContext"
+        )
+        guard connection != nil else {
+            PerformanceSignposts.database.endInterval(
+                "LoadCustomerContext",
+                interval,
+                "database=unavailable"
+            )
+            return CustomerContextSnapshot()
+        }
 
         do {
             let partyID = try ensureParty(
                 address: address,
                 displayName: displayName
             )
-            return try snapshot(
+            let result = try snapshot(
                 partyID: partyID,
                 callIdentifier: callIdentifier
             )
+            PerformanceSignposts.database.endInterval(
+                "LoadCustomerContext",
+                interval,
+                "result=success"
+            )
+            return result
         } catch {
+            PerformanceSignposts.database.endInterval(
+                "LoadCustomerContext",
+                interval,
+                "result=error"
+            )
             let nsError = error as NSError
             Log.customerContext.error(
                 """
@@ -126,7 +145,17 @@ final class CustomerContextStore {
         emails: [String],
         note: String
     ) {
-        guard connection != nil else { return }
+        let interval = PerformanceSignposts.database.beginInterval(
+            "SaveCustomerContext"
+        )
+        guard connection != nil else {
+            PerformanceSignposts.database.endInterval(
+                "SaveCustomerContext",
+                interval,
+                "database=unavailable"
+            )
+            return
+        }
 
         do {
             let partyID = try ensureParty(
@@ -148,7 +177,17 @@ final class CustomerContextStore {
                     callIdentifier: callIdentifier
                 )
             }
+            PerformanceSignposts.database.endInterval(
+                "SaveCustomerContext",
+                interval,
+                "result=success"
+            )
         } catch {
+            PerformanceSignposts.database.endInterval(
+                "SaveCustomerContext",
+                interval,
+                "result=error"
+            )
             let nsError = error as NSError
             Log.customerContext.error(
                 """

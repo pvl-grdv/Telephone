@@ -9,4 +9,5 @@ enum PerformanceSignposts {
     static let settings = OSSignposter(logger: Log.settingsPerformance)
     static let contacts = OSSignposter(logger: Log.contactsPerformance)
     static let calls = OSSignposter(logger: Log.callPerformance)
+    static let database = OSSignposter(logger: Log.databasePerformance)
 }

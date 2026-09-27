@@ -127,9 +127,14 @@ actor CallDestinationContactIndex {
                 )
             }
         } catch {
-            NSLog(
-                "Could not enumerate contacts for autocomplete: %@",
-                error.localizedDescription
+            let nsError = error as NSError
+            Log.contacts.error(
+                """
+                Could not enumerate contacts for autocomplete \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
             )
         }
 

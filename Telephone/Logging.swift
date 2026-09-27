@@ -52,4 +52,14 @@ enum Log {
         subsystem: subsystem,
         category: "Performance"
     )
+
+    static let sip = Logger(subsystem: subsystem, category: "SIP")
+    static let application = Logger(subsystem: subsystem, category: "Application")
+    static let audio = Logger(subsystem: subsystem, category: "Audio")
+    static let storage = Logger(subsystem: subsystem, category: "Storage")
+    static let systemIntegration = Logger(
+        subsystem: subsystem,
+        category: "SystemIntegration"
+    )
+    static let media = Logger(subsystem: subsystem, category: "Media")
 }

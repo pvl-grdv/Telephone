@@ -11,7 +11,7 @@ enum PerformanceStateReporting {
     static let settingsDomain = "com.tlphn.Telephone.settings"
     static let callDomain = "com.tlphn.Telephone.call"
 
-    private enum CallState {
+    private enum CallState: Equatable {
         case incoming
         case active
         case held

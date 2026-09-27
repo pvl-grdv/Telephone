@@ -41,14 +41,18 @@ private extension CoreAudioChangeEventSource {
     func start() {
         let status = AudioObjectAddPropertyListenerBlock(objectID, &address, queue, callback)
         if status != noErr {
-            print("Could not add Core Audio change listener: \(status)")
+            Log.audio.error(
+                "Could not add Core Audio change listener status=\(status, privacy: .public)"
+            )
         }
     }
 
     func stop() {
         let status = AudioObjectRemovePropertyListenerBlock(objectID, &address, queue, callback)
         if status != noErr {
-            print("Could not remove Core Audio change listener: \(status)")
+            Log.audio.error(
+                "Could not remove Core Audio change listener status=\(status, privacy: .public)"
+            )
         }
     }
 }

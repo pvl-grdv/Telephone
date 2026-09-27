@@ -598,9 +598,14 @@ class CallController: NSObject, AKSIPCallDelegate {
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error {
-                NSLog(
-                    "Could not deliver call notification: %@",
-                    error.localizedDescription
+                let nsError = error as NSError
+                Log.application.error(
+                    """
+                    Could not deliver call notification \
+                    domain=\(nsError.domain, privacy: .public) \
+                    code=\(nsError.code, privacy: .public) \
+                    description=\(nsError.localizedDescription, privacy: .private)
+                    """
                 )
             }
         }

@@ -35,12 +35,13 @@ func PJSUAOnCallReplaced(
         return
     }
 
-    NSLog(
-        "Call %d with %@ is being replaced by call %d with %@",
-        oldCallID,
-        pjStringValue(oldInfo.remote_info),
-        newCallID,
-        pjStringValue(newInfo.remote_info)
+    Log.sip.info(
+        """
+        Replacing call old=\(oldCallID, privacy: .public) \
+        oldRemote=\(pjStringValue(oldInfo.remote_info), privacy: .private) \
+        new=\(newCallID, privacy: .public) \
+        newRemote=\(pjStringValue(newInfo.remote_info), privacy: .private)
+        """
     )
 
     let snapshot = PJSUACallInfo(
@@ -72,12 +73,13 @@ func PJSUAOnCallTransferStatus(
     } ?? ""
     let isFinal = isFinal != 0
 
-    NSLog(
-        "Call %d transfer status=%d (%@)%@",
-        callID,
-        statusCode,
-        statusText,
-        isFinal ? " [final]" : ""
+    Log.sip.info(
+        """
+        Transfer status call=\(callID, privacy: .public) \
+        status=\(statusCode, privacy: .public) \
+        final=\(isFinal, privacy: .public) \
+        text=\(statusText, privacy: .private)
+        """
     )
 
     if statusCode / 100 == 2 {
@@ -120,7 +122,9 @@ func PJSUAOnNATDetect(
 
     let detection = result.pointee
     guard detection.status == 0 else {
-        NSLog("NAT detection failed with status %d", detection.status)
+        Log.sip.error(
+            "NAT detection failed status=\(detection.status, privacy: .public)"
+        )
         return
     }
 
@@ -161,11 +165,10 @@ func PJSUAOnIncomingCall(
     let headers = incomingIdentityHeaders(from: invite)
 
     if headers.isEmpty {
-        NSLog("Incoming identity headers: none")
+        Log.sip.debug("Incoming identity headers: none")
     } else {
-        NSLog(
-            "Incoming identity headers captured: %ld",
-            headers.count
+        Log.sip.debug(
+            "Incoming identity headers captured count=\(headers.count, privacy: .public)"
         )
     }
 
@@ -311,9 +314,8 @@ func PJSUAOnCallState(
             guard let account = agent.account(
                 withIdentifier: snapshot.accountIdentifier
             ) else {
-                NSLog(
-                    "Could not find account for call %d",
-                    callID
+                Log.sip.error(
+                    "Could not find account for call=\(callID, privacy: .public)"
                 )
                 return
             }
@@ -321,9 +323,8 @@ func PJSUAOnCallState(
         }
 
         guard let call else {
-            NSLog(
-                "Could not find call %d during state change",
-                callID
+            Log.sip.error(
+                "Could not find call during state change call=\(callID, privacy: .public)"
             )
             return
         }
@@ -381,7 +382,9 @@ func PJSUAOnCallState(
 func PJSUAOnCallMediaState(_ callID: pjsua_call_id) {
     var info = pjsua_call_info()
     guard pjsua_call_get_info(callID, &info) == 0 else {
-        NSLog("Could not get media info for call %d", callID)
+        Log.sip.error(
+            "Could not get media info call=\(callID, privacy: .public)"
+        )
         return
     }
 
@@ -391,7 +394,9 @@ func PJSUAOnCallMediaState(_ callID: pjsua_call_id) {
     guard let audio = activeMedia.first(where: {
         $0.type.rawValue == PJMEDIA_TYPE_AUDIO.rawValue
     }) else {
-        NSLog("Call %d has no audio media", callID)
+        Log.audio.error(
+            "Call has no audio media call=\(callID, privacy: .public)"
+        )
         return
     }
 

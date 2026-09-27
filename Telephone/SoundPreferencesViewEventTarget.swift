@@ -68,7 +68,15 @@ private extension SoundPreferencesViewEventTarget {
         do {
             try makeSettingsSoundIOLoadUseCase(view: view).execute()
         } catch {
-            print("Could not load Sound IO view data")
+            let nsError = error as NSError
+            Log.audio.error(
+                """
+                Could not load Sound IO view data \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
         }
     }
 
@@ -80,7 +88,15 @@ private extension SoundPreferencesViewEventTarget {
         do {
             try ringtoneOutputUpdate.execute()
         } catch {
-            print("Could not update ringtone output: \(error)")
+            let nsError = error as NSError
+            Log.audio.error(
+                """
+                Could not update ringtone output \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
         }
     }
 
@@ -92,7 +108,15 @@ private extension SoundPreferencesViewEventTarget {
         do {
             try ringtoneSoundPlayback.play()
         } catch {
-            print("Could not play ringtone sound: \(error)")
+            let nsError = error as NSError
+            Log.audio.error(
+                """
+                Could not play ringtone sound \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
         }
     }
 

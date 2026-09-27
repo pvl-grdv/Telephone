@@ -168,7 +168,7 @@ final class AKSIPUserAgent: NSObject {
         }
 
         guard pj_init() == 0 else {
-            NSLog("Error initializing PJSIP")
+            Log.sip.error("Could not initialize PJSIP")
             return
         }
 
@@ -302,9 +302,8 @@ final class AKSIPUserAgent: NSObject {
 
         let transport = transportIdentifier(for: account)
         guard transport >= 0 else {
-            NSLog(
-                "Could not create required SIP transport for account %@",
-                account
+            Log.sip.error(
+                "Could not create required SIP transport account=\(String(describing: account), privacy: .private)"
             )
             return false
         }
@@ -332,10 +331,8 @@ final class AKSIPUserAgent: NSObject {
             &identifier
         )
         guard status == 0 else {
-            NSLog(
-                "Error adding account %@ with status %d",
-                account,
-                status
+            Log.sip.error(
+                "Could not add SIP account status=\(status, privacy: .public) account=\(String(describing: account), privacy: .private)"
             )
             return false
         }
@@ -495,9 +492,8 @@ final class AKSIPUserAgent: NSObject {
 
             let status = pjsua_handle_ip_change(&parameters)
             if status != 0 {
-                NSLog(
-                    "Error handling SIP IP address change: %d",
-                    status
+                Log.sip.error(
+                    "Could not handle SIP IP address change status=\(status, privacy: .public)"
                 )
             }
         }
@@ -525,12 +521,12 @@ final class AKSIPUserAgent: NSObject {
     @nonobjc
     private final func startPJSIPRuntime() -> Bool {
         guard TelephonePJSIPRegisterCurrentThread() == 0 else {
-            NSLog("Error registering PJSIP control thread")
+            Log.sip.error("Could not register PJSIP control thread")
             return false
         }
 
         guard pjsua_create() == 0 else {
-            NSLog("Error creating PJSUA")
+            Log.sip.error("Could not create PJSUA")
             return false
         }
 
@@ -540,7 +536,7 @@ final class AKSIPUserAgent: NSObject {
             1_000
         )
         guard storage.pool != nil else {
-            NSLog("Could not create memory pool")
+            Log.sip.error("Could not create PJSIP memory pool")
             stopPJSIPRuntime()
             return false
         }
@@ -630,7 +626,7 @@ final class AKSIPUserAgent: NSObject {
             &loggingConfig,
             &mediaConfig
         ) == 0 else {
-            NSLog("Error initializing PJSUA")
+            Log.sip.error("Could not initialize PJSUA")
             stopPJSIPRuntime()
             return false
         }
@@ -646,7 +642,7 @@ final class AKSIPUserAgent: NSObject {
             &transportConfig,
             &udpIdentifier
         ) == 0 else {
-            NSLog("Error creating UDP4 transport")
+            Log.sip.error("Could not create UDP4 SIP transport")
             stopPJSIPRuntime()
             return false
         }
@@ -666,7 +662,7 @@ final class AKSIPUserAgent: NSObject {
         updateCodecs()
 
         guard pjsua_start() == 0 else {
-            NSLog("Error starting PJSUA")
+            Log.sip.error("Could not start PJSUA")
             stopPJSIPRuntime()
             return false
         }
@@ -702,7 +698,7 @@ final class AKSIPUserAgent: NSObject {
             UInt32(PJMEDIA_TONEGEN_LOOP),
             &port
         ) == 0, let port else {
-            NSLog("Error creating ringback tones")
+            Log.audio.error("Could not create ringback tone generator")
             return false
         }
 
@@ -720,7 +716,7 @@ final class AKSIPUserAgent: NSObject {
             &tone,
             UInt32(PJMEDIA_TONEGEN_LOOP)
         ) == 0 else {
-            NSLog("Error configuring ringback tone")
+            Log.audio.error("Could not configure ringback tone")
             return false
         }
 
@@ -730,7 +726,7 @@ final class AKSIPUserAgent: NSObject {
             port,
             &slot
         ) == 0 else {
-            NSLog("Error adding media port for ringback tones")
+            Log.audio.error("Could not add media port for ringback tone")
             return false
         }
 
@@ -757,7 +753,7 @@ final class AKSIPUserAgent: NSObject {
         }
 
         if pjsua_destroy() != 0 {
-            NSLog("Error stopping SIP user agent")
+            Log.sip.error("Could not stop SIP user agent")
         }
     }
 
@@ -878,20 +874,16 @@ final class AKSIPUserAgent: NSObject {
             &identifier
         )
         guard status == 0 else {
-            NSLog(
-                "Error creating %@ SIP transport: %d",
-                name,
-                status
+            Log.sip.error(
+                "Could not create SIP transport name=\(name, privacy: .public) status=\(status, privacy: .public)"
             )
             return -1
         }
 
         var info = pjsua_transport_info()
         if pjsua_transport_get_info(identifier, &info) == 0 {
-            NSLog(
-                "SIP transport %@ listening on port %u",
-                name,
-                info.local_name.port
+            Log.sip.info(
+                "SIP transport \(name, privacy: .public) listening port=\(info.local_name.port, privacy: .public)"
             )
         }
 
@@ -915,7 +907,7 @@ final class AKSIPUserAgent: NSObject {
 
         var count = UInt32(capacity)
         guard pjsua_enum_codecs(codecs, &count) == 0 else {
-            NSLog("Error getting list of codecs")
+            Log.sip.error("Could not get SIP codec list")
             return
         }
 
@@ -939,7 +931,9 @@ final class AKSIPUserAgent: NSObject {
                 &identifier,
                 priority
             ) != 0 {
-                NSLog("Error setting codec priority for %@", name)
+                Log.sip.error(
+                    "Could not set codec priority codec=\(name, privacy: .public)"
+                )
             }
         }
     }

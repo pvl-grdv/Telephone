@@ -33,7 +33,15 @@ final class OrphanLogFileRemoval: NSObject {
         } catch CocoaError.fileNoSuchFile {
             // Do nothing.
         } catch {
-            NSLog("Could not remove orphan log file: \(error)")
+            let nsError = error as NSError
+            Log.storage.error(
+                """
+                Could not remove orphan log file \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
         }
     }
 }

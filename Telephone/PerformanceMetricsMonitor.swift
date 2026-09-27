@@ -19,10 +19,10 @@ final class PerformanceMetricsMonitor {
         manager = MetricManager(
             enabledStateReportingDomains: [
                 StateReportingDomain(
-                    PerformanceStateReporting.settingsDomain
+                    rawValue: PerformanceStateReporting.settingsDomain
                 ),
                 StateReportingDomain(
-                    PerformanceStateReporting.callDomain
+                    rawValue: PerformanceStateReporting.callDomain
                 ),
             ]
         )

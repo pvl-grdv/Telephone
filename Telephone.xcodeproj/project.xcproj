@@ -461,6 +461,7 @@
         { "path": "AccountControllers.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AccountCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AppController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "Logging.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "ApplicationDialogController.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
           "path": "AppSettings.swift",

@@ -17,7 +17,6 @@
 //
 
 @preconcurrency import Contacts
-import OSLog
 import UseCases
 
 final class CNContactStoreToContactsAdapter {
@@ -40,7 +39,15 @@ extension CNContactStoreToContactsAdapter: Contacts {
                 body(Contact(contact))
             }
         } catch {
-            contactsLogger.error("Could not enumerate contacts: \(String(describing: error), privacy: .private)")
+            let nsError = error as NSError
+            Log.contacts.error(
+                """
+                Could not enumerate contacts \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
         }
     }
 }
@@ -121,8 +128,3 @@ final class IncomingCallContactResolver: NSObject {
         }
     }
 }
-
-private let contactsLogger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "com.tlphn.Telephone",
-    category: "Contacts"
-)

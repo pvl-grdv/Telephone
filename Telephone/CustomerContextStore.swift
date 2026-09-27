@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import OSLog
 import SQLite3
 import UseCases
 
@@ -53,7 +52,15 @@ final class CustomerContextStore {
                 withIntermediateDirectories: true
             )
         } catch {
-            customerContextLogger.error("Could not create application support directory: \(String(describing: error), privacy: .private)")
+            let nsError = error as NSError
+            Log.customerContext.error(
+                """
+                Could not create application support directory \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
             return
         }
 
@@ -67,7 +74,15 @@ final class CustomerContextStore {
             try execute("PRAGMA busy_timeout = 2000")
             try ensureSchema()
         } catch {
-            customerContextLogger.error("Could not initialize customer context database: \(String(describing: error), privacy: .private)")
+            let nsError = error as NSError
+            Log.customerContext.error(
+                """
+                Could not initialize customer context database \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
             connection = nil
         }
     }
@@ -89,7 +104,15 @@ final class CustomerContextStore {
                 callIdentifier: callIdentifier
             )
         } catch {
-            customerContextLogger.error("Could not load customer context: \(String(describing: error), privacy: .private)")
+            let nsError = error as NSError
+            Log.customerContext.error(
+                """
+                Could not load customer context \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
             return CustomerContextSnapshot()
         }
     }
@@ -126,7 +149,15 @@ final class CustomerContextStore {
                 )
             }
         } catch {
-            customerContextLogger.error("Could not save customer context: \(String(describing: error), privacy: .private)")
+            let nsError = error as NSError
+            Log.customerContext.error(
+                """
+                Could not save customer context \
+                domain=\(nsError.domain, privacy: .public) \
+                code=\(nsError.code, privacy: .public) \
+                description=\(nsError.localizedDescription, privacy: .private)
+                """
+            )
         }
     }
 
@@ -519,8 +550,3 @@ final class CustomerContextStore {
         statement.string(at: index)
     }
 }
-
-private let customerContextLogger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "com.tlphn.Telephone",
-    category: "CustomerContext"
-)

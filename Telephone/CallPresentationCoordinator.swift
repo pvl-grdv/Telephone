@@ -139,6 +139,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     }
 
     func invalidate() {
+        PerformanceStateReporting.removeCall(id: id)
         endActiveCallInterval()
         stopCallTimer()
         cancelRedialEnable()
@@ -202,6 +203,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
     func showIncomingState() {
         model.showIncomingState()
+        PerformanceStateReporting.showIncomingCall(id: id)
         customerContextCoordinator?.loadIfNeeded()
         focusAnswer()
     }
@@ -217,6 +219,7 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     func showEndedState() {
         transferCoordinator.discardSourceTransferSession()
         model.showEndedState()
+        PerformanceStateReporting.showEndedCall(id: id)
         endActiveCallInterval()
         stopCallTimer()
         cancelIntermediateStatusRestore()
@@ -265,6 +268,13 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
 
     func updateCallControls() {
         session.updateCallControls()
+
+        if !model.isTransfer, let call = callController?.call, call.isActive {
+            PerformanceStateReporting.showActiveCall(
+                id: id,
+                isHeld: call.isOnLocalHold || call.isOnRemoteHold
+            )
+        }
 
         if model.isTransfer {
             transferCoordinator.setActionEnabled(session.holdEnabled)

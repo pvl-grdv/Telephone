@@ -296,6 +296,7 @@
             { "path": "PreferencesController.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "PerformanceSignposts.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "PerformanceStateReporting.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "PerformanceMetricsMonitor.swift", "target-membership": [ "Telephone/compile-sources" ] },
             {
               "path": "PreferencesControllerAccountsEventSource.swift",
               "encoding": "utf8",

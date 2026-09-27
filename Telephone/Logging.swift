@@ -47,4 +47,9 @@ enum Log {
         subsystem: subsystem,
         category: "DatabasePerformance"
     )
+
+    static let performance = Logger(
+        subsystem: subsystem,
+        category: "Performance"
+    )
 }

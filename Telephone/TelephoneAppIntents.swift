@@ -297,6 +297,9 @@ struct CallWithTelephoneIntent: AppIntent {
         "Places a phone or SIP call using Telephone."
     )
     static let supportedModes: IntentModes = .foreground
+    static var parameterSummary: some ParameterSummary {
+        Summary("Dial \(\.$destination) with Telephone")
+    }
 
     @Parameter(
         title: "Destination",
@@ -349,6 +352,9 @@ struct SetTelephoneAccountAvailabilityIntent: AppIntent {
         "Changes the availability status of a Telephone SIP account."
     )
     static let supportedModes: IntentModes = .foreground
+    static var parameterSummary: some ParameterSummary {
+        Summary("Set \(\.$account) to \(\.$availability)")
+    }
 
     @Parameter(title: "Account")
     var account: TelephoneAccountEntity

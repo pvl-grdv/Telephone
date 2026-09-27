@@ -42,6 +42,7 @@ final class AppController:
 
     private var restartTask: Task<Void, Never>?
     private var networkPathTask: Task<Void, Never>?
+    private var performanceMetricsMonitor: AnyObject?
 
     private var userAgent: AKSIPUserAgent {
         compositionRoot.userAgent
@@ -180,6 +181,7 @@ final class AppController:
     ) {
         compositionRoot.defaultAppSettings.register()
         compositionRoot.settingsMigration.execute()
+        startPerformanceMetricsMonitoring()
 
         if TelephoneUITestSupport.handleLaunch(appController: self) {
             finishedLaunching = true
@@ -525,6 +527,17 @@ final class AppController:
         }
 
         makeCallOrRememberDestination(destination)
+    }
+
+    private func startPerformanceMetricsMonitoring() {
+        if #available(macOS 27.0, *) {
+            let directory = compositionRoot.logFileURL.urlValue
+                .deletingLastPathComponent()
+                .appendingPathComponent("MetricKit", isDirectory: true)
+            let monitor = PerformanceMetricsMonitor(directory: directory)
+            monitor.start()
+            performanceMetricsMonitor = monitor
+        }
     }
 
     // MARK: - Private lifecycle

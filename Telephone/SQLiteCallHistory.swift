@@ -13,6 +13,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 import UseCases
 
@@ -32,7 +33,7 @@ final class SQLiteCallHistory {
             try execute("PRAGMA busy_timeout = 2000")
             try migrateSchema()
         } catch {
-            NSLog("Could not initialize call history database: %@", String(describing: error))
+            callHistoryLogger.error("Could not initialize call history database: \(String(describing: error), privacy: .private)")
             connection = nil
         }
     }
@@ -52,9 +53,9 @@ final class SQLiteCallHistory {
                 }
                 try markMigrated(url)
             }
-            NSLog("Migrated %ld call history records from %@", records.count, url.path)
+            callHistoryLogger.info("Migrated \(records.count, privacy: .public) call history records from \(url.path, privacy: .private)")
         } catch {
-            NSLog("Could not migrate legacy call history %@: %@", url.path, String(describing: error))
+            callHistoryLogger.error("Could not migrate legacy call history \(url.path, privacy: .private): \(String(describing: error), privacy: .private)")
         }
     }
 }
@@ -96,7 +97,7 @@ extension SQLiteCallHistory: CallHistory {
             }
             return result
         } catch {
-            NSLog("Could not read call history: %@", String(describing: error))
+            callHistoryLogger.error("Could not read call history: \(String(describing: error), privacy: .private)")
             return []
         }
     }
@@ -105,7 +106,7 @@ extension SQLiteCallHistory: CallHistory {
         do {
             try insert(record)
         } catch {
-            NSLog("Could not add call history record: %@", String(describing: error))
+            callHistoryLogger.error("Could not add call history record: \(String(describing: error), privacy: .private)")
         }
     }
 
@@ -116,7 +117,7 @@ extension SQLiteCallHistory: CallHistory {
             try bind(record.identifier, at: 2, to: statement)
             try stepDone(statement)
         } catch {
-            NSLog("Could not remove call history record: %@", String(describing: error))
+            callHistoryLogger.error("Could not remove call history record: \(String(describing: error), privacy: .private)")
         }
     }
 
@@ -126,7 +127,7 @@ extension SQLiteCallHistory: CallHistory {
             try bind(accountUUID, at: 1, to: statement)
             try stepDone(statement)
         } catch {
-            NSLog("Could not remove call history: %@", String(describing: error))
+            callHistoryLogger.error("Could not remove call history: \(String(describing: error), privacy: .private)")
         }
     }
 
@@ -430,3 +431,8 @@ private extension SQLiteCallHistory {
         statement.string(at: index)
     }
 }
+
+private let callHistoryLogger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "com.tlphn.Telephone",
+    category: "CallHistory"
+)

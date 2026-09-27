@@ -6,6 +6,7 @@
 import Foundation
 @preconcurrency import Contacts
 import Observation
+import OSLog
 import SwiftUI
 
 extension Notification.Name {
@@ -429,9 +430,8 @@ private final class CallDestinationInputModel {
                 self.contactsPermissionRequestInFlight = false
                 guard granted else {
                     if let error {
-                        NSLog(
-                            "Could not get Contacts access: %@",
-                            error.localizedDescription
+                        callDestinationLogger.error(
+                            "Could not get Contacts access: \(error.localizedDescription, privacy: .private)"
                         )
                     }
                     return
@@ -578,7 +578,9 @@ private final class CallDestinationInputModel {
             errorDescription: &error
         ) else {
             if let error {
-                NSLog("%@", error)
+                callDestinationLogger.debug(
+                    "Could not parse call destination: \(error as String, privacy: .private)"
+                )
             }
             return nil
         }
@@ -988,3 +990,8 @@ struct TransferDestinationView: View {
         .frame(minWidth: 320, idealWidth: 360, minHeight: 118)
     }
 }
+
+private let callDestinationLogger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "com.tlphn.Telephone",
+    category: "CallDestination"
+)

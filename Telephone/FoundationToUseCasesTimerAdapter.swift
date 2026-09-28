@@ -10,32 +10,19 @@
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
 import Foundation
 import UseCases
 
-final class FoundationToUseCasesTimerAdapter {
-    private let action: () -> Void
+final class FoundationToUseCasesTimerAdapter: UseCases.Timer {
+    private let timer: Foundation.Timer
 
-    var timer: Foundation.Timer!
-
-    init(action: @escaping () -> Void) {
-        self.action = action
+    init(timer: Foundation.Timer) {
+        self.timer = timer
     }
 
-    @objc func tick() {
-        action()
-    }
-}
-
-extension FoundationToUseCasesTimerAdapter: UseCases.Timer {
     var interval: Double {
-        return timer.timeInterval
+        timer.timeInterval
     }
 
     func invalidate() {

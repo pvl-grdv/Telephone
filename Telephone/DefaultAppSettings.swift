@@ -20,7 +20,7 @@ import Foundation
 import UseCases
 
 @MainActor
-final class DefaultAppSettings: NSObject {
+final class DefaultAppSettings {
     let defaults: [String: Any]
 
     private let settings: KeyValueSettings
@@ -30,7 +30,6 @@ final class DefaultAppSettings: NSObject {
         self.defaults = makeDefaults(for: localization)
     }
 
-    @objc(registerDefaults)
     func register() {
         settings.register(defaults: defaults)
     }

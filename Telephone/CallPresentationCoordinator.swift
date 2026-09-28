@@ -8,9 +8,8 @@ import OSLog
 import SwiftUI
 
 @MainActor
-@objcMembers
-final class CallPresentationCoordinator: NSObject, Identifiable {
-    @nonobjc let id: String
+final class CallPresentationCoordinator: Identifiable {
+    let id: String
 
     private weak var callController: CallController?
     private let session: CallSession
@@ -28,11 +27,6 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     private var closeNotificationGate = CallWindowCloseNotificationGate()
     private var activeCallInterval: OSSignpostIntervalState?
 
-    class func installScene() {
-        CallWindowSceneController.shared.install()
-    }
-
-    @objc(initWithCallController:accountController:isTransfer:)
     init(
         callController: CallController,
         accountController: AccountController,
@@ -81,12 +75,9 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
                 model: model
             )
 
-        super.init()
-
         CallPresentationRegistry.shared.register(self, key: id)
     }
 
-    @nonobjc
     var contentView: some View {
         CallWindowView(
             model: model,
@@ -130,12 +121,18 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
     func showWindow() {
         guard !model.isTransfer else { return }
         closeNotificationGate.reset()
-        CallWindowSceneController.shared.show(key: id)
+        SceneRouter.shared.openWindow(
+            id: CallWindowScene.id,
+            value: id
+        )
     }
 
     func closeWindow() {
         guard !model.isTransfer else { return }
-        CallWindowSceneController.shared.hide(key: id)
+        SceneRouter.shared.dismissWindow(
+            id: CallWindowScene.id,
+            value: id
+        )
     }
 
     func invalidate() {
@@ -306,7 +303,6 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         callTimerTask = nil
     }
 
-    @objc(scheduleRedialEnableAfter:)
     func scheduleRedialEnable(after delay: TimeInterval) {
         cancelRedialEnable()
 
@@ -325,7 +321,6 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         }
     }
 
-    @objc(scheduleAutoCloseAfter:)
     func scheduleAutoClose(after delay: TimeInterval) {
         cancelAutoClose()
 
@@ -349,7 +344,6 @@ final class CallPresentationCoordinator: NSObject, Identifiable {
         autoCloseTask = nil
     }
 
-    @objc(showIntermediateStatus:)
     func showIntermediateStatus(_ value: String) {
         cancelIntermediateStatusRestore()
         stopCallTimer()

@@ -9,13 +9,11 @@ import Foundation
 import SystemConfiguration
 
 @MainActor
-@objc
 protocol NameServersChangeEventTarget: AnyObject {
     func nameServersDidChange(_ nameServers: NameServers)
 }
 
-@objcMembers
-final class NameServers: NSObject {
+final class NameServers {
     private static let dnsSettingsKey = "State:/Network/Global/DNS"
 
     private weak var target: NameServersChangeEventTarget?
@@ -27,7 +25,6 @@ final class NameServers: NSObject {
         target: NameServersChangeEventTarget
     ) {
         self.target = target
-        super.init()
 
         let name = bundle.object(
             forInfoDictionaryKey: "CFBundleName"

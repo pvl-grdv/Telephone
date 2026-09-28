@@ -5,8 +5,7 @@
 
 import Foundation
 
-@objcMembers
-final class CallerIdentityPresentation: NSObject {
+final class CallerIdentityPresentation {
     let primary: String
     let detail: String
 
@@ -15,9 +14,6 @@ final class CallerIdentityPresentation: NSObject {
         self.detail = detail
     }
 
-    @objc(
-        makeWithSIPDisplayName:callSource:contactName:organization:label:
-    )
     static func make(
         sipDisplayName: String,
         callSource: String,

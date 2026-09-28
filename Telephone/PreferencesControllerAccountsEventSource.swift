@@ -20,22 +20,31 @@ import Foundation
 import UseCases
 
 final class PreferencesControllerAccountsEventSource {
-    private let center: NotificationCenter
-    private let target: AccountsEventTarget
+    private final class TargetBox: @unchecked Sendable {
+        let target: AccountsEventTarget
+
+        init(_ target: AccountsEventTarget) {
+            self.target = target
+        }
+    }
+
+    private var observation: NotificationObservation?
 
     init(center: NotificationCenter, target: AccountsEventTarget) {
-        self.center = center
-        self.target = target
-        center.addObserver(
-            self, selector: #selector(didRemoveAccount), name: .AKPreferencesControllerDidRemoveAccount, object: nil
-        )
+        let box = TargetBox(target)
+
+        observation = NotificationObservation(
+            center: center,
+            name: .AKPreferencesControllerDidRemoveAccount,
+            queue: nil
+        ) { notification in
+            guard let uuid = notification.userInfo?[
+                AKSIPAccountKeys.uuid
+            ] as? String else {
+                return
+            }
+            box.target.didRemoveAccount(withUUID: uuid)
+        }
     }
 
-    deinit {
-        center.removeObserver(self, name: .AKPreferencesControllerDidRemoveAccount, object: nil)
-    }
-
-    @objc private func didRemoveAccount(_ notification: Notification) {
-        target.didRemoveAccount(withUUID: notification.userInfo![AKSIPAccountKeys.uuid] as! String)
-    }
 }

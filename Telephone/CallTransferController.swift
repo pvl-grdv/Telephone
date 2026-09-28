@@ -8,12 +8,9 @@
 import Foundation
 
 @MainActor
-@objc(CallTransferController)
-@objcMembers
 final class CallTransferController: CallController {
     private weak var sourceCallController: CallController?
 
-    @objc(initWithSourceCallController:userAgent:)
     init(
         sourceCallController: CallController,
         userAgent: AKSIPUserAgent
@@ -45,7 +42,6 @@ final class CallTransferController: CallController {
         sourceCall.attendedTransfer(to: destinationCall)
     }
 
-    @objc(closeSheet:)
     func closeSheet(_ sender: Any?) {
         guard let sourceCallController else { return }
 
@@ -59,7 +55,6 @@ final class CallTransferController: CallController {
         sourceCallController.discardCallTransfer()
     }
 
-    @objc(showInitialState:)
     func showInitialState(_ sender: Any?) {
         if callActive {
             hangUpCall()

@@ -22,80 +22,57 @@ import UseCases
 final class AKSIPUserAgentEventSource {
     private let target: UserAgentEventTarget
     private let agent: UserAgent
+    private let center: NotificationCenter
+    private var observers: [NSObjectProtocol] = []
 
-    init(target: UserAgentEventTarget, agent: UserAgent) {
+    init(
+        target: UserAgentEventTarget,
+        agent: UserAgent,
+        center: NotificationCenter = .default
+    ) {
         self.target = target
         self.agent = agent
-        subscribe()
+        self.center = center
+
+        observe(.AKSIPUserAgentDidFinishStarting, object: agent) {
+            $0.didFinishStarting($1)
+        }
+        observe(.AKSIPUserAgentDidFinishStopping, object: agent) {
+            $0.didFinishStopping($1)
+        }
+        observe(.AKSIPUserAgentDidDetectNAT, object: agent) {
+            $0.didDetectNAT($1)
+        }
+        observe(.AKSIPCallCalling) {
+            $0.didMakeCall($1)
+        }
+        observe(.AKSIPCallIncoming) {
+            $0.didReceiveCall($1)
+        }
     }
 
     deinit {
-        unsubscribe()
+        for observer in observers {
+            center.removeObserver(observer)
+        }
     }
 
-    private func subscribe() {
-        let nc = NotificationCenter.default
-        nc.addObserver(
-            self,
-            selector: #selector(SIPUserAgentDidFinishStarting),
-            name: NSNotification.Name.AKSIPUserAgentDidFinishStarting,
-            object: agent
+    private func observe(
+        _ name: Notification.Name,
+        object: AnyObject? = nil,
+        action: @escaping (UserAgentEventTarget, UserAgent) -> Void
+    ) {
+        let target = SendableReference(target)
+        let agent = SendableReference(agent)
+        let action = SendableReference(action)
+        observers.append(
+            center.addObserver(
+                forName: name,
+                object: object,
+                queue: .main
+            ) { _ in
+                action.value(target.value, agent.value)
+            }
         )
-        nc.addObserver(
-            self,
-            selector: #selector(SIPUserAgentDidFinishStopping),
-            name: NSNotification.Name.AKSIPUserAgentDidFinishStopping,
-            object: agent
-        )
-        nc.addObserver(
-            self,
-            selector: #selector(SIPUserAgentDidDetectNAT),
-            name: NSNotification.Name.AKSIPUserAgentDidDetectNAT,
-            object: agent
-        )
-        nc.addObserver(
-            self,
-            selector: #selector(SIPUserAgentDidMakeCall),
-            name: NSNotification.Name.AKSIPCallCalling,
-            object: nil
-        )
-        nc.addObserver(
-            self,
-            selector: #selector(SIPUserAgentDidReceiveCall),
-            name: NSNotification.Name.AKSIPCallIncoming,
-            object: nil
-        )
-    }
-
-    private func unsubscribe() {
-        let nc = NotificationCenter.default
-        nc.removeObserver(self, name: NSNotification.Name.AKSIPUserAgentDidFinishStarting, object: agent)
-        nc.removeObserver(self, name: NSNotification.Name.AKSIPUserAgentDidFinishStopping, object: agent)
-        nc.removeObserver(self, name: NSNotification.Name.AKSIPUserAgentDidDetectNAT, object: agent)
-        nc.removeObserver(self, name: NSNotification.Name.AKSIPCallCalling, object: nil)
-        nc.removeObserver(self, name: NSNotification.Name.AKSIPCallIncoming, object: nil)
-    }
-
-    @objc private func SIPUserAgentDidFinishStarting(_ notification: Notification) {
-        precondition(agent === notification.object as! UserAgent)
-        target.didFinishStarting(agent)
-    }
-
-    @objc private func SIPUserAgentDidFinishStopping(_ notification: Notification) {
-        precondition(agent === notification.object as! UserAgent)
-        target.didFinishStopping(agent)
-    }
-
-    @objc private func SIPUserAgentDidDetectNAT(_ notification: Notification) {
-        precondition(agent === notification.object as! UserAgent)
-        target.didDetectNAT(agent)
-    }
-
-    @objc private func SIPUserAgentDidMakeCall(_ notification: Notification) {
-        target.didMakeCall(agent)
-    }
-
-    @objc private func SIPUserAgentDidReceiveCall(_ notification: Notification) {
-        target.didReceiveCall(agent)
     }
 }

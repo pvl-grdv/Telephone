@@ -19,10 +19,10 @@
 import Foundation
 import UseCases
 
-final class PresentationContact: NSObject {
-    @objc let title: String
-    @objc let tooltip: String
-    @objc let label: String
+struct PresentationContact: Hashable {
+    let title: String
+    let tooltip: String
+    let label: String
     let address: String
 
     init(title: String, tooltip: String, label: String, address: String) {
@@ -40,30 +40,7 @@ final class PresentationContact: NSObject {
 }
 
 extension PresentationContact {
-    override func isEqual(_ object: Any?) -> Bool {
-        guard let contact = object as? PresentationContact else { return false }
-        return isEqual(to: contact)
-    }
-
-    override var hash: Int {
-        var hasher = Hasher()
-        hasher.combine(title)
-        hasher.combine(tooltip)
-        hasher.combine(label)
-        hasher.combine(address)
-        return hasher.finalize()
-    }
-
-    private func isEqual(to contact: PresentationContact) -> Bool {
-        title == contact.title
-            && tooltip == contact.tooltip
-            && label == contact.label
-            && address == contact.address
-    }
-}
-
-extension PresentationContact {
-    convenience init(contact: MatchedContact) {
+    init(contact: MatchedContact) {
         let address: String
         let label: String
 

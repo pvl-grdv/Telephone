@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PJSIPBridge
 
 @c @implementation
 func PJSUAOnAccountRegistrationState(_ accountID: pjsua_acc_id) {

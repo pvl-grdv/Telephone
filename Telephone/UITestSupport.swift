@@ -3,14 +3,14 @@
 //  Telephone
 //
 
-import AppKit
+import Foundation
 import SwiftUI
 
 @MainActor
-@objcMembers
-final class TelephoneUITestSupport: NSObject {
-    @objc(handleLaunchWithAppController:)
-    static func handleLaunch(appController: AppController) -> Bool {
+enum TelephoneUITestSupport {
+    static func handleLaunch(
+        coordinator: ApplicationCoordinator
+    ) -> Bool {
 #if DEBUG
         guard
             let scenario = ProcessInfo.processInfo.environment[
@@ -35,16 +35,16 @@ final class TelephoneUITestSupport: NSObject {
 
             switch scenario {
             case "settings":
-                appController.showPreferencesForUITesting()
+                coordinator.showPreferencesForUITesting()
             case "account-setup":
-                appController.showAccountSetupForUITesting()
+                coordinator.showAccountSetupForUITesting()
             case "incoming-call":
                 UITestCallSceneController.shared.show()
             default:
                 break
             }
 
-            NSApplication.shared.activate()
+            MacApplication.activate()
         }
 
         return true
@@ -76,7 +76,7 @@ final class TelephoneUITestSupport: NSObject {
 #if DEBUG
 
 @MainActor
-private struct UITestCallHostedScene: Scene {
+struct UITestCallHostedScene: Scene {
     var body: some Scene {
         Window(
             NSLocalizedString(
@@ -101,19 +101,8 @@ private final class UITestCallSceneController {
     static let shared = UITestCallSceneController()
     static let sceneID = "telephone-ui-test-call"
 
-    private let representation =
-        NSHostingSceneRepresentation<UITestCallHostedScene> {
-            UITestCallHostedScene()
-        }
-    private var installed = false
-
     func show() {
-        if !installed {
-            installed = true
-            NSApplication.shared.addSceneRepresentation(representation)
-        }
-
-        representation.environment.openWindow(id: Self.sceneID)
+        SceneRouter.shared.openWindow(id: Self.sceneID)
     }
 }
 

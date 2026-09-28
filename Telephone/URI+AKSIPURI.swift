@@ -20,7 +20,6 @@ import Foundation
 import UseCases
 
 extension URI {
-    @objc(initWithURI:transport:)
     convenience init(uri: AKSIPURI, transport: Transport) {
         self.init(
             user: uri.user,
@@ -30,7 +29,6 @@ extension URI {
         )
     }
 
-    @objc(initWithURI:)
     convenience init(_ uri: AKSIPURI) {
         self.init(user: uri.user, host: uri.host, displayName: uri.displayName)
     }

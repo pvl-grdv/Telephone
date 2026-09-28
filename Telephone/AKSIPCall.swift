@@ -7,8 +7,9 @@
 
 import Foundation
 import UseCases
+import PJSIPBridge
 
-final class AKSIPCall: NSObject, Call, @unchecked Sendable {
+final class AKSIPCall: Call, CustomStringConvertible, @unchecked Sendable {
     let sipAccount: AKSIPAccount
     var account: any Account { sipAccount }
     var identifier: Int
@@ -84,10 +85,9 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         incomingValue = info.isIncoming
         missedValue = info.isIncoming
         incomingIdentityHeaders = [:]
-        super.init()
     }
 
-    override var description: String {
+    var description: String {
         "\(localURI) <=> \(remoteURI)"
     }
 
@@ -223,12 +223,10 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         setHeld(mediaStatus != PJSUA_CALL_MEDIA_LOCAL_HOLD)
     }
 
-    @nonobjc
     private final var mediaStatus: pjsua_call_media_status? {
         firstMediaInfo()?.status
     }
 
-    @nonobjc
     private final func firstMediaInfo() -> pjsua_call_media_info? {
         guard identifier != kAKSIPUserAgentInvalidIdentifier else {
             return nil
@@ -246,7 +244,6 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         return media.first
     }
 
-    @nonobjc
     private final func muteMicrophone() {
         guard !microphoneMutedValue, isConfirmed else {
             return
@@ -266,7 +263,6 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         }
     }
 
-    @nonobjc
     private final func unmuteMicrophone() {
         guard microphoneMutedValue, isConfirmed else {
             return
@@ -286,7 +282,6 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         }
     }
 
-    @nonobjc
     private final func hold() {
         guard state == PJSIP_INV_STATE_CONFIRMED, mediaStatus != PJSUA_CALL_MEDIA_REMOTE_HOLD else {
             return
@@ -298,7 +293,6 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         )
     }
 
-    @nonobjc
     private final func unhold() {
         guard state == PJSIP_INV_STATE_CONFIRMED else {
             return
@@ -311,7 +305,6 @@ final class AKSIPCall: NSObject, Call, @unchecked Sendable {
         )
     }
 
-    @nonobjc
     private final func sendInfoDTMF(_ digit: Character) {
         let messageBody = "Signal=\(digit)\r\nDuration=300"
 

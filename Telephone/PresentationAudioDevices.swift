@@ -19,10 +19,10 @@
 import Domain
 import Foundation
 
-final class PresentationAudioDevices: NSObject {
-    @objc let input: [PresentationAudioDevice]
-    @objc let output: [PresentationAudioDevice]
-    @objc var ringtoneOutput: [PresentationAudioDevice] { return output }
+final class PresentationAudioDevices: Hashable {
+    let input: [PresentationAudioDevice]
+    let output: [PresentationAudioDevice]
+    var ringtoneOutput: [PresentationAudioDevice] { output }
 
     init(input: [PresentationAudioDevice], output: [PresentationAudioDevice]) {
         self.input = input
@@ -31,19 +31,15 @@ final class PresentationAudioDevices: NSObject {
 }
 
 extension PresentationAudioDevices {
-    override func isEqual(_ object: Any?) -> Bool {
-        guard let devices = object as? PresentationAudioDevices else { return false }
-        return isEqual(to: devices)
+    static func == (
+        lhs: PresentationAudioDevices,
+        rhs: PresentationAudioDevices
+    ) -> Bool {
+        lhs.input == rhs.input && lhs.output == rhs.output
     }
 
-    override var hash: Int {
-        var hasher = Hasher()
+    func hash(into hasher: inout Hasher) {
         hasher.combine(input)
         hasher.combine(output)
-        return hasher.finalize()
-    }
-
-    private func isEqual(to devices: PresentationAudioDevices) -> Bool {
-        return input == devices.input && output == devices.output
     }
 }

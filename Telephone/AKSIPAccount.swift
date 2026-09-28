@@ -7,6 +7,7 @@
 
 import Foundation
 import UseCases
+import PJSIPBridge
 
 let kAKSIPAccountDefaultSIPProxyPort = 0
 let kAKSIPAccountDefaultReregistrationTime = 300
@@ -14,7 +15,7 @@ let kAKSIPAccountDefaultTransport: Transport = .udp
 let kAKSIPAccountRegistrationExpireTimeNotSpecified =
     Int(PJSIP_EXPIRES_NOT_SPECIFIED)
 
-final class AKSIPAccount: NSObject, Account, @unchecked Sendable {
+final class AKSIPAccount: Account, CustomStringConvertible, @unchecked Sendable {
     weak var delegate: (any AKSIPAccountDelegate)?
 
     let uuid: String
@@ -39,7 +40,7 @@ final class AKSIPAccount: NSObject, Account, @unchecked Sendable {
     let updatesSDP: Bool
 
     private(set) var identifier = -1
-    var thread: Thread?
+    var thread: SIPRuntimeThread?
 
     private let parser: AKSIPURIParser
     private var calls: [AKSIPCall] = []
@@ -224,10 +225,9 @@ final class AKSIPAccount: NSObject, Account, @unchecked Sendable {
         )
 
         self.parser = parser
-        super.init()
     }
 
-    override var description: String {
+    var description: String {
         sipAddressValue
     }
 
@@ -275,12 +275,9 @@ final class AKSIPAccount: NSObject, Account, @unchecked Sendable {
             completion.call(addCall(info: info))
         }
 
-        perform(
-            #selector(threadMakeCall(_:)),
-            on: thread,
-            with: request,
-            waitUntilDone: false
-        )
+        thread.perform { [weak self, request] in
+            self?.makeCallOnRuntimeThread(request)
+        }
     }
 
     func addCall(info: PJSUACallInfo) -> AKSIPCall {
@@ -309,8 +306,7 @@ final class AKSIPAccount: NSObject, Account, @unchecked Sendable {
         calls.lazy.filter(\.isActive).count
     }
 
-    @objc
-    private final func threadMakeCall(_ request: SIPCallRequest) {
+    private final func makeCallOnRuntimeThread(_ request: SIPCallRequest) {
         autoreleasepool {
             var callIdentifier = pjsua_call_id(-1)
 
@@ -348,7 +344,6 @@ final class AKSIPAccount: NSObject, Account, @unchecked Sendable {
         }
     }
 
-    @nonobjc
     private final var accountInfo: pjsua_acc_info? {
         guard identifier >= 0 else {
             return nil
@@ -379,7 +374,7 @@ private final class SIPCallCompletion: @unchecked Sendable {
     }
 }
 
-private final class SIPCallRequest: NSObject, @unchecked Sendable {
+private final class SIPCallRequest: @unchecked Sendable {
     let destination: URI
     let accountIdentifier: pjsua_acc_id
     let parser: AKSIPURIParser

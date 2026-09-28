@@ -19,6 +19,7 @@
 import Domain
 import Foundation
 import UseCases
+import PJSIPBridge
 
 extension SimpleUserAgentAudioDevice {
     init(device: pjmedia_aud_dev_info, identifier: Int) {

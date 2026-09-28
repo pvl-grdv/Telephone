@@ -28,7 +28,7 @@ final class CallHistoryPresenter: CallHistoryView {
     private let model = CallHistoryViewModel()
     private let clipboard: Clipboard
 
-    init(clipboard: Clipboard = SystemClipboard.shared) {
+    init(clipboard: Clipboard = MacClipboard.shared) {
         self.clipboard = clipboard
     }
 

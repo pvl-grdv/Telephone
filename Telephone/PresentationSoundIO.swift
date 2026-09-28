@@ -20,12 +20,12 @@ import Domain
 import Foundation
 import UseCases
 
-final class PresentationSoundIO: NSObject {
-    @objc let input: PresentationAudioDevice
-    @objc let output: PresentationAudioDevice
-    @objc let ringtoneOutput: PresentationAudioDevice
+final class PresentationSoundIO: Hashable {
+    let input: PresentationAudioDevice
+    let output: PresentationAudioDevice
+    let ringtoneOutput: PresentationAudioDevice
 
-    @objc init(input: PresentationAudioDevice, output: PresentationAudioDevice, ringtoneOutput: PresentationAudioDevice) {
+    init(input: PresentationAudioDevice, output: PresentationAudioDevice, ringtoneOutput: PresentationAudioDevice) {
         self.input = input
         self.output = output
         self.ringtoneOutput = ringtoneOutput
@@ -43,20 +43,18 @@ extension PresentationSoundIO {
 }
 
 extension PresentationSoundIO {
-    override func isEqual(_ object: Any?) -> Bool {
-        guard let soundIO = object as? PresentationSoundIO else { return false }
-        return isEqual(to: soundIO)
+    static func == (
+        lhs: PresentationSoundIO,
+        rhs: PresentationSoundIO
+    ) -> Bool {
+        lhs.input == rhs.input
+            && lhs.output == rhs.output
+            && lhs.ringtoneOutput == rhs.ringtoneOutput
     }
 
-    override var hash: Int {
-        var hasher = Hasher()
+    func hash(into hasher: inout Hasher) {
         hasher.combine(input)
         hasher.combine(output)
         hasher.combine(ringtoneOutput)
-        return hasher.finalize()
-    }
-
-    private func isEqual(to soundIO: PresentationSoundIO) -> Bool {
-        return input == soundIO.input && output == soundIO.output && ringtoneOutput == soundIO.ringtoneOutput
     }
 }

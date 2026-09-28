@@ -7,10 +7,8 @@
 
 import Foundation
 
-@objcMembers
-final class SIPResponseLocalization: NSObject {
-    @objc(localizedStringForCode:)
-    class func localizedString(for code: Int) -> String? {
+enum SIPResponseLocalization {
+    static func localizedString(for code: Int) -> String? {
         guard let key = responseKeys[code] else {
             return nil
         }

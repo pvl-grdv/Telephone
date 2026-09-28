@@ -18,7 +18,7 @@
 
 import Foundation
 
-final class OrphanLogFileRemoval: NSObject {
+final class OrphanLogFileRemoval {
     private let locations: ApplicationDataLocations
     private let manager: FileManager
 
@@ -27,7 +27,7 @@ final class OrphanLogFileRemoval: NSObject {
         self.manager = manager
     }
 
-    @objc func execute() {
+    func execute() {
         do {
             try manager.removeItem(at: locations.root().appendingPathComponent("Telephone.log"))
         } catch CocoaError.fileNoSuchFile {

@@ -18,11 +18,98 @@
 
 import Foundation
 
-final class WaitingThread: Thread {
-    override func main() {
-        autoreleasepool {
-            RunLoop.current.add(Port(), forMode: .default)
-            RunLoop.current.run()
+final class SIPRuntimeThread: @unchecked Sendable {
+    private final class Operation: @unchecked Sendable {
+        let body: () -> Void
+
+        init(_ body: @escaping () -> Void) {
+            self.body = body
+        }
+    }
+
+    private let condition = NSCondition()
+    private let finished = DispatchSemaphore(value: 0)
+    private var operations: [Operation] = []
+    private var isShuttingDown = false
+
+    private lazy var thread: Thread = {
+        let thread = Thread { [weak self] in
+            self?.run()
+        }
+        thread.name = "Telephone SIP runtime"
+        thread.qualityOfService = .userInitiated
+        return thread
+    }()
+
+    init() {
+        thread.start()
+    }
+
+    deinit {
+        shutdown()
+    }
+
+    func perform(_ body: @escaping () -> Void) {
+        condition.lock()
+        guard !isShuttingDown else {
+            condition.unlock()
+            return
+        }
+
+        operations.append(Operation(body))
+        condition.signal()
+        condition.unlock()
+    }
+
+    func performAndWait(_ body: @escaping () -> Void) {
+        if Thread.current === thread {
+            body()
+            return
+        }
+
+        let completed = DispatchSemaphore(value: 0)
+        perform {
+            body()
+            completed.signal()
+        }
+        completed.wait()
+    }
+
+    func shutdown() {
+        condition.lock()
+        let shouldWait = !isShuttingDown
+        isShuttingDown = true
+        condition.broadcast()
+        condition.unlock()
+
+        guard shouldWait, Thread.current !== thread else {
+            return
+        }
+
+        finished.wait()
+    }
+
+    private func run() {
+        defer { finished.signal() }
+
+        while true {
+            condition.lock()
+
+            while operations.isEmpty && !isShuttingDown {
+                condition.wait()
+            }
+
+            if operations.isEmpty && isShuttingDown {
+                condition.unlock()
+                return
+            }
+
+            let operation = operations.removeFirst()
+            condition.unlock()
+
+            autoreleasepool {
+                operation.body()
+            }
         }
     }
 }

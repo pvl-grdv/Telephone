@@ -20,7 +20,7 @@ import Foundation
 import UseCases
 
 @MainActor
-final class ProgressiveSettingsMigration: NSObject {
+final class ProgressiveSettingsMigration {
     private let settings: KeyValueSettings
     private let factory: SettingsMigrationFactory
 

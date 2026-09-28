@@ -8,18 +8,14 @@
 import Foundation
 import UseCases
 
-@objc(AccountControllerToAccountAdapter)
 final class AccountControllerToAccountAdapter:
-    NSObject,
     Account,
     @unchecked Sendable
 {
     private weak var controller: AccountController?
 
-    @objc(initWithController:)
     init(controller: AccountController) {
         self.controller = controller
-        super.init()
     }
 
     var uuid: String {

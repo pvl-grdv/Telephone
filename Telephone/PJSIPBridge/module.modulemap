@@ -1,0 +1,4 @@
+module PJSIPBridge {
+    header "PJSIPBridge.h"
+    export *
+}

@@ -5,16 +5,14 @@
 //  Owns one configured SIP account and its call windows.
 //
 
-import AppKit
 import Foundation
 import UserNotifications
 import UseCases
+import PJSIPBridge
 
 @MainActor
-@objc(AccountController)
-@objcMembers
 final class AccountController:
-    NSObject,
+    CustomStringConvertible,
     AKSIPAccountDelegate,
     CallControllerDelegate,
     AccountPresentationCoordinatorDelegate
@@ -23,7 +21,6 @@ final class AccountController:
     let ringtonePlayback: any RingtonePlaybackUseCase
     let accountDescription: String
 
-    @objc(isEnabled)
     var enabled = false
 
     var callControllers: [CallController] = []
@@ -43,7 +40,6 @@ final class AccountController:
         set { presentation.shouldPresentRegistrationError = newValue }
     }
 
-    @objc(isAccountUnavailable)
     var accountUnavailable: Bool {
         get { presentation.accountUnavailable }
         set { presentation.accountUnavailable = newValue }
@@ -62,7 +58,6 @@ final class AccountController:
         }
     }
 
-    @objc(isAccountRegistered)
     var accountRegistered: Bool {
         account.isRegistered
     }
@@ -74,6 +69,7 @@ final class AccountController:
     private let userAgent: AKSIPUserAgent
     private let sleepStatus: WorkspaceSleepStatus
     private let incomingCallContactResolver: IncomingCallContactResolver
+    private let callControllerDidClose: @MainActor () -> Void
     private var presentation: AccountPresentationCoordinator!
 
     private var reRegistrationTimer: Foundation.Timer?
@@ -83,7 +79,6 @@ final class AccountController:
         account.identifier >= 0
     }
 
-    @nonobjc
     init(
         sipAccount account: AKSIPAccount,
         accountDescription: String,
@@ -91,7 +86,8 @@ final class AccountController:
         ringtonePlayback: any RingtonePlaybackUseCase,
         sleepStatus: WorkspaceSleepStatus,
         incomingCallContactResolver: IncomingCallContactResolver,
-        callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
+        callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
+        callControllerDidClose: @escaping @MainActor () -> Void = {}
     ) {
         self.account = account
         self.accountDescription = accountDescription
@@ -99,8 +95,7 @@ final class AccountController:
         self.ringtonePlayback = ringtonePlayback
         self.sleepStatus = sleepStatus
         self.incomingCallContactResolver = incomingCallContactResolver
-
-        super.init()
+        self.callControllerDidClose = callControllerDidClose
 
         account.delegate = self
 
@@ -129,7 +124,7 @@ final class AccountController:
         presentation?.invalidate()
     }
 
-    override var description: String {
+    var description: String {
         "\(account) controller"
     }
 
@@ -188,7 +183,6 @@ final class AccountController:
         _ = userAgent.removeAccount(account)
     }
 
-    @objc(makeCallToURI:phoneLabel:callTransferController:)
     func makeCall(
         to destinationURI: AKSIPURI,
         phoneLabel: String,
@@ -295,7 +289,6 @@ final class AccountController:
         }
     }
 
-    @objc(makeCallToURI:phoneLabel:)
     func makeCall(
         to destinationURI: AKSIPURI,
         phoneLabel: String
@@ -309,7 +302,6 @@ final class AccountController:
         )
     }
 
-    @objc(makeCallToDestinationRegisteringAccountIfNeeded:)
     func makeCall(
         to destination: SanitizedCallDestination
     ) {
@@ -333,7 +325,6 @@ final class AccountController:
         presentation.hideWindow()
     }
 
-    @objc(changeAccountStateRawValue:)
     func changeAccountState(rawValue: Int) -> Bool {
         guard
             enabled,
@@ -346,7 +337,6 @@ final class AccountController:
         return true
     }
 
-    @objc(showRegistrarConnectionErrorSheetWithError:)
     func showRegistrarConnectionErrorSheet(error: String) {
         presentation.showRegistrarConnectionError(
             registrar: account.registrar.stringValue,
@@ -427,8 +417,7 @@ final class AccountController:
     func callControllerWillClose(_ callController: CallController) {
         callControllers.removeAll { $0 === callController }
 
-        (NSApp.delegate as? AppController)?
-            .updateDockTileBadgeLabel()
+        callControllerDidClose()
     }
 
     // MARK: - Registration

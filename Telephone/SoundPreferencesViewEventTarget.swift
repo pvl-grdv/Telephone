@@ -20,7 +20,7 @@ import Foundation
 import UseCases
 
 @MainActor
-final class SoundPreferencesViewEventTarget: NSObject {
+final class SoundPreferencesViewEventTarget {
     private let useCaseFactory: UseCaseFactory
     private let presenterFactory: PresenterFactory
     private let userAgentSoundIOSelection: UseCase

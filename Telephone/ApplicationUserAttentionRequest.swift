@@ -16,46 +16,52 @@
 //  GNU General Public License for more details.
 //
 
-import AppKit
+import Foundation
 import UseCases
 
 @MainActor
 final class ApplicationUserAttentionRequest {
     private var request: Int?
 
-    private let application: NSApplication
-    private let center: NotificationCenter
+    private let isActive: () -> Bool
+    private let requestAttention: () -> Int
+    private let cancelAttention: (Int) -> Void
+    private var activeObservation: NotificationObservation?
 
-    init(application: NSApplication, center: NotificationCenter) {
-        self.application = application
-        self.center = center
-        center.addObserver(
-            self,
-            selector: #selector(didBecomeAcitve),
-            name: NSApplication.didBecomeActiveNotification,
+    init(
+        center: NotificationCenter,
+        didBecomeActiveNotification: Notification.Name,
+        application: AnyObject,
+        isActive: @escaping () -> Bool,
+        requestAttention: @escaping () -> Int,
+        cancelAttention: @escaping (Int) -> Void
+    ) {
+        self.isActive = isActive
+        self.requestAttention = requestAttention
+        self.cancelAttention = cancelAttention
+
+        activeObservation = NotificationObservation(
+            center: center,
+            name: didBecomeActiveNotification,
             object: application
-        )
-    }
-
-    deinit {
-        center.removeObserver(self)
-    }
-
-    @objc private func didBecomeAcitve(_ notification: Notification) {
-        request = nil
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.request = nil
+            }
+        }
     }
 }
 
-extension ApplicationUserAttentionRequest: @MainActor UserAttentionRequest {
+extension ApplicationUserAttentionRequest: UserAttentionRequest {
     func start() {
-        if !application.isActive && request == nil {
-            request = application.requestUserAttention(.criticalRequest)
+        if !isActive(), request == nil {
+            request = requestAttention()
         }
     }
 
     func stop() {
-        if let request = request {
-            application.cancelUserAttentionRequest(request)
+        if let request {
+            cancelAttention(request)
         }
         request = nil
     }

@@ -16,31 +16,61 @@
 //  GNU General Public License for more details.
 //
 
+import Foundation
 import XCTest
 
 final class WorkspaceSleepStatusTests: XCTestCase {
-    func testIsNotSleepingAfterCreation() {
-        let sut = WorkspaceSleepStatus(workspace: NSWorkspace.shared)
+    private let willSleep = Notification.Name("WorkspaceWillSleep")
+    private let didWake = Notification.Name("WorkspaceDidWake")
 
-        XCTAssertFalse(sut.isSleeping)
+    func testIsNotSleepingAfterCreation() {
+        let fixture = makeFixture()
+
+        XCTAssertFalse(fixture.sut.isSleeping)
     }
 
     func testIsSleepingAfterWillSleepNotification() {
-        let sut = WorkspaceSleepStatus(workspace: NSWorkspace.shared)
-        let nc = NSWorkspace.shared.notificationCenter
+        let fixture = makeFixture()
 
-        nc.post(name: NSWorkspace.willSleepNotification, object: NSWorkspace.shared)
+        fixture.center.post(
+            name: willSleep,
+            object: fixture.workspace
+        )
 
-        XCTAssertTrue(sut.isSleeping)
+        XCTAssertTrue(fixture.sut.isSleeping)
     }
 
     func testIsNotSleepingAfterDidWakeNotification() {
-        let sut = WorkspaceSleepStatus(workspace: NSWorkspace.shared)
-        let nc = NSWorkspace.shared.notificationCenter
+        let fixture = makeFixture()
 
-        nc.post(name: NSWorkspace.willSleepNotification, object: NSWorkspace.shared)
-        nc.post(name: NSWorkspace.didWakeNotification, object: NSWorkspace.shared)
+        fixture.center.post(
+            name: willSleep,
+            object: fixture.workspace
+        )
+        fixture.center.post(
+            name: didWake,
+            object: fixture.workspace
+        )
 
-        XCTAssertFalse(sut.isSleeping)
+        XCTAssertFalse(fixture.sut.isSleeping)
+    }
+
+    private func makeFixture() -> (
+        sut: WorkspaceSleepStatus,
+        center: NotificationCenter,
+        workspace: NSObject
+    ) {
+        let center = NotificationCenter()
+        let workspace = NSObject()
+        return (
+            WorkspaceSleepStatus(
+                center: center,
+                willSleepNotification: willSleep,
+                didWakeNotification: didWake,
+                workspace: workspace
+            ),
+            center,
+            workspace
+        )
     }
 }

@@ -8,7 +8,7 @@
 import Foundation
 import UseCases
 
-final class AKSIPURI: NSObject, NSCopying {
+final class AKSIPURI: Hashable, CustomStringConvertible {
     var user: String
     var host: String
     var displayName: String
@@ -44,7 +44,6 @@ final class AKSIPURI: NSObject, NSCopying {
         self.host = host
         self.displayName = displayName
         self.port = port
-        super.init()
     }
 
     convenience init(
@@ -60,7 +59,7 @@ final class AKSIPURI: NSObject, NSCopying {
         )
     }
 
-    override convenience init() {
+    convenience init() {
         self.init(user: "", host: "", displayName: "")
     }
 
@@ -76,7 +75,7 @@ final class AKSIPURI: NSObject, NSCopying {
         )
     }
 
-    override var description: String {
+    var description: String {
         let address = ServiceAddress(
             host: host,
             port: port > 0 ? String(port) : ""
@@ -90,32 +89,17 @@ final class AKSIPURI: NSObject, NSCopying {
         ).stringValue
     }
 
-    override func isEqual(_ object: Any?) -> Bool {
-        guard let other = object as? AKSIPURI else {
-            return false
-        }
-
-        return port == other.port
-            && user == other.user
-            && host == other.host
-            && displayName == other.displayName
+    static func == (lhs: AKSIPURI, rhs: AKSIPURI) -> Bool {
+        lhs.port == rhs.port
+            && lhs.user == rhs.user
+            && lhs.host == rhs.host
+            && lhs.displayName == rhs.displayName
     }
 
-    override var hash: Int {
-        var hasher = Hasher()
+    func hash(into hasher: inout Hasher) {
         hasher.combine(user)
         hasher.combine(host)
         hasher.combine(displayName)
         hasher.combine(port)
-        return hasher.finalize()
-    }
-
-    func copy(with zone: NSZone? = nil) -> Any {
-        AKSIPURI(
-            user: user,
-            host: host,
-            displayName: displayName,
-            port: port
-        )
     }
 }

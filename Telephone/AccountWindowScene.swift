@@ -3,8 +3,11 @@
 //  Telephone
 //
 
-import AppKit
 import SwiftUI
+
+enum AccountWindowScene {
+    static let id = "telephone-account"
+}
 
 @MainActor
 enum AccountPresentationRegistry {
@@ -12,14 +15,14 @@ enum AccountPresentationRegistry {
         WeakObjectRegistry<String, AccountPresentationCoordinator>()
 }
 
-private struct AccountWindowsScene: Scene {
+struct AccountWindowsScene: Scene {
     var body: some Scene {
         WindowGroup(
             NSLocalizedString(
                 "Account",
                 comment: "Account window scene title."
             ),
-            id: AccountWindowSceneController.sceneID,
+            id: AccountWindowScene.id,
             for: String.self
         ) { key in
             AccountWindowSceneContent(key: key.wrappedValue)
@@ -46,37 +49,5 @@ private struct AccountWindowSceneContent: View {
         } else {
             EmptyView()
         }
-    }
-}
-
-@MainActor
-final class AccountWindowSceneController {
-    static let shared = AccountWindowSceneController()
-    static let sceneID = "telephone-account"
-
-    private let representation = NSHostingSceneRepresentation {
-        AccountWindowsScene()
-    }
-    private var installed = false
-
-    func install() {
-        guard !installed else { return }
-        installed = true
-        NSApplication.shared.addSceneRepresentation(representation)
-    }
-
-    func show(key: String) {
-        install()
-        representation.environment.openWindow(
-            id: Self.sceneID,
-            value: key
-        )
-    }
-
-    func hide(key: String) {
-        representation.environment.dismissWindow(
-            id: Self.sceneID,
-            value: key
-        )
     }
 }

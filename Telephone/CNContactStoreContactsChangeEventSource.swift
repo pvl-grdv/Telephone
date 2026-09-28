@@ -21,32 +21,30 @@ import Foundation
 import UseCases
 
 final class CNContactStoreContactsChangeEventSource {
-    private let center: NotificationCenter
     private let target: ContactsChangeEventTarget
+    private var observations: [NotificationObservation] = []
 
     init(center: NotificationCenter, target: ContactsChangeEventTarget) {
-        self.center = center
         self.target = target
-        center.addObserver(self, selector: #selector(contactsDidChange), name: .CNContactStoreDidChange, object: nil)
-        center.addObserver(
-            self,
-            selector: #selector(contactsDidChange),
-            name: .AKContactsAuthorizationDidChange,
-            object: nil
-        )
-    }
 
-    deinit {
-        center.removeObserver(self, name: .CNContactStoreDidChange, object: nil)
-        center.removeObserver(
-            self, name: .AKContactsAuthorizationDidChange, object: nil
-        )
-    }
-
-    @objc private func contactsDidChange(_ notification: Notification) {
-        Task { [target] in
-            await target.contactsDidChange()
-            await CallDestinationContactIndex.shared.invalidate()
+        for name in [
+            Notification.Name.CNContactStoreDidChange,
+            .AKContactsAuthorizationDidChange,
+        ] {
+            observations.append(
+                NotificationObservation(
+                    center: center,
+                    name: name,
+                    object: nil,
+                    queue: nil
+                ) { [target] _ in
+                    Task {
+                        await target.contactsDidChange()
+                        await CallDestinationContactIndex.shared.invalidate()
+                    }
+                }
+            )
         }
     }
+
 }

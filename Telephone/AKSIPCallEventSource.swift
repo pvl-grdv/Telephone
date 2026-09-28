@@ -22,38 +22,52 @@ import UseCases
 final class AKSIPCallEventSource {
     private let center: NotificationCenter
     private let target: CallEventTarget
+    private var observers: [NSObjectProtocol] = []
 
     init(center: NotificationCenter, target: CallEventTarget) {
         self.center = center
         self.target = target
-        center.addObserver(self, selector: #selector(didMake), name: .AKSIPCallCalling, object: nil)
-        center.addObserver(self, selector: #selector(didReceive), name: .AKSIPCallIncoming, object: nil)
-        center.addObserver(self, selector: #selector(isConnecting), name: .AKSIPCallConnecting, object: nil)
-        center.addObserver(self, selector: #selector(didConnect), name: .AKSIPCallDidConfirm, object: nil)
-        center.addObserver(self, selector: #selector(didDisconnect), name: .AKSIPCallDidDisconnect, object: nil)
+
+        observe(.AKSIPCallCalling) { target, call in
+            target.didMake(call)
+        }
+        observe(.AKSIPCallIncoming) { target, call in
+            target.didReceive(call)
+        }
+        observe(.AKSIPCallConnecting) { target, call in
+            target.isConnecting(call)
+        }
+        observe(.AKSIPCallDidConfirm) { target, call in
+            target.didConnect(call)
+        }
+        observe(.AKSIPCallDidDisconnect) { target, call in
+            target.didDisconnect(call)
+        }
     }
 
     deinit {
-        center.removeObserver(self)
+        for observer in observers {
+            center.removeObserver(observer)
+        }
     }
 
-    @objc private func didMake(_ notification: Notification) {
-        target.didMake(notification.object as! Call)
-    }
-
-    @objc private func didReceive(_ notification: Notification) {
-        target.didReceive(notification.object as! Call)
-    }
-
-    @objc private func isConnecting(_ notification: Notification) {
-        target.isConnecting(notification.object as! Call)
-    }
-
-    @objc private func didConnect(_ notification: Notification) {
-        target.didConnect(notification.object as! Call)
-    }
-
-    @objc private func didDisconnect(_ notification: Notification) {
-        target.didDisconnect(notification.object as! Call)
+    private func observe(
+        _ name: Notification.Name,
+        action: @escaping (CallEventTarget, Call) -> Void
+    ) {
+        let target = SendableReference(target)
+        let action = SendableReference(action)
+        observers.append(
+            center.addObserver(
+                forName: name,
+                object: nil,
+                queue: .main
+            ) { notification in
+                guard let call = notification.object as? Call else {
+                    return
+                }
+                action.value(target.value, call)
+            }
+        )
     }
 }

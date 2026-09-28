@@ -11,22 +11,18 @@ private extension Notification.Name {
 }
 
 @MainActor
-@objcMembers
-final class AuthenticationFailureController: NSObject {
+final class AuthenticationFailureController {
     private(set) weak var accountController: AccountController?
     private let userAgent: AKSIPUserAgent
 
-    @nonobjc
     init(
         accountController: AccountController,
         userAgent: AKSIPUserAgent
     ) {
         self.accountController = accountController
         self.userAgent = userAgent
-        super.init()
     }
 
-    @nonobjc
     func makeModel() -> AuthenticationFailureModel? {
         guard let accountController else {
             return nil
@@ -48,7 +44,6 @@ final class AuthenticationFailureController: NSObject {
         )
     }
 
-    @nonobjc
     func changeUsernameAndPassword(_ model: AuthenticationFailureModel) {
         let username = model.username.trimmingCharacters(
             in: .whitespacesAndNewlines

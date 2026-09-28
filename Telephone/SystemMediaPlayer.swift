@@ -9,7 +9,7 @@ import Darwin
 import Foundation
 import UseCases
 
-final class SystemMediaPlayer: NSObject, MusicPlayer, @unchecked Sendable {
+final class SystemMediaPlayer: MusicPlayer, @unchecked Sendable {
     private typealias IsPlayingCompletion =
         @convention(block) (UInt8) -> Void
     private typealias GetIsPlaying =
@@ -30,9 +30,7 @@ final class SystemMediaPlayer: NSObject, MusicPlayer, @unchecked Sendable {
     private var didPause = false
     private var requestGeneration = 0
 
-    override init() {
-        super.init()
-
+    init() {
         mediaRemoteHandle = dlopen(
             Self.mediaRemotePath,
             RTLD_LAZY | RTLD_LOCAL

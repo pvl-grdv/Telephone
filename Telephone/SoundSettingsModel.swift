@@ -3,12 +3,12 @@
 //  Telephone
 //
 
-import Cocoa
+import Foundation
 import Observation
 
 @MainActor
 @Observable
-final class SoundSettingsModel: NSObject {
+final class SoundSettingsModel {
     var inputDevices: [PresentationAudioDevice] = []
     var outputDevices: [PresentationAudioDevice] = []
     var selectedInputID = "system-default"
@@ -26,7 +26,6 @@ final class SoundSettingsModel: NSObject {
         self.userAgent = userAgent
         usesG711Only = userAgent.usesG711Only
         selectedRingtoneName = UserDefaults.standard.string(forKey: UserDefaultsKeys.ringingSound) ?? ""
-        super.init()
     }
 
     func activate() {

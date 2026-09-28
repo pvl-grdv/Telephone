@@ -18,9 +18,9 @@
 
 import Foundation
 
-final class LogFileURL: NSObject {
-    @objc let urlValue: URL
-    @objc var pathValue: String { return urlValue.path }
+final class LogFileURL {
+    let urlValue: URL
+    var pathValue: String { urlValue.path }
 
     init(locations: ApplicationDataLocations, filename: String) {
         urlValue = locations.logs().appendingPathComponent(filename)

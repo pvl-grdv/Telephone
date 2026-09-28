@@ -7,8 +7,9 @@
 
 import Foundation
 import UseCases
+import PJSIPBridge
 
-final class AKSIPUserAgent: NSObject {
+final class AKSIPUserAgent {
     private final let storage = SIPUserAgentStorage()
 
     weak var delegate: (any AKSIPUserAgentDelegate)?
@@ -144,17 +145,14 @@ final class AKSIPUserAgent: NSObject {
     }
 
     init(delegate: (any AKSIPUserAgentDelegate)?) {
-        super.init()
 
         storage.detectedNATType = PJ_STUN_NAT_TYPE_UNKNOWN
-        storage.thread.qualityOfService = .userInitiated
-        storage.thread.start()
         storage.parser = AKSIPURIParser(userAgent: self)
 
         self.delegate = delegate
     }
 
-    override convenience init() {
+    convenience init() {
         self.init(delegate: nil)
     }
 
@@ -174,25 +172,23 @@ final class AKSIPUserAgent: NSObject {
 
         storage.state = .starting
 
-        let request = SIPUserAgentStartRequest { [weak self] didStart in
+        storage.thread.perform { [weak self] in
             guard let self else { return }
 
-            storage.state = didStart ? .started : .stopped
+            let didStart = self.startPJSIPRuntime()
+            Task { @MainActor [weak self] in
+                guard let self else { return }
 
-            let notification = Notification(
-                name: .AKSIPUserAgentDidFinishStarting,
-                object: self
-            )
-            NotificationCenter.default.post(notification)
-            delegate?.sipUserAgentDidFinishStarting(notification)
+                storage.state = didStart ? .started : .stopped
+
+                let notification = Notification(
+                    name: .AKSIPUserAgentDidFinishStarting,
+                    object: self
+                )
+                NotificationCenter.default.post(notification)
+                delegate?.sipUserAgentDidFinishStarting(notification)
+            }
         }
-
-        perform(
-            #selector(threadStart(_:)),
-            on: storage.thread,
-            with: request,
-            waitUntilDone: false
-        )
     }
 
     func stop() {
@@ -202,16 +198,14 @@ final class AKSIPUserAgent: NSObject {
 
         storage.state = .stopping
 
-        let request = SIPUserAgentStopRequest { [weak self] in
-            self?.finishStopping()
-        }
+        storage.thread.perform { [weak self] in
+            guard let self else { return }
 
-        perform(
-            #selector(threadStop(_:)),
-            on: storage.thread,
-            with: request,
-            waitUntilDone: false
-        )
+            self.stopPJSIPRuntime()
+            Task { @MainActor [weak self] in
+                self?.finishStopping()
+            }
+        }
     }
 
     @MainActor
@@ -222,12 +216,9 @@ final class AKSIPUserAgent: NSObject {
 
         storage.state = .stopping
 
-        perform(
-            #selector(threadStopSynchronously),
-            on: storage.thread,
-            with: nil,
-            waitUntilDone: true
-        )
+        storage.thread.performAndWait { [weak self] in
+            self?.stopPJSIPRuntime()
+        }
         finishStopping()
     }
 
@@ -236,12 +227,9 @@ final class AKSIPUserAgent: NSObject {
             return
         }
 
-        perform(
-            #selector(threadHandleIPAddressChange),
-            on: storage.thread,
-            with: nil,
-            waitUntilDone: false
-        )
+        storage.thread.perform { [weak self] in
+            self?.handleIPAddressChangeOnRuntimeThread()
+        }
     }
 
     @MainActor
@@ -468,57 +456,22 @@ final class AKSIPUserAgent: NSObject {
         ) ?? "Response code: \(responseCode)"
     }
 
-    @objc
-    private final func threadStart(
-        _ request: SIPUserAgentStartRequest
-    ) {
-        autoreleasepool {
-            let didStart = startPJSIPRuntime()
-            DispatchQueue.main.async {
-                request.completion(didStart)
-            }
+    private final func handleIPAddressChangeOnRuntimeThread() {
+        guard TelephonePJSIPRegisterCurrentThread() == 0 else {
+            return
+        }
+
+        var parameters = pjsua_ip_change_param()
+        pjsua_ip_change_param_default(&parameters)
+
+        let status = pjsua_handle_ip_change(&parameters)
+        if status != 0 {
+            Log.sip.error(
+                "Could not handle SIP IP address change status=\(status, privacy: .public)"
+            )
         }
     }
 
-    @objc
-    private final func threadHandleIPAddressChange() {
-        autoreleasepool {
-            guard TelephonePJSIPRegisterCurrentThread() == 0 else {
-                return
-            }
-
-            var parameters = pjsua_ip_change_param()
-            pjsua_ip_change_param_default(&parameters)
-
-            let status = pjsua_handle_ip_change(&parameters)
-            if status != 0 {
-                Log.sip.error(
-                    "Could not handle SIP IP address change status=\(status, privacy: .public)"
-                )
-            }
-        }
-    }
-
-    @objc
-    private final func threadStop(
-        _ request: SIPUserAgentStopRequest
-    ) {
-        autoreleasepool {
-            stopPJSIPRuntime()
-            DispatchQueue.main.async {
-                request.completion()
-            }
-        }
-    }
-
-    @objc
-    private final func threadStopSynchronously() {
-        autoreleasepool {
-            stopPJSIPRuntime()
-        }
-    }
-
-    @nonobjc
     private final func startPJSIPRuntime() -> Bool {
         guard TelephonePJSIPRegisterCurrentThread() == 0 else {
             Log.sip.error("Could not register PJSIP control thread")
@@ -670,7 +623,6 @@ final class AKSIPUserAgent: NSObject {
         return true
     }
 
-    @nonobjc
     private final func createRingback(
         mediaConfig: pjsua_media_config
     ) -> Bool {
@@ -734,7 +686,6 @@ final class AKSIPUserAgent: NSObject {
         return true
     }
 
-    @nonobjc
     private final func stopPJSIPRuntime() {
         if let port = storage.ringbackPort {
             if storage.ringbackSlot >= 0 {
@@ -771,7 +722,6 @@ final class AKSIPUserAgent: NSObject {
         delegate?.sipUserAgentDidFinishStopping(notification)
     }
 
-    @nonobjc
     private final func transportIdentifier(
         for account: AKSIPAccount
     ) -> pjsua_transport_id {
@@ -831,7 +781,6 @@ final class AKSIPUserAgent: NSObject {
         }
     }
 
-    @nonobjc
     private final func createSIPTransport(
         _ type: pjsip_transport_type_e,
         name: String,
@@ -890,7 +839,6 @@ final class AKSIPUserAgent: NSObject {
         return identifier
     }
 
-    @nonobjc
     private final func updateCodecs() {
         guard
             storage.state.rawValue != 0,
@@ -974,7 +922,7 @@ private final class SIPUserAgentStorage {
     var parser: AKSIPURIParser?
     var accounts: [AKSIPAccount] = []
 
-    let thread = WaitingThread()
+    let thread = SIPRuntimeThread()
 
     var pool: UnsafeMutablePointer<pj_pool_t>?
     var ringbackSlot = pjsua_conf_port_id(-1)
@@ -1020,32 +968,6 @@ private extension UnsafeMutablePointer
 where Pointee == SIPCallData {
     var indices: Range<Int> {
         0..<Int(PJSUA_MAX_CALLS)
-    }
-}
-
-private final class SIPUserAgentStartRequest:
-    NSObject,
-    @unchecked Sendable
-{
-    let completion: @MainActor @Sendable (Bool) -> Void
-
-    init(
-        completion: @escaping @MainActor @Sendable (Bool) -> Void
-    ) {
-        self.completion = completion
-    }
-}
-
-private final class SIPUserAgentStopRequest:
-    NSObject,
-    @unchecked Sendable
-{
-    let completion: @MainActor @Sendable () -> Void
-
-    init(
-        completion: @escaping @MainActor @Sendable () -> Void
-    ) {
-        self.completion = completion
     }
 }
 

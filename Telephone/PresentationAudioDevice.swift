@@ -20,11 +20,11 @@ import Domain
 import Foundation
 import UseCases
 
-final class PresentationAudioDevice: NSObject, Identifiable {
+final class PresentationAudioDevice: Identifiable, Hashable {
     let id: String
     let uniqueIdentifier: String?
-    @objc var isSystemDefault: Bool
-    @objc var name: String
+    var isSystemDefault: Bool
+    var name: String
 
     private init(
         id: String,
@@ -84,14 +84,14 @@ extension PresentationAudioDevice {
 }
 
 extension PresentationAudioDevice {
-    override func isEqual(_ object: Any?) -> Bool {
-        guard let device = object as? PresentationAudioDevice else {
-            return false
-        }
-        return id == device.id
+    static func == (
+        lhs: PresentationAudioDevice,
+        rhs: PresentationAudioDevice
+    ) -> Bool {
+        lhs.id == rhs.id
     }
 
-    override var hash: Int {
-        id.hashValue
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }

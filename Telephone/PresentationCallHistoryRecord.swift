@@ -10,89 +10,23 @@
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
-import Cocoa
-import UseCases
+import Foundation
 
-final class PresentationCallHistoryRecord: NSObject {
+struct PresentationCallHistoryRecord: Identifiable, Hashable {
     let identifier: String
-    @objc let contact: PresentationContact
-    @objc let date: String
-    @objc let duration: String
-    @objc let isIncoming: Bool
-    @objc let isMissed: Bool
+    let contact: PresentationContact
+    let date: String
+    let duration: String
+    let isIncoming: Bool
+    let isMissed: Bool
 
-    init(
-        identifier: String,
-        contact: PresentationContact,
-        date: String,
-        duration: String,
-        isIncoming: Bool,
-        isMissed: Bool
-    ) {
-        self.identifier = identifier
-        self.contact = contact
-        self.date = date
-        self.duration = duration
-        self.isIncoming = isIncoming
-        self.isMissed = isMissed
-    }
-}
-
-extension PresentationCallHistoryRecord {
-    override func isEqual(_ object: Any?) -> Bool {
-        guard let record = object as? PresentationCallHistoryRecord else { return false }
-        return isEqual(to: record)
-    }
-
-    override var hash: Int {
-        var hasher = Hasher()
-        hasher.combine(identifier)
-        hasher.combine(contact)
-        hasher.combine(date)
-        hasher.combine(duration)
-        hasher.combine(isIncoming)
-        hasher.combine(isMissed)
-        return hasher.finalize()
-    }
-
-    private func isEqual(to record: PresentationCallHistoryRecord) -> Bool {
-        return
-            identifier == record.identifier &&
-            contact == record.contact &&
-            date == record.date &&
-            duration == record.duration &&
-            isIncoming == record.isIncoming &&
-            isMissed == record.isMissed
-    }
-}
-
-extension PresentationCallHistoryRecord: Identifiable {
     var id: String { identifier }
-}
 
-extension PresentationCallHistoryRecord: NSPasteboardWriting {
-    func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
-        return [.string]
-    }
-
-    func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
-        return contact.address
-    }
-}
-
-extension PresentationCallHistoryRecord {
     var name: String {
-        return contact.title.isEmpty ? date : "\(contact.title), \(date)"
+        contact.title.isEmpty ? date : "\(contact.title), \(date)"
     }
-}
 
-extension PresentationCallHistoryRecord {
     func matchesSearch(_ query: String) -> Bool {
         let haystacks = [
             contact.title,
@@ -100,11 +34,14 @@ extension PresentationCallHistoryRecord {
             contact.label,
             contact.address,
             date,
-            duration
+            duration,
         ]
 
         if haystacks.contains(where: {
-            $0.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+            $0.range(
+                of: query,
+                options: [.caseInsensitive, .diacriticInsensitive]
+            ) != nil
         }) {
             return true
         }

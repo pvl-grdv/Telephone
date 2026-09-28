@@ -3,12 +3,12 @@
 //  Telephone
 //
 
-import Cocoa
+import Foundation
 import Observation
 
 @MainActor
 @Observable
-final class NetworkSettingsModel: NSObject {
+final class NetworkSettingsModel {
     var transportPort = ""
     var stunServerHost = ""
     var stunServerPort = ""
@@ -21,6 +21,7 @@ final class NetworkSettingsModel: NSObject {
     private let defaults: UserDefaults
     private let userAgent: AKSIPUserAgent
     private weak var preferencesController: AnyObject?
+    private var userAgentStartedObservation: NotificationObservation?
 
     init(
         userAgent: AKSIPUserAgent,
@@ -30,20 +31,17 @@ final class NetworkSettingsModel: NSObject {
         self.userAgent = userAgent
         self.preferencesController = preferencesController
         self.defaults = defaults
-        super.init()
         discard()
         refreshTransportPortPlaceholder()
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(userAgentDidFinishStarting),
-            name: NSNotification.Name.AKSIPUserAgentDidFinishStarting,
-            object: nil
-        )
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
+        userAgentStartedObservation = NotificationObservation(
+            center: .default,
+            name: .AKSIPUserAgentDidFinishStarting
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.refreshTransportPortPlaceholder()
+            }
+        }
     }
 
     var transportPortInvalid: Bool {
@@ -155,10 +153,6 @@ final class NetworkSettingsModel: NSObject {
         }
     }
 
-    @objc private func userAgentDidFinishStarting(_ notification: Notification) {
-        refreshTransportPortPlaceholder()
-    }
-
     private func stringValue(for key: String) -> String {
         let value = defaults.integer(forKey: key)
         return value > 0 ? String(value) : ""
@@ -172,4 +166,3 @@ final class NetworkSettingsModel: NSObject {
         value.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
-

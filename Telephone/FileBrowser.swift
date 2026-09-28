@@ -18,6 +18,7 @@
 
 import Foundation
 
+@MainActor
 protocol FileBrowser {
     func showFile(at url: URL)
 }

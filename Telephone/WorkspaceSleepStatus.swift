@@ -16,31 +16,48 @@
 //  GNU General Public License for more details.
 //
 
-import AppKit
+import Foundation
 
-final class WorkspaceSleepStatus: NSObject {
-    @objc private(set) var isSleeping = false
+final class WorkspaceSleepStatus: @unchecked Sendable {
+    private let lock = NSLock()
+    private var sleeping = false
+    private var observations: [NotificationObservation] = []
 
-    private let workspace: NSWorkspace
-
-    init(workspace: NSWorkspace) {
-        self.workspace = workspace
-        super.init()
-        let nc = workspace.notificationCenter
-        nc.addObserver(self, selector: #selector(willSleep), name: NSWorkspace.willSleepNotification, object: workspace)
-        nc.addObserver(self, selector: #selector(didWake), name: NSWorkspace.didWakeNotification, object: workspace)
+    var isSleeping: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return sleeping
     }
 
-    deinit {
-        workspace.notificationCenter.removeObserver(self, name: NSWorkspace.willSleepNotification, object: workspace)
-        workspace.notificationCenter.removeObserver(self, name: NSWorkspace.didWakeNotification, object: workspace)
+    init(
+        center: NotificationCenter,
+        willSleepNotification: Notification.Name,
+        didWakeNotification: Notification.Name,
+        workspace: AnyObject
+    ) {
+        observations = [
+            NotificationObservation(
+                center: center,
+                name: willSleepNotification,
+                object: workspace,
+                queue: nil
+            ) { [weak self] _ in
+                self?.setSleeping(true)
+            },
+            NotificationObservation(
+                center: center,
+                name: didWakeNotification,
+                object: workspace,
+                queue: nil
+            ) { [weak self] _ in
+                self?.setSleeping(false)
+            },
+        ]
     }
 
-    @objc private func willSleep(notification: Notification) {
-        isSleeping = true
-    }
-
-    @objc private func didWake(notification: Notification) {
-        isSleeping = false
+    private func setSleeping(_ value: Bool) {
+        lock.lock()
+        sleeping = value
+        lock.unlock()
     }
 }

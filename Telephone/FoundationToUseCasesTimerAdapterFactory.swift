@@ -10,25 +10,34 @@
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 //
-//  Telephone is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
 
 import Foundation
 import UseCases
 
 final class FoundationToUseCasesTimerAdapterFactory: TimerFactory {
-    func makeRepeatingTimer(interval: Double, action: @escaping () -> Void) -> UseCases.Timer {
-        let timer = FoundationToUseCasesTimerAdapter(action: action)
-        timer.timer = Foundation.Timer.scheduledTimer(
-            timeInterval: interval,
-            target: timer,
-            selector: #selector(FoundationToUseCasesTimerAdapter.tick),
-            userInfo: nil,
+    func makeRepeatingTimer(
+        interval: Double,
+        action: @escaping () -> Void
+    ) -> UseCases.Timer {
+        let action = TimerAction(action)
+        let timer = Foundation.Timer.scheduledTimer(
+            withTimeInterval: interval,
             repeats: true
-        )
-        return timer
+        ) { _ in
+            action.perform()
+        }
+        return FoundationToUseCasesTimerAdapter(timer: timer)
+    }
+}
+
+private final class TimerAction: @unchecked Sendable {
+    private let action: () -> Void
+
+    init(_ action: @escaping () -> Void) {
+        self.action = action
+    }
+
+    func perform() {
+        action()
     }
 }

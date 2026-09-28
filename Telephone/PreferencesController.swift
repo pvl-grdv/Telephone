@@ -3,23 +3,16 @@
 //  Telephone
 //
 
-import AppKit
 import SwiftUI
 
 @MainActor
-@objcMembers
-final class PreferencesController: NSObject, SoundIOPreferences {
-    @nonobjc weak var delegate: PreferencesControllerDelegate?
+final class PreferencesController: SoundIOPreferences {
+    weak var delegate: PreferencesControllerDelegate?
 
     let userAgent: AKSIPUserAgent
     let soundPreferencesViewEventTarget: SoundPreferencesViewEventTarget
 
-    private lazy var sceneController = PreferencesSceneController(model: model)
-
-#if DEBUG
-    private lazy var uiTestSceneController =
-        PreferencesUITestSceneController(model: model)
-#endif
+    private var notificationObservations: [NotificationObservation] = []
 
     private lazy var model = SettingsViewModel(
         accountModelFactory: { [unowned self] in
@@ -48,31 +41,28 @@ final class PreferencesController: NSObject, SoundIOPreferences {
         self.userAgent = userAgent
         self.soundPreferencesViewEventTarget = soundPreferencesViewEventTarget
 
-        super.init()
-
         observePreferenceChanges()
-    }
-
-    func install() {
-        sceneController.install()
     }
 
     func showWindowCentered() {
         PerformanceSignposts.settings.emitEvent("OpenSettingsRequested")
-        sceneController.show()
+        SceneRouter.shared.openSettings()
     }
 
 #if DEBUG
     func showWindowForUITesting() {
-        uiTestSceneController.show()
+        SceneRouter.shared.openWindow(id: PreferencesUITestScene.id)
     }
 #endif
+
+    var sceneModel: SettingsViewModel {
+        model
+    }
 
     func showAccounts() {
         model.selection = .accounts
     }
 
-    @objc(reloadAccountAtIndex:)
     func reloadAccount(at index: Int) {
         model.reloadAccountIfLoaded(at: index)
     }
@@ -82,53 +72,61 @@ final class PreferencesController: NSObject, SoundIOPreferences {
     }
 
     private func observePreferenceChanges() {
-        let center = NotificationCenter.default
-
-        center.addObserver(
-            self,
-            selector: #selector(accountDidRemove(_:)),
-            name: .AKPreferencesControllerDidRemoveAccount,
-            object: self
-        )
-        center.addObserver(
-            self,
-            selector: #selector(accountEnabledDidChange(_:)),
-            name: .AKPreferencesControllerDidChangeAccountEnabled,
-            object: self
-        )
-        center.addObserver(
-            self,
-            selector: #selector(accountsDidSwap(_:)),
-            name: .AKPreferencesControllerDidSwapAccounts,
-            object: self
-        )
-        center.addObserver(
-            self,
-            selector: #selector(networkSettingsDidChange(_:)),
-            name: .AKPreferencesControllerDidChangeNetworkSettings,
-            object: self
-        )
+        observe(
+            .AKPreferencesControllerDidRemoveAccount
+        ) { [weak self] notification in
+            self?.delegate?.preferencesControllerDidRemoveAccount(notification)
+        }
+        observe(
+            .AKPreferencesControllerDidChangeAccountEnabled
+        ) { [weak self] notification in
+            self?.delegate?.preferencesControllerDidChangeAccountEnabled(
+                notification
+            )
+        }
+        observe(
+            .AKPreferencesControllerDidSwapAccounts
+        ) { [weak self] notification in
+            self?.delegate?.preferencesControllerDidSwapAccounts(notification)
+        }
+        observe(
+            .AKPreferencesControllerDidChangeNetworkSettings
+        ) { [weak self] notification in
+            self?.delegate?.preferencesControllerDidChangeNetworkSettings(
+                notification
+            )
+        }
     }
 
-    @objc private func accountDidRemove(_ notification: Notification) {
-        delegate?.preferencesControllerDidRemoveAccount(notification)
+    private func observe(
+        _ name: Notification.Name,
+        action: @escaping @MainActor (Notification) -> Void
+    ) {
+        notificationObservations.append(
+            NotificationObservation(
+                name: name,
+                object: self
+            ) { notification in
+                let notification =
+                    PreferencesSendableNotification(notification)
+                MainActor.assumeIsolated {
+                    action(notification.value)
+                }
+            }
+        )
     }
+}
 
-    @objc private func accountEnabledDidChange(_ notification: Notification) {
-        delegate?.preferencesControllerDidChangeAccountEnabled(notification)
-    }
+private struct PreferencesSendableNotification: @unchecked Sendable {
+    let value: Notification
 
-    @objc private func accountsDidSwap(_ notification: Notification) {
-        delegate?.preferencesControllerDidSwapAccounts(notification)
-    }
-
-    @objc private func networkSettingsDidChange(_ notification: Notification) {
-        delegate?.preferencesControllerDidChangeNetworkSettings(notification)
+    init(_ value: Notification) {
+        self.value = value
     }
 }
 
 
-private struct PreferencesHostedScene: Scene {
+struct PreferencesHostedScene: Scene {
     let model: SettingsViewModel
 
     var body: some Scene {
@@ -144,34 +142,9 @@ private struct PreferencesHostedScene: Scene {
     }
 }
 
-@MainActor
-private final class PreferencesSceneController {
-    private let representation:
-        NSHostingSceneRepresentation<PreferencesHostedScene>
-    private var installed = false
-
-    init(model: SettingsViewModel) {
-        representation = NSHostingSceneRepresentation {
-            PreferencesHostedScene(model: model)
-        }
-    }
-
-    func install() {
-        guard !installed else { return }
-        installed = true
-        NSApplication.shared.addSceneRepresentation(representation)
-    }
-
-    func show() {
-        install()
-        representation.environment.openSettings()
-    }
-}
-
-
 #if DEBUG
 
-private struct PreferencesUITestHostedScene: Scene {
+struct PreferencesUITestHostedScene: Scene {
     let model: SettingsViewModel
 
     var body: some Scene {
@@ -180,7 +153,7 @@ private struct PreferencesUITestHostedScene: Scene {
                 "Telephone Settings",
                 comment: "Settings default window title."
             ),
-            id: PreferencesUITestSceneController.sceneID
+            id: PreferencesUITestScene.id
         ) {
             SettingsRootView(
                 model: model,
@@ -196,28 +169,8 @@ private struct PreferencesUITestHostedScene: Scene {
     }
 }
 
-@MainActor
-private final class PreferencesUITestSceneController {
-    static let sceneID = "telephone-ui-test-settings"
-
-    private let representation:
-        NSHostingSceneRepresentation<PreferencesUITestHostedScene>
-    private var installed = false
-
-    init(model: SettingsViewModel) {
-        representation = NSHostingSceneRepresentation {
-            PreferencesUITestHostedScene(model: model)
-        }
-    }
-
-    func show() {
-        if !installed {
-            installed = true
-            NSApplication.shared.addSceneRepresentation(representation)
-        }
-
-        representation.environment.openWindow(id: Self.sceneID)
-    }
+enum PreferencesUITestScene {
+    static let id = "telephone-ui-test-settings"
 }
 
 #endif

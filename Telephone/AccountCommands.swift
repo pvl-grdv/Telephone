@@ -8,7 +8,7 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class AccountsCommandModel: NSObject {
+final class AccountsCommandModel {
     struct Item: Identifiable {
         let id: ObjectIdentifier
         let title: String
@@ -20,14 +20,11 @@ final class AccountsCommandModel: NSObject {
 
     private(set) var items: [Item] = []
 
-    @objc(initWithControllers:)
     init(controllers: AccountControllers) {
         self.controllers = controllers
-        super.init()
         update()
     }
 
-    @objc
     func update() {
         items = controllers.enabled.map { controller in
             Item(

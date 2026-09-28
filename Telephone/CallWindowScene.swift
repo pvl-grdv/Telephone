@@ -3,8 +3,11 @@
 //  Telephone
 //
 
-import AppKit
 import SwiftUI
+
+enum CallWindowScene {
+    static let id = "telephone-call"
+}
 
 @MainActor
 enum CallPresentationRegistry {
@@ -12,7 +15,7 @@ enum CallPresentationRegistry {
         WeakObjectRegistry<String, CallPresentationCoordinator>()
 }
 
-private struct CallWindowsScene: Scene {
+struct CallWindowsScene: Scene {
     @AppStorage(UserDefaultsKeys.keepCallWindowOnTop)
     private var keepOnTop = false
 
@@ -22,7 +25,7 @@ private struct CallWindowsScene: Scene {
                 "Call Window Title",
                 comment: "Call window scene title."
             ),
-            id: CallWindowSceneController.sceneID,
+            id: CallWindowScene.id,
             for: String.self
         ) { key in
             if let key = key.wrappedValue,
@@ -41,37 +44,5 @@ private struct CallWindowsScene: Scene {
         .windowIdealSize(.fitToContent)
         .windowBackgroundDragBehavior(.enabled)
         .windowLevel(keepOnTop ? .floating : .normal)
-    }
-}
-
-@MainActor
-final class CallWindowSceneController {
-    static let shared = CallWindowSceneController()
-    static let sceneID = "telephone-call"
-
-    private let representation = NSHostingSceneRepresentation {
-        CallWindowsScene()
-    }
-    private var installed = false
-
-    func install() {
-        guard !installed else { return }
-        installed = true
-        NSApplication.shared.addSceneRepresentation(representation)
-    }
-
-    func show(key: String) {
-        install()
-        representation.environment.openWindow(
-            id: Self.sceneID,
-            value: key
-        )
-    }
-
-    func hide(key: String) {
-        representation.environment.dismissWindow(
-            id: Self.sceneID,
-            value: key
-        )
     }
 }

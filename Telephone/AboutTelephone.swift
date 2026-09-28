@@ -3,7 +3,6 @@
 //  Telephone
 //
 
-import AppKit
 import SwiftUI
 
 enum AboutTelephoneScene {
@@ -40,7 +39,7 @@ struct AboutTelephoneView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(nsImage: NSApplication.shared.applicationIconImage)
+            MacApplication.applicationIcon
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 72, height: 72)

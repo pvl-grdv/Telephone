@@ -16,7 +16,6 @@
 //  GNU General Public License for more details.
 //
 
-import AppKit
 import Contacts
 import Foundation
 import UseCases
@@ -63,7 +62,7 @@ final class CompositionRoot {
 
         let soundFactory = SimpleSoundFactory(
             load: SettingsRingtoneSoundConfigurationLoadUseCase(settings: defaults, factory: soundIOFactory),
-            factory: NSSoundToSoundAdapterFactory()
+            factory: MacSoundFactory()
         )
 
         ringtonePlayback = ConditionalRingtonePlaybackUseCase(
@@ -113,7 +112,7 @@ final class CompositionRoot {
 
         orphanLogFileRemoval = OrphanLogFileRemoval(locations: applicationDataLocations, manager: FileManager.default)
 
-        workstationSleepStatus = WorkspaceSleepStatus(workspace: NSWorkspace.shared)
+        workstationSleepStatus = MacSystem.makeWorkspaceSleepStatus()
 
         userAgentEventSource = AKSIPUserAgentEventSource(
             target: UserAgentEventTargets(
@@ -167,8 +166,8 @@ final class CompositionRoot {
                     RingtonePlaybackCallEventTarget(playback: ringtonePlayback),
                     UserAttentionRequestCallEventTarget(
                         request: CallsUserAttentionRequest(
-                            origin: ApplicationUserAttentionRequest(
-                                application: NSApp, center: NotificationCenter.default
+                            origin: MacSystem.makeUserAttentionRequest(
+                                center: NotificationCenter.default
                             ),
                             calls: userAgent
                         )
@@ -215,9 +214,9 @@ final class CompositionRoot {
             logFileURL: logFileURL,
             homepageURL: URL(string: "https://github.com/pvl-grdv/Telephone")!,
             faqURL: URL(string: "https://www.64characters.com/telephone/faq/")!,
-            fileBrowser: NSWorkspace.shared,
-            webBrowser: NSWorkspace.shared,
-            clipboard: NSPasteboard.general,
+            fileBrowser: MacSystem.fileBrowser,
+            webBrowser: MacSystem.webBrowser,
+            clipboard: MacSystem.clipboard,
             settings: AppSettings(
                 settings: defaults,
                 defaults: defaultAppSettings.defaults,

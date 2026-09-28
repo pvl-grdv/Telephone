@@ -3,39 +3,29 @@
 //  Telephone
 //
 
-import AppKit
 import SwiftUI
 
 @MainActor
-@objcMembers
-final class AccountSetupPresentationController: NSObject {
-    private let controller = AccountSetupSceneController()
-
+final class AccountSetupPresentationController {
     class func didAddAccountNotificationName() -> String {
         accountSetupDidAddNotificationName.rawValue
     }
 
-    func install() {
-        controller.install()
-    }
-
     func showFirstRun() {
-        controller.show()
+        SceneRouter.shared.openWindow(id: AccountSetupScene.id)
     }
 }
 
-private struct AccountSetupHostedScene: Scene {
-    let windowID: String
-
+struct AccountSetupHostedScene: Scene {
     var body: some Scene {
         WindowGroup(
             NSLocalizedString(
                 "Account Setup",
                 comment: "Account setup window title."
             ),
-            id: windowID
+            id: AccountSetupScene.id
         ) {
-            FirstRunAccountSetupView(windowID: windowID)
+            FirstRunAccountSetupView(windowID: AccountSetupScene.id)
         }
         .defaultLaunchBehavior(.suppressed)
         .defaultSize(width: 520, height: 360)
@@ -46,30 +36,8 @@ private struct AccountSetupHostedScene: Scene {
     }
 }
 
-@MainActor
-private final class AccountSetupSceneController {
-    private static let windowID = "telephone-first-run-account-setup"
-
-    private let representation:
-        NSHostingSceneRepresentation<AccountSetupHostedScene>
-    private var installed = false
-
-    init() {
-        representation = NSHostingSceneRepresentation {
-            AccountSetupHostedScene(windowID: Self.windowID)
-        }
-    }
-
-    func install() {
-        guard !installed else { return }
-        installed = true
-        NSApplication.shared.addSceneRepresentation(representation)
-    }
-
-    func show() {
-        install()
-        representation.environment.openWindow(id: Self.windowID)
-    }
+enum AccountSetupScene {
+    static let id = "telephone-first-run-account-setup"
 }
 
 private struct FirstRunAccountSetupView: View {
@@ -100,7 +68,7 @@ private struct FirstRunAccountSetupView: View {
     }
 
     private func cancel() {
-        NSApplication.shared.terminate(nil)
+        MacApplication.terminate()
     }
 
     private func terminateIfAccountWasNotAdded() {
@@ -109,7 +77,7 @@ private struct FirstRunAccountSetupView: View {
         ) ?? []
 
         if accounts.isEmpty {
-            NSApplication.shared.terminate(nil)
+            MacApplication.terminate()
         }
     }
 }

@@ -7,10 +7,25 @@ import SwiftUI
 
 @main
 struct TelephoneApp: App {
-    @NSApplicationDelegateAdaptor(AppController.self)
+    @NSApplicationDelegateAdaptor(MacApplicationDelegate.self)
     private var appController
 
+    @Environment(\.openWindow)
+    private var openWindow
+
+    @Environment(\.dismissWindow)
+    private var dismissWindow
+
+    @Environment(\.openSettings)
+    private var openSettings
+
     var body: some Scene {
+        let _ = SceneRouter.shared.configure(
+            openWindow: openWindow,
+            dismissWindow: dismissWindow,
+            openSettings: openSettings
+        )
+
         WindowGroup(
             "Telephone",
             id: "telephone-command-host"
@@ -28,13 +43,13 @@ struct TelephoneApp: App {
                         comment: "Application settings menu item."
                     )
                 ) {
-                    appController.showPreferencesForSwiftUI()
+                    appController.coordinator.showPreferencesForSwiftUI()
                 }
                 .keyboardShortcut(",", modifiers: .command)
             }
 
             AccountsCommands(
-                model: appController.accountsCommandModelForSwiftUI()
+                model: appController.coordinator.accountsCommandModelForSwiftUI()
             )
 
             CallCommands()
@@ -50,7 +65,7 @@ struct TelephoneApp: App {
                         comment: "Copy application settings help menu item."
                     )
                 ) {
-                    appController.copySettings()
+                    appController.coordinator.copySettings()
                 }
 
                 Button(
@@ -59,7 +74,7 @@ struct TelephoneApp: App {
                         comment: "Show log file help menu item."
                     )
                 ) {
-                    appController.showLogFile()
+                    appController.coordinator.showLogFile()
                 }
 
                 Divider()
@@ -70,7 +85,7 @@ struct TelephoneApp: App {
                         comment: "Open maintained fork repository help menu item."
                     )
                 ) {
-                    appController.openHomepage()
+                    appController.coordinator.openHomepage()
                 }
 
                 Button(
@@ -79,10 +94,33 @@ struct TelephoneApp: App {
                         comment: "Open upstream Telephone FAQ help menu item."
                     )
                 ) {
-                    appController.openFAQ()
+                    appController.coordinator.openFAQ()
                 }
             }
         }
+
+        AccountWindowsScene()
+
+        CallWindowsScene()
+
+        AccountSetupHostedScene()
+
+        ApplicationDialogScene(
+            controller:
+                appController.coordinator.applicationDialogControllerForSwiftUI()
+        )
+
+        PreferencesHostedScene(
+            model: appController.coordinator.settingsModelForSwiftUI()
+        )
+
+#if DEBUG
+        PreferencesUITestHostedScene(
+            model: appController.coordinator.settingsModelForSwiftUI()
+        )
+
+        UITestCallHostedScene()
+#endif
 
         Window(
             NSLocalizedString(

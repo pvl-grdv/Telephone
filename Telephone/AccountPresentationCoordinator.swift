@@ -7,13 +7,13 @@ import Foundation
 import SwiftUI
 import UseCases
 
-@objc enum AccountAvailabilityState: Int {
+enum AccountAvailabilityState: Int {
     case offline
     case available
     case unavailable
 }
 
-@objc protocol AccountPresentationCoordinatorDelegate: AnyObject {
+protocol AccountPresentationCoordinatorDelegate: AnyObject {
     func accountPresentationCoordinator(
         _ controller: AccountPresentationCoordinator,
         didChangeAccountState state: AccountAvailabilityState
@@ -21,8 +21,7 @@ import UseCases
 }
 
 @MainActor
-@objcMembers
-final class AccountPresentationCoordinator: NSObject {
+final class AccountPresentationCoordinator {
     private let accountDescription: String
     private let windowKey: String
     private let callDestinationComposer: CallDestinationComposer
@@ -42,11 +41,6 @@ final class AccountPresentationCoordinator: NSObject {
         model.showsCallComposer
     }
 
-    class func installScene() {
-        AccountWindowSceneController.shared.install()
-    }
-
-    @nonobjc
     init(
         accountDescription: String,
         accountController: AccountController,
@@ -80,13 +74,10 @@ final class AccountPresentationCoordinator: NSObject {
         )
         model = AccountWindowModel(session: session)
 
-        super.init()
-
         AccountPresentationRegistry.shared.register(self, key: windowKey)
         show(.offline, callComposerVisible: false, animated: false)
     }
 
-    @nonobjc
     var contentView: some View {
         AccountWindowRootView(
             model: model,
@@ -162,7 +153,6 @@ final class AccountPresentationCoordinator: NSObject {
         model.authenticationFailure = nil
     }
 
-    @objc(showRegistrarConnectionErrorWithRegistrar:error:)
     func showRegistrarConnectionError(
         registrar: String,
         error: String?
@@ -178,7 +168,10 @@ final class AccountPresentationCoordinator: NSObject {
     }
 
     func showWindow() {
-        AccountWindowSceneController.shared.show(key: windowKey)
+        SceneRouter.shared.openWindow(
+            id: AccountWindowScene.id,
+            value: windowKey
+        )
     }
 
     func showWindowWithoutMakingKey() {
@@ -186,7 +179,10 @@ final class AccountPresentationCoordinator: NSObject {
     }
 
     func hideWindow() {
-        AccountWindowSceneController.shared.hide(key: windowKey)
+        SceneRouter.shared.dismissWindow(
+            id: AccountWindowScene.id,
+            value: windowKey
+        )
     }
 
     func invalidate() {

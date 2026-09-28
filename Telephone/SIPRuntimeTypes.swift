@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PJSIPBridge
 
 typealias AKSIPCallState = pjsip_inv_state
 typealias AKNATType = pj_stun_nat_type

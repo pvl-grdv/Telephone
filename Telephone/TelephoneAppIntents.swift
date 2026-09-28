@@ -4,7 +4,6 @@
 //
 
 import AppIntents
-import AppKit
 import Foundation
 
 struct TelephoneAccountEntity: AppEntity, Hashable, Sendable {
@@ -276,12 +275,12 @@ struct StartTelephoneCallIntent: AudioRecordingIntent, AudioPlaybackIntent {
             )
         }
 
-        guard let appController = NSApplication.shared.delegate as? AppController
+        guard let coordinator = MacApplication.coordinator
         else {
             return .result(dialog: "Telephone is not ready.")
         }
 
-        let success = appController.makeCallFromAppIntent(
+        let success = coordinator.makeCallFromAppIntent(
             destination: target
         )
         return success
@@ -309,12 +308,12 @@ struct CallWithTelephoneIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard let appController = NSApplication.shared.delegate as? AppController
+        guard let coordinator = MacApplication.coordinator
         else {
             return .result(dialog: "Telephone is not ready.")
         }
 
-        let success = appController.makeCallFromAppIntent(
+        let success = coordinator.makeCallFromAppIntent(
             destination: destination
         )
         if success {
@@ -336,12 +335,12 @@ struct OpenTelephoneSettingsIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        guard let appController = NSApplication.shared.delegate as? AppController
+        guard let coordinator = MacApplication.coordinator
         else {
             return .result()
         }
 
-        appController.showPreferencesForSwiftUI()
+        coordinator.showPreferencesForSwiftUI()
         return .result()
     }
 }
@@ -364,12 +363,12 @@ struct SetTelephoneAccountAvailabilityIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard let appController = NSApplication.shared.delegate as? AppController
+        guard let coordinator = MacApplication.coordinator
         else {
             return .result(dialog: "Telephone is not ready.")
         }
 
-        let success = appController.setAccountAvailabilityFromAppIntent(
+        let success = coordinator.setAccountAvailabilityFromAppIntent(
             uuid: account.id,
             state: availability.stateRawValue
         )

@@ -119,13 +119,18 @@ private final class CallDestinationInputModel {
             normalizeCurrentDestination()
         }
         guard
-            let uri = selectedGroup?.selectedDestination?.uri.copy()
-                as? AKSIPURI,
-            !uri.user.isEmpty
+            let source = selectedGroup?.selectedDestination?.uri,
+            !source.user.isEmpty
         else {
             return nil
         }
-        return uri
+
+        return AKSIPURI(
+            user: source.user,
+            host: source.host,
+            displayName: source.displayName,
+            port: source.port
+        )
     }
 
     var callDestinationPhoneLabel: String {

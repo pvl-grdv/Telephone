@@ -5,18 +5,16 @@
 //  Coordinates one SIP call with its SwiftUI presentation.
 //
 
-import AppKit
 import Foundation
 import UserNotifications
+import PJSIPBridge
 
 @MainActor
-@objc(CallController)
-@objcMembers
-class CallController: NSObject, AKSIPCallDelegate {
+class CallController: AKSIPCallDelegate {
     private static let autoCloseDelay: TimeInterval = 1.5
     private static let redialEnableDelay: TimeInterval = 1.0
 
-    @nonobjc weak var delegate: (any CallControllerDelegate)?
+    weak var delegate: (any CallControllerDelegate)?
     weak var accountController: AccountController?
 
     let identifier = UUID().uuidString
@@ -95,13 +93,10 @@ class CallController: NSObject, AKSIPCallDelegate {
     var redialURI: AKSIPURI?
     var callStartTime: TimeInterval = 0
 
-    @objc(isCallOnHold)
     var callOnHold = false
 
-    @objc(isCallActive)
     var callActive = false
 
-    @objc(isCallUnhandled)
     var callUnhandled: Bool {
         call?.isMissed ?? false
     }
@@ -129,8 +124,6 @@ class CallController: NSObject, AKSIPCallDelegate {
         self.delegate = delegate
         defaults = .standard
 
-        super.init()
-
         presentation = CallPresentationCoordinator(
             callController: self,
             accountController: accountController,
@@ -153,7 +146,6 @@ class CallController: NSObject, AKSIPCallDelegate {
     }
 
 
-    @objc(showWindow:)
     func showWindow(_ sender: Any?) {
         didHandleWindowClose = false
         presentation.showWindow()
@@ -182,7 +174,6 @@ class CallController: NSObject, AKSIPCallDelegate {
         delegate?.callControllerWillClose(self)
     }
 
-    @objc(setShowsAccountInfo:)
     func setShowsAccountInfo(_ visible: Bool) {
         presentation.setShowsAccountInfo(visible)
     }
@@ -287,7 +278,6 @@ class CallController: NSObject, AKSIPCallDelegate {
         }
     }
 
-    @objc(setCallHeld:)
     func setCallHeld(_ held: Bool) {
         guard
             call?.state == PJSIP_INV_STATE_CONFIRMED,
@@ -303,7 +293,6 @@ class CallController: NSObject, AKSIPCallDelegate {
         setCallHeld(!(call?.isOnLocalHold ?? false))
     }
 
-    @objc(setMicrophoneMuted:)
     func setMicrophoneMuted(_ muted: Bool) {
         guard call?.state == PJSIP_INV_STATE_CONFIRMED else {
             return
@@ -340,7 +329,6 @@ class CallController: NSObject, AKSIPCallDelegate {
         setMicrophoneMuted(!(call?.isMicrophoneMuted ?? false))
     }
 
-    @objc(setIntermediateStatus:)
     func setIntermediateStatus(_ newStatus: String) {
         presentation.showIntermediateStatus(newStatus)
     }
@@ -566,7 +554,7 @@ class CallController: NSObject, AKSIPCallDelegate {
     }
 
     private func removeOrShowUserNotificationOnDisconnectIfNeeded() {
-        guard !NSApp.isActive else { return }
+        guard !MacApplication.isActive else { return }
 
         if callUnhandled {
             removeUserNotification()

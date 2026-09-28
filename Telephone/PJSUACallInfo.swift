@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PJSIPBridge
 
 final class PJSUACallInfo: @unchecked Sendable {
     let identifier: Int

@@ -16,10 +16,7 @@
 //  GNU General Public License for more details.
 //
 
-import Foundation
-
-@objcMembers
-class AKSIPAccountKeys: NSObject {
+enum AKSIPAccountKeys {
     static let uuid = "UUID"
     static let desc = "Description"
     static let fullName = "FullName"

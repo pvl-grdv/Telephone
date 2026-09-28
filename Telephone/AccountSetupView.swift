@@ -3,7 +3,6 @@
 //  Telephone
 //
 
-import AppKit
 import Observation
 import SwiftUI
 
@@ -169,7 +168,7 @@ struct AccountSetupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .top, spacing: 18) {
-                Image(nsImage: NSApp.applicationIconImage)
+                MacApplication.applicationIcon
                     .resizable()
                     .scaledToFit()
                     .frame(width: 72, height: 72)

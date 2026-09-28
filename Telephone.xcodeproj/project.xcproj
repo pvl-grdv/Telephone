@@ -311,8 +311,7 @@
           "kind": "group",
           "name": "Ringtone",
           "children": [
-            { "path": "NSSoundToSoundAdapter.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "NSSoundToSoundAdapterFactory.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "MacSound.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             {
               "path": "RepeatingSoundFactory.swift",
               "encoding": "utf8",
@@ -461,9 +460,12 @@
         { "path": "CompositionRoot.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AccountControllers.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AccountCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "AppController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "MacApplicationDelegate.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "ApplicationCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "Logging.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "ApplicationDialogController.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "MacSystemIntegration.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "NotificationObservation.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         {
           "path": "AppSettings.swift",
           "target-membership": [
@@ -544,10 +546,7 @@
         { "path": "PresentationProtocols.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "SoundPresentationProtocols.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "NSCalendarDayChangeEventSource.swift", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "NSPasteboard+Clipboard.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "NSUserDefaults+KeyValueSettings.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "NSWorkspace+FileBrowser.swift", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "NSWorkspace+WebBrowser.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "OrphanLogFileRemoval.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
           "path": "PresenterFactory.swift",
@@ -624,8 +623,8 @@
           "kind": "group",
           "name": "Other Sources",
           "children": [
-            { "path": "Telephone-Bridging-Header.h" },
             { "path": "TelephoneApp.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "SceneRouter.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AboutTelephone.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "TelephoneAppIntents.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "UITestSupport.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -1326,7 +1325,7 @@
         "RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION": "NO",
         "SWIFT_ACTIVE_COMPILATION_CONDITIONS[config=Debug]": "DEBUG",
         "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
-        "SWIFT_OBJC_BRIDGING_HEADER": "Telephone/Telephone-Bridging-Header.h",
+        "SWIFT_INCLUDE_PATHS": "\"$(SRCROOT)/Telephone/PJSIPBridge\"",
         "SWIFT_STRICT_CONCURRENCY": "complete",
         "SWIFT_VERSION": "6.0",
       },

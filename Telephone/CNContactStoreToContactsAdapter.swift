@@ -60,8 +60,7 @@ private let keys = [
 ]
 
 
-@objcMembers
-final class IncomingCallContact: NSObject, @unchecked Sendable {
+final class IncomingCallContact: @unchecked Sendable {
     let name: String
     let organization: String
     let label: String
@@ -73,8 +72,7 @@ final class IncomingCallContact: NSObject, @unchecked Sendable {
     }
 }
 
-@objcMembers
-final class IncomingCallContactResolver: NSObject {
+final class IncomingCallContactResolver {
     private let index: ContactMatchingIndex
     private let settings: ContactMatchingSettings
 

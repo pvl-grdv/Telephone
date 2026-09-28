@@ -18,15 +18,13 @@
 
 import Foundation
 
-final class SanitizedCallDestination: NSObject {
-    @objc let value: String
+final class SanitizedCallDestination {
+    let value: String
 
-    @objc(initWithString:)
     init(_ string: String) {
         value = unescapingPlusCharacter(strippingEscapedSpaces(strippingSlashes(strippingHeaders(string))))
     }
 
-    @objc(initWithURL:)
     convenience init?(url: URL) {
         guard let scheme = url.scheme?.lowercased(),
               supportedURLSchemes.contains(scheme) else {

@@ -18,6 +18,7 @@
 
 import Domain
 import UseCases
+import PJSIPBridge
 
 struct UserAgentAudioDevices {
     let all: [UserAgentAudioDevice]

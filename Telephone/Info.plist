@@ -55,23 +55,5 @@
 	<string>The microphone is used for phone calls.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSServices</key>
-	<array>
-		<dict>
-			<key>NSMenuItem</key>
-			<dict>
-				<key>default</key>
-				<string>Telephone: Call</string>
-			</dict>
-			<key>NSMessage</key>
-			<string>makeCallFromTextService</string>
-			<key>NSPortName</key>
-			<string>Telephone</string>
-			<key>NSSendTypes</key>
-			<array>
-				<string>public.utf8-plain-text</string>
-			</array>
-		</dict>
-	</array>
 </dict>
 </plist>

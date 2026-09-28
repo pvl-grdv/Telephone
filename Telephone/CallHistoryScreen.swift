@@ -134,7 +134,7 @@ struct CallHistoryScreen: View {
                 }
             }
             .listStyle(.inset)
-            .onCopyCommand(perform: copyCommandPayload)
+            .copyable(copyableAddresses)
             .onKeyPress(.return) {
                 model.callSelected(action: call) ? .handled : .ignored
             }
@@ -191,14 +191,8 @@ struct CallHistoryScreen: View {
         }
     }
 
-    private var copyCommandPayload: (() -> [NSItemProvider])? {
-        guard let address = model.selectedRecord?.contact.address else {
-            return nil
-        }
-
-        return {
-            [NSItemProvider(object: address as NSString)]
-        }
+    private var copyableAddresses: [String] {
+        model.selectedRecord.map { [$0.contact.address] } ?? []
     }
 
     private var deletionIsPresented: Binding<Bool> {

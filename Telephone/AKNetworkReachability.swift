@@ -8,8 +8,7 @@
 import Foundation
 import Network
 
-@objcMembers
-final class AKNetworkReachability: NSObject, @unchecked Sendable {
+final class AKNetworkReachability: @unchecked Sendable {
     static let didChangeNotification =
         Notification.Name("AKNetworkReachabilityDidChange")
 
@@ -20,14 +19,7 @@ final class AKNetworkReachability: NSObject, @unchecked Sendable {
 
     private(set) var isReachable = false
 
-    @objc(networkReachability)
-    class func networkReachability() -> AKNetworkReachability {
-        AKNetworkReachability()
-    }
-
-    override init() {
-        super.init()
-
+    init() {
         monitor.pathUpdateHandler = { [weak self] path in
             let reachable = path.status == .satisfied
 

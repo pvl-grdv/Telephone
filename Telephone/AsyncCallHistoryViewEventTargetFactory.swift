@@ -20,7 +20,7 @@ import Foundation
 import UseCases
 
 @MainActor
-final class AsyncCallHistoryViewEventTargetFactory: NSObject {
+final class AsyncCallHistoryViewEventTargetFactory {
     private let origin: CallHistoryViewEventTargetFactory
 
     init(origin: CallHistoryViewEventTargetFactory) {

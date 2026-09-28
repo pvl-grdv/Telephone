@@ -1,24 +1,25 @@
 //
-//  AppController.swift
+//  ApplicationCoordinator.swift
 //  Telephone
 //
-//  Application lifecycle and top-level orchestration.
+//  Application lifecycle and top-level orchestration without AppKit ownership.
 //
 
-import AppKit
 import Foundation
 import UserNotifications
 import UseCases
+import PJSIPBridge
+
+enum ApplicationTerminationDecision {
+    case terminateNow
+    case terminateLater
+    case cancel
+}
 
 @MainActor
-@objc(AppController)
-@objcMembers
-final class AppController:
-    NSObject,
-    NSApplicationDelegate,
+final class ApplicationCoordinator:
     AKSIPUserAgentDelegate,
     PreferencesControllerDelegate,
-    @preconcurrency UNUserNotificationCenterDelegate,
     NameServersChangeEventTarget
 {
     private var compositionRoot: CompositionRoot!
@@ -28,8 +29,7 @@ final class AppController:
         AccountSetupPresentationController()
     private lazy var applicationDialogController =
         ApplicationDialogController()
-    private let networkReachability =
-        AKNetworkReachability.networkReachability()
+    private let networkReachability = AKNetworkReachability()
 
     private var shouldRegisterAllAccounts = false
     private var shouldRestartUserAgentASAP = false
@@ -43,6 +43,8 @@ final class AppController:
     private var restartTask: Task<Void, Never>?
     private var networkPathTask: Task<Void, Never>?
     private var performanceMetricsMonitor: AnyObject?
+    private var notificationObservations: [NotificationObservation] = []
+    private var workspaceEventSource: MacWorkspaceEventSource?
 
     private var userAgent: AKSIPUserAgent {
         compositionRoot.userAgent
@@ -64,9 +66,7 @@ final class AppController:
         compositionRoot.nameServers
     }
 
-    override init() {
-        super.init()
-
+    init() {
         compositionRoot = CompositionRoot(
             preferencesControllerDelegate: self,
             nameServersChangeEventTarget: self
@@ -77,14 +77,25 @@ final class AppController:
         )
 
         observeApplicationEvents()
+        workspaceEventSource = MacWorkspaceEventSource(
+            willSleep: { [weak self] in
+                self?.workspaceWillSleep()
+            },
+            didWake: { [weak self] in
+                self?.workspaceDidWake()
+            },
+            sessionDidResignActive: { [weak self] in
+                self?.workspaceSessionDidResignActive()
+            },
+            sessionDidBecomeActive: { [weak self] in
+                self?.workspaceSessionDidBecomeActive()
+            }
+        )
     }
 
     isolated deinit {
         restartTask?.cancel()
         networkPathTask?.cancel()
-        NotificationCenter.default.removeObserver(self)
-        NSWorkspace.shared.notificationCenter.removeObserver(self)
-        DistributedNotificationCenter.default().removeObserver(self)
     }
 
     func copySettings() {
@@ -105,6 +116,16 @@ final class AppController:
 
     func accountsCommandModelForSwiftUI() -> AccountsCommandModel {
         accountsCommandModel
+    }
+
+    func settingsModelForSwiftUI() -> SettingsViewModel {
+        preferencesController.sceneModel
+    }
+
+    func applicationDialogControllerForSwiftUI()
+        -> ApplicationDialogController
+    {
+        applicationDialogController
     }
 
     func showPreferencesForSwiftUI() {
@@ -144,25 +165,19 @@ final class AppController:
 
     func updateDockTileBadgeLabel() {
         let count = accountControllers.unhandledIncomingCallsCount()
-        NSApp.dockTile.badgeLabel =
+        MacApplication.setDockBadgeLabel(
             count == 0 ? "" : String(count)
+        )
     }
 
-    // MARK: - NSApplicationDelegate
-
-    func applicationWillFinishLaunching(
-        _ notification: Notification
-    ) {
+    func applicationWillFinishLaunching() {
         UserDefaults.standard.set(
             false,
             forKey: "NSFullScreenMenuItemEverywhere"
         )
     }
 
-    func application(
-        _ application: NSApplication,
-        open urls: [URL]
-    ) {
+    func open(urls: [URL]) {
         guard
             let url = urls.first,
             let destination = SanitizedCallDestination(url: url)
@@ -179,21 +194,19 @@ final class AppController:
     }
 
     func applicationDidFinishLaunching(
-        _ notification: Notification
+        notificationDelegate: any UNUserNotificationCenterDelegate
     ) {
         compositionRoot.defaultAppSettings.register()
         compositionRoot.settingsMigration.execute()
         startPerformanceMetricsMonitoring()
 
-        if TelephoneUITestSupport.handleLaunch(appController: self) {
+        if TelephoneUITestSupport.handleLaunch(coordinator: self) {
             finishedLaunching = true
             return
         }
 
         configureUserAgent()
-        configureUserNotifications()
-        NSApp.servicesProvider = self
-
+        configureUserNotifications(delegate: notificationDelegate)
         let accounts =
             UserDefaults.standard.array(
                 forKey: UserDefaultsKeys.accounts
@@ -229,8 +242,7 @@ final class AppController:
         showAccountPreferencesIfNeeded()
     }
 
-    func applicationShouldHandleReopen(
-        _ sender: NSApplication,
+    func handleReopen(
         hasVisibleWindows flag: Bool
     ) -> Bool {
         if userAgent.hasUnansweredIncomingCalls {
@@ -245,22 +257,18 @@ final class AppController:
         return true
     }
 
-    func applicationDidBecomeActive(
-        _ notification: Notification
-    ) {
+    func applicationDidBecomeActive() {
         UNUserNotificationCenter.current()
             .removeAllDeliveredNotifications()
     }
 
-    func applicationShouldTerminate(
-        _ sender: NSApplication
-    ) -> NSApplication.TerminateReply {
+    func terminationDecision() -> ApplicationTerminationDecision {
         if
             accountControllers.haveActiveCallControllers(),
             !terminationConfirmed
         {
             applicationDialogController.showQuitConfirmation()
-            return .terminateCancel
+            return .cancel
         }
 
         if userAgent.isStarted {
@@ -328,7 +336,7 @@ final class AppController:
         _ notification: Notification
     ) {
         if terminating {
-            NSApp.reply(toApplicationShouldTerminate: true)
+            MacApplication.replyToTermination(true)
             return
         }
 
@@ -357,7 +365,6 @@ final class AppController:
 
     // MARK: - PreferencesControllerDelegate
 
-    @objc(preferencesControllerDidRemoveAccount:)
     func preferencesControllerDidRemoveAccount(
         _ notification: Notification
     ) {
@@ -381,7 +388,6 @@ final class AppController:
         accountsCommandModel.update()
     }
 
-    @objc(preferencesControllerDidChangeAccountEnabled:)
     func preferencesControllerDidChangeAccountEnabled(
         _ notification: Notification
     ) {
@@ -415,7 +421,6 @@ final class AppController:
         accountsCommandModel.update()
     }
 
-    @objc(preferencesControllerDidSwapAccounts:)
     func preferencesControllerDidSwapAccounts(
         _ notification: Notification
     ) {
@@ -446,7 +451,6 @@ final class AppController:
         accountsCommandModel.update()
     }
 
-    @objc(preferencesControllerDidChangeNetworkSettings:)
     func preferencesControllerDidChangeNetworkSettings(
         _ notification: Notification
     ) {
@@ -458,11 +462,9 @@ final class AppController:
         }
     }
 
-    // MARK: - User notifications
-
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
+    func handleUserNotificationResponse(
+        _ response: UNNotificationResponse,
+        center: UNUserNotificationCenter
     ) async {
         let identifier = response.notification.request.identifier
 
@@ -508,31 +510,6 @@ final class AppController:
         restartUserAgentAfterDelayOrMarkForRestart()
     }
 
-    // MARK: - Services
-
-    @objc(makeCallFromTextService:userData:error:)
-    func makeCallFromTextService(
-        _ pasteboard: NSPasteboard,
-        userData: String?,
-        error: AutoreleasingUnsafeMutablePointer<NSString?>?
-    ) {
-        guard
-            pasteboard.canReadObject(
-                forClasses: [NSString.self],
-                options: [:]
-            ),
-            let destination =
-                pasteboard.string(forType: .string)
-        else {
-            Log.application.error(
-                "Could not read call destination from pasteboard"
-            )
-            return
-        }
-
-        makeCallOrRememberDestination(destination)
-    }
-
     private func startPerformanceMetricsMonitoring() {
         if #available(macOS 27.0, *) {
             let directory = compositionRoot.logFileURL.urlValue
@@ -549,20 +526,25 @@ final class AppController:
     private func observeApplicationEvents() {
         let center = NotificationCenter.default
 
-        center.addObserver(
-            self,
-            selector: #selector(networkPathDidChange),
-            name: AKNetworkReachability.didChangeNotification,
-            object: networkReachability
+        notificationObservations.append(
+            observe(
+                center,
+                name: AKNetworkReachability.didChangeNotification,
+                object: networkReachability
+            ) { [weak self] notification in
+                self?.networkPathDidChange(notification)
+            }
         )
-        center.addObserver(
-            self,
-            selector: #selector(accountSetupDidAddAccount),
-            name: Notification.Name(
-                AccountSetupPresentationController
-                    .didAddAccountNotificationName()
-            ),
-            object: nil
+        notificationObservations.append(
+            observe(
+                center,
+                name: Notification.Name(
+                    AccountSetupPresentationController
+                        .didAddAccountNotificationName()
+                )
+            ) { [weak self] notification in
+                self?.accountSetupDidAddAccount(notification)
+            }
         )
 
         for name in [
@@ -571,57 +553,53 @@ final class AppController:
             .AKSIPCallConnecting,
             .AKSIPCallDidDisconnect,
         ] {
-            center.addObserver(
-                self,
-                selector: #selector(callStateDidChange),
-                name: name,
-                object: nil
+            notificationObservations.append(
+                observe(center, name: name) { [weak self] notification in
+                    self?.callStateDidChange(notification)
+                }
             )
         }
 
-        center.addObserver(
-            self,
-            selector: #selector(authenticationCredentialsDidChange),
-            name: Notification.Name(
-                "AKAuthenticationFailureControllerDidChangeUsernameAndPassword"
-            ),
-            object: nil
+        notificationObservations.append(
+            observe(
+                center,
+                name: Notification.Name(
+                    "AKAuthenticationFailureControllerDidChangeUsernameAndPassword"
+                )
+            ) { [weak self] notification in
+                self?.authenticationCredentialsDidChange(notification)
+            }
         )
-        center.addObserver(
-            self,
-            selector: #selector(applicationDialogDidConfirmQuit),
-            name: Notification.Name(
-                ApplicationDialogController
-                    .quitConfirmedNotificationName()
-            ),
-            object: nil
+        notificationObservations.append(
+            observe(
+                center,
+                name: Notification.Name(
+                    ApplicationDialogController
+                        .quitConfirmedNotificationName()
+                )
+            ) { [weak self] notification in
+                self?.applicationDialogDidConfirmQuit(notification)
+            }
         )
 
-        let workspace = NSWorkspace.shared.notificationCenter
-        workspace.addObserver(
-            self,
-            selector: #selector(workspaceWillSleep),
-            name: NSWorkspace.willSleepNotification,
-            object: nil
-        )
-        workspace.addObserver(
-            self,
-            selector: #selector(workspaceDidWake),
-            name: NSWorkspace.didWakeNotification,
-            object: nil
-        )
-        workspace.addObserver(
-            self,
-            selector: #selector(workspaceSessionDidResignActive),
-            name: NSWorkspace.sessionDidResignActiveNotification,
-            object: nil
-        )
-        workspace.addObserver(
-            self,
-            selector: #selector(workspaceSessionDidBecomeActive),
-            name: NSWorkspace.sessionDidBecomeActiveNotification,
-            object: nil
-        )
+    }
+
+    private func observe(
+        _ center: NotificationCenter,
+        name: Notification.Name,
+        object: AnyObject? = nil,
+        action: @escaping @MainActor (Notification) -> Void
+    ) -> NotificationObservation {
+        NotificationObservation(
+            center: center,
+            name: name,
+            object: object
+        ) { notification in
+            let notification = SendableNotification(notification)
+            MainActor.assumeIsolated {
+                action(notification.value)
+            }
+        }
     }
 
     private func configureUserAgent() {
@@ -710,9 +688,11 @@ final class AppController:
                 : []
     }
 
-    private func configureUserNotifications() {
+    private func configureUserNotifications(
+        delegate: any UNUserNotificationCenterDelegate
+    ) {
         let center = UNUserNotificationCenter.current()
-        center.delegate = self
+        center.delegate = delegate
 
         let answer = UNNotificationAction(
             identifier: "answer",
@@ -790,7 +770,10 @@ final class AppController:
             incomingCallContactResolver:
                 compositionRoot.incomingCallContactResolver,
             callHistoryViewEventTargetFactory:
-                compositionRoot.callHistoryViewEventTargetFactory
+                compositionRoot.callHistoryViewEventTargetFactory,
+            callControllerDidClose: { [weak self] in
+                self?.updateDockTileBadgeLabel()
+            }
         )
 
         controller.enabled = boolValue(
@@ -895,7 +878,6 @@ final class AppController:
 
     // MARK: - Event handlers
 
-    @objc
     private func accountSetupDidAddAccount(
         _ notification: Notification
     ) {
@@ -934,7 +916,6 @@ final class AppController:
         }
     }
 
-    @objc
     private func callStateDidChange(
         _ notification: Notification
     ) {
@@ -951,7 +932,6 @@ final class AppController:
         }
     }
 
-    @objc
     private func authenticationCredentialsDidChange(
         _ notification: Notification
     ) {
@@ -988,18 +968,14 @@ final class AppController:
         preferencesController.reloadAccount(at: index)
     }
 
-    @objc
     private func applicationDialogDidConfirmQuit(
         _ notification: Notification
     ) {
         terminationConfirmed = true
-        NSApp.terminate(self)
+        MacApplication.terminate()
     }
 
-    @objc
-    private func workspaceWillSleep(
-        _ notification: Notification
-    ) {
+    private func workspaceWillSleep() {
         networkPathTask?.cancel()
 
         if userAgent.isStarted {
@@ -1007,10 +983,7 @@ final class AppController:
         }
     }
 
-    @objc
-    private func workspaceDidWake(
-        _ notification: Notification
-    ) {
+    private func workspaceDidWake() {
         if
             userSessionActive,
             networkReachability.isReachable
@@ -1019,19 +992,13 @@ final class AppController:
         }
     }
 
-    @objc
-    private func workspaceSessionDidResignActive(
-        _ notification: Notification
-    ) {
+    private func workspaceSessionDidResignActive() {
         networkPathTask?.cancel()
         userSessionActive = false
         accountControllers.unregisterAllAccounts()
     }
 
-    @objc
-    private func workspaceSessionDidBecomeActive(
-        _ notification: Notification
-    ) {
+    private func workspaceSessionDidBecomeActive() {
         userSessionActive = true
 
         if networkReachability.isReachable {
@@ -1039,7 +1006,6 @@ final class AppController:
         }
     }
 
-    @objc
     private func networkPathDidChange(
         _ notification: Notification
     ) {
@@ -1100,4 +1066,13 @@ private func index(
         return number.intValue
     }
     return value as? Int
+}
+
+
+private struct SendableNotification: @unchecked Sendable {
+    let value: Notification
+
+    init(_ value: Notification) {
+        self.value = value
+    }
 }

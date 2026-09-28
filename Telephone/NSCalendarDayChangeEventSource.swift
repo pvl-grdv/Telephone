@@ -20,20 +20,19 @@ import Foundation
 import UseCases
 
 final class NSCalendarDayChangeEventSource {
-    private let center: NotificationCenter
-    private let target: DayChangeEventTarget
+    private var observation: NotificationObservation?
 
-    init(center: NotificationCenter, target: DayChangeEventTarget) {
-        self.center = center
-        self.target = target
-        center.addObserver(self, selector: #selector(dayDidChange), name: .NSCalendarDayChanged, object: nil)
-    }
-
-    deinit {
-        center.removeObserver(self)
-    }
-
-    @objc private func dayDidChange(_ notification: Notification) {
-        target.dayDidChange()
+    init(
+        center: NotificationCenter,
+        target: DayChangeEventTarget
+    ) {
+        let target = SendableReference(target)
+        observation = NotificationObservation(
+            center: center,
+            name: .NSCalendarDayChanged,
+            queue: .main
+        ) { _ in
+            target.value.dayDidChange()
+        }
     }
 }

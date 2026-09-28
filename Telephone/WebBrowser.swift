@@ -18,6 +18,7 @@
 
 import Foundation
 
+@MainActor
 protocol WebBrowser {
     func showPage(at url: URL)
 }

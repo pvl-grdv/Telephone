@@ -55,7 +55,7 @@ struct AccountSettingsDraft: Equatable {
 
 @MainActor
 @Observable
-final class AccountSettingsModel: NSObject {
+final class AccountSettingsModel {
     var accounts: [AccountSettingsSummary] = []
 
     var selection: String? {
@@ -120,6 +120,9 @@ final class AccountSettingsModel: NSObject {
     @ObservationIgnored
     private var loadedPasswordAccount = ""
 
+    @ObservationIgnored
+    private var accountAddedObservation: NotificationObservation?
+
     init(
         preferencesController: AnyObject?,
         defaults: UserDefaults = .standard,
@@ -128,19 +131,16 @@ final class AccountSettingsModel: NSObject {
         self.preferencesController = preferencesController
         self.defaults = defaults
         self.credentials = credentials
-        super.init()
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(accountDidAdd),
-            name: accountSetupDidAddNotification,
-            object: nil
-        )
+        accountAddedObservation = NotificationObservation(
+            name: accountSetupDidAddNotification
+        ) { [weak self] notification in
+            let notification = AccountSettingsSendableNotification(notification)
+            MainActor.assumeIsolated {
+                self?.accountDidAdd(notification.value)
+            }
+        }
         reload()
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
     }
 
     var hasSelection: Bool {
@@ -353,7 +353,6 @@ final class AccountSettingsModel: NSObject {
         showsCredentialsError = false
     }
 
-    @objc
     private func accountDidAdd(_ notification: Notification) {
         let stored = storedAccounts()
         accounts = summaries(from: stored)
@@ -941,3 +940,12 @@ final class AccountSettingsModel: NSObject {
     }
 }
 
+
+
+private struct AccountSettingsSendableNotification: @unchecked Sendable {
+    let value: Notification
+
+    init(_ value: Notification) {
+        self.value = value
+    }
+}

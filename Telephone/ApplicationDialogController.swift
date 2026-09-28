@@ -3,7 +3,6 @@
 //  Telephone
 //
 
-import AppKit
 import Observation
 import SwiftUI
 
@@ -13,21 +12,10 @@ private extension Notification.Name {
 }
 
 @MainActor
-@objcMembers
-final class ApplicationDialogController: NSObject {
+final class ApplicationDialogController {
     fileprivate static let sceneID = "telephone-application-dialog"
 
-    private let model = ApplicationDialogModel()
-    private var installed = false
-    private lazy var representation =
-        NSHostingSceneRepresentation<ApplicationDialogScene> {
-            ApplicationDialogScene(
-                model: model,
-                dismiss: { [weak self] in
-                    self?.dismiss()
-                }
-            )
-        }
+    let model = ApplicationDialogModel()
 
     var isPresenting: Bool {
         model.dialog != nil
@@ -35,12 +23,6 @@ final class ApplicationDialogController: NSObject {
 
     class func quitConfirmedNotificationName() -> String {
         Notification.Name.applicationQuitConfirmed.rawValue
-    }
-
-    func install() {
-        guard !installed else { return }
-        installed = true
-        NSApplication.shared.addSceneRepresentation(representation)
     }
 
     func showSIPUserAgentLaunchError() {
@@ -89,24 +71,23 @@ final class ApplicationDialogController: NSObject {
     }
 
     private func present(_ dialog: ApplicationDialog) {
-        install()
         model.dialog = dialog
-        representation.environment.openWindow(id: Self.sceneID)
+        SceneRouter.shared.openWindow(id: Self.sceneID)
     }
 
-    private func dismiss() {
+    func dismiss() {
         model.dialog = nil
-        representation.environment.dismissWindow(id: Self.sceneID)
+        SceneRouter.shared.dismissWindow(id: Self.sceneID)
     }
 }
 
 @MainActor
 @Observable
-private final class ApplicationDialogModel {
+final class ApplicationDialogModel {
     var dialog: ApplicationDialog?
 }
 
-private enum ApplicationDialog: Equatable {
+enum ApplicationDialog: Equatable {
     case information(title: String, message: String)
     case quitConfirmation(title: String, message: String)
 
@@ -127,19 +108,18 @@ private enum ApplicationDialog: Equatable {
     }
 }
 
-private struct ApplicationDialogScene: Scene {
-    let model: ApplicationDialogModel
-    let dismiss: () -> Void
+struct ApplicationDialogScene: Scene {
+    let controller: ApplicationDialogController
 
     var body: some Scene {
         Window(
             NSLocalizedString("Telephone", comment: "Application name."),
             id: ApplicationDialogController.sceneID
         ) {
-            if let dialog = model.dialog {
+            if let dialog = controller.model.dialog {
                 ApplicationDialogView(
                     dialog: dialog,
-                    dismiss: dismiss
+                    dismiss: controller.dismiss
                 )
             } else {
                 EmptyView()

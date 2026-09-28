@@ -6,10 +6,10 @@
 //
 
 import Foundation
+import PJSIPBridge
 
 @MainActor
-@objcMembers
-final class AccountControllers: NSObject {
+final class AccountControllers {
     private var controllers: [AccountController] = []
 
     var all: [AccountController] {
@@ -25,17 +25,14 @@ final class AccountControllers: NSObject {
         set { controllers[index] = newValue }
     }
 
-    @objc(indexOfController:)
     func index(of controller: AccountController) -> Int {
         controllers.firstIndex { $0 === controller } ?? NSNotFound
     }
 
-    @objc(addController:)
     func add(_ controller: AccountController) {
         controllers.append(controller)
     }
 
-    @objc(removeControllerAtIndex:)
     func removeController(at index: Int) {
         controllers.remove(at: index)
     }
@@ -44,12 +41,10 @@ final class AccountControllers: NSObject {
         controllers.remove(at: index)
     }
 
-    @objc(insertController:atIndex:)
     func insert(_ controller: AccountController, at index: Int) {
         controllers.insert(controller, at: index)
     }
 
-    @objc(callControllerByIdentifier:)
     func callController(byIdentifier identifier: String) -> CallController? {
         for accountController in enabled {
             for callController in accountController.callControllers {
@@ -61,14 +56,12 @@ final class AccountControllers: NSObject {
         return nil
     }
 
-    @objc(haveActiveCallControllers)
     func haveActiveCallControllers() -> Bool {
         enabled.contains { accountController in
             accountController.callControllers.contains(where: \.callActive)
         }
     }
 
-    @objc(unhandledIncomingCallsCount)
     func unhandledIncomingCallsCount() -> Int {
         enabled.reduce(into: 0) { count, accountController in
             for callController in accountController.callControllers {
@@ -81,7 +74,6 @@ final class AccountControllers: NSObject {
         }
     }
 
-    @objc(showIncomingCallWindows)
     func showIncomingCallWindows() {
         for accountController in enabled {
             for callController in accountController.callControllers {
@@ -96,7 +88,6 @@ final class AccountControllers: NSObject {
         }
     }
 
-    @objc(updateCallsShouldDisplayAccountInfo)
     func updateCallsShouldDisplayAccountInfo() {
         let shouldDisplay = enabled.count > 1
 
@@ -105,7 +96,6 @@ final class AccountControllers: NSObject {
         }
     }
 
-    @objc(hangUpCallsAndRemoveAccountsFromUserAgent)
     func hangUpCallsAndRemoveAccountsFromUserAgent() {
         for accountController in enabled {
             for callController in accountController.callControllers {
@@ -116,14 +106,12 @@ final class AccountControllers: NSObject {
         }
     }
 
-    @objc(registerAllAccounts)
     func registerAllAccounts() {
         for controller in enabled {
             controller.registerAccount()
         }
     }
 
-    @objc(unregisterAllAccounts)
     func unregisterAllAccounts() {
         for controller in enabled where controller.accountRegistered {
             controller.unregisterAccount()

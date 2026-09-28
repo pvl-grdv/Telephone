@@ -16,11 +16,9 @@
 //  GNU General Public License for more details.
 //
 
-import Foundation
 import UseCases
 
-@objcMembers
-class UserDefaultsKeys: NSObject {
+enum UserDefaultsKeys {
     static let accounts = "Accounts"
     static let stunServerHost = "STUNServerHost"
     static let stunServerPort = "STUNServerPort"

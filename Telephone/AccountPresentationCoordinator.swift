@@ -174,10 +174,6 @@ final class AccountPresentationCoordinator {
         )
     }
 
-    func showWindowWithoutMakingKey() {
-        showWindow()
-    }
-
     func hideWindow() {
         SceneRouter.shared.dismissWindow(
             id: AccountWindowScene.id,

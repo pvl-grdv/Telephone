@@ -329,10 +329,6 @@ final class AccountController:
         presentation.showWindow()
     }
 
-    func showWindowWithoutMakingKey() {
-        presentation.showWindowWithoutMakingKey()
-    }
-
     func hideWindow() {
         presentation.hideWindow()
     }

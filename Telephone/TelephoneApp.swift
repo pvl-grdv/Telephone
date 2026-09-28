@@ -36,18 +36,6 @@ struct TelephoneApp: App {
         .commands {
             AboutTelephoneCommands()
 
-            CommandGroup(replacing: .appSettings) {
-                Button(
-                    NSLocalizedString(
-                        "Settings…",
-                        comment: "Application settings menu item."
-                    )
-                ) {
-                    appController.coordinator.showPreferencesForSwiftUI()
-                }
-                .keyboardShortcut(",", modifiers: .command)
-            }
-
             AccountsCommands(
                 model: appController.coordinator.accountsCommandModelForSwiftUI()
             )

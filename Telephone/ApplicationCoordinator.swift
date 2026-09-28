@@ -46,7 +46,7 @@ final class ApplicationCoordinator:
     private var destinationToCall = ""
     private var userSessionActive = true
 
-    private let restartScheduler = DelayedRestartScheduler()
+    private var restartTask: Task<Void, Never>?
     private var networkPathTask: Task<Void, Never>?
     private var terminationTask: Task<Void, Never>?
     private var performanceMetricsMonitor: AnyObject?
@@ -101,7 +101,7 @@ final class ApplicationCoordinator:
     }
 
     isolated deinit {
-        restartScheduler.cancel()
+        restartTask?.cancel()
         networkPathTask?.cancel()
         terminationTask?.cancel()
     }
@@ -136,8 +136,8 @@ final class ApplicationCoordinator:
         applicationDialogController
     }
 
-    func showPreferencesForSwiftUI() {
-        preferencesController.showWindowCentered()
+    func showSettings() {
+        preferencesController.showSettings()
     }
 
 #if DEBUG
@@ -454,7 +454,7 @@ final class ApplicationCoordinator:
             let controller = accountController(with: account)
             controller.accountUnavailable = false
             accountControllers[index] = controller
-            controller.showWindowWithoutMakingKey()
+            controller.showWindow()
             controller.registerAccount()
         } else if accountControllers.all.indices.contains(index) {
             accountControllers[index].disableAccount()
@@ -855,17 +855,28 @@ final class ApplicationCoordinator:
     }
 
     private func restartUserAgentAfterDelayOrMarkForRestart() {
-        restartScheduler.request(
-            hasActiveCalls: { [weak self] in
-                self?.accountControllers.haveActiveCallControllers() ?? false
-            },
-            deferRestart: { [weak self] in
-                self?.shouldRestartUserAgentASAP = true
-            },
-            restart: { [weak self] in
-                self?.restartUserAgent()
+        guard !accountControllers.haveActiveCallControllers() else {
+            shouldRestartUserAgentASAP = true
+            return
+        }
+
+        restartTask?.cancel()
+        restartTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(3))
+            } catch {
+                return
             }
-        )
+
+            guard !Task.isCancelled, let self else { return }
+
+            guard !accountControllers.haveActiveCallControllers() else {
+                shouldRestartUserAgentASAP = true
+                return
+            }
+
+            restartUserAgent()
+        }
     }
 
     private func showAccountPreferencesIfNeeded() {
@@ -873,7 +884,7 @@ final class ApplicationCoordinator:
             return
         }
 
-        preferencesController.showWindowCentered()
+        preferencesController.showSettings()
         preferencesController.showAccounts()
     }
 
@@ -938,7 +949,7 @@ final class ApplicationCoordinator:
         accountControllers.add(controller)
         accountControllers.updateCallsShouldDisplayAccountInfo()
         accountsCommandModel.update()
-        controller.showWindowWithoutMakingKey()
+        controller.showWindow()
 
         if isFirstLaunch {
             finishedLaunching = true
@@ -964,7 +975,8 @@ final class ApplicationCoordinator:
             shouldRestartUserAgentASAP,
             !accountControllers.haveActiveCallControllers()
         {
-            restartScheduler.cancel()
+            restartTask?.cancel()
+            restartTask = nil
             shouldRestartUserAgentASAP = false
             restartUserAgent()
         }

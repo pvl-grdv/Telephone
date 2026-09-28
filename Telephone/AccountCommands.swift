@@ -1,5 +1,5 @@
 //
-//  AccountsMenuItems.swift
+//  AccountCommands.swift
 //  Telephone
 //
 

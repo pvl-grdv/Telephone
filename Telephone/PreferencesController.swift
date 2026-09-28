@@ -44,7 +44,7 @@ final class PreferencesController: SoundIOPreferences {
         observePreferenceChanges()
     }
 
-    func showWindowCentered() {
+    func showSettings() {
         PerformanceSignposts.settings.emitEvent("OpenSettingsRequested")
         SceneRouter.shared.openSettings()
     }

@@ -65,6 +65,26 @@ struct LocalizationAndLayoutSmokeTests {
     }
 
     @Test
+    func appMenuUsesNativeSettingsSceneOnly() throws {
+        let appSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/TelephoneApp.swift"
+            ),
+            encoding: .utf8
+        )
+        let preferencesSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/PreferencesController.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(!appSource.contains("CommandGroup(replacing: .appSettings)"))
+        #expect(!appSource.contains("\"Settings…\""))
+        #expect(preferencesSource.contains("Settings {"))
+    }
+
+    @Test
     @MainActor
     func settingsWindowSizesStayPurposeBuilt() {
         #expect(SettingsSection.general.windowSize.width <= 620)

@@ -356,7 +356,7 @@ struct OpenTelephoneSettingsIntent: AppIntent {
             return .result()
         }
 
-        coordinator.showPreferencesForSwiftUI()
+        coordinator.showSettings()
         return .result()
     }
 }

@@ -3969,29 +3969,6 @@
         }
       }
     },
-    "Settings…": {
-      "comment": "Application settings menu item.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einstellungen …"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки…"
-          }
-        }
-      }
-    },
     "Show %d more…": {
       "comment": "Show more call history records button.",
       "localizations": {

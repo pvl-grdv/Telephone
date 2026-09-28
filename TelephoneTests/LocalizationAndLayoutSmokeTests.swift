@@ -102,6 +102,20 @@ struct LocalizationAndLayoutSmokeTests {
     }
 
     @Test
+    func accountToolbarKeepsCompactStatusFallback() throws {
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/AccountWindowView.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("expandedStateMinimumWidth: CGFloat = 370"))
+        #expect(source.contains("AccountStateIndicator(state: state)"))
+        #expect(source.contains("if showsTitle"))
+    }
+
+    @Test
     @MainActor
     func settingsWindowSizesStayPurposeBuilt() {
         #expect(SettingsSection.general.windowSize.width <= 620)

@@ -125,6 +125,7 @@ struct AccountWindowRootView: View {
     @Bindable var model: AccountWindowModel
     @State private var pendingAuthenticationFailureSubmission:
         AuthenticationFailureModel?
+    @State private var showsAccountStateTitle = true
 
     let callDestinationComposer: CallDestinationComposer
     let callHistoryPresenter: CallHistoryPresenter
@@ -153,9 +154,17 @@ struct AccountWindowRootView: View {
             ToolbarItem(placement: .primaryAction) {
                 AccountStateMenu(
                     state: model.state,
+                    showsTitle: showsAccountStateTitle,
                     changeState: changeState
                 )
             }
+        }
+        .onGeometryChange(for: Bool.self) { proxy in
+            AccountToolbarLayout.showsStateTitle(
+                for: proxy.size.width
+            )
+        } action: { showsTitle in
+            showsAccountStateTitle = showsTitle
         }
         .sheet(
             item: $model.authenticationFailure,
@@ -194,8 +203,17 @@ struct AccountWindowRootView: View {
     }
 }
 
+enum AccountToolbarLayout {
+    static let expandedStateMinimumWidth: CGFloat = 370
+
+    static func showsStateTitle(for width: CGFloat) -> Bool {
+        width >= expandedStateMinimumWidth
+    }
+}
+
 private struct AccountStateMenu: View {
     let state: AccountWindowDisplayState
+    let showsTitle: Bool
     let changeState: (AccountAvailabilityState) -> Void
 
     var body: some View {
@@ -240,17 +258,15 @@ private struct AccountStateMenu: View {
         } label: {
             HStack(spacing: 6) {
                 AccountStateIndicator(state: state)
+                    .frame(width: 18, height: 18)
 
-                Text(state.title)
-                    .lineLimit(1)
+                if showsTitle {
+                    Text(state.title)
+                        .lineLimit(1)
+                }
             }
         }
-        .help(
-            NSLocalizedString(
-                "Account State",
-                comment: "Account state toolbar item."
-            )
-        )
+        .help(state.title)
         .accessibilityLabel(
             NSLocalizedString(
                 "Account State",

@@ -58,7 +58,7 @@ final class AccountControllers {
 
     func haveActiveCallControllers() -> Bool {
         enabled.contains { accountController in
-            accountController.callControllers.contains(where: \.callActive)
+            accountController.callControllers.contains(where: \.hasActiveCall)
         }
     }
 
@@ -103,6 +103,12 @@ final class AccountControllers {
             }
 
             accountController.removeAccountFromUserAgent()
+        }
+    }
+
+    func flushPendingCustomerContextChanges() async {
+        for controller in controllers {
+            await controller.flushPendingCustomerContextChanges()
         }
     }
 

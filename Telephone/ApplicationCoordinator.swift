@@ -16,6 +16,12 @@ enum ApplicationTerminationDecision {
     case cancel
 }
 
+enum DialRequestOutcome {
+    case requested
+    case queuedForRegistration
+    case unavailable
+}
+
 @MainActor
 final class ApplicationCoordinator:
     AKSIPUserAgentDelegate,
@@ -40,8 +46,9 @@ final class ApplicationCoordinator:
     private var destinationToCall = ""
     private var userSessionActive = true
 
-    private var restartTask: Task<Void, Never>?
+    private let restartScheduler = DelayedRestartScheduler()
     private var networkPathTask: Task<Void, Never>?
+    private var terminationTask: Task<Void, Never>?
     private var performanceMetricsMonitor: AnyObject?
     private var notificationObservations: [NotificationObservation] = []
     private var workspaceEventSource: MacWorkspaceEventSource?
@@ -94,8 +101,9 @@ final class ApplicationCoordinator:
     }
 
     isolated deinit {
-        restartTask?.cancel()
+        restartScheduler.cancel()
         networkPathTask?.cancel()
+        terminationTask?.cancel()
     }
 
     func copySettings() {
@@ -142,14 +150,38 @@ final class ApplicationCoordinator:
     }
 #endif
 
-    func makeCallFromAppIntent(destination: String) -> Bool {
-        guard finishedLaunching, canMakeCall else {
-            return false
+    func makeCallFromAppIntent(
+        destination: String,
+        accountUUID: String? = nil
+    ) -> DialRequestOutcome {
+        guard
+            finishedLaunching,
+            !applicationDialogController.isPresenting
+        else {
+            return .unavailable
         }
 
-        let sanitized = SanitizedCallDestination(destination)
-        accountControllers.enabled.first?.makeCall(to: sanitized)
-        return true
+        let controller: AccountController?
+        if let accountUUID {
+            controller = accountControllers.enabled.first {
+                $0.account.uuid == accountUUID
+            }
+        } else {
+            controller = accountControllers.enabled.first
+        }
+
+        guard let controller else {
+            return .unavailable
+        }
+
+        switch controller.requestCall(
+            to: SanitizedCallDestination(destination)
+        ) {
+        case .requested:
+            return .requested
+        case .queuedForRegistration:
+            return .queuedForRegistration
+        }
     }
 
     func setAccountAvailabilityFromAppIntent(
@@ -271,13 +303,24 @@ final class ApplicationCoordinator:
             return .cancel
         }
 
-        if userAgent.isStarted {
-            terminating = true
-            stopUserAgent()
+        if terminationTask != nil {
             return .terminateLater
         }
 
-        return .terminateNow
+        terminating = true
+        terminationTask = Task { [weak self] in
+            guard let self else { return }
+
+            await accountControllers.flushPendingCustomerContextChanges()
+            guard !Task.isCancelled else { return }
+
+            if userAgent.isStarted {
+                stopUserAgent()
+            } else {
+                MacApplication.replyToTermination(true)
+            }
+        }
+        return .terminateLater
     }
 
     // MARK: - AKSIPUserAgentDelegate
@@ -812,22 +855,17 @@ final class ApplicationCoordinator:
     }
 
     private func restartUserAgentAfterDelayOrMarkForRestart() {
-        guard !accountControllers.haveActiveCallControllers() else {
-            shouldRestartUserAgentASAP = true
-            return
-        }
-
-        restartTask?.cancel()
-        restartTask = Task { [weak self] in
-            do {
-                try await Task.sleep(for: .seconds(3))
-            } catch {
-                return
+        restartScheduler.request(
+            hasActiveCalls: { [weak self] in
+                self?.accountControllers.haveActiveCallControllers() ?? false
+            },
+            deferRestart: { [weak self] in
+                self?.shouldRestartUserAgentASAP = true
+            },
+            restart: { [weak self] in
+                self?.restartUserAgent()
             }
-
-            guard !Task.isCancelled else { return }
-            self?.restartUserAgent()
-        }
+        )
     }
 
     private func showAccountPreferencesIfNeeded() {
@@ -926,7 +964,7 @@ final class ApplicationCoordinator:
             shouldRestartUserAgentASAP,
             !accountControllers.haveActiveCallControllers()
         {
-            restartTask?.cancel()
+            restartScheduler.cancel()
             shouldRestartUserAgentASAP = false
             restartUserAgent()
         }

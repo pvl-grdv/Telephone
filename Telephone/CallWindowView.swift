@@ -9,8 +9,11 @@ import SwiftUI
 struct CallWindowView: View {
     @Bindable var model: CallWindowModel
 
-    @AppStorage(UserDefaultsKeys.showCustomerContext)
-    private var showsCustomerContext = true
+    @SceneStorage("Telephone.CallWindow.showsCustomerContext")
+    private var showsCustomerContext =
+        UserDefaults.standard.object(
+            forKey: UserDefaultsKeys.showCustomerContext
+        ) as? Bool ?? true
 
     let transferDestinationComposer: CallDestinationComposer?
 
@@ -26,6 +29,8 @@ struct CallWindowView: View {
     let cancelTransfer: () -> Void
     let completeTransfer: () -> Void
     let customerContextChanged: () -> Void
+    let reloadCustomerContext: () -> Void
+    let saveCustomerContext: () -> Void
     let customerContextVisibilityChanged: (Bool) -> Void
     let sendDTMF: (String) -> Void
 
@@ -33,10 +38,18 @@ struct CallWindowView: View {
         Group {
             if model.isTransfer {
                 transferContent
-                    .frame(width: 360)
+                    .frame(
+                        minWidth: 360,
+                        idealWidth: 380,
+                        maxWidth: 480
+                    )
             } else {
                 regularContent
-                    .frame(width: 420)
+                    .frame(
+                        minWidth: 420,
+                        idealWidth: 480,
+                        maxWidth: 640
+                    )
             }
         }
         .windowResizeAnchor(.top)
@@ -70,7 +83,9 @@ struct CallWindowView: View {
 
                 CustomerContextView(
                     model: model,
-                    changed: customerContextChanged
+                    changed: customerContextChanged,
+                    reload: reloadCustomerContext,
+                    save: saveCustomerContext
                 )
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)

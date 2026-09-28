@@ -11,45 +11,13 @@ struct CustomerContextView: View {
     @State private var isExpanded = false
 
     let changed: () -> Void
+    let reload: () -> Void
+    let save: () -> Void
 
     var body: some View {
-        Group {
-            if !model.customerContextLoaded {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .controlSize(.mini)
-                    Text(
-                        NSLocalizedString(
-                            "Loading client details…",
-                            comment: "Customer context loading status."
-                        )
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            } else if model.hasCustomerContextData || isExpanded {
-                DisclosureGroup(isExpanded: $isExpanded) {
-                    editor
-                        .padding(.top, 8)
-                } label: {
-                    contextSummary
-                }
-            } else {
-                Button {
-                    isExpanded = true
-                } label: {
-                    Label(
-                        NSLocalizedString(
-                            "Add client details",
-                            comment: "Expand empty customer context."
-                        ),
-                        systemImage: "person.crop.circle.badge.plus"
-                    )
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-            }
+        VStack(alignment: .leading, spacing: 6) {
+            contextContent
+            persistenceStatus
         }
         .onChange(of: model.customerCompany) {
             changed()
@@ -62,6 +30,120 @@ struct CustomerContextView: View {
         }
         .onChange(of: model.customerNote) {
             changed()
+        }
+    }
+
+    @ViewBuilder
+    private var contextContent: some View {
+        if model.customerContextLoadFailed {
+            HStack(spacing: 8) {
+                Label(
+                    NSLocalizedString(
+                        "Couldn’t load client details",
+                        comment: "Customer context load failure."
+                    ),
+                    systemImage: "exclamationmark.triangle"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+                Spacer(minLength: 4)
+
+                Button(
+                    NSLocalizedString(
+                        "Retry",
+                        comment: "Retry customer context loading."
+                    ),
+                    action: reload
+                )
+                .controlSize(.small)
+            }
+        } else if !model.customerContextLoaded {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.mini)
+                Text(
+                    NSLocalizedString(
+                        "Loading client details…",
+                        comment: "Customer context loading status."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else if model.hasCustomerContextData || isExpanded {
+            DisclosureGroup(isExpanded: $isExpanded) {
+                editor
+                    .padding(.top, 8)
+            } label: {
+                contextSummary
+            }
+        } else {
+            Button {
+                isExpanded = true
+            } label: {
+                Label(
+                    NSLocalizedString(
+                        "Add client details",
+                        comment: "Expand empty customer context."
+                    ),
+                    systemImage: "person.crop.circle.badge.plus"
+                )
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var persistenceStatus: some View {
+        if model.customerContextSaving {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .controlSize(.mini)
+                Text(
+                    NSLocalizedString(
+                        "Saving client details…",
+                        comment: "Customer context saving status."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+        } else if model.customerContextSaveFailed {
+            HStack(spacing: 8) {
+                Label(
+                    NSLocalizedString(
+                        "Couldn’t save client details",
+                        comment: "Customer context save failure."
+                    ),
+                    systemImage: "exclamationmark.triangle"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+                Spacer(minLength: 4)
+
+                Button(
+                    NSLocalizedString(
+                        "Retry",
+                        comment: "Retry customer context saving."
+                    ),
+                    action: save
+                )
+                .controlSize(.small)
+            }
+        } else if model.customerContextSaveSucceeded {
+            Label(
+                NSLocalizedString(
+                    "Saved client details",
+                    comment: "Customer context saved status."
+                ),
+                systemImage: "checkmark.circle"
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
     }
 

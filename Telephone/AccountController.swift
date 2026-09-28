@@ -10,6 +10,11 @@ import UserNotifications
 import UseCases
 import PJSIPBridge
 
+enum AccountCallRequestOutcome {
+    case requested
+    case queuedForRegistration
+}
+
 @MainActor
 final class AccountController:
     CustomStringConvertible,
@@ -277,7 +282,6 @@ final class AccountController:
 
                 if let call {
                     controller.call = call
-                    controller.callActive = true
                 } else {
                     controller.showEndedCallView()
                     controller.status = NSLocalizedString(
@@ -305,12 +309,20 @@ final class AccountController:
     func makeCall(
         to destination: SanitizedCallDestination
     ) {
+        _ = requestCall(to: destination)
+    }
+
+    func requestCall(
+        to destination: SanitizedCallDestination
+    ) -> AccountCallRequestOutcome {
         if !accountAdded {
             destinationToCall = destination.value
             registerAccount()
-        } else {
-            makeCallToDestination(destination.value)
+            return .queuedForRegistration
         }
+
+        makeCallToDestination(destination.value)
+        return .requested
     }
 
     func showWindow() {
@@ -404,12 +416,18 @@ final class AccountController:
 
         if !UserDefaults.standard.bool(
             forKey: UserDefaultsKeys.callWaiting
-        ), callControllers.contains(where: { $0.callActive }) {
+        ), callControllers.contains(where: { $0.hasActiveCall }) {
             call.replyWithBusyHere()
             return
         }
 
         presentIncoming(call)
+    }
+
+    func flushPendingCustomerContextChanges() async {
+        for controller in callControllers {
+            await controller.flushPendingCustomerContextChanges()
+        }
     }
 
     // MARK: - CallControllerDelegate
@@ -636,7 +654,6 @@ final class AccountController:
         )
 
         controller.call = call
-        controller.callActive = true
         callControllers.append(controller)
 
         let defaults = UserDefaults.standard
@@ -675,7 +692,7 @@ final class AccountController:
                 let self,
                 let controller,
                 let call,
-                controller.callActive,
+                controller.hasActiveCall,
                 call.isMissed,
                 call.state.rawValue != 6
             else {
@@ -748,7 +765,7 @@ final class AccountController:
         defaults: UserDefaults
     ) {
         guard
-            controller.callActive,
+            controller.hasActiveCall,
             call.isMissed,
             call.state.rawValue != 6
         else {

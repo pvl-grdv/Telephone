@@ -462,6 +462,8 @@
         { "path": "AccountCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "MacApplicationDelegate.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "ApplicationCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "DelayedRestartScheduler.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+        { "path": "<PROJECT>/TelephoneTests/DelayedRestartSchedulerTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "Logging.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "ApplicationDialogController.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "MacSystemIntegration.swift", "target-membership": [ "Telephone/compile-sources" ] },

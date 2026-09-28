@@ -262,6 +262,10 @@ final class CallWindowModel {
     var recentCustomerNotes: [CustomerContextNote] = []
     var crmProfile: CRMCustomerProfile?
     var customerContextLoaded = false
+    var customerContextLoadFailed = false
+    var customerContextSaving = false
+    var customerContextSaveFailed = false
+    var customerContextSaveSucceeded = false
 
     var hasCustomerContextData: Bool {
         !customerCompany.trimmingCharacters(

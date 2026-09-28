@@ -104,6 +104,12 @@ final class CallPresentationCoordinator: Identifiable {
             customerContextChanged: { [weak self] in
                 self?.customerContextCoordinator?.scheduleSave()
             },
+            reloadCustomerContext: { [weak self] in
+                self?.customerContextCoordinator?.reload()
+            },
+            saveCustomerContext: { [weak self] in
+                self?.customerContextCoordinator?.retrySave()
+            },
             customerContextVisibilityChanged: { [weak self] isVisible in
                 self?.customerContextCoordinator?
                     .visibilityChanged(isVisible)
@@ -133,6 +139,10 @@ final class CallPresentationCoordinator: Identifiable {
             id: CallWindowScene.id,
             value: id
         )
+    }
+
+    func flushPendingCustomerContextChanges() async {
+        await customerContextCoordinator?.flushPendingChanges()
     }
 
     func invalidate() {

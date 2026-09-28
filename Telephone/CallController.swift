@@ -93,9 +93,15 @@ class CallController: AKSIPCallDelegate {
     var redialURI: AKSIPURI?
     var callStartTime: TimeInterval = 0
 
-    var callOnHold = false
+    private var wasOnHold = false
 
-    var callActive = false
+    var hasActiveCall: Bool {
+        call?.isActive == true
+    }
+
+    var isCallOnHold: Bool {
+        call?.isOnLocalHold == true || call?.isOnRemoteHold == true
+    }
 
     var callUnhandled: Bool {
         call?.isMissed ?? false
@@ -156,12 +162,15 @@ class CallController: AKSIPCallDelegate {
         callWindowDidClose()
     }
 
+    func flushPendingCustomerContextChanges() async {
+        await presentation.flushPendingCustomerContextChanges()
+    }
+
     func callWindowDidClose() {
         guard !didHandleWindowClose else { return }
         didHandleWindowClose = true
 
-        if callActive {
-            callActive = false
+        if hasActiveCall {
             presentation.stopCallTimer()
 
             if call?.delegate === self {
@@ -191,7 +200,6 @@ class CallController: AKSIPCallDelegate {
     }
 
     func hangUpCall() {
-        callActive = false
         presentation.stopCallTimer()
 
         if call?.delegate === self {
@@ -266,7 +274,6 @@ class CallController: AKSIPCallDelegate {
 
                 if let call {
                     self.call = call
-                    self.callActive = true
                 } else {
                     self.showEndedCallView()
                     self.status = NSLocalizedString(
@@ -301,7 +308,9 @@ class CallController: AKSIPCallDelegate {
         call?.setMuted(muted)
 
         if call?.isMicrophoneMuted == true {
-            if !callOnHold {
+            let isOnHold =
+                call?.isOnLocalHold == true || call?.isOnRemoteHold == true
+            if !isOnHold {
                 presentation.stopCallTimer()
                 status = NSLocalizedString(
                     "mic muted",
@@ -419,7 +428,7 @@ class CallController: AKSIPCallDelegate {
     }
 
     func sipCallDidDisconnect(_ notification: Notification) {
-        callActive = false
+        wasOnHold = false
         presentation.stopCallTimer()
 
         status = disconnectedStatus()
@@ -447,8 +456,8 @@ class CallController: AKSIPCallDelegate {
     func sipCallMediaDidBecomeActive(_ notification: Notification) {
         presentation.updateCallControls()
 
-        if callOnHold {
-            callOnHold = false
+        if wasOnHold {
+            wasOnHold = false
             setIntermediateStatus(
                 NSLocalizedString(
                     "off hold",
@@ -459,7 +468,7 @@ class CallController: AKSIPCallDelegate {
     }
 
     func sipCallDidLocalHold(_ notification: Notification) {
-        callOnHold = true
+        wasOnHold = true
         presentation.updateCallControls()
         presentation.stopCallTimer()
         status = NSLocalizedString(
@@ -469,7 +478,7 @@ class CallController: AKSIPCallDelegate {
     }
 
     func sipCallDidRemoteHold(_ notification: Notification) {
-        callOnHold = true
+        wasOnHold = true
         presentation.updateCallControls()
         presentation.stopCallTimer()
         status = NSLocalizedString(

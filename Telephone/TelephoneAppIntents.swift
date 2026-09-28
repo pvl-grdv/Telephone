@@ -280,12 +280,19 @@ struct StartTelephoneCallIntent: AudioRecordingIntent, AudioPlaybackIntent {
             return .result(dialog: "Telephone is not ready.")
         }
 
-        let success = coordinator.makeCallFromAppIntent(
+        let outcome = coordinator.makeCallFromAppIntent(
             destination: target
         )
-        return success
-            ? .result(dialog: "Calling \(target).")
-            : .result(dialog: "Telephone couldn't place this call.")
+        switch outcome {
+        case .requested:
+            return .result(dialog: "Starting call to \(target).")
+        case .queuedForRegistration:
+            return .result(
+                dialog: "Telephone will call \(target) when the account is ready."
+            )
+        case .unavailable:
+            return .result(dialog: "Telephone couldn't place this call.")
+        }
     }
 
 }
@@ -306,6 +313,9 @@ struct CallWithTelephoneIntent: AppIntent {
     )
     var destination: String
 
+    @Parameter(title: "Account")
+    var account: TelephoneAccountEntity?
+
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard let coordinator = MacApplication.coordinator
@@ -313,12 +323,18 @@ struct CallWithTelephoneIntent: AppIntent {
             return .result(dialog: "Telephone is not ready.")
         }
 
-        let success = coordinator.makeCallFromAppIntent(
-            destination: destination
+        let outcome = coordinator.makeCallFromAppIntent(
+            destination: destination,
+            accountUUID: account?.id
         )
-        if success {
-            return .result(dialog: "Calling \(destination).")
-        } else {
+        switch outcome {
+        case .requested:
+            return .result(dialog: "Starting call to \(destination).")
+        case .queuedForRegistration:
+            return .result(
+                dialog: "Telephone will call \(destination) when the account is ready."
+            )
+        case .unavailable:
             return .result(
                 dialog: "Telephone couldn't place this call."
             )

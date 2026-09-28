@@ -26,6 +26,16 @@ struct CustomerContextSnapshot: Sendable {
     var lastCallDate: Date?
 }
 
+enum CustomerContextLoadResult: Sendable {
+    case success(CustomerContextSnapshot)
+    case failure
+}
+
+enum CustomerContextSaveResult: Sendable {
+    case success
+    case failure
+}
+
 @CallHistoryActor
 final class CustomerContextStore {
     static let shared = CustomerContextStore()
@@ -89,7 +99,7 @@ final class CustomerContextStore {
         address: CustomerPartyAddress,
         displayName: String,
         callIdentifier: String
-    ) -> CustomerContextSnapshot {
+    ) -> CustomerContextLoadResult {
         let interval = PerformanceSignposts.database.beginInterval(
             "LoadCustomerContext"
         )
@@ -99,7 +109,7 @@ final class CustomerContextStore {
                 interval,
                 "database=unavailable"
             )
-            return CustomerContextSnapshot()
+            return .failure
         }
 
         do {
@@ -116,7 +126,7 @@ final class CustomerContextStore {
                 interval,
                 "result=success"
             )
-            return result
+            return .success(result)
         } catch {
             PerformanceSignposts.database.endInterval(
                 "LoadCustomerContext",
@@ -132,7 +142,7 @@ final class CustomerContextStore {
                 description=\(nsError.localizedDescription, privacy: .private)
                 """
             )
-            return CustomerContextSnapshot()
+            return .failure
         }
     }
 
@@ -144,7 +154,7 @@ final class CustomerContextStore {
         keys: [String],
         emails: [String],
         note: String
-    ) {
+    ) -> CustomerContextSaveResult {
         let interval = PerformanceSignposts.database.beginInterval(
             "SaveCustomerContext"
         )
@@ -154,7 +164,7 @@ final class CustomerContextStore {
                 interval,
                 "database=unavailable"
             )
-            return
+            return .failure
         }
 
         do {
@@ -182,6 +192,7 @@ final class CustomerContextStore {
                 interval,
                 "result=success"
             )
+            return .success
         } catch {
             PerformanceSignposts.database.endInterval(
                 "SaveCustomerContext",
@@ -197,6 +208,7 @@ final class CustomerContextStore {
                 description=\(nsError.localizedDescription, privacy: .private)
                 """
             )
+            return .failure
         }
     }
 

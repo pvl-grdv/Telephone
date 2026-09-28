@@ -36,6 +36,15 @@ jobs:
             ThirdParty/PJSIP
           key: telephone-third-party-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('README.md', 'ThirdParty/PJSIP/patches/**', 'script/bootstrap_third_party.sh') }}
 
+      - name: Run unit tests
+        run: ./script/test.sh
+
+      - name: Compile App Intents tests
+        run: ./script/test_app_intents.sh --build-only-unsigned
+
+      - name: Run UI smoke tests
+        run: ./script/test_ui.sh
+
       - name: Resolve version
         id: version
         shell: bash

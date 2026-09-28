@@ -1417,6 +1417,52 @@
         }
       }
     },
+    "Couldn’t load client details": {
+      "comment": "Customer context load failure.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t load client details"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundendetails konnten nicht geladen werden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось загрузить данные клиента"
+          }
+        }
+      }
+    },
+    "Couldn’t save client details": {
+      "comment": "Customer context save failure.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t save client details"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundendetails konnten nicht gespeichert werden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось сохранить данные клиента"
+          }
+        }
+      }
+    },
     "CRM keys": {
       "comment": "Local customer CRM keys field placeholder.",
       "localizations": {
@@ -3534,6 +3580,29 @@
         }
       }
     },
+    "Retry": {
+      "comment": "Retry customer context operation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut versuchen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повторить"
+          }
+        }
+      }
+    },
     "Revert": {
       "comment": "Revert network settings button.",
       "localizations": {
@@ -3668,6 +3737,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сохранить сетевые настройки?"
+          }
+        }
+      }
+    },
+    "Saved client details": {
+      "comment": "Customer context saved status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved client details"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundendetails gespeichert"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Данные клиента сохранены"
+          }
+        }
+      }
+    },
+    "Saving client details…": {
+      "comment": "Customer context saving status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving client details…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundendetails werden gespeichert…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранение данных клиента…"
           }
         }
       }

@@ -12,7 +12,9 @@ final class CustomerContextCoordinator {
     private let crmProvider: any CRMProvider
 
     private var loadTask: Task<Void, Never>?
-    private var saveTask: Task<Void, Never>?
+    private var saveDebounceTask: Task<Void, Never>?
+    private var saveTail: Task<Void, Never>?
+    private var saveGeneration = 0
     private var loadedKey: String?
     private var loadedAddress: CustomerPartyAddress?
     private var loadedDisplayName = ""
@@ -49,17 +51,18 @@ final class CustomerContextCoordinator {
         let displayName = customerDisplayName
         loadedDisplayName = displayName
         model.customerContextLoaded = false
+        model.customerContextLoadFailed = false
+        model.customerContextSaveSucceeded = false
 
         loadTask = Task { [weak self, crmProvider] in
-            async let localSnapshot = CustomerContextStore.shared.load(
+            async let localResult = CustomerContextStore.shared.load(
                 address: address,
                 displayName: displayName,
                 callIdentifier: contextIdentifier
             )
             async let crmProfile = crmProvider.customer(for: address)
 
-            let snapshot = await localSnapshot
-            let profile = await crmProfile
+            let result = await localResult
 
             guard
                 !Task.isCancelled,
@@ -69,17 +72,37 @@ final class CustomerContextCoordinator {
                 return
             }
 
-            self.isApplyingSnapshot = true
-            self.model.customerCompany = snapshot.company.isEmpty
-                ? self.model.contactOrganization
-                : snapshot.company
-            self.model.customerKeys = snapshot.keys.joined(separator: ", ")
-            self.model.customerEmails = snapshot.emails.joined(separator: ", ")
-            self.model.customerNote = snapshot.currentCallNote
-            self.model.previousConversationCount =
-                snapshot.previousConversationCount
-            self.model.lastCallDate = snapshot.lastCallDate
-            self.model.recentCustomerNotes = snapshot.recentNotes
+            switch result {
+            case .success(let snapshot):
+                self.isApplyingSnapshot = true
+                self.model.customerCompany = snapshot.company.isEmpty
+                    ? self.model.contactOrganization
+                    : snapshot.company
+                self.model.customerKeys = snapshot.keys.joined(separator: ", ")
+                self.model.customerEmails = snapshot.emails.joined(separator: ", ")
+                self.model.customerNote = snapshot.currentCallNote
+                self.model.previousConversationCount =
+                    snapshot.previousConversationCount
+                self.model.lastCallDate = snapshot.lastCallDate
+                self.model.recentCustomerNotes = snapshot.recentNotes
+                self.model.customerContextLoaded = true
+                self.model.customerContextLoadFailed = false
+                self.isApplyingSnapshot = false
+            case .failure:
+                self.model.customerContextLoaded = false
+                self.model.customerContextLoadFailed = true
+                return
+            }
+
+            let profile = await crmProfile
+
+            guard
+                !Task.isCancelled,
+                self.loadedKey == key
+            else {
+                return
+            }
+
             self.model.crmProfile = profile
 
             if let profile, profile.hasContent {
@@ -91,10 +114,12 @@ final class CustomerContextCoordinator {
                 self.model.displayedName = identity.primary
                 self.model.identityDetail = identity.detail
             }
-
-            self.model.customerContextLoaded = true
-            self.isApplyingSnapshot = false
         }
+    }
+
+    func reload() {
+        loadedKey = nil
+        loadIfNeeded()
     }
 
     func callDidChange() {
@@ -102,8 +127,8 @@ final class CustomerContextCoordinator {
 
         loadTask?.cancel()
         loadTask = nil
-        saveTask?.cancel()
-        saveTask = nil
+        saveDebounceTask?.cancel()
+        saveDebounceTask = nil
 
         loadedKey = nil
         loadedAddress = nil
@@ -121,8 +146,9 @@ final class CustomerContextCoordinator {
             return
         }
 
-        saveTask?.cancel()
-        saveTask = Task { [weak self] in
+        model.customerContextSaveSucceeded = false
+        saveDebounceTask?.cancel()
+        saveDebounceTask = Task { [weak self] in
             do {
                 try await Task.sleep(for: .milliseconds(350))
             } catch {
@@ -140,8 +166,11 @@ final class CustomerContextCoordinator {
             saveNow(ignoringPreference: true)
             loadTask?.cancel()
             loadTask = nil
+            saveDebounceTask?.cancel()
+            saveDebounceTask = nil
             loadedKey = nil
             model.customerContextLoaded = false
+            model.customerContextLoadFailed = false
             model.crmProfile = nil
         }
     }
@@ -151,31 +180,79 @@ final class CustomerContextCoordinator {
             (ignoringPreference || isEnabled),
             model.customerContextLoaded,
             !isApplyingSnapshot,
-            let address = loadedAddress
+            let address = loadedAddress,
+            let contextKey = loadedKey
         else {
             return
         }
 
-        saveTask?.cancel()
-        saveTask = nil
+        saveDebounceTask?.cancel()
+        saveDebounceTask = nil
 
-        let contextIdentifier = callIdentifier
-        let displayName = loadedDisplayName
-        let company = model.customerCompany
-        let keys = listValues(model.customerKeys)
-        let emails = listValues(model.customerEmails)
-        let note = model.customerNote
+        let request = CustomerContextSaveRequest(
+            address: address,
+            displayName: loadedDisplayName,
+            callIdentifier: callIdentifier,
+            company: model.customerCompany,
+            keys: listValues(model.customerKeys),
+            emails: listValues(model.customerEmails),
+            note: model.customerNote
+        )
+        saveGeneration += 1
+        let generation = saveGeneration
+        let previousSave = saveTail
 
-        Task {
-            await CustomerContextStore.shared.save(
-                address: address,
-                displayName: displayName,
-                callIdentifier: contextIdentifier,
-                company: company,
-                keys: keys,
-                emails: emails,
-                note: note
+        model.customerContextSaving = true
+        model.customerContextSaveFailed = false
+        model.customerContextSaveSucceeded = false
+
+        let task = Task { [weak self] in
+            if let previousSave {
+                await previousSave.value
+            }
+
+            let result = await CustomerContextStore.shared.save(
+                address: request.address,
+                displayName: request.displayName,
+                callIdentifier: request.callIdentifier,
+                company: request.company,
+                keys: request.keys,
+                emails: request.emails,
+                note: request.note
             )
+
+            guard
+                let self,
+                self.loadedKey == contextKey,
+                self.saveGeneration == generation
+            else {
+                return
+            }
+
+            self.model.customerContextSaving = false
+            switch result {
+            case .success:
+                self.model.customerContextSaveFailed = false
+                self.model.customerContextSaveSucceeded = true
+            case .failure:
+                self.model.customerContextSaveFailed = true
+                self.model.customerContextSaveSucceeded = false
+            }
+        }
+        saveTail = task
+    }
+
+    func retrySave() {
+        saveNow()
+    }
+
+    func flushPendingChanges() async {
+        saveDebounceTask?.cancel()
+        saveDebounceTask = nil
+        saveNow(ignoringPreference: true)
+
+        if let saveTail {
+            await saveTail.value
         }
     }
 
@@ -184,8 +261,8 @@ final class CustomerContextCoordinator {
 
         loadTask?.cancel()
         loadTask = nil
-        saveTask?.cancel()
-        saveTask = nil
+        saveDebounceTask?.cancel()
+        saveDebounceTask = nil
         loadedKey = nil
         loadedAddress = nil
         model.customerContextLoaded = false
@@ -201,6 +278,10 @@ final class CustomerContextCoordinator {
         model.recentCustomerNotes = []
         model.crmProfile = nil
         model.customerContextLoaded = false
+        model.customerContextLoadFailed = false
+        model.customerContextSaving = false
+        model.customerContextSaveFailed = false
+        model.customerContextSaveSucceeded = false
     }
 
     private var isEnabled: Bool {
@@ -242,4 +323,15 @@ final class CustomerContextCoordinator {
         }
         .filter { !$0.isEmpty }
     }
+}
+
+
+private struct CustomerContextSaveRequest: Sendable {
+    let address: CustomerPartyAddress
+    let displayName: String
+    let callIdentifier: String
+    let company: String
+    let keys: [String]
+    let emails: [String]
+    let note: String
 }

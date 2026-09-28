@@ -45,8 +45,8 @@ final class CallTransferController: CallController {
     func closeSheet(_ sender: Any?) {
         guard let sourceCallController else { return }
 
-        if sourceCallController.callActive,
-           sourceCallController.callOnHold
+        if sourceCallController.hasActiveCall,
+           sourceCallController.isCallOnHold
         {
             sourceCallController.toggleCallHold()
         }
@@ -56,11 +56,11 @@ final class CallTransferController: CallController {
     }
 
     func showInitialState(_ sender: Any?) {
-        if callActive {
+        if hasActiveCall {
             hangUpCall()
         }
 
-        guard sourceCallController?.callActive == true else {
+        guard sourceCallController?.hasActiveCall == true else {
             closeSheet(nil)
             return
         }

@@ -133,6 +133,8 @@ private struct UITestIncomingCallView: View {
             cancelTransfer: {},
             completeTransfer: {},
             customerContextChanged: {},
+            reloadCustomerContext: {},
+            saveCustomerContext: {},
             customerContextVisibilityChanged: { _ in },
             sendDTMF: { _ in }
         )

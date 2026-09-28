@@ -461,7 +461,8 @@ final class AccountController:
         guard
             added,
             !account.isRegistered,
-            account.registrationExpireTime == -1,
+            account.registrationExpireTime
+                == kAKSIPAccountRegistrationExpireTimeNotSpecified,
             userAgent.isStarted
         else {
             return
@@ -489,7 +490,8 @@ final class AccountController:
 
         guard
             account.registrationStatus / 100 != 2,
-            account.registrationExpireTime == -1,
+            account.registrationExpireTime
+                == kAKSIPAccountRegistrationExpireTimeNotSpecified,
             userAgent.isStarted
         else {
             return

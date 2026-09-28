@@ -65,6 +65,32 @@ struct LocalizationAndLayoutSmokeTests {
     }
 
     @Test
+    func sipRegistrationUsesPJSIPExpirySentinel() throws {
+        let accountSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/AKSIPAccount.swift"
+            ),
+            encoding: .utf8
+        )
+        let controllerSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/AccountController.swift"
+            ),
+            encoding: .utf8
+        )
+
+        let sentinel =
+            "kAKSIPAccountRegistrationExpireTimeNotSpecified"
+
+        #expect(accountSource.contains("PJSIP_EXPIRES_NOT_SPECIFIED"))
+        #expect(!accountSource.contains("registrationExpireTime != -1"))
+        #expect(!controllerSource.contains("registrationExpireTime == -1"))
+        #expect(
+            controllerSource.components(separatedBy: sentinel).count - 1 == 2
+        )
+    }
+
+    @Test
     func systemMediaPauseDoesNotReadNowPlayingState() throws {
         let source = try String(
             contentsOf: repositoryRoot.appendingPathComponent(

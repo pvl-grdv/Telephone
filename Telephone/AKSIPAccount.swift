@@ -12,6 +12,8 @@ import PJSIPBridge
 let kAKSIPAccountDefaultSIPProxyPort = 0
 let kAKSIPAccountDefaultReregistrationTime = 300
 let kAKSIPAccountDefaultTransport: Transport = .udp
+// PJSIP exposes PJSIP_EXPIRES_NOT_SPECIFIED as an unsigned sentinel.
+// Keep comparisons against the imported value instead of the Objective-C-era -1.
 let kAKSIPAccountRegistrationExpireTimeNotSpecified =
     Int(PJSIP_EXPIRES_NOT_SPECIFIED)
 
@@ -48,7 +50,8 @@ final class AKSIPAccount: Account, CustomStringConvertible, @unchecked Sendable 
     var isRegistered: Bool {
         get {
             registrationStatus / 100 == 2
-                && registrationExpireTime != -1
+                && registrationExpireTime
+                    != kAKSIPAccountRegistrationExpireTimeNotSpecified
         }
         set {
             guard identifier >= 0 else { return }

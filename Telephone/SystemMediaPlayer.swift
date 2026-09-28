@@ -10,25 +10,15 @@ import Foundation
 import UseCases
 
 final class SystemMediaPlayer: MusicPlayer, @unchecked Sendable {
-    private typealias IsPlayingCompletion =
-        @convention(block) (UInt8) -> Void
-    private typealias GetIsPlaying =
-        @convention(c) (DispatchQueue, IsPlayingCompletion) -> Void
     private typealias SendCommand =
-        @convention(c) (Int, NSDictionary?) -> UInt8
+        @convention(c) (Int32, CFDictionary?) -> Bool
 
     private static let mediaRemotePath =
         "/System/Library/PrivateFrameworks/MediaRemote.framework/MediaRemote"
-    private static let playCommand = 0
-    private static let pauseCommand = 1
+    private static let pauseCommand: Int32 = 1
 
     private var mediaRemoteHandle: UnsafeMutableRawPointer?
-    private var getIsPlaying: GetIsPlaying?
     private var sendCommand: SendCommand?
-
-    private var pauseRequested = false
-    private var didPause = false
-    private var requestGeneration = 0
 
     init() {
         mediaRemoteHandle = dlopen(
@@ -45,21 +35,12 @@ final class SystemMediaPlayer: MusicPlayer, @unchecked Sendable {
 
         if let symbol = dlsym(
             mediaRemoteHandle,
-            "MRMediaRemoteGetNowPlayingApplicationIsPlaying"
-        ) {
-            getIsPlaying = unsafeBitCast(symbol, to: GetIsPlaying.self)
-        }
-
-        if let symbol = dlsym(
-            mediaRemoteHandle,
             "MRMediaRemoteSendCommand"
         ) {
             sendCommand = unsafeBitCast(symbol, to: SendCommand.self)
-        }
-
-        if getIsPlaying == nil || sendCommand == nil {
+        } else {
             Log.media.notice(
-                "System media control unavailable: required MediaRemote symbols are missing"
+                "System media control unavailable: MediaRemote transport symbol is missing"
             )
         }
     }
@@ -72,47 +53,16 @@ final class SystemMediaPlayer: MusicPlayer, @unchecked Sendable {
 
     func pause() {
         DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+            guard let sendCommand = self?.sendCommand else { return }
 
-            pauseRequested = true
-            requestGeneration &+= 1
-            let generation = requestGeneration
-
-            guard
-                let getIsPlaying,
-                let sendCommand
-            else {
-                return
-            }
-
-            getIsPlaying(.main) { [weak self] isPlaying in
-                guard
-                    let self,
-                    pauseRequested,
-                    generation == requestGeneration,
-                    isPlaying != 0
-                else {
-                    return
-                }
-
-                if sendCommand(Self.pauseCommand, nil) != 0 {
-                    didPause = true
-                }
-            }
+            _ = sendCommand(Self.pauseCommand, nil)
         }
     }
 
     func resume() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-
-            pauseRequested = false
-            requestGeneration &+= 1
-
-            guard didPause else { return }
-            didPause = false
-
-            _ = sendCommand?(Self.playCommand, nil)
-        }
+        // Modern macOS gates MediaRemote now-playing reads for third-party
+        // processes. Without a reliable way to know whether Telephone actually
+        // paused active media, sending Play here could start media that was
+        // already paused before the call. Keep resume as a safe no-op.
     }
 }

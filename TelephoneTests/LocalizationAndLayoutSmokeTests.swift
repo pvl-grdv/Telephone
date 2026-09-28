@@ -65,6 +65,23 @@ struct LocalizationAndLayoutSmokeTests {
     }
 
     @Test
+    func systemMediaPauseDoesNotReadNowPlayingState() throws {
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/SystemMediaPlayer.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("MRMediaRemoteSendCommand"))
+        #expect(
+            !source.contains(
+                "MRMediaRemoteGetNowPlayingApplicationIsPlaying"
+            )
+        )
+    }
+
+    @Test
     func appMenuUsesNativeSettingsSceneOnly() throws {
         let appSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent(

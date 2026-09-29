@@ -6129,6 +6129,604 @@
           }
         }
       }
+    },
+    "Check in CRM": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check in CRM"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im CRM prüfen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить в CRM"
+          }
+        }
+      }
+    },
+    "View saved CRM check": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View saved CRM check"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeicherte CRM-Prüfung anzeigen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать сохранённую проверку CRM"
+          }
+        }
+      }
+    },
+    "CRM check for this call": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM check for this call"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM-Prüfung für diesen Anruf"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка CRM для этого звонка"
+          }
+        }
+      }
+    },
+    "Check CRM now": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check CRM now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM jetzt prüfen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить CRM сейчас"
+          }
+        }
+      }
+    },
+    "This check shows CRM data at the time of verification, not at the time of the call.": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This check shows CRM data at the time of verification, not at the time of the call."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Prüfung zeigt CRM-Daten zum Zeitpunkt der Prüfung, nicht zum Zeitpunkt des Anrufs."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка показывает данные CRM на момент проверки, а не на момент звонка."
+          }
+        }
+      }
+    },
+    "Checked: %@": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geprüft: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверено: %@"
+          }
+        }
+      }
+    },
+    "This call has no saved CRM check.": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This call has no saved CRM check."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für diesen Anruf gibt es keine gespeicherte CRM-Prüfung."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Для этого звонка нет сохранённой проверки CRM."
+          }
+        }
+      }
+    },
+    "Loading saved CRM check…": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading saved CRM check…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeicherte CRM-Prüfung wird geladen…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузка сохранённой проверки CRM…"
+          }
+        }
+      }
+    },
+    "Saving CRM check locally…": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving CRM check locally…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM-Prüfung wird lokal gespeichert…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранение проверки CRM на компьютере…"
+          }
+        }
+      }
+    },
+    "Checking CRM…": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking CRM…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM wird geprüft…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка CRM…"
+          }
+        }
+      }
+    },
+    "No organization matched this call’s phone number.": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No organization matched this call’s phone number."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Organisation stimmt mit der Telefonnummer dieses Anrufs überein."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Для телефонного номера этого звонка организация не найдена."
+          }
+        }
+      }
+    },
+    "Couldn’t read this call or its saved CRM check from local history.": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t read this call or its saved CRM check from local history."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Anruf oder seine gespeicherte CRM-Prüfung konnte nicht aus dem lokalen Verlauf gelesen werden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось прочитать звонок или его сохранённую проверку CRM из локальной истории."
+          }
+        }
+      }
+    },
+    "The saved CRM check is invalid. Check CRM again to replace it.": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved CRM check is invalid. Check CRM again to replace it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die gespeicherte CRM-Prüfung ist ungültig. Prüfen Sie CRM erneut, um sie zu ersetzen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранённая проверка CRM некорректна. Проверьте CRM снова, чтобы заменить её."
+          }
+        }
+      }
+    },
+    "Couldn’t save the CRM check locally. The displayed result has not been stored.": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t save the CRM check locally. The displayed result has not been stored."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die CRM-Prüfung konnte nicht lokal gespeichert werden. Das angezeigte Ergebnis wurde nicht gespeichert."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось сохранить проверку CRM на компьютере. Показанный результат не сохранён."
+          }
+        }
+      }
+    },
+    "This call was removed from history. Its CRM check was not saved.": {
+      "comment": "Explicit CRM verification of existing call history.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This call was removed from history. Its CRM check was not saved."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Anruf wurde aus dem Verlauf entfernt. Seine CRM-Prüfung wurde nicht gespeichert."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот звонок удалён из истории. Проверка CRM для него не сохранена."
+          }
+        }
+      }
+    },
+    "Enter one valid email address.": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter one valid email address."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie eine gültige E-Mail-Adresse ein."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите один корректный адрес email."
+          }
+        }
+      }
+    },
+    "Find by key": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find by key"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Schlüssel suchen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти по ключу"
+          }
+        }
+      }
+    },
+    "Email address": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-Mail-Adresse"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Адрес email"
+          }
+        }
+      }
+    },
+    "Find by email": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find by email"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach E-Mail suchen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти по email"
+          }
+        }
+      }
+    },
+    "No organization found. Search by key number or email.": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No organization found. Search by key number or email."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Organisation gefunden. Suchen Sie nach Schlüsselnummer oder E-Mail."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Организация не найдена. Найдите её по номеру ключа или email."
+          }
+        }
+      }
+    },
+    "Several organizations match. Choose one.": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Several organizations match. Choose one."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehrere Organisationen stimmen überein. Wählen Sie eine aus."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найдено несколько организаций. Выберите нужную."
+          }
+        }
+      }
+    },
+    "Find an organization manually": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find an organization manually"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organisation manuell suchen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти организацию вручную"
+          }
+        }
+      }
+    },
+    "Lookup by phone: %@": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lookup by phone: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche nach Telefonnummer: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск по телефону: %@"
+          }
+        }
+      }
+    },
+    "Lookup by key: %@": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lookup by key: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche nach Schlüssel: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск по ключу: %@"
+          }
+        }
+      }
+    },
+    "Lookup by email: %@": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lookup by email: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche nach E-Mail: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск по email: %@"
+          }
+        }
+      }
+    },
+    "No organization matched this lookup. Try a key number or email.": {
+      "comment": "CRM manual key/email lookup and saved provenance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No organization matched this lookup. Try a key number or email."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Organisation stimmt mit dieser Suche überein. Versuchen Sie eine Schlüsselnummer oder E-Mail."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "По этому запросу организация не найдена. Попробуйте номер ключа или email."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

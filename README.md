@@ -142,8 +142,8 @@ disabled and local customer context remains local to Telephone.
 ### Optional CRM lookup through a gateway
 
 Settings → CRM enables automatic lookup by the actual caller's phone number,
-with a **numeric key number** as a manual fallback in the call window's client
-details section. One exact phone match shows its organization; multiple matches
+with a **numeric key number or email address** as a manual fallback in the call
+window's client details section. One exact match shows its organization; multiple matches
 require an explicit choice. Arbitrary SIP usernames are not treated as phones.
 CRM results are never copied into local notes automatically.
 The result shows the owning organization, its code, all keys and all program
@@ -155,7 +155,9 @@ independent gateway token locally. The token is stored in macOS Keychain,
 scoped to that origin; CRM credentials stay on the gateway computer. No
 deployment addresses, customer data, or credentials are bundled with the app.
 
-Telephone calls the gateway's fixed phone/key lookup routes. After manual key
+Telephone calls the gateway's fixed phone/key/email lookup routes. Email lookup
+is case-insensitive and requires a plain, exact address; it never appends the
+caller number to CRM. After manual key
 lookup, **Link number to organization** can append the caller's phone to that
 organization, with a confirmation showing the phone and organization. Existing
 phone values are preserved and duplicates are avoided. The gateway token must
@@ -166,6 +168,18 @@ are asynchronous and can be cancelled; changing the call, input, or saved CRM
 settings invalidates pending results. Existing SIP/audio behavior is unchanged.
 
 See [the public gateway contract and setup guide](docs/CRM-gateway.md).
+
+Existing call-history rows can be checked with the **CRM** toolbar action or
+**Check in CRM** context menu. This performs a current, read-only lookup from
+the stored peer phone and saves the latest normalized result in local SQLite
+for that call/account, with its actual verification time. It does not claim
+historical CRM state at the call time. **View saved CRM check** opens the stored
+result without contacting the gateway. The history sheet also allows manual key
+or email lookup and saves the query provenance separately from the original
+phone. Later checks refresh the saved query and chosen organization; **Find by
+phone** returns to the original call phone. This is a local call association and
+does not write to CRM. No automatic history backfill or call-end
+check is performed; failed local saves are shown explicitly.
 
 For diagnosing a PBX integration, Telephone captures a small allowlist of
 identity and routing headers from the original incoming SIP INVITE, including

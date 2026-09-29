@@ -105,6 +105,8 @@ extension CRMGatewayError {
             NSLocalizedString("Enter a positive numeric key number.", comment: "CRM key number validation.")
         case .invalidPhoneNumber:
             NSLocalizedString("The caller does not have a valid phone number for CRM lookup.", comment: "CRM phone validation failure.")
+        case .invalidEmail:
+            NSLocalizedString("Enter one valid email address.", comment: "CRM invalid email address.")
         case .forbidden:
             NSLocalizedString("This gateway token cannot link phone numbers. Ask the gateway operator to enable this permission.", comment: "CRM phone append permission failure.")
         case .conflict:

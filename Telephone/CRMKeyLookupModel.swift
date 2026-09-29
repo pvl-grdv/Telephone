@@ -41,6 +41,9 @@ final class CRMKeyLookupModel {
     var keyNumber = "" {
         didSet { if oldValue != keyNumber { cancel() } }
     }
+    var email = "" {
+        didSet { if oldValue != email { cancel() } }
+    }
     private(set) var callerPhone: String?
     private(set) var state: CRMKeyLookupState = .idle
     private(set) var phoneLinkState: CRMPhoneLinkState = .idle
@@ -55,6 +58,7 @@ final class CRMKeyLookupModel {
     @ObservationIgnored private var isContextActive = true
     @ObservationIgnored private var automaticLookupAttempted = false
     @ObservationIgnored private var loadedFromKey = false
+    @ObservationIgnored private var lookupIdentity: LiveCRMQuery?
 
     init(settings: CRMGatewaySettings, provider: any CRMKeyLookupProvider) {
         self.settings = settings
@@ -65,6 +69,11 @@ final class CRMKeyLookupModel {
 
     var canSearch: Bool {
         settings.enabled && isContextActive && CRMKeyNumber.parse(keyNumber) != nil
+            && state != .loading && phoneLinkState != .saving
+    }
+
+    var canSearchEmail: Bool {
+        settings.enabled && isContextActive && CRMEmailAddress.normalize(email) != nil
             && state != .loading && phoneLinkState != .saving
     }
 
@@ -84,7 +93,8 @@ final class CRMKeyLookupModel {
         guard let phone = callerPhone, case .loaded(let response) = state,
               let customer = response.data else { return false }
         if case .saved = phoneLinkState { return true }
-        return !loadedFromKey || customer.company.containsPhone(phone)
+        if case .phone = lookupIdentity { return true }
+        return customer.company.containsPhone(phone)
     }
 
     func setCallerPhone(_ raw: String?, isActive: Bool) {
@@ -118,7 +128,24 @@ final class CRMKeyLookupModel {
             let result = try await provider.customer(forKeyNumber: number, configuration: configuration)
             return result.data == nil ? .notFound : .loaded(result)
         }
+        lookupIdentity = .key(number)
         loadedFromKey = true
+    }
+
+    func searchEmail(companyID: Int? = nil) {
+        guard settings.enabled, isContextActive, phoneLinkState != .saving else { return }
+        guard let email = CRMEmailAddress.normalize(email) else {
+            cancel()
+            state = .failed(.invalidEmail)
+            return
+        }
+        loadedFromKey = false
+        lookupIdentity = .email(email)
+        beginLookup { provider, configuration in
+            let result = try await provider.customer(forEmail: email, companyID: companyID, configuration: configuration)
+            if result.data != nil { return .loaded(CRMKeyLookupResponse(data: result.data, meta: result.meta)) }
+            return result.matches.isEmpty ? .notFound : .choosing(result.matches)
+        }
     }
 
     func searchCallerPhone(companyID: Int? = nil) {
@@ -126,6 +153,7 @@ final class CRMKeyLookupModel {
               let phone = callerPhone else { return }
         automaticLookupAttempted = true
         loadedFromKey = false
+        lookupIdentity = .phone(phone)
         beginLookup { provider, configuration in
             let result = try await provider.customer(
                 forPhoneNumber: phone, companyID: companyID, configuration: configuration
@@ -140,7 +168,11 @@ final class CRMKeyLookupModel {
     func chooseCompany(_ match: CRMPhoneLookupMatch) {
         guard case .choosing(let matches) = state,
               matches.contains(where: { $0.id == match.id }) else { return }
-        searchCallerPhone(companyID: match.id)
+        switch lookupIdentity {
+        case .phone: searchCallerPhone(companyID: match.id)
+        case .email: searchEmail(companyID: match.id)
+        default: break
+        }
     }
 
     func preparePhoneLink() {
@@ -218,12 +250,14 @@ final class CRMKeyLookupModel {
         phoneLinkState = .idle
         state = .idle
         loadedFromKey = false
+        lookupIdentity = nil
     }
 
     func resetContext() {
         contextGeneration &+= 1
         cancel()
         keyNumber = ""
+        email = ""
         callerPhone = nil
         automaticLookupAttempted = false
     }
@@ -289,4 +323,10 @@ final class CRMKeyLookupModel {
             }
         }
     }
+}
+
+private enum LiveCRMQuery: Sendable {
+    case phone(String)
+    case key(Int)
+    case email(String)
 }

@@ -35,9 +35,21 @@ struct CRMKeyLookupView: View {
                 .accessibilityIdentifier("customer.crm.keyNumber")
                 .disabled(model.phoneLinkState == .saving)
                 .onSubmit { if model.canSearch { model.search() } }
-                Button(NSLocalizedString("Search", comment: "CRM search button.")) { model.search() }
+                Button(NSLocalizedString("Find by key", comment: "CRM key search button.")) { model.search() }
                     .disabled(!model.canSearch)
                     .accessibilityIdentifier("customer.crm.search")
+            }
+            .controlSize(.small)
+
+            HStack {
+                TextField(NSLocalizedString("Email address", comment: "Manual CRM email input."), text: $model.email)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier("customer.crm.email")
+                    .disabled(model.phoneLinkState == .saving)
+                    .onSubmit { if model.canSearchEmail { model.searchEmail() } }
+                Button(NSLocalizedString("Find by email", comment: "Manual CRM email search.")) { model.searchEmail() }
+                    .disabled(!model.canSearchEmail)
+                    .accessibilityIdentifier("customer.crm.searchEmail")
             }
             .controlSize(.small)
 
@@ -89,12 +101,12 @@ struct CRMKeyLookupView: View {
                     .controlSize(.small)
             }
         case .notFound:
-            Text(NSLocalizedString("No organization found. Search by key number.", comment: "CRM no exact phone or key match."))
+            Text(NSLocalizedString("No organization found. Search by key number or email.", comment: "CRM no exact lookup match."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         case .choosing(let matches):
             VStack(alignment: .leading, spacing: 6) {
-                Text(NSLocalizedString("This number belongs to several organizations. Choose one.", comment: "Ambiguous CRM phone matches."))
+                Text(NSLocalizedString("Several organizations match. Choose one.", comment: "Ambiguous CRM phone or email matches."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 ForEach(matches) { match in

@@ -54,7 +54,14 @@ final class AccountPresentationCoordinator {
         callDestinationComposer = CallDestinationComposer(
             accountController: accountController
         )
-        callHistoryPresenter = CallHistoryPresenter()
+        callHistoryPresenter = CallHistoryPresenter(
+            crmLookupModel: CRMHistoryLookupModel(
+                storage: DefaultCallHistoryCRMStorage(),
+                settings: accountController.crmGatewaySettings,
+                provider: accountController.crmKeyLookupProvider
+            ),
+            accountUUID: account.uuid
+        )
         self.callHistoryViewEventTargetFactory = callHistoryViewEventTargetFactory
         self.account = account
         authenticationFailureController = AuthenticationFailureController(
@@ -187,6 +194,7 @@ final class AccountPresentationCoordinator {
 
     func invalidate() {
         dismissAuthenticationFailure()
+        callHistoryPresenter.closeCRM()
         callHistoryPresenter.target = nil
         callHistoryViewEventTarget = nil
         AccountPresentationRegistry.shared.unregister(key: windowKey)

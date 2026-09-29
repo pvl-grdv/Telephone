@@ -14,7 +14,8 @@ infrastructure settings are managed separately.
 4. Enter the gateway token, enable CRM lookup and select **Apply**.
 5. During a call, Telephone looks up the actual peer's phone number. One exact
    match shows its organization. Multiple matches require an explicit choice.
-6. If the phone is absent, enter a numeric key number and select **Search**.
+6. If the phone is absent, enter a numeric key number or one email address and
+   select **Find by key** or **Find by email**. Several email matches require a choice.
 7. After manual key lookup, **Link number to organization** offers a confirmation
    showing the phone and organization. This needs a token with append permission.
 
@@ -85,6 +86,39 @@ POST /v1/customer-by-key/filter
 
 `keyNumber` is a positive integer no greater than `9007199254740991`, preserving
 exact representation in JavaScript and Swift. The app sends no other key fields.
+
+### Manual email lookup
+
+```http
+POST /v1/customer-by-email/filter
+```
+
+```json
+{"email":"person@example.test"}
+```
+
+This is an exact, case-insensitive lookup of one plain ASCII email address.
+Telephone and the gateway trim outer spaces and lowercase both parts. The local
+part permits letters, digits, `.`, `_`, `+` and `-`, with no leading, trailing or
+consecutive dots. Domain labels contain letters, digits and internal hyphens;
+at least two labels are required. Local parts are at most 64 characters, labels
+at most 63, and the whole address at most 254. Controls, whitespace within the
+address, wildcards, percent signs, quoted mailboxes and recipient lists fail
+validation before a request is sent.
+
+The response uses the same `data`, `matches` and `meta` structure as phone lookup.
+No match returns `data:null` and an empty matches array. Multiple exact matches
+require an explicit choice, repeated as:
+
+```json
+{"email":"person@example.test","companyId":1200456}
+```
+
+The gateway rechecks that this organization still owns the email. An email
+inventory has `sourceKeyId:null` and a required `company.emails` canonical,
+unique array containing the searched address. Other lookup responses may omit
+`emails`. Email lookup never automatically adds the caller's number to CRM and
+does not offer the phone-append operation.
 
 ## Inventory response
 
@@ -204,7 +238,7 @@ finish on the server after the window closes.
 
 | Condition | Telephone behavior |
 |---|---|
-| Complete `200`, `data: null`, no phone matches | No organization found; manual key fallback |
+| Complete `200`, `data: null`, no matches | No organization found; manual key or email fallback |
 | `401`, or lookup `403` | Token rejected; update local settings |
 | Append `403` | Phone append permission missing |
 | Append `409` | Refresh organization before another append |
@@ -225,15 +259,66 @@ cancelled. There is no automatic retry or upstream authentication on macOS.
 
 ## Architecture and privacy
 
+### Explicit CRM checks from call history
+
+Select an existing history row and use the **CRM** toolbar action or
+**Check in CRM** context-menu action to check its phone now. The source number
+comes from the existing SQLite call's peer `user` field, not a Contacts name or
+the displayed history title. A first check uses phone lookup; later checks
+refresh the last saved phone, key or email query.
+History verification never places a call, edits CRM, or offers phone append.
+The sheet also supports manual key and email searches, including calls whose
+stored peer is an internal extension. A found organization is associated with
+that selected call by saving its local verification result; it does not change
+the call's phone identity or append that number to CRM.
+
+**View saved CRM check** loads the saved local result without a network request.
+The sheet's **Check CRM now** performs another explicit read. A fresh toolbar or
+context-menu check also repeats the latest saved lookup identity; the first
+check uses the stored peer phone. Manual key/email fields are restored when a
+saved check is reopened. The sheet's **Find by phone** explicitly returns to
+the original peer number. An old saved result
+and its timestamp remain visible while the fresh request runs. Ambiguous matches
+require a choice, revalidated by the same phone or email lookup with the company
+ID. Refreshing a matched saved selection revalidates that chosen organization.
+
+The newest verification outcome is saved against that existing call and account
+in local SQLite: matched organization/inventory, no match, ambiguous candidates,
+or a safe typed failure code. `checkedAt` is the local time this verification
+finished; it does not assert what the CRM contained at the original call time.
+The lookup provenance records the normalized phone, numeric key or email that
+was actually checked; the original call phone remains separate. This makes a
+manual association visible and refreshable without claiming a phone match.
+The validated gateway request ID, fetched-at time, completeness and cache flag
+are retained as evidence. One latest outcome replaces the previous check; this
+is not an audit timeline of CRM changes.
+
+Only an approved, normalized snapshot is stored: canonical phones/emails, lookup
+provenance, company
+name/code/ID, all key/program records and checked portal links. Raw company
+phone text, credentials, origins, authorization/network headers and unfiltered
+response bodies are excluded. Saved snapshots are validated again before their
+links are displayed; invalid or oversized snapshots are rejected. The save and
+restore limit is the same 16 MiB.
+
+Closing the sheet, changing accounts/calls, or changing CRM settings cancels
+pending checks and invalidates late results. Snapshots cannot create a call row;
+if the original row was deleted, saving reports that it no longer exists.
+Database read/save failures are shown separately from CRM errors. This feature
+does not automatically backfill old calls or run CRM checks when a call ends.
+
+### Shared gateway behavior
+
 - `CompositionRoot` creates one provider/settings store and passes them through
   account controllers to each call window.
-- `CRMGatewayClient` is an actor with three fixed typed requests and an ephemeral
+- `CRMGatewayClient` is an actor with four fixed typed requests and an ephemeral
   URLSession. Cookies, URL credential storage and HTTP caching are disabled.
   Every redirect is refused.
 - Lookup state tracks request, call context and settings generations. Late
   responses are ignored. Phone confirmation carries the same scope and snapshot.
-- Results are transient UI data. They do not replace SIP caller identity or
-  automatically update local customer context. The only CRM change is the
+- Live-call results are transient UI data. Explicit history checks are saved
+  locally with their verification time. Neither replaces SIP caller identity
+  nor automatically updates local customer notes. The only CRM change is the
   explicitly confirmed phone append through the gateway.
 - Non-secret settings use local UserDefaults; gateway tokens use Keychain.
   Requests, tokens and customer responses are not logged by the client.
@@ -241,7 +326,7 @@ cancelled. There is no automatic retry or upstream authentication on macOS.
   responses stay outside the public repository. Tests use invented data.
 
 The legacy address-based `CRMProvider` remains compatible and disabled by
-default. Key and phone lookup use explicit typed gateway methods instead of
+default. Key, email and phone lookup use explicit typed gateway methods instead of
 pretending that a key is a phone address.
 
 ## Validation
@@ -257,5 +342,9 @@ Tests cover route/body restrictions, HTTPS and redirects, decoding/completeness,
 safe links, old records and release strings, not-found/error distinctions,
 token origin scoping, phone normalization, ambiguous choices, confirmation,
 append permission/conflict handling and context/settings/cancellation races.
+History tests additionally cover normalized snapshot encoding, safe metadata,
+saved-result reopening without network, current-time checks, ambiguous choices,
+stale call/account/settings replies, deleted rows, visible local save errors,
+manual key/email provenance and restoring/refreshing their saved associations.
 Localization smoke tests verify English, German and Russian UI strings.
 Real integration checks require a separately configured gateway and credentials.

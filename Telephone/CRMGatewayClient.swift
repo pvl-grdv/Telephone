@@ -5,12 +5,13 @@
 
 import Foundation
 
-enum CRMGatewayError: Error, Equatable, Sendable {
+enum CRMGatewayError: String, Error, Equatable, Sendable, Codable {
     case disabled
     case invalidOrigin
     case missingToken
     case invalidKeyNumber
     case invalidPhoneNumber
+    case invalidEmail
     case forbidden
     case conflict
     case phoneWriteUnconfirmed
@@ -57,15 +58,25 @@ struct CRMGatewayConfiguration: Equatable, Sendable {
     }
 }
 
-struct CRMKeyLookupCompany: Decodable, Equatable, Sendable {
+struct CRMKeyLookupCompany: Codable, Equatable, Sendable {
     let id: Int
     let name: String
     let formattedCode: String
     let phone: String?
     let phones: [String]?
+    let emails: [String]?
+
+    init(id: Int, name: String, formattedCode: String, phone: String?, phones: [String]?, emails: [String]? = nil) {
+        self.id = id
+        self.name = name
+        self.formattedCode = formattedCode
+        self.phone = phone
+        self.phones = phones
+        self.emails = emails
+    }
 
     func replacingPhone(_ value: String, phones: [String]?) -> Self {
-        Self(id: id, name: name, formattedCode: formattedCode, phone: value, phones: phones)
+        Self(id: id, name: name, formattedCode: formattedCode, phone: value, phones: phones, emails: emails)
     }
 
     func containsPhone(_ value: String) -> Bool {
@@ -75,7 +86,7 @@ struct CRMKeyLookupCompany: Decodable, Equatable, Sendable {
     }
 }
 
-struct CRMKeyLookupProgram: Decodable, Equatable, Identifiable, Sendable {
+struct CRMKeyLookupProgram: Codable, Equatable, Identifiable, Sendable {
     let recordId: Int
     let programId: Int?
     let name: String
@@ -85,20 +96,20 @@ struct CRMKeyLookupProgram: Decodable, Equatable, Identifiable, Sendable {
     var id: Int { recordId }
 }
 
-struct CRMKeyLookupKey: Decodable, Equatable, Identifiable, Sendable {
+struct CRMKeyLookupKey: Codable, Equatable, Identifiable, Sendable {
     let id: Int
     let name: String
     let url: URL
     let programs: [CRMKeyLookupProgram]
 }
 
-struct CRMKeyLookupCustomer: Decodable, Equatable, Sendable {
+struct CRMKeyLookupCustomer: Codable, Equatable, Sendable {
     let sourceKeyId: Int?
     let company: CRMKeyLookupCompany
     let keys: [CRMKeyLookupKey]
 }
 
-struct CRMKeyLookupMetadata: Decodable, Equatable, Sendable {
+struct CRMKeyLookupMetadata: Codable, Equatable, Sendable {
     let requestId: String
     let fetchedAt: String
     let complete: Bool
@@ -129,7 +140,7 @@ struct CRMKeyLookupResponse: Decodable, Equatable, Sendable {
     }
 }
 
-struct CRMPhoneLookupMatch: Decodable, Equatable, Identifiable, Sendable {
+struct CRMPhoneLookupMatch: Codable, Equatable, Identifiable, Sendable {
     let id: Int
     let name: String
     let formattedCode: String
@@ -170,6 +181,12 @@ struct CRMPhoneAppendResponse: Decodable, Equatable, Sendable {
 
 protocol CRMKeyLookupProvider: Sendable {
     func customer(
+        forEmail email: String,
+        companyID: Int?,
+        configuration: CRMGatewayConfiguration
+    ) async throws -> CRMPhoneLookupResponse
+
+    func customer(
         forKeyNumber keyNumber: Int,
         configuration: CRMGatewayConfiguration
     ) async throws -> CRMKeyLookupResponse
@@ -190,6 +207,14 @@ protocol CRMKeyLookupProvider: Sendable {
 }
 
 extension CRMKeyLookupProvider {
+    func customer(
+        forEmail email: String,
+        companyID: Int?,
+        configuration: CRMGatewayConfiguration
+    ) async throws -> CRMPhoneLookupResponse {
+        throw CRMGatewayError.invalidResponse
+    }
+
     func customer(
         forPhoneNumber phoneNumber: String,
         companyID: Int?,
@@ -258,6 +283,36 @@ actor CRMGatewayClient: CRMKeyLookupProvider {
 
     init(transport: any CRMGatewayHTTPTransport = CRMGatewayURLSessionTransport()) {
         self.transport = transport
+    }
+
+    func customer(
+        forEmail email: String,
+        companyID: Int?,
+        configuration: CRMGatewayConfiguration
+    ) async throws -> CRMPhoneLookupResponse {
+        guard let email = CRMEmailAddress.normalize(email) else { throw CRMGatewayError.invalidEmail }
+        if let companyID, !CRMKeyNumber.isValid(companyID) { throw CRMGatewayError.invalidResponse }
+        let result: CRMPhoneLookupResponse = try await send(
+            route: .emailLookup, body: EmailRequest(email: email, companyId: companyID), configuration: configuration
+        )
+        try Self.validateMetadata(result.meta)
+        guard Set(result.matches.map(\.id)).count == result.matches.count,
+              result.matches.allSatisfy({ CRMKeyNumber.isValid($0.id)
+                  && !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            throw CRMGatewayError.invalidResponse
+        }
+        if let customer = result.data {
+            guard customer.sourceKeyId == nil,
+                  result.matches.contains(where: { $0.id == customer.company.id }),
+                  customer.company.emails?.contains(email) == true,
+                  companyID.map({ $0 == customer.company.id }) ?? (result.matches.count == 1) else {
+                throw CRMGatewayError.invalidResponse
+            }
+            try Self.validateCustomer(customer)
+        } else if result.matches.count == 1 || companyID != nil {
+            throw CRMGatewayError.invalidResponse
+        }
+        return result
     }
 
     func customer(
@@ -432,6 +487,12 @@ actor CRMGatewayClient: CRMKeyLookupProvider {
 
     private static func validateCustomer(_ customer: CRMKeyLookupCustomer) throws {
         try validatePhones(customer.company.phones)
+        if let emails = customer.company.emails {
+            guard Set(emails).count == emails.count,
+                  emails.allSatisfy({ CRMEmailAddress.normalize($0) == $0 }) else {
+                throw CRMGatewayError.invalidResponse
+            }
+        }
         guard CRMKeyNumber.isValid(customer.company.id),
               !customer.company.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               Set(customer.keys.map(\.id)).count == customer.keys.count else {
@@ -472,6 +533,11 @@ private struct PhoneNumberRequest: Encodable {
     let companyId: Int?
 }
 
+private struct EmailRequest: Encodable {
+    let email: String
+    let companyId: Int?
+}
+
 private struct PhoneAppendRequest: Encodable {
     let companyId: Int
     let sourceKeyId: Int
@@ -482,6 +548,7 @@ private struct PhoneAppendRequest: Encodable {
 private enum GatewayRoute: String {
     case keyLookup = "v1/customer-by-key/filter"
     case phoneLookup = "v1/customer-by-phone/filter"
+    case emailLookup = "v1/customer-by-email/filter"
     case phoneAppend = "v1/customer-phone/append"
 }
 

@@ -223,6 +223,16 @@ private extension SQLiteCallHistory {
                 try backfillCallParties()
                 try execute("PRAGMA user_version = 2")
             }
+            version = 2
+        }
+
+        if version < 3 {
+            try transaction {
+                try TelephoneDatabaseSchema.createCallCRMSnapshotTable(
+                    execute: execute
+                )
+                try execute("PRAGMA user_version = 3")
+            }
         }
     }
 

@@ -4,7 +4,28 @@
 //
 
 enum TelephoneDatabaseSchema {
-    static let currentVersion = 2
+    static let currentVersion = 3
+
+    static func createCallCRMSnapshotTable(
+        execute: (String) throws -> Void
+    ) throws {
+        try execute(
+            """
+            CREATE TABLE IF NOT EXISTS call_crm_snapshots (
+                account_uuid TEXT NOT NULL,
+                call_identifier TEXT NOT NULL,
+                checked_at REAL NOT NULL,
+                status TEXT NOT NULL,
+                company_id INTEGER,
+                company_name TEXT,
+                snapshot_json TEXT NOT NULL,
+                PRIMARY KEY (account_uuid, call_identifier),
+                FOREIGN KEY (account_uuid, call_identifier)
+                    REFERENCES calls(account_uuid, identifier) ON DELETE CASCADE
+            )
+            """
+        )
+    }
 
     static func createPartyTables(
         execute: (String) throws -> Void

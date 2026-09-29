@@ -102,6 +102,42 @@ struct CallHistoryViewModelTests {
         #expect(model.selection == nil)
     }
 
+    @Test
+    func crmSelectionUsesTheExistingRecordAndClosesWhenItIsRemoved() {
+        let first = record(id: "first", address: "111", incoming: true, missed: false)
+        let second = record(id: "second", address: "222", incoming: true, missed: true)
+        let missing = record(id: "missing", address: "333", incoming: false, missed: false)
+        let model = CallHistoryViewModel()
+        model.show([first, second])
+
+        model.selectForCRM(missing)
+        #expect(model.pendingCRMRecord == nil)
+        model.selectForCRM(first, checkNow: false)
+        #expect(model.selection == first.identifier)
+        #expect(model.pendingCRMRecord == first)
+        #expect(!model.crmCheckRequested)
+        model.show([second])
+        #expect(model.pendingCRMRecord == nil)
+
+        model.selectForCRM(second)
+        #expect(model.crmCheckRequested)
+        #expect(model.requestDeleteSelected())
+        model.commitPendingDeletion(deleteRecord: { _ in }, deleteAll: {})
+        #expect(model.pendingCRMRecord == nil)
+    }
+
+    @Test
+    func deletingAllHistoryClosesAnOpenCRMCheck() {
+        let existing = record(id: "call", address: "111", incoming: true, missed: false)
+        let model = CallHistoryViewModel()
+        model.show([existing])
+        model.selectForCRM(existing)
+        model.requestDeleteAll()
+        model.commitPendingDeletion(deleteRecord: { _ in }, deleteAll: {})
+        #expect(model.pendingCRMRecord == nil)
+        #expect(model.allRecords.isEmpty)
+    }
+
     private func record(
         id: String,
         title: String = "",

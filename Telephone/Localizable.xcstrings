@@ -5071,6 +5071,696 @@
           }
         }
       }
+    },
+    "CRM": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM"
+          }
+        }
+      }
+    },
+    "Enable CRM lookup": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable CRM lookup"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM-Suche aktivieren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить поиск в CRM"
+          }
+        }
+      }
+    },
+    "Search the owner's organization and keys by a numeric key number during a call.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search the owner's organization and keys by a numeric key number during a call."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Während eines Anrufs anhand einer numerischen Schlüsselnummer nach der Organisation des Besitzers und ihren Schlüsseln suchen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Во время звонка ищите организацию владельца и её ключи по числовому номеру ключа."
+          }
+        }
+      }
+    },
+    "Gateway address": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway-Adresse"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Адрес gateway"
+          }
+        }
+      }
+    },
+    "Gateway token": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway token"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway-Token"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Токен gateway"
+          }
+        }
+      }
+    },
+    "Use an HTTPS address without a path. The gateway token is stored in Keychain for this address; leave the field empty to keep it.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use an HTTPS address without a path. The gateway token is stored in Keychain for this address; leave the field empty to keep it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwenden Sie eine HTTPS-Adresse ohne Pfad. Das Gateway-Token wird für diese Adresse im Schlüsselbund gespeichert; lassen Sie das Feld leer, um es beizubehalten."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Укажите HTTPS-адрес без пути. Токен gateway сохраняется в Связке ключей для этого адреса; оставьте поле пустым, чтобы сохранить текущий токен."
+          }
+        }
+      }
+    },
+    "CRM email and password stay on the gateway computer.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM email and password stay on the gateway computer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM-E-Mail und -Passwort bleiben auf dem Gateway-Computer."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email и пароль CRM хранятся на компьютере с gateway."
+          }
+        }
+      }
+    },
+    "Gateway token saved": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway token saved"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway-Token gespeichert"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Токен gateway сохранён"
+          }
+        }
+      }
+    },
+    "Remove token": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove token"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token entfernen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить токен"
+          }
+        }
+      }
+    },
+    "CRM settings saved": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM settings saved"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM-Einstellungen gespeichert"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки CRM сохранены"
+          }
+        }
+      }
+    },
+    "CRM lookup is disabled in Settings.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM lookup is disabled in Settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die CRM-Suche ist in den Einstellungen deaktiviert."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск в CRM отключён в настройках."
+          }
+        }
+      }
+    },
+    "Enter a valid HTTPS gateway address without a path, query, or credentials.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a valid HTTPS gateway address without a path, query, or credentials."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie eine gültige HTTPS-Gateway-Adresse ohne Pfad, Abfrage oder Zugangsdaten ein."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите корректный HTTPS-адрес gateway без пути, параметров и учётных данных."
+          }
+        }
+      }
+    },
+    "Save a gateway token for this address in CRM Settings.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a gateway token for this address in CRM Settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichern Sie in den CRM-Einstellungen ein Gateway-Token für diese Adresse."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохраните токен gateway для этого адреса в настройках CRM."
+          }
+        }
+      }
+    },
+    "Enter a positive numeric key number.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a positive numeric key number."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie eine positive numerische Schlüsselnummer ein."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите положительный числовой номер ключа."
+          }
+        }
+      }
+    },
+    "The gateway rejected the token. Update it in CRM Settings.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The gateway rejected the token. Update it in CRM Settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gateway hat das Token abgelehnt. Aktualisieren Sie es in den CRM-Einstellungen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway отклонил токен. Обновите его в настройках CRM."
+          }
+        }
+      }
+    },
+    "The gateway or CRM is unavailable. Check the connection and try again.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The gateway or CRM is unavailable. Check the connection and try again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gateway oder CRM ist nicht erreichbar. Prüfen Sie die Verbindung und versuchen Sie es erneut."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway или CRM недоступны. Проверьте подключение и повторите поиск."
+          }
+        }
+      }
+    },
+    "Too many requests. Try again shortly.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many requests. Try again shortly."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu viele Anfragen. Versuchen Sie es in Kürze erneut."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слишком много запросов. Повторите поиск немного позже."
+          }
+        }
+      }
+    },
+    "The gateway redirected the request. Check its address in CRM Settings.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The gateway redirected the request. Check its address in CRM Settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gateway hat die Anfrage umgeleitet. Prüfen Sie die Adresse in den CRM-Einstellungen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway перенаправил запрос. Проверьте его адрес в настройках CRM."
+          }
+        }
+      }
+    },
+    "The gateway returned an incomplete or invalid response.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The gateway returned an incomplete or invalid response."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gateway hat eine unvollständige oder ungültige Antwort zurückgegeben."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gateway вернул неполный или некорректный ответ."
+          }
+        }
+      }
+    },
+    "Couldn’t save or remove the gateway token in Keychain.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t save or remove the gateway token in Keychain."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gateway-Token konnte im Schlüsselbund nicht gespeichert oder entfernt werden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось сохранить или удалить токен gateway в Связке ключей."
+          }
+        }
+      }
+    },
+    "CRM lookup by key": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM lookup by key"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM-Suche nach Schlüssel"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск в CRM по ключу"
+          }
+        }
+      }
+    },
+    "Key number": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key number"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüsselnummer"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер ключа"
+          }
+        }
+      }
+    },
+    "Search": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suchen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти"
+          }
+        }
+      }
+    },
+    "Searching CRM…": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching CRM…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM wird durchsucht…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск в CRM…"
+          }
+        }
+      }
+    },
+    "No owner found for this key.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No owner found for this key."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für diesen Schlüssel wurde kein Besitzer gefunden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Владелец этого ключа не найден."
+          }
+        }
+      }
+    },
+    "Organization code": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organization code"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organisationscode"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код организации"
+          }
+        }
+      }
+    },
+    "Open key in personal account": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open key in personal account"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüssel im persönlichen Konto öffnen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть ключ в личном кабинете"
+          }
+        }
+      }
+    },
+    "No programs on this key.": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No programs on this key."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Programme auf diesem Schlüssel."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На этом ключе нет программ."
+          }
+        }
+      }
+    },
+    "Version: %@ · Release: %@": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version: %@ · Release: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version: %@ · Release: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия: %@ · Релиз: %@"
+          }
+        }
+      }
+    },
+    "Unnamed program": {
+      "comment": "CRM gateway integration.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unnamed program"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbenanntes Programm"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Программа без названия"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

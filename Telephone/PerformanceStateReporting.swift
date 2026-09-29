@@ -131,6 +131,8 @@ private extension SettingsSection {
             "Sound"
         case .network:
             "Network"
+        case .crm:
+            "CRM"
         }
     }
 }

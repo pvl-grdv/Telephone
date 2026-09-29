@@ -25,6 +25,8 @@ final class AccountController:
     let account: AKSIPAccount
     let ringtonePlayback: any RingtonePlaybackUseCase
     let accountDescription: String
+    let crmGatewaySettings: CRMGatewaySettings
+    let crmKeyLookupProvider: any CRMKeyLookupProvider
 
     var enabled = false
 
@@ -92,10 +94,14 @@ final class AccountController:
         sleepStatus: WorkspaceSleepStatus,
         incomingCallContactResolver: IncomingCallContactResolver,
         callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
+        crmGatewaySettings: CRMGatewaySettings = CRMGatewaySettings(),
+        crmKeyLookupProvider: any CRMKeyLookupProvider = CRMGatewayClient(),
         callControllerDidClose: @escaping @MainActor () -> Void = {}
     ) {
         self.account = account
         self.accountDescription = accountDescription
+        self.crmGatewaySettings = crmGatewaySettings
+        self.crmKeyLookupProvider = crmKeyLookupProvider
         self.userAgent = userAgent
         self.ringtonePlayback = ringtonePlayback
         self.sleepStatus = sleepStatus

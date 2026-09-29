@@ -24,6 +24,8 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/CallHistoryScreen.swift",
             "Telephone/CallTransferViews.swift",
             "Telephone/CustomerContextView.swift",
+            "Telephone/CRMGatewaySettingsView.swift",
+            "Telephone/CRMKeyLookupView.swift",
             "Telephone/GeneralSettingsView.swift",
             "Telephone/NetworkSettingsView.swift",
             "Telephone/SettingsModel.swift",

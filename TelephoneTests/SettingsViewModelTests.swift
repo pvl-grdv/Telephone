@@ -13,6 +13,7 @@ struct SettingsViewModelTests {
         var accountCreates = 0
         var soundCreates = 0
         var networkCreates = 0
+        var crmCreates = 0
 
         _ = SettingsViewModel(
             defaults: defaults,
@@ -27,12 +28,17 @@ struct SettingsViewModelTests {
             networkModelFactory: {
                 networkCreates += 1
                 fatalError("Network model should stay lazy")
+            },
+            crmModelFactory: {
+                crmCreates += 1
+                fatalError("CRM model should stay lazy")
             }
         )
 
         #expect(accountCreates == 0)
         #expect(soundCreates == 0)
         #expect(networkCreates == 0)
+        #expect(crmCreates == 0)
     }
 
     @Test func restoresLastSelectedSection() {

@@ -16,6 +16,7 @@ struct CallWindowView: View {
         ) as? Bool ?? true
 
     let transferDestinationComposer: CallDestinationComposer?
+    var crmKeyLookupModel: CRMKeyLookupModel? = nil
 
     let answer: () -> Void
     let decline: () -> Void
@@ -83,6 +84,7 @@ struct CallWindowView: View {
 
                 CustomerContextView(
                     model: model,
+                    crmKeyLookupModel: crmKeyLookupModel,
                     changed: customerContextChanged,
                     reload: reloadCustomerContext,
                     save: saveCustomerContext

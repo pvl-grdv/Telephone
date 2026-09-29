@@ -17,6 +17,7 @@ final class CallPresentationCoordinator: Identifiable {
     private let model: CallWindowModel
     private let transferCoordinator: CallTransferCoordinator
     private let customerContextCoordinator: CustomerContextCoordinator?
+    private let crmKeyLookupModel: CRMKeyLookupModel?
 
     private let clock = ContinuousClock()
     private var callTimerTask: Task<Void, Never>?
@@ -63,6 +64,11 @@ final class CallPresentationCoordinator: Identifiable {
             : NSLocalizedString("Call Window Title", comment: "Call window title.")
         self.model = model
 
+        crmKeyLookupModel = isTransfer ? nil : CRMKeyLookupModel(
+            settings: accountController.crmGatewaySettings,
+            provider: accountController.crmKeyLookupProvider
+        )
+
         transferCoordinator = CallTransferCoordinator(
             callController: callController,
             accountController: accountController,
@@ -82,6 +88,7 @@ final class CallPresentationCoordinator: Identifiable {
         CallWindowView(
             model: model,
             transferDestinationComposer: transferCoordinator.destinationComposer,
+            crmKeyLookupModel: crmKeyLookupModel,
             answer: { [weak self] in self?.acceptCall() },
             decline: { [weak self] in self?.hangUpCall() },
             hangUp: { [weak self] in self?.hangUpCall() },
@@ -113,6 +120,7 @@ final class CallPresentationCoordinator: Identifiable {
             customerContextVisibilityChanged: { [weak self] isVisible in
                 self?.customerContextCoordinator?
                     .visibilityChanged(isVisible)
+                if !isVisible { self?.crmKeyLookupModel?.cancel() }
             },
             sendDTMF: { [weak self] text in
                 self?.handleDTMF(text)
@@ -153,6 +161,7 @@ final class CallPresentationCoordinator: Identifiable {
         cancelAutoClose()
         cancelIntermediateStatusRestore()
         customerContextCoordinator?.invalidate()
+        crmKeyLookupModel?.resetContext()
         CallPresentationRegistry.shared.unregister(key: id)
     }
 
@@ -179,6 +188,7 @@ final class CallPresentationCoordinator: Identifiable {
         cancelRedialEnable()
         cancelIntermediateStatusRestore()
         customerContextCoordinator?.callDidChange()
+        crmKeyLookupModel?.resetContext()
         transferCoordinator.discardSourceTransferSession()
         session.setCall(call)
         enteredDTMF = NSMutableString()
@@ -532,6 +542,7 @@ final class CallPresentationCoordinator: Identifiable {
         }
 
         customerContextCoordinator?.saveNow(ignoringPreference: true)
+        crmKeyLookupModel?.cancel()
         callController?.callWindowDidClose()
     }
 }

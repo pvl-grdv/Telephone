@@ -88,6 +88,28 @@
           }
         }
       }
+    },
+    "NSLocalNetworkUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connects to your configured CRM gateway on your network."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindet sich mit Ihrem konfigurierten CRM-Gateway in Ihrem Netzwerk."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключается к настроенному вами gateway CRM в вашей сети."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

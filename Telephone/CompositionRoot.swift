@@ -36,6 +36,8 @@ final class CompositionRoot {
     let accountControllers: AccountControllers
     let nameServers: NameServers
     let incomingCallContactResolver: IncomingCallContactResolver
+    let crmGatewaySettings: CRMGatewaySettings
+    let crmKeyLookupProvider: any CRMKeyLookupProvider
     private let defaults: UserDefaults
 
     private let userAgentEventSource: AKSIPUserAgentEventSource
@@ -49,6 +51,8 @@ final class CompositionRoot {
     init(preferencesControllerDelegate: PreferencesControllerDelegate, nameServersChangeEventTarget: NameServersChangeEventTarget) {
         userAgent = AKSIPUserAgent.shared()
         defaults = UserDefaults.standard
+        crmGatewaySettings = CRMGatewaySettings(defaults: defaults)
+        crmKeyLookupProvider = CRMGatewayClient()
 
         let systemAudioDevicesFactory = CoreAudioSystemAudioDevicesFactory(objectIDs: CoreAudioDevicesAudioObjectIDs())
 
@@ -98,7 +102,8 @@ final class CompositionRoot {
                 userAgentSoundIOSelection: userAgentSoundIOSelection,
                 ringtoneOutputUpdate: RingtoneOutputUpdateUseCase(playback: ringtonePlayback),
                 ringtoneSoundPlayback: DefaultSoundPlaybackUseCase(factory: soundFactory)
-            )
+            ),
+            crmGatewaySettings: crmGatewaySettings
         )
 
         settingsMigration = ProgressiveSettingsMigration(

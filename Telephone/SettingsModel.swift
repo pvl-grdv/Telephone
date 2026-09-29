@@ -12,6 +12,7 @@ enum SettingsSection: Int, CaseIterable, Hashable {
     case accounts
     case sound
     case network
+    case crm
 
     var title: String {
         switch self {
@@ -23,6 +24,8 @@ enum SettingsSection: Int, CaseIterable, Hashable {
             NSLocalizedString("Sound", comment: "Sound preferences window title.")
         case .network:
             NSLocalizedString("Network", comment: "Network preferences window title.")
+        case .crm:
+            NSLocalizedString("CRM", comment: "CRM preferences window title.")
         }
     }
 
@@ -32,6 +35,7 @@ enum SettingsSection: Int, CaseIterable, Hashable {
         case .accounts: "at"
         case .sound: "speaker.wave.2"
         case .network: "network"
+        case .crm: "building.2"
         }
     }
 
@@ -45,6 +49,8 @@ enum SettingsSection: Int, CaseIterable, Hashable {
             CGSize(width: 620, height: 420)
         case .network:
             CGSize(width: 640, height: 500)
+        case .crm:
+            CGSize(width: 640, height: 490)
         }
     }
 }
@@ -70,6 +76,8 @@ final class SettingsViewModel {
     private let soundModelFactory: () -> SoundSettingsModel
     @ObservationIgnored
     private let networkModelFactory: () -> NetworkSettingsModel
+    @ObservationIgnored
+    private let crmModelFactory: () -> CRMGatewaySettingsModel
 
     @ObservationIgnored
     private var storedAccountModel: AccountSettingsModel?
@@ -77,17 +85,23 @@ final class SettingsViewModel {
     private var storedSoundModel: SoundSettingsModel?
     @ObservationIgnored
     private var storedNetworkModel: NetworkSettingsModel?
+    @ObservationIgnored
+    private var storedCRMModel: CRMGatewaySettingsModel?
 
     init(
         defaults: UserDefaults = .standard,
         accountModelFactory: @escaping () -> AccountSettingsModel,
         soundModelFactory: @escaping () -> SoundSettingsModel,
-        networkModelFactory: @escaping () -> NetworkSettingsModel
+        networkModelFactory: @escaping () -> NetworkSettingsModel,
+        crmModelFactory: @escaping () -> CRMGatewaySettingsModel = {
+            CRMGatewaySettingsModel()
+        }
     ) {
         self.defaults = defaults
         self.accountModelFactory = accountModelFactory
         self.soundModelFactory = soundModelFactory
         self.networkModelFactory = networkModelFactory
+        self.crmModelFactory = crmModelFactory
 
         let rawValue = defaults.integer(
             forKey: UserDefaultsKeys.settingsSection
@@ -153,6 +167,13 @@ final class SettingsViewModel {
         storedAccountModel?.reloadAccount(at: index)
     }
 
+    var crmModel: CRMGatewaySettingsModel {
+        if let storedCRMModel { return storedCRMModel }
+        let model = crmModelFactory()
+        storedCRMModel = model
+        return model
+    }
+
     func updateSoundIOIfLoaded() {
         storedSoundModel?.updateSoundIO()
     }
@@ -161,6 +182,7 @@ final class SettingsViewModel {
         storedAccountModel?.flushPendingChanges()
         storedSoundModel?.stopPreview()
         storedNetworkModel?.discard()
+        storedCRMModel?.discard()
     }
 }
 

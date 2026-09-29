@@ -11,6 +11,7 @@ final class PreferencesController: SoundIOPreferences {
 
     let userAgent: AKSIPUserAgent
     let soundPreferencesViewEventTarget: SoundPreferencesViewEventTarget
+    let crmGatewaySettings: CRMGatewaySettings
 
     private var notificationObservations: [NotificationObservation] = []
 
@@ -29,17 +30,22 @@ final class PreferencesController: SoundIOPreferences {
                 userAgent: userAgent,
                 preferencesController: self
             )
+        },
+        crmModelFactory: { [unowned self] in
+            CRMGatewaySettingsModel(settings: crmGatewaySettings)
         }
     )
 
     init(
         delegate: PreferencesControllerDelegate,
         userAgent: AKSIPUserAgent,
-        soundPreferencesViewEventTarget: SoundPreferencesViewEventTarget
+        soundPreferencesViewEventTarget: SoundPreferencesViewEventTarget,
+        crmGatewaySettings: CRMGatewaySettings = CRMGatewaySettings()
     ) {
         self.delegate = delegate
         self.userAgent = userAgent
         self.soundPreferencesViewEventTarget = soundPreferencesViewEventTarget
+        self.crmGatewaySettings = crmGatewaySettings
 
         observePreferenceChanges()
     }

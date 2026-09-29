@@ -139,6 +139,27 @@ The CRM interface is present, but this repository does not ship an Avantel CRM
 adapter or credentials. With no CRM provider configured, the provider is
 disabled and local customer context remains local to Telephone.
 
+### Optional CRM lookup through a gateway
+
+Settings → CRM enables manual lookup by a **numeric key number** in the call
+window's client details section. This lookup is separate from the caller's
+phone/SIP address and never copies CRM results into local notes automatically.
+The result shows the owning organization, its code, all keys and all program
+records, including older versions. Key and program links open the key's
+personal account page.
+
+The feature is disabled by default. Configure an HTTPS gateway origin and an
+independent gateway token locally. The token is stored in macOS Keychain,
+scoped to that origin; CRM credentials stay on the gateway computer. No
+deployment addresses, customer data, or credentials are bundled with the app.
+
+Telephone only calls `POST /v1/customer-by-key/filter` on that gateway. It
+rejects redirects, incomplete responses, and unexpected portal links. Searches
+are asynchronous and can be cancelled; changing the call, input, or saved CRM
+settings invalidates pending results. Existing SIP/audio behavior is unchanged.
+
+See [the public gateway contract and setup guide](docs/CRM-gateway.md).
+
 For diagnosing a PBX integration, Telephone captures a small allowlist of
 identity and routing headers from the original incoming SIP INVITE, including
 `P-Asserted-Identity`, `Remote-Party-ID`, `Diversion`, `History-Info`,

@@ -9,6 +9,7 @@ import SwiftUI
 struct CustomerContextView: View {
     @Bindable var model: CallWindowModel
     @State private var isExpanded = false
+    var crmKeyLookupModel: CRMKeyLookupModel? = nil
 
     let changed: () -> Void
     let reload: () -> Void
@@ -18,6 +19,10 @@ struct CustomerContextView: View {
         VStack(alignment: .leading, spacing: 6) {
             contextContent
             persistenceStatus
+            if let crmKeyLookupModel, crmKeyLookupModel.settings.enabled {
+                Divider()
+                CRMKeyLookupView(model: crmKeyLookupModel)
+            }
         }
         .onChange(of: model.customerCompany) {
             changed()

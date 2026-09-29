@@ -53,6 +53,8 @@
 	<string>© 2008–2016 Alexey Kuznetsov; © 2016–2022 64 Characters; fork modifications © 2026 Pavel Gordeev</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>The microphone is used for phone calls.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Connects to your configured CRM gateway on your network.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

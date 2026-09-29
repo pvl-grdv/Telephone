@@ -62,6 +62,20 @@ struct SettingsRootView: View {
                 )
                 .accessibilityIdentifier("settings.tab.network")
             }
+
+            Tab(value: SettingsSection.crm) {
+                if model.selection == .crm {
+                    CRMGatewaySettingsView(model: model.crmModel)
+                } else {
+                    Color.clear
+                }
+            } label: {
+                Label(
+                    SettingsSection.crm.title,
+                    systemImage: SettingsSection.crm.systemImage
+                )
+                .accessibilityIdentifier("settings.tab.crm")
+            }
         }
         .frame(
             width: model.selection.windowSize.width,

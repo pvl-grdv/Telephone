@@ -814,6 +814,8 @@ final class ApplicationCoordinator:
                 compositionRoot.incomingCallContactResolver,
             callHistoryViewEventTargetFactory:
                 compositionRoot.callHistoryViewEventTargetFactory,
+            crmGatewaySettings: compositionRoot.crmGatewaySettings,
+            crmKeyLookupProvider: compositionRoot.crmKeyLookupProvider,
             callControllerDidClose: { [weak self] in
                 self?.updateDockTileBadgeLabel()
             }

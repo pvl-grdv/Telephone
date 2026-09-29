@@ -134,6 +134,10 @@ final class AccountPresentationCoordinator {
         show(.unavailable, callComposerVisible: true, animated: true)
     }
 
+    func showConnectionLostState() {
+        show(.connectionLost, callComposerVisible: true, animated: true)
+    }
+
     func showOfflineState() {
         show(.offline, callComposerVisible: false, animated: true)
     }

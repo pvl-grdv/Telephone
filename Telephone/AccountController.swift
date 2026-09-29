@@ -356,6 +356,10 @@ final class AccountController:
         presentation.showUnavailableState()
     }
 
+    func showConnectionLostState() {
+        presentation.showConnectionLostState()
+    }
+
     func showConnectingState() {
         presentation.showConnectingState()
     }
@@ -387,8 +391,10 @@ final class AccountController:
                     makeCallToSavedDestination()
                 }
             }
-        } else {
+        } else if accountUnavailable {
             showUnavailableState()
+        } else {
+            showConnectionLostState()
             handleRegistrationFailureIfNeeded()
         }
 
@@ -468,7 +474,11 @@ final class AccountController:
             return
         }
 
-        showUnavailableState()
+        if accountUnavailable || attemptingToUnregisterAccount {
+            showUnavailableState()
+        } else {
+            showConnectionLostState()
+        }
         scheduleReRegistrationIfNeeded()
 
         if shouldPresentRegistrationError {
@@ -571,10 +581,14 @@ final class AccountController:
             registerAccount()
 
         case .unavailable:
+            accountUnavailable = true
+
             if accountRegistered || !accountAdded {
-                accountUnavailable = true
                 shouldPresentRegistrationError = true
                 unregisterAccount()
+            } else {
+                shouldPresentRegistrationError = false
+                showUnavailableState()
             }
         }
     }

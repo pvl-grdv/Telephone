@@ -1210,6 +1210,29 @@
         }
       }
     },
+    "Connection Lost": {
+      "comment": "Account registration connection lost status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection Lost"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung unterbrochen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Соединение потеряно"
+          }
+        }
+      }
+    },
     "Connecting...": {
       "comment": "Account registration Connecting... menu item.",
       "localizations": {

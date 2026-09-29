@@ -14,6 +14,7 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/AccountSettingsModel.swift",
             "Telephone/AccountSettingsView.swift",
             "Telephone/AccountSetupView.swift",
+            "Telephone/AccountWindowView.swift",
             "Telephone/ApplicationDialogController.swift",
             "Telephone/CallController.swift",
             "Telephone/CallControlViews.swift",
@@ -62,6 +63,37 @@ struct LocalizationAndLayoutSmokeTests {
                 "Untranslated \(localization) catalog keys: \(untranslated)"
             )
         }
+    }
+
+    @Test
+    func accountConnectionFailureIsDistinctFromUserUnavailable() throws {
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/AccountWindowView.swift"
+            ),
+            encoding: .utf8
+        )
+        let controllerSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/AccountController.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.contains("case connectionLost"))
+        #expect(viewSource.contains("\"Connection Lost\""))
+        #expect(
+            viewSource.contains(
+                "exclamationmark.triangle.fill"
+            )
+        )
+        #expect(controllerSource.contains("else if accountUnavailable"))
+        #expect(controllerSource.contains("showConnectionLostState()"))
+        #expect(
+            controllerSource.contains(
+                "case .unavailable:\n            accountUnavailable = true"
+            )
+        )
     }
 
     @Test

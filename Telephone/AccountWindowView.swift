@@ -13,6 +13,7 @@ enum AccountWindowDisplayState: Equatable {
     case connecting
     case available
     case unavailable
+    case connectionLost
 
     var title: String {
         switch self {
@@ -35,6 +36,11 @@ enum AccountWindowDisplayState: Equatable {
             NSLocalizedString(
                 "Unavailable",
                 comment: "Account registration Unavailable menu item."
+            )
+        case .connectionLost:
+            NSLocalizedString(
+                "Connection Lost",
+                comment: "Account registration connection lost status."
             )
         }
     }
@@ -293,6 +299,10 @@ private struct AccountStateIndicator: View {
         case .unavailable:
             Image(systemName: "minus.circle.fill")
                 .foregroundStyle(.orange)
+                .accessibilityHidden(true)
+        case .connectionLost:
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.yellow)
                 .accessibilityHidden(true)
         case .offline:
             Image(systemName: "circle.slash")

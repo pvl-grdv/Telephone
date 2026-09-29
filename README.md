@@ -141,9 +141,11 @@ disabled and local customer context remains local to Telephone.
 
 ### Optional CRM lookup through a gateway
 
-Settings → CRM enables manual lookup by a **numeric key number** in the call
-window's client details section. This lookup is separate from the caller's
-phone/SIP address and never copies CRM results into local notes automatically.
+Settings → CRM enables automatic lookup by the actual caller's phone number,
+with a **numeric key number** as a manual fallback in the call window's client
+details section. One exact phone match shows its organization; multiple matches
+require an explicit choice. Arbitrary SIP usernames are not treated as phones.
+CRM results are never copied into local notes automatically.
 The result shows the owning organization, its code, all keys and all program
 records, including older versions. Key and program links open the key's
 personal account page.
@@ -153,8 +155,13 @@ independent gateway token locally. The token is stored in macOS Keychain,
 scoped to that origin; CRM credentials stay on the gateway computer. No
 deployment addresses, customer data, or credentials are bundled with the app.
 
-Telephone only calls `POST /v1/customer-by-key/filter` on that gateway. It
-rejects redirects, incomplete responses, and unexpected portal links. Searches
+Telephone calls the gateway's fixed phone/key lookup routes. After manual key
+lookup, **Link number to organization** can append the caller's phone to that
+organization, with a confirmation showing the phone and organization. Existing
+phone values are preserved and duplicates are avoided. The gateway token must
+have separate permission for this operation; no general CRM editing is exposed.
+
+The client rejects redirects, incomplete responses, and unexpected portal links. Searches
 are asynchronous and can be cancelled; changing the call, input, or saved CRM
 settings invalidates pending results. Existing SIP/audio behavior is unchanged.
 

@@ -120,7 +120,11 @@ final class CallPresentationCoordinator: Identifiable {
             customerContextVisibilityChanged: { [weak self] isVisible in
                 self?.customerContextCoordinator?
                     .visibilityChanged(isVisible)
-                if !isVisible { self?.crmKeyLookupModel?.cancel() }
+                if isVisible {
+                    self?.updateCRMCallerPhone()
+                } else {
+                    self?.crmKeyLookupModel?.deactivateContext()
+                }
             },
             sendDTMF: { [weak self] text in
                 self?.handleDTMF(text)
@@ -134,6 +138,7 @@ final class CallPresentationCoordinator: Identifiable {
 
     func showWindow() {
         guard !model.isTransfer else { return }
+        updateCRMCallerPhone()
         closeNotificationGate.reset()
         SceneRouter.shared.openWindow(
             id: CallWindowScene.id,
@@ -191,6 +196,7 @@ final class CallPresentationCoordinator: Identifiable {
         crmKeyLookupModel?.resetContext()
         transferCoordinator.discardSourceTransferSession()
         session.setCall(call)
+        updateCRMCallerPhone()
         enteredDTMF = NSMutableString()
         model.usesDTMFDisplay = false
 
@@ -542,7 +548,20 @@ final class CallPresentationCoordinator: Identifiable {
         }
 
         customerContextCoordinator?.saveNow(ignoringPreference: true)
-        crmKeyLookupModel?.cancel()
+        crmKeyLookupModel?.deactivateContext()
         callController?.callWindowDidClose()
+    }
+
+    private func updateCRMCallerPhone() {
+        // Only the actual SIP peer user is eligible. Display names, headers and
+        // arbitrary SIP usernames are never turned into CRM phone identities.
+        let rawPhone = callController?.call?.remoteURI.user
+        let showsContext = UserDefaults.standard.object(
+            forKey: UserDefaultsKeys.showCustomerContext
+        ) as? Bool ?? true
+        crmKeyLookupModel?.setCallerPhone(
+            rawPhone,
+            isActive: callController?.call != nil && showsContext
+        )
     }
 }

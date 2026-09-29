@@ -5761,6 +5761,374 @@
           }
         }
       }
+    },
+    "Find the organization by the caller’s phone number, with key number lookup as a fallback.": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find the organization by the caller’s phone number, with key number lookup as a fallback."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Organisation anhand der Telefonnummer des Anrufers finden; alternativ anhand einer Schlüsselnummer suchen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Организация ищется по номеру звонящего; если она не найдена, используйте номер ключа."
+          }
+        }
+      }
+    },
+    "The caller does not have a valid phone number for CRM lookup.": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The caller does not have a valid phone number for CRM lookup."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Anrufer hat keine gültige Telefonnummer für die CRM-Suche."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У звонящего нет подходящего телефонного номера для поиска в CRM."
+          }
+        }
+      }
+    },
+    "This gateway token cannot link phone numbers. Ask the gateway operator to enable this permission.": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This gateway token cannot link phone numbers. Ask the gateway operator to enable this permission."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Gateway-Token darf keine Telefonnummern zuordnen. Bitten Sie den Gateway-Betreiber, diese Berechtigung zu aktivieren."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У этого токена gateway нет права связывать телефонные номера. Попросите администратора gateway включить это право."
+          }
+        }
+      }
+    },
+    "The organization’s phones changed. Refresh its details before linking the number.": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The organization’s phones changed. Refresh its details before linking the number."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Telefonnummern der Organisation wurden geändert. Aktualisieren Sie die Angaben, bevor Sie die Nummer zuordnen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефоны организации изменились. Обновите её данные перед привязкой номера."
+          }
+        }
+      }
+    },
+    "Find by phone": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find by phone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Telefon suchen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти по телефону"
+          }
+        }
+      }
+    },
+    "Link phone to organization": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link phone to organization"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonnummer einer Organisation zuordnen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Связать телефон с организацией"
+          }
+        }
+      }
+    },
+    "Link phone": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link phone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonnummer zuordnen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Связать телефон"
+          }
+        }
+      }
+    },
+    "Add %@ to %@? Existing phone numbers will be preserved.": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add %@ to %@? Existing phone numbers will be preserved."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ zu %@ hinzufügen? Vorhandene Telefonnummern bleiben erhalten."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить %@ в организацию %@? Существующие телефоны сохранятся."
+          }
+        }
+      }
+    },
+    "No organization found. Search by key number.": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No organization found. Search by key number."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Organisation gefunden. Suchen Sie anhand einer Schlüsselnummer."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Организация не найдена. Выполните поиск по номеру ключа."
+          }
+        }
+      }
+    },
+    "This number belongs to several organizations. Choose one.": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This number belongs to several organizations. Choose one."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Nummer gehört zu mehreren Organisationen. Wählen Sie eine aus."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот номер указан у нескольких организаций. Выберите нужную."
+          }
+        }
+      }
+    },
+    "Link number to organization": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link number to organization"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nummer einer Organisation zuordnen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Связать номер с организацией"
+          }
+        }
+      }
+    },
+    "This number is already linked to the organization.": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This number is already linked to the organization."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Nummer ist der Organisation bereits zugeordnet."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот номер уже связан с организацией."
+          }
+        }
+      }
+    },
+    "Linking number…": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linking number…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nummer wird zugeordnet…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка номера…"
+          }
+        }
+      }
+    },
+    "Number linked to organization": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number linked to organization"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nummer der Organisation zugeordnet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер связан с организацией"
+          }
+        }
+      }
+    },
+    "Refresh organization": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh organization"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organisation aktualisieren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновить организацию"
+          }
+        }
+      }
+    },
+    "Couldn’t confirm the phone association. Refresh the organization before trying again.": {
+      "comment": "CRM caller phone lookup and association.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t confirm the phone association. Refresh the organization before trying again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Zuordnung der Telefonnummer konnte nicht bestätigt werden. Aktualisieren Sie die Organisation, bevor Sie es erneut versuchen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось подтвердить привязку телефона. Обновите организацию перед повторной попыткой."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

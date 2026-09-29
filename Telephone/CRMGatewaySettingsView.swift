@@ -16,7 +16,7 @@ struct CRMGatewaySettingsView: View {
                     isOn: $model.enabled
                 )
                 Text(NSLocalizedString(
-                    "Search the owner's organization and keys by a numeric key number during a call.",
+                    "Find the organization by the caller’s phone number, with key number lookup as a fallback.",
                     comment: "CRM settings explanation."
                 ))
                 .font(.caption)
@@ -103,6 +103,14 @@ extension CRMGatewayError {
             NSLocalizedString("Save a gateway token for this address in CRM Settings.", comment: "CRM missing token error.")
         case .invalidKeyNumber:
             NSLocalizedString("Enter a positive numeric key number.", comment: "CRM key number validation.")
+        case .invalidPhoneNumber:
+            NSLocalizedString("The caller does not have a valid phone number for CRM lookup.", comment: "CRM phone validation failure.")
+        case .forbidden:
+            NSLocalizedString("This gateway token cannot link phone numbers. Ask the gateway operator to enable this permission.", comment: "CRM phone append permission failure.")
+        case .conflict:
+            NSLocalizedString("The organization’s phones changed. Refresh its details before linking the number.", comment: "CRM optimistic concurrency conflict.")
+        case .phoneWriteUnconfirmed:
+            NSLocalizedString("Couldn’t confirm the phone association. Refresh the organization before trying again.", comment: "CRM unknown phone write outcome.")
         case .unauthorized:
             NSLocalizedString("The gateway rejected the token. Update it in CRM Settings.", comment: "CRM authorization error.")
         case .unavailable:

@@ -147,7 +147,7 @@ struct CRMGatewayClientTests {
     }
 }
 
-private actor GatewayTransportFake: CRMGatewayHTTPTransport {
+actor GatewayTransportFake: CRMGatewayHTTPTransport {
     let status: Int
     let data: Data
     private(set) var requests: [URLRequest] = []

@@ -126,6 +126,22 @@ struct LocalizationAndLayoutSmokeTests {
     }
 
     @Test
+    func crmHistorySheetUsesSingleScrollableResultRegion() throws {
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/CRMHistoryLookupView.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(source.contains(".frame(minHeight: 160, idealHeight: 320)"))
+        #expect(source.contains("minHeight: 420, idealHeight: 560"))
+        #expect(
+            source.components(separatedBy: "ScrollView {").count - 1 == 1
+        )
+    }
+
+    @Test
     func systemMediaPauseDoesNotReadNowPlayingState() throws {
         let source = try String(
             contentsOf: repositoryRoot.appendingPathComponent(

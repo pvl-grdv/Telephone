@@ -21,40 +21,56 @@ struct CRMHistoryLookupView: View {
                 .disabled(!model.canCheck)
                 .accessibilityIdentifier("history.crm.checkNow")
             }
+
             if let phone = model.callerPhone {
                 Text(phone)
                     .font(.callout)
                     .textSelection(.enabled)
             }
+
             Text(NSLocalizedString(
                 "This check shows CRM data at the time of verification, not at the time of the call.",
                 comment: "Historical call CRM check temporal scope."
             ))
             .font(.caption)
             .foregroundStyle(.secondary)
+
             manualSearch
             Divider()
 
-            progress
-            localStatus
-            if let snapshot = model.snapshot {
-                Text(String(
-                    format: NSLocalizedString("Checked: %@", comment: "Saved CRM check local timestamp."),
-                    snapshot.checkedAt.formatted(date: .abbreviated, time: .standard)
-                ))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                lookupIdentity(snapshot)
-                snapshotContent(snapshot)
-            } else if !model.isLoading && !model.isChecking && model.localError == nil {
-                Text(NSLocalizedString("This call has no saved CRM check.", comment: "Call history has no previous CRM verification."))
-                    .foregroundStyle(.secondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    progress
+                    localStatus
+
+                    if let snapshot = model.snapshot {
+                        Text(String(
+                            format: NSLocalizedString("Checked: %@", comment: "Saved CRM check local timestamp."),
+                            snapshot.checkedAt.formatted(date: .abbreviated, time: .standard)
+                        ))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                        lookupIdentity(snapshot)
+                        snapshotContent(snapshot)
+                    } else if !model.isLoading && !model.isChecking && model.localError == nil {
+                        Text(NSLocalizedString("This call has no saved CRM check.", comment: "Call history has no previous CRM verification."))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if !model.settings.enabled {
+                        Text(CRMGatewayError.disabled.crmMessage)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 2)
             }
-            if !model.settings.enabled {
-                Text(CRMGatewayError.disabled.crmMessage)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            .frame(minHeight: 160, idealHeight: 320)
+
+            Divider()
+
             HStack {
                 Spacer()
                 Button(NSLocalizedString("Close", comment: "Close history CRM verification sheet.")) {
@@ -66,7 +82,7 @@ struct CRMHistoryLookupView: View {
         }
         .padding(18)
         .frame(minWidth: 500, idealWidth: 560, maxWidth: 720,
-               minHeight: 260, idealHeight: 480, maxHeight: 760, alignment: .topLeading)
+               minHeight: 420, idealHeight: 560, maxHeight: 760, alignment: .topLeading)
         .onDisappear { model.close() }
     }
 
@@ -167,20 +183,17 @@ struct CRMHistoryLookupView: View {
             Text(NSLocalizedString("Several organizations match. Choose one.", comment: "History CRM ambiguous match choice."))
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(snapshot.matches) { match in
-                        Button { model.chooseCompany(match) } label: {
-                            Text("\(match.name) · \(match.formattedCode)")
-                                .multilineTextAlignment(.leading)
-                        }
-                        .buttonStyle(.link)
-                        .disabled(!model.canCheck)
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(snapshot.matches) { match in
+                    Button { model.chooseCompany(match) } label: {
+                        Text("\(match.name) · \(match.formattedCode)")
+                            .multilineTextAlignment(.leading)
                     }
+                    .buttonStyle(.link)
+                    .disabled(!model.canCheck)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(minHeight: 80, idealHeight: 160, maxHeight: 240)
+            .frame(maxWidth: .infinity, alignment: .leading)
         case .failed:
             if let error = snapshot.errorCode {
                 Label(error.crmMessage, systemImage: "exclamationmark.triangle")
@@ -204,43 +217,40 @@ private struct CRMHistoryCustomerDetails: View {
             )
             .font(.caption)
             .textSelection(.enabled)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(customer.keys) { key in
-                        DisclosureGroup {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Link(
-                                    NSLocalizedString("Open key in personal account", comment: "History CRM key portal link."),
-                                    destination: key.url
-                                )
-                                if key.programs.isEmpty {
-                                    Text(NSLocalizedString("No programs on this key.", comment: "History CRM key has no programs."))
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(customer.keys) { key in
+                    DisclosureGroup {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Link(
+                                NSLocalizedString("Open key in personal account", comment: "History CRM key portal link."),
+                                destination: key.url
+                            )
+                            if key.programs.isEmpty {
+                                Text(NSLocalizedString("No programs on this key.", comment: "History CRM key has no programs."))
+                                    .foregroundStyle(.secondary)
+                            }
+                            ForEach(key.programs) { program in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Link(programTitle(program), destination: program.keyUrl)
+                                    if program.version != nil || program.release != nil {
+                                        Text(String(
+                                            format: NSLocalizedString("Version: %@ · Release: %@", comment: "History CRM program version and release."),
+                                            program.version ?? "—", program.release ?? "—"
+                                        ))
                                         .foregroundStyle(.secondary)
-                                }
-                                ForEach(key.programs) { program in
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Link(programTitle(program), destination: program.keyUrl)
-                                        if program.version != nil || program.release != nil {
-                                            Text(String(
-                                                format: NSLocalizedString("Version: %@ · Release: %@", comment: "History CRM program version and release."),
-                                                program.version ?? "—", program.release ?? "—"
-                                            ))
-                                            .foregroundStyle(.secondary)
-                                        }
                                     }
                                 }
                             }
-                            .font(.caption)
-                            .padding(.top, 4)
-                        } label: {
-                            Text("\(key.id) · \(key.name)")
-                                .font(.caption.weight(.medium))
                         }
+                        .font(.caption)
+                        .padding(.top, 4)
+                    } label: {
+                        Text("\(key.id) · \(key.name)")
+                            .font(.caption.weight(.medium))
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(minHeight: 100, idealHeight: 240, maxHeight: 420)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

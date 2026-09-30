@@ -49,6 +49,17 @@
 	<string>${MACOSX_DEPLOYMENT_TARGET}</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Details from your contacts can be used for displaying names and phone labels and for phone number autocomplete.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>100.64.0.0/10</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2008–2016 Alexey Kuznetsov; © 2016–2022 64 Characters; fork modifications © 2026 Pavel Gordeev</string>
 	<key>NSMicrophoneUsageDescription</key>

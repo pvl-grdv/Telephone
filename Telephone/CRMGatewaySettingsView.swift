@@ -28,12 +28,25 @@ struct CRMGatewaySettingsView: View {
                     TextField("https://gateway.example", text: $model.origin)
                         .accessibilityIdentifier("settings.crm.origin")
                 }
+                Toggle(
+                    NSLocalizedString("Allow HTTP over Tailscale", comment: "CRM Tailscale HTTP opt-in."),
+                    isOn: $model.allowTailscaleHTTP
+                )
+                .accessibilityIdentifier("settings.crm.allowTailscaleHTTP")
+                if model.allowTailscaleHTTP {
+                    Text(NSLocalizedString(
+                        "Use this only while Tailscale is connected. Tailscale protects the connection, but the IP address alone does not verify the peer.",
+                        comment: "CRM Tailscale HTTP security explanation."
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
                 LabeledContent(NSLocalizedString("Gateway token", comment: "CRM gateway token label.")) {
                     SecureField("", text: $model.newToken)
                         .accessibilityIdentifier("settings.crm.token")
                 }
                 Text(NSLocalizedString(
-                    "Use an HTTPS address without a path. The gateway token is stored in Keychain for this address; leave the field empty to keep it.",
+                    "Use an HTTPS address, or enable HTTP over Tailscale for a 100.64.0.0/10 IPv4 address with an explicit port. The gateway token is stored in Keychain for this address; leave the field empty to keep it.",
                     comment: "CRM origin and token settings help."
                 ))
                 .font(.caption)
@@ -98,7 +111,7 @@ extension CRMGatewayError {
         case .disabled:
             NSLocalizedString("CRM lookup is disabled in Settings.", comment: "CRM disabled error.")
         case .invalidOrigin:
-            NSLocalizedString("Enter a valid HTTPS gateway address without a path, query, or credentials.", comment: "CRM gateway origin error.")
+            NSLocalizedString("Enter an HTTPS gateway address, or enable HTTP over Tailscale for a 100.64.0.0/10 IPv4 address with an explicit port.", comment: "CRM gateway origin error.")
         case .missingToken:
             NSLocalizedString("Save a gateway token for this address in CRM Settings.", comment: "CRM missing token error.")
         case .invalidKeyNumber:

@@ -10,7 +10,11 @@ infrastructure settings are managed separately.
 1. Obtain your HTTPS gateway origin and gateway access token from its operator.
 2. Open **Settings → CRM** in Telephone.
 3. Enter the HTTPS origin, for example `https://gateway.example`. Do not append
-   a path, query or credentials. A non-default HTTPS port is allowed.
+   a path, query or credentials. A non-default HTTPS port is allowed. If your
+   operator supplies a Tailscale IPv4 address, **Allow HTTP over Tailscale**
+   permits plain HTTP only for `100.64.0.0/10` with an explicit port. Use this
+   only while Tailscale is connected; the IP address alone does not verify the
+   peer. HTTPS remains the default.
 4. Enter the gateway token, enable CRM lookup and select **Apply**.
 5. During a call, Telephone looks up the actual peer's phone number. One exact
    match shows its organization. Multiple matches require an explicit choice.
@@ -27,8 +31,10 @@ credential for the saved origin and disables lookup. Previous origins retain
 their separate credentials until removed.
 
 The gateway and its network/VPN must be available. HTTPS uses normal system
-certificate validation; the client does not trust arbitrary certificates or
-disable App Transport Security. CRM email/password stay on the gateway computer.
+certificate validation. The optional HTTP connection uses Tailscale's protected
+network path and is restricted to its shared IPv4 range, with an explicit
+settings switch and port. The address and token remain local settings. CRM
+email/password stay on the gateway computer.
 The gateway token is a separate credential, not an upstream CRM JWT.
 
 ## Fixed request routes
@@ -234,6 +240,30 @@ Append is never retried automatically. Call/input/settings changes invalidate
 the confirmation and UI result. A request accepted by the gateway can still
 finish on the server after the window closes.
 
+### From an existing call in history
+
+History can also offer **Link number to organization** after a matched manual
+key lookup and only when the existing call's stored peer `user` contains a full
+phone number. A saved result does not authorize a write on its own. Telephone
+re-reads the phone from that call and performs a fresh key lookup before showing
+the confirmation; it verifies the same source key and owner. The gateway's
+current raw `company.phone` is held only in memory as `expectedPhone` for this
+one confirmation and is never saved in the SQLite snapshot. The dialog shows
+the exact phone and organization; dismissing it sends no append request.
+
+On confirmation, Telephone checks that the same call still exists, its phone
+still matches, and the call, settings and lookup generations are current. It
+then sends one append request. A second activation of the same confirmation
+cannot send a second request. Email and phone lookup results, invalid internal
+extensions, changed key ownership, or a deleted call cannot start this write.
+After a confirmed success, the normalized organization inventory and updated
+canonical phones replace that call's local snapshot. The raw CRM phone field is
+removed. A local SQLite save error is reported separately from the completed
+CRM write. If the append response cannot establish the write outcome, the UI
+shows an unconfirmed result; the user must perform another fresh key lookup
+before trying again. Closing the sheet after the request was sent cannot
+guarantee that the server did not complete it.
+
 ## Errors and completeness
 
 | Condition | Telephone behavior |
@@ -266,7 +296,8 @@ Select an existing history row and use the **CRM** toolbar action or
 comes from the existing SQLite call's peer `user` field, not a Contacts name or
 the displayed history title. A first check uses phone lookup; later checks
 refresh the last saved phone, key or email query.
-History verification never places a call, edits CRM, or offers phone append.
+History verification never places a call or edits CRM by itself. The separate,
+explicitly confirmed key-based phone append described above is the only write.
 The sheet also supports manual key and email searches, including calls whose
 stored peer is an internal extension. A found organization is associated with
 that selected call by saving its local verification result; it does not change

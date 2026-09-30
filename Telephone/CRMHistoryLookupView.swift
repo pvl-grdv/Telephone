@@ -53,6 +53,7 @@ struct CRMHistoryLookupView: View {
 
                         lookupIdentity(snapshot)
                         snapshotContent(snapshot)
+                        phoneLinkContent
                     } else if !model.isLoading && !model.isChecking && model.localError == nil {
                         Text(NSLocalizedString("This call has no saved CRM check.", comment: "Call history has no previous CRM verification."))
                             .foregroundStyle(.secondary)
@@ -83,6 +84,27 @@ struct CRMHistoryLookupView: View {
         .padding(18)
         .frame(minWidth: 500, idealWidth: 560, maxWidth: 720,
                minHeight: 420, idealHeight: 560, maxHeight: 760, alignment: .topLeading)
+        .confirmationDialog(
+            NSLocalizedString("Link phone to organization", comment: "Confirm CRM history phone append."),
+            isPresented: Binding(
+                get: { model.pendingPhoneLink != nil },
+                set: { if !$0 { model.dismissPhoneLinkConfirmation() } }
+            ),
+            titleVisibility: .visible,
+            presenting: model.pendingPhoneLink
+        ) { confirmation in
+            Button(NSLocalizedString("Link phone", comment: "Confirm phone append for an existing call.")) {
+                model.confirmPhoneLink(confirmation)
+            }
+            Button(NSLocalizedString("Cancel", comment: "Cancel CRM history phone append."), role: .cancel) {
+                model.dismissPhoneLinkConfirmation()
+            }
+        } message: { confirmation in
+            Text(String(format: NSLocalizedString(
+                "Add the phone from this call, %@, to %@? Existing phone numbers will be preserved.",
+                comment: "History call phone association, names exact phone and organization."
+            ), confirmation.phone, confirmation.companyName))
+        }
         .onDisappear { model.close() }
     }
 
@@ -101,7 +123,7 @@ struct CRMHistoryLookupView: View {
             HStack {
                 TextField(NSLocalizedString("Key number", comment: "History CRM key input."), text: $model.keyNumber)
                     .textFieldStyle(.roundedBorder)
-                    .disabled(model.isSaving)
+                    .disabled(model.isSaving || model.phoneLinkState == .saving || model.phoneLinkState == .refreshing)
                     .onSubmit { if model.canSearchKey { model.searchKey() } }
                 Button(NSLocalizedString("Find by key", comment: "History CRM key lookup.")) { model.searchKey() }
                     .disabled(!model.canSearchKey)
@@ -109,13 +131,77 @@ struct CRMHistoryLookupView: View {
             HStack {
                 TextField(NSLocalizedString("Email address", comment: "History CRM email input."), text: $model.email)
                     .textFieldStyle(.roundedBorder)
-                    .disabled(model.isSaving)
+                    .disabled(model.isSaving || model.phoneLinkState == .saving || model.phoneLinkState == .refreshing)
                     .onSubmit { if model.canSearchEmail { model.searchEmail() } }
                 Button(NSLocalizedString("Find by email", comment: "History CRM email lookup.")) { model.searchEmail() }
                     .disabled(!model.canSearchEmail)
             }
         }
         .controlSize(.small)
+    }
+
+    @ViewBuilder
+    private var phoneLinkContent: some View {
+        if model.canLinkPhone {
+            if needsPhoneLinkRefresh {
+                Button(NSLocalizedString("Refresh organization", comment: "Fresh key lookup required before retrying CRM append.")) {
+                    model.preparePhoneLink()
+                }
+                .controlSize(.small)
+            } else {
+                Button(NSLocalizedString("Link number to organization", comment: "Start explicit CRM history phone association.")) {
+                    model.preparePhoneLink()
+                }
+                .controlSize(.small)
+                .accessibilityIdentifier("history.crm.linkPhone")
+            }
+            Text(NSLocalizedString(
+                "A fresh key lookup runs before confirmation.",
+                comment: "CRM history append requires a current key result."
+            ))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        if model.isCallerLinkedToKey, model.phoneLinkState == .idle {
+            Text(NSLocalizedString("This number is already linked to the organization.", comment: "History key already contains caller phone."))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        switch model.phoneLinkState {
+        case .idle:
+            EmptyView()
+        case .refreshing:
+            HStack {
+                ProgressView().controlSize(.small)
+                Text(NSLocalizedString("Refreshing key before phone confirmation…", comment: "History CRM current key lookup progress."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        case .saving:
+            HStack {
+                ProgressView().controlSize(.small)
+                Text(NSLocalizedString("Linking number…", comment: "History CRM append progress."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        case .saved(let added):
+            Label(
+                added
+                    ? NSLocalizedString("Number linked to organization", comment: "History CRM append succeeded.")
+                    : NSLocalizedString("This number is already linked to the organization.", comment: "History CRM append already present."),
+                systemImage: "checkmark.circle"
+            )
+            .font(.caption)
+        case .failed(let error):
+            Label(error.crmMessage, systemImage: "exclamationmark.triangle")
+                .font(.caption)
+                .foregroundStyle(.red)
+        }
+    }
+
+    private var needsPhoneLinkRefresh: Bool {
+        if case .failed = model.phoneLinkState { return true }
+        return false
     }
 
     @ViewBuilder
@@ -272,6 +358,8 @@ private extension CRMHistoryLocalError {
             NSLocalizedString("Couldn’t save the CRM check locally. The displayed result has not been stored.", comment: "History CRM local write failure.")
         case .recordRemoved:
             NSLocalizedString("This call was removed from history. Its CRM check was not saved.", comment: "History CRM deleted call cannot be saved.")
+        case .callerChanged:
+            NSLocalizedString("The phone stored for this call changed. Reopen its CRM check before linking.", comment: "History CRM caller changed before append.")
         }
     }
 }

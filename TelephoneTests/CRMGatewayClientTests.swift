@@ -27,6 +27,51 @@ struct CRMGatewayClientTests {
         }
     }
 
+    @Test func tailscaleHTTPNeedsOptInAndStrictIPv4WithExplicitPort() throws {
+        #expect(throws: CRMGatewayError.invalidOrigin) {
+            try CRMGatewayConfiguration.canonicalOrigin("http://100.64.1.2:8787")
+        }
+        #expect(
+            try CRMGatewayConfiguration.canonicalOrigin(
+                "http://100.64.0.1:8787/", allowTailscaleHTTP: true
+            ).absoluteString == "http://100.64.0.1:8787"
+        )
+        #expect(
+            try CRMGatewayConfiguration.canonicalOrigin(
+                "http://100.127.255.254:8787", allowTailscaleHTTP: true
+            ).absoluteString == "http://100.127.255.254:8787"
+        )
+        for origin in [
+            "http://100.63.255.255:8787", "http://100.128.0.1:8787",
+            "http://192.168.0.1:8787", "http://127.0.0.1:8787",
+            "http://gateway.example:8787", "http://100.64.1.2",
+            "http://100.064.1.2:8787", "http://0100.64.1.2:8787",
+            "http://100.64.1.2:0", "http://100.64.1.2:65536",
+            "http://user@100.64.1.2:8787", "http://100.64.1.2:8787/api",
+            "http://100.64.1.2:8787?x=1", "http://100.64.1.2:8787/#fragment",
+            "http://100.64.1.2.evil.example:8787", "http://100.64.1:8787",
+        ] {
+            #expect(throws: CRMGatewayError.invalidOrigin) {
+                try CRMGatewayConfiguration.canonicalOrigin(origin, allowTailscaleHTTP: true)
+            }
+        }
+    }
+
+    @Test func tailscaleHTTPRequestRetainsBearerAndFixedRoute() async throws {
+        let transport = GatewayTransportFake(data: GatewayFixture.customer)
+        let configuration = try CRMGatewayConfiguration(
+            origin: "http://100.64.1.2:8787", token: "fictional-ip-token", allowTailscaleHTTP: true
+        )
+        _ = try await CRMGatewayClient(transport: transport).customer(
+            forKeyNumber: 76543, configuration: configuration
+        )
+        let requests = await transport.requests
+        let request = try #require(requests.first)
+        #expect(request.url?.absoluteString == "http://100.64.1.2:8787/v1/customer-by-key/filter")
+        #expect(request.httpMethod == "POST")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer fictional-ip-token")
+    }
+
     @Test func sendsOnlyTheGatewayLookupAndPreservesAllProgramRecords() async throws {
         let transport = GatewayTransportFake(data: GatewayFixture.customer)
         let sut = CRMGatewayClient(transport: transport)

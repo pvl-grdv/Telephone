@@ -6727,6 +6727,190 @@
           }
         }
       }
+    },
+    "Allow HTTP over Tailscale": {
+      "comment": "CRM history phone association and optional Tailscale transport.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow HTTP over Tailscale"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP über Tailscale erlauben"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрешить HTTP через Tailscale"
+          }
+        }
+      }
+    },
+    "Use this only while Tailscale is connected. Tailscale protects the connection, but the IP address alone does not verify the peer.": {
+      "comment": "CRM history phone association and optional Tailscale transport.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this only while Tailscale is connected. Tailscale protects the connection, but the IP address alone does not verify the peer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur bei aktiver Tailscale-Verbindung verwenden. Tailscale schützt die Verbindung, aber die IP-Adresse allein bestätigt das Gegenüber nicht."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Используйте только при активном подключении Tailscale. Tailscale защищает соединение, но сам IP-адрес не подтверждает устройство."
+          }
+        }
+      }
+    },
+    "Use an HTTPS address, or enable HTTP over Tailscale for a 100.64.0.0/10 IPv4 address with an explicit port. The gateway token is stored in Keychain for this address; leave the field empty to keep it.": {
+      "comment": "CRM history phone association and optional Tailscale transport.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use an HTTPS address, or enable HTTP over Tailscale for a 100.64.0.0/10 IPv4 address with an explicit port. The gateway token is stored in Keychain for this address; leave the field empty to keep it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwenden Sie eine HTTPS-Adresse oder aktivieren Sie HTTP über Tailscale für eine IPv4-Adresse aus 100.64.0.0/10 mit explizitem Port. Das Gateway-Token wird für diese Adresse im Schlüsselbund gespeichert; lassen Sie das Feld leer, um es zu behalten."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Укажите адрес HTTPS либо включите HTTP через Tailscale для IPv4-адреса из 100.64.0.0/10 с явным портом. Токен gateway хранится в Keychain для этого адреса; оставьте поле пустым, чтобы сохранить его."
+          }
+        }
+      }
+    },
+    "Enter an HTTPS gateway address, or enable HTTP over Tailscale for a 100.64.0.0/10 IPv4 address with an explicit port.": {
+      "comment": "CRM history phone association and optional Tailscale transport.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an HTTPS gateway address, or enable HTTP over Tailscale for a 100.64.0.0/10 IPv4 address with an explicit port."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie eine HTTPS-Gateway-Adresse ein oder aktivieren Sie HTTP über Tailscale für eine IPv4-Adresse aus 100.64.0.0/10 mit explizitem Port."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Укажите HTTPS-адрес gateway либо включите HTTP через Tailscale для IPv4-адреса из 100.64.0.0/10 с явным портом."
+          }
+        }
+      }
+    },
+    "Add the phone from this call, %@, to %@? Existing phone numbers will be preserved.": {
+      "comment": "CRM history phone association and optional Tailscale transport.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the phone from this call, %@, to %@? Existing phone numbers will be preserved."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Telefonnummer dieses Anrufs, %@, zu %@ hinzufügen? Bestehende Telefonnummern bleiben erhalten."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить номер из этого звонка %@ к организации %@? Существующие номера сохранятся."
+          }
+        }
+      }
+    },
+    "A fresh key lookup runs before confirmation.": {
+      "comment": "CRM history phone association and optional Tailscale transport.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fresh key lookup runs before confirmation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vor der Bestätigung wird der Schlüssel erneut abgefragt."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перед подтверждением данные ключа будут запрошены заново."
+          }
+        }
+      }
+    },
+    "Refreshing key before phone confirmation…": {
+      "comment": "CRM history phone association and optional Tailscale transport.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refreshing key before phone confirmation…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüssel wird vor der Bestätigung der Telefonnummer neu geladen…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновление данных ключа перед подтверждением номера…"
+          }
+        }
+      }
+    },
+    "The phone stored for this call changed. Reopen its CRM check before linking.": {
+      "comment": "CRM history phone association and optional Tailscale transport.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The phone stored for this call changed. Reopen its CRM check before linking."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die für diesen Anruf gespeicherte Telefonnummer hat sich geändert. Öffnen Sie die CRM-Prüfung vor der Verknüpfung erneut."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер, сохранённый для этого звонка, изменился. Откройте проверку CRM заново перед привязкой."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

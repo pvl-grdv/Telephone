@@ -32,6 +32,57 @@ struct CRMKeyLookupModelTests {
         #expect(await tokens.token(for: "https://gateway.example").isEmpty)
     }
 
+    @Test func tailscaleHTTPOptInPersistsAndRequiresItsOwnToken() async throws {
+        let defaults = freshDefaults()
+        let tokens = GatewayTokenStoreFake()
+        let settings = CRMGatewaySettings(defaults: defaults, tokenStore: tokens)
+        #expect(!settings.allowTailscaleHTTP)
+        try await settings.save(
+            enabled: true, origin: "https://gateway.example", newToken: "fictional-https-token"
+        )
+
+        do {
+            try await settings.save(
+                enabled: true, origin: "http://100.64.1.2:8787", newToken: "",
+                allowTailscaleHTTP: true
+            )
+            Issue.record("An IP origin must not inherit the HTTPS token")
+        } catch let error as CRMGatewayError {
+            #expect(error == .missingToken)
+        }
+        #expect(settings.origin == "https://gateway.example")
+
+        try await settings.save(
+            enabled: true, origin: "http://100.64.1.2:8787", newToken: "fictional-ip-token",
+            allowTailscaleHTTP: true
+        )
+        #expect(settings.allowTailscaleHTTP)
+        #expect(settings.origin == "http://100.64.1.2:8787")
+        #expect(try await settings.configuration().token == "fictional-ip-token")
+        #expect(await tokens.token(for: "https://gateway.example") == "fictional-https-token")
+        #expect(await tokens.token(for: "http://100.64.1.2:8787") == "fictional-ip-token")
+
+        let reloaded = CRMGatewaySettings(defaults: defaults, tokenStore: tokens)
+        #expect(reloaded.allowTailscaleHTTP)
+        #expect(try await reloaded.configuration().origin.absoluteString == "http://100.64.1.2:8787")
+        do {
+            try await reloaded.save(
+                enabled: true, origin: "http://100.64.1.2:8787", newToken: "",
+                allowTailscaleHTTP: false
+            )
+            Issue.record("Turning off the opt-in must reject an HTTP origin")
+        } catch let error as CRMGatewayError {
+            #expect(error == .invalidOrigin)
+        }
+        #expect(reloaded.allowTailscaleHTTP)
+        try await reloaded.save(
+            enabled: true, origin: "https://gateway.example", newToken: "",
+            allowTailscaleHTTP: false
+        )
+        #expect(!reloaded.allowTailscaleHTTP)
+        #expect(try await reloaded.configuration().token == "fictional-https-token")
+    }
+
     @Test func lateResponseFromPreviousCallCannotPopulateTheNextCall() async throws {
         let fixture = try await makeFixture()
         let model = fixture.model

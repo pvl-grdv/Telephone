@@ -177,8 +177,10 @@ historical CRM state at the call time. **View saved CRM check** opens the stored
 result without contacting the gateway. The history sheet also allows manual key
 or email lookup and saves the query provenance separately from the original
 phone. Later checks refresh the saved query and chosen organization; **Find by
-phone** returns to the original call phone. This is a local call association and
-does not write to CRM. No automatic history backfill or call-end
+phone** returns to the original call phone. A key match can separately offer a
+confirmed phone association: Telephone refreshes the key and original call
+phone before confirmation, then sends one append request. Results from phone
+or email lookup cannot trigger that write. No automatic history backfill or call-end
 check is performed; failed local saves are shown explicitly.
 
 For diagnosing a PBX integration, Telephone captures a small allowlist of

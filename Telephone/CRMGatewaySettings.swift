@@ -33,6 +33,7 @@ actor CRMGatewayKeychainTokenStore: CRMGatewayTokenStoring {
 final class CRMGatewaySettings {
     private(set) var enabled: Bool
     private(set) var origin: String
+    private(set) var allowTailscaleHTTP: Bool
     private(set) var generation = 0
     private(set) var hasSavedToken = false
 
@@ -40,6 +41,7 @@ final class CRMGatewaySettings {
     @ObservationIgnored private let tokenStore: any CRMGatewayTokenStoring
     private static let enabledKey = "Telephone.CRMGateway.enabled"
     private static let originKey = "Telephone.CRMGateway.origin"
+    private static let allowTailscaleHTTPKey = "Telephone.CRMGateway.allowTailscaleHTTP"
 
     init(
         defaults: UserDefaults = .standard,
@@ -49,33 +51,48 @@ final class CRMGatewaySettings {
         self.tokenStore = tokenStore
         enabled = defaults.bool(forKey: Self.enabledKey)
         origin = defaults.string(forKey: Self.originKey) ?? ""
+        allowTailscaleHTTP = defaults.bool(forKey: Self.allowTailscaleHTTPKey)
     }
 
     func refreshTokenPresence() async {
         let currentOrigin = origin
+        let currentGeneration = generation
         let token = await tokenStore.token(for: currentOrigin)
-        guard origin == currentOrigin else { return }
+        guard generation == currentGeneration, origin == currentOrigin else { return }
         hasSavedToken = !token.isEmpty
     }
 
     func configuration() async throws -> CRMGatewayConfiguration {
         guard enabled else { throw CRMGatewayError.disabled }
-        let currentOrigin = try CRMGatewayConfiguration.canonicalOrigin(origin).absoluteString
+        let currentGeneration = generation
+        let currentAllowed = allowTailscaleHTTP
+        let currentOrigin = try CRMGatewayConfiguration.canonicalOrigin(
+            origin, allowTailscaleHTTP: currentAllowed
+        ).absoluteString
         let token = await tokenStore.token(for: currentOrigin)
-        return try CRMGatewayConfiguration(origin: currentOrigin, token: token)
+        guard generation == currentGeneration, enabled else { throw CRMGatewayError.disabled }
+        return try CRMGatewayConfiguration(
+            origin: currentOrigin, token: token, allowTailscaleHTTP: currentAllowed
+        )
     }
 
-    func save(enabled: Bool, origin: String, newToken: String) async throws {
+    func save(
+        enabled: Bool, origin: String, newToken: String, allowTailscaleHTTP: Bool = false
+    ) async throws {
         let inputOrigin = origin.trimmingCharacters(in: .whitespacesAndNewlines)
         let canonicalOrigin: String
         if inputOrigin.isEmpty && !enabled && newToken.isEmpty {
             canonicalOrigin = ""
         } else {
-            canonicalOrigin = try CRMGatewayConfiguration.canonicalOrigin(inputOrigin).absoluteString
+            canonicalOrigin = try CRMGatewayConfiguration.canonicalOrigin(
+                inputOrigin, allowTailscaleHTTP: allowTailscaleHTTP
+            ).absoluteString
         }
         var savedToken = ""
         if !newToken.isEmpty {
-            _ = try CRMGatewayConfiguration(origin: canonicalOrigin, token: newToken)
+            _ = try CRMGatewayConfiguration(
+                origin: canonicalOrigin, token: newToken, allowTailscaleHTTP: allowTailscaleHTTP
+            )
             guard await tokenStore.save(newToken, for: canonicalOrigin) else {
                 throw CRMGatewayError.keychain
             }
@@ -84,13 +101,17 @@ final class CRMGatewaySettings {
             savedToken = await tokenStore.token(for: canonicalOrigin)
         }
         if enabled {
-            _ = try CRMGatewayConfiguration(origin: canonicalOrigin, token: savedToken)
+            _ = try CRMGatewayConfiguration(
+                origin: canonicalOrigin, token: savedToken, allowTailscaleHTTP: allowTailscaleHTTP
+            )
         }
         self.enabled = enabled
         self.origin = canonicalOrigin
+        self.allowTailscaleHTTP = allowTailscaleHTTP
         hasSavedToken = !savedToken.isEmpty
         defaults.set(enabled, forKey: Self.enabledKey)
         defaults.set(canonicalOrigin, forKey: Self.originKey)
+        defaults.set(allowTailscaleHTTP, forKey: Self.allowTailscaleHTTPKey)
         generation &+= 1
     }
 
@@ -113,6 +134,7 @@ final class CRMGatewaySettingsModel {
     let settings: CRMGatewaySettings
     var enabled: Bool
     var origin: String
+    var allowTailscaleHTTP: Bool
     var newToken = ""
     private(set) var isSaving = false
     private(set) var saved = false
@@ -122,10 +144,12 @@ final class CRMGatewaySettingsModel {
         self.settings = settings
         enabled = settings.enabled
         origin = settings.origin
+        allowTailscaleHTTP = settings.allowTailscaleHTTP
     }
 
     var hasChanges: Bool {
-        enabled != settings.enabled || origin != settings.origin || !newToken.isEmpty
+        enabled != settings.enabled || origin != settings.origin
+            || allowTailscaleHTTP != settings.allowTailscaleHTTP || !newToken.isEmpty
     }
 
     func save() async {
@@ -135,10 +159,14 @@ final class CRMGatewaySettingsModel {
         saved = false
         defer { isSaving = false }
         do {
-            try await settings.save(enabled: enabled, origin: origin, newToken: newToken)
+            try await settings.save(
+                enabled: enabled, origin: origin, newToken: newToken,
+                allowTailscaleHTTP: allowTailscaleHTTP
+            )
             newToken = ""
             enabled = settings.enabled
             origin = settings.origin
+            allowTailscaleHTTP = settings.allowTailscaleHTTP
             saved = true
         } catch let failure as CRMGatewayError {
             error = failure
@@ -165,6 +193,7 @@ final class CRMGatewaySettingsModel {
     func discard() {
         enabled = settings.enabled
         origin = settings.origin
+        allowTailscaleHTTP = settings.allowTailscaleHTTP
         newToken = ""
         saved = false
         error = nil

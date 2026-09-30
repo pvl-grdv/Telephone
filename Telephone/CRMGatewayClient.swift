@@ -27,8 +27,8 @@ struct CRMGatewayConfiguration: Equatable, Sendable {
     let origin: URL
     let token: String
 
-    init(origin: String, token: String) throws {
-        self.origin = try Self.canonicalOrigin(origin)
+    init(origin: String, token: String, allowTailscaleHTTP: Bool = false) throws {
+        self.origin = try Self.canonicalOrigin(origin, allowTailscaleHTTP: allowTailscaleHTTP)
         guard !token.isEmpty, token.utf8.count <= 4096,
               token.utf8.allSatisfy({ $0 > 32 && $0 < 127 }) else {
             throw CRMGatewayError.missingToken
@@ -36,10 +36,11 @@ struct CRMGatewayConfiguration: Equatable, Sendable {
         self.token = token
     }
 
-    static func canonicalOrigin(_ value: String) throws -> URL {
+    static func canonicalOrigin(_ value: String, allowTailscaleHTTP: Bool = false) throws -> URL {
         let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard var components = URLComponents(string: value),
-              components.scheme?.lowercased() == "https",
+              let scheme = components.scheme?.lowercased(),
+              scheme == "https" || (scheme == "http" && allowTailscaleHTTP),
               let host = components.host, !host.isEmpty,
               components.user == nil, components.password == nil,
               components.query == nil, components.fragment == nil,
@@ -47,14 +48,42 @@ struct CRMGatewayConfiguration: Equatable, Sendable {
               components.port.map({ (1...65535).contains($0) }) ?? true else {
             throw CRMGatewayError.invalidOrigin
         }
-        components.scheme = "https"
+        if scheme == "http" {
+            // Keep the ATS exception useful only for explicit Tailscale IPv4 origins.
+            // Checking the raw URL prevents URL parsing from accepting alternate IP spellings.
+            guard value.range(
+                of: #"^http://[0-9.]+:[0-9]{1,5}/?$"#,
+                options: [.regularExpression, .caseInsensitive]
+            ) != nil,
+                  let rawHost = value.dropFirst(7).split(separator: ":", omittingEmptySubsequences: false).first,
+                  String(rawHost) == host,
+                  let port = components.port, (1...65535).contains(port),
+                  Self.isTailscaleIPv4(host) else {
+                throw CRMGatewayError.invalidOrigin
+            }
+        }
+        components.scheme = scheme
         components.host = host.lowercased()
         components.path = ""
-        if components.port == 443 { components.port = nil }
+        if scheme == "https", components.port == 443 { components.port = nil }
         guard let url = components.url else {
             throw CRMGatewayError.invalidOrigin
         }
         return url
+    }
+
+    private static func isTailscaleIPv4(_ host: String) -> Bool {
+        let octets = host.split(separator: ".", omittingEmptySubsequences: false)
+        guard octets.count == 4 else { return false }
+        var values: [Int] = []
+        for octet in octets {
+            guard !octet.isEmpty, octet.count <= 3,
+                  (octet.count == 1 || octet.first != "0"),
+                  octet.utf8.allSatisfy({ (48...57).contains($0) }),
+                  let number = Int(octet), number <= 255 else { return false }
+            values.append(number)
+        }
+        return values[0] == 100 && (64...127).contains(values[1])
     }
 }
 

@@ -7,7 +7,12 @@ infrastructure settings are managed separately.
 
 ## User setup
 
-1. Obtain your HTTPS gateway origin and gateway access token from its operator.
+1. Obtain your gateway address and a device access token from its operator.
+   The operator opens the gateway setup shortcut on the Windows gateway
+   computer, signs in to CRM once and creates a device token for this Mac there.
+   The installed `Open-Setup.ps1` launcher opens the authorized local setup page;
+   a bare API address is not a browser login page. CRM email/password stay on
+   that computer; the gateway maintains its CRM session automatically.
 2. Open **Settings → CRM** in Telephone.
 3. Enter the HTTPS origin, for example `https://gateway.example`. Do not append
    a path, query or credentials. A non-default HTTPS port is allowed. If your
@@ -15,7 +20,8 @@ infrastructure settings are managed separately.
    permits plain HTTP only for `100.64.0.0/10` with an explicit port. Use this
    only while Tailscale is connected; the IP address alone does not verify the
    peer. HTTPS remains the default.
-4. Enter the gateway token, enable CRM lookup and select **Apply**.
+4. Paste the device token into **Gateway token**, enable CRM lookup and select
+   **Apply**. This token is separate from the CRM password and Tailscale login.
 5. During a call, Telephone looks up the actual peer's phone number. One exact
    match shows its organization. Multiple matches require an explicit choice.
 6. If the phone is absent, enter a numeric key number or one email address and
@@ -23,12 +29,27 @@ infrastructure settings are managed separately.
 7. After manual key lookup, **Link number to organization** offers a confirmation
    showing the phone and organization. This needs a token with append permission.
 
-The feature is disabled by default. The token is stored in macOS Keychain under
-service `com.tlphn.Telephone.crm-gateway`, with the canonical HTTPS origin as its
-account. An empty token field preserves that origin's saved token. Changing the
-origin never sends another origin's credential. **Remove token** removes the
-credential for the saved origin and disables lookup. Previous origins retain
-their separate credentials until removed.
+The feature is disabled by default. **How to connect to the gateway** in CRM
+settings explains the local setup, token creation and Telephone connection.
+Tailscale Serve only exposes the gateway over the tailnet; it does not perform
+gateway or CRM authentication. The local administration page must remain local
+to the gateway computer and must not be published through Serve.
+
+The token is stored in macOS Keychain under service
+`com.tlphn.Telephone.crm-gateway`, with the canonical origin as its account.
+Settings show the exact address for which a token is saved. An empty token
+field preserves the token for that same address. Changing the address does not
+automatically copy or send a credential saved for another address.
+
+When switching between two addresses of the **same gateway**, for example its
+HTTPS hostname and Tailscale IP, **Use saved token for this address** offers a
+confirmation showing the saved and new addresses. Confirming stores the same
+token for the new address and applies the settings. Use this only when both
+addresses lead to the same trusted gateway. Dismissing the confirmation leaves
+credentials unchanged; no token is shown or copied to the clipboard. A new
+gateway requires its own device token. **Remove saved token** removes the token
+for the explicitly displayed saved address and disables lookup. Other origins
+retain their separate credentials until removed.
 
 The gateway and its network/VPN must be available. HTTPS uses normal system
 certificate validation. The optional HTTP connection uses Tailscale's protected

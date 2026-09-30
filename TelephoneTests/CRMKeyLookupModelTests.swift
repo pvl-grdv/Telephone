@@ -83,6 +83,84 @@ struct CRMKeyLookupModelTests {
         #expect(try await reloaded.configuration().token == "fictional-https-token")
     }
 
+    @Test func confirmedReuseCopiesTokenToTheChosenOriginWithoutExposingIt() async throws {
+        let defaults = freshDefaults()
+        let tokens = GatewayTokenStoreFake()
+        let settings = CRMGatewaySettings(defaults: defaults, tokenStore: tokens)
+        try await settings.save(enabled: true, origin: "https://gateway.example", newToken: "fictional-reuse-token")
+        let model = CRMGatewaySettingsModel(settings: settings)
+        model.origin = "http://100.64.1.2:8787"
+        model.allowTailscaleHTTP = true
+        #expect(model.savedTokenOrigin == "https://gateway.example")
+        #expect(model.canReuseSavedToken)
+        await model.save()
+        #expect(model.error == .missingToken)
+        #expect(await tokens.token(for: model.origin).isEmpty)
+        #expect(model.prepareTokenReuse())
+        #expect(model.tokenReuseSource == "https://gateway.example")
+        #expect(model.tokenReuseDestination == "http://100.64.1.2:8787")
+        await model.reuseSavedToken()
+        #expect(model.saved)
+        #expect(model.newToken.isEmpty)
+        #expect(model.error == nil)
+        #expect(settings.origin == "http://100.64.1.2:8787")
+        #expect(try await settings.configuration().token == "fictional-reuse-token")
+        #expect(await tokens.token(for: "https://gateway.example") == "fictional-reuse-token")
+        #expect(!model.canReuseSavedToken)
+        #expect(!defaults.dictionaryRepresentation().values.contains { ($0 as? String) == "fictional-reuse-token" })
+    }
+
+    @Test func reuseRequiresAnUnchangedConfirmationAndAllowedDestination() async throws {
+        let tokens = GatewayTokenStoreFake()
+        let settings = CRMGatewaySettings(defaults: freshDefaults(), tokenStore: tokens)
+        try await settings.save(enabled: true, origin: "https://gateway.example", newToken: "fictional-reuse-token")
+        let model = CRMGatewaySettingsModel(settings: settings)
+        model.origin = "http://100.64.1.2:8787"
+        #expect(!model.canReuseSavedToken)
+        model.allowTailscaleHTTP = true
+        #expect(model.prepareTokenReuse())
+        model.cancelTokenReuse()
+        await model.reuseSavedToken()
+        #expect(settings.origin == "https://gateway.example")
+        #expect(await tokens.token(for: model.origin).isEmpty)
+
+        #expect(model.prepareTokenReuse())
+        model.origin = "http://100.64.1.3:8787"
+        await model.reuseSavedToken()
+        #expect(await tokens.token(for: "http://100.64.1.2:8787").isEmpty)
+        #expect(await tokens.token(for: model.origin).isEmpty)
+
+        model.origin = "http://192.0.2.1:8787"
+        #expect(!model.canReuseSavedToken)
+        model.origin = "https://GATEWAY.example:443/"
+        #expect(!model.canReuseSavedToken)
+        model.origin = "http://100.64.1.2:8787"
+        model.newToken = "fictional-replacement"
+        #expect(!model.canReuseSavedToken)
+        model.newToken = ""
+        #expect(model.prepareTokenReuse())
+        try await settings.removeToken()
+        await model.reuseSavedToken()
+        #expect(await tokens.token(for: model.origin).isEmpty)
+        #expect(!settings.enabled)
+    }
+
+    @Test func reuseReportsKeychainFailureWithoutSwitchingTheSavedAddress() async throws {
+        let tokens = GatewayTokenStoreFake()
+        let settings = CRMGatewaySettings(defaults: freshDefaults(), tokenStore: tokens)
+        try await settings.save(enabled: true, origin: "https://gateway.example", newToken: "fictional-reuse-token")
+        let model = CRMGatewaySettingsModel(settings: settings)
+        model.origin = "http://100.64.1.2:8787"
+        model.allowTailscaleHTTP = true
+        #expect(model.prepareTokenReuse())
+        await tokens.setSaveFailure(true)
+        await model.reuseSavedToken()
+        #expect(model.error == .keychain)
+        #expect(!model.saved)
+        #expect(settings.origin == "https://gateway.example")
+        #expect(await tokens.token(for: model.origin).isEmpty)
+    }
+
     @Test func lateResponseFromPreviousCallCannotPopulateTheNextCall() async throws {
         let fixture = try await makeFixture()
         let model = fixture.model
@@ -189,9 +267,13 @@ private struct LookupFixture {
 
 private actor GatewayTokenStoreFake: CRMGatewayTokenStoring {
     private var tokens: [String: String] = [:]
+    private var saveFailure = false
+
+    func setSaveFailure(_ value: Bool) { saveFailure = value }
 
     func token(for origin: String) -> String { tokens[origin] ?? "" }
     func save(_ token: String, for origin: String) -> Bool {
+        guard !saveFailure else { return false }
         tokens[origin] = token
         return true
     }

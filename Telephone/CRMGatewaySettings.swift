@@ -79,6 +79,7 @@ final class CRMGatewaySettings {
     func save(
         enabled: Bool, origin: String, newToken: String, allowTailscaleHTTP: Bool = false
     ) async throws {
+        let currentGeneration = generation
         let inputOrigin = origin.trimmingCharacters(in: .whitespacesAndNewlines)
         let canonicalOrigin: String
         if inputOrigin.isEmpty && !enabled && newToken.isEmpty {
@@ -105,6 +106,7 @@ final class CRMGatewaySettings {
                 origin: canonicalOrigin, token: savedToken, allowTailscaleHTTP: allowTailscaleHTTP
             )
         }
+        guard generation == currentGeneration else { throw CRMGatewayError.disabled }
         self.enabled = enabled
         self.origin = canonicalOrigin
         self.allowTailscaleHTTP = allowTailscaleHTTP
@@ -113,6 +115,14 @@ final class CRMGatewaySettings {
         defaults.set(canonicalOrigin, forKey: Self.originKey)
         defaults.set(allowTailscaleHTTP, forKey: Self.allowTailscaleHTTPKey)
         generation &+= 1
+    }
+
+    func tokenForConfirmedReuse(from source: String, generation expectedGeneration: Int) async throws -> String {
+        guard generation == expectedGeneration, origin == source else { throw CRMGatewayError.disabled }
+        let token = await tokenStore.token(for: source)
+        guard generation == expectedGeneration, origin == source else { throw CRMGatewayError.disabled }
+        guard !token.isEmpty else { throw CRMGatewayError.missingToken }
+        return token
     }
 
     func removeToken() async throws {
@@ -139,6 +149,16 @@ final class CRMGatewaySettingsModel {
     private(set) var isSaving = false
     private(set) var saved = false
     private(set) var error: CRMGatewayError?
+    private var pendingTokenReuse: TokenReuse?
+
+    private struct TokenReuse {
+        let source: String
+        let destination: String
+        let inputOrigin: String
+        let settingsGeneration: Int
+        let enabled: Bool
+        let allowTailscaleHTTP: Bool
+    }
 
     init(settings: CRMGatewaySettings = CRMGatewaySettings()) {
         self.settings = settings
@@ -152,8 +172,75 @@ final class CRMGatewaySettingsModel {
             || allowTailscaleHTTP != settings.allowTailscaleHTTP || !newToken.isEmpty
     }
 
+    var savedTokenOrigin: String? {
+        settings.hasSavedToken ? settings.origin : nil
+    }
+
+    var canReuseSavedToken: Bool {
+        guard !isSaving, newToken.isEmpty, let source = savedTokenOrigin,
+              let destination = try? CRMGatewayConfiguration.canonicalOrigin(
+                origin, allowTailscaleHTTP: allowTailscaleHTTP
+              ).absoluteString else { return false }
+        return destination != source
+    }
+
+    var tokenReuseSource: String { pendingTokenReuse?.source ?? "" }
+    var tokenReuseDestination: String { pendingTokenReuse?.destination ?? "" }
+
+    @discardableResult
+    func prepareTokenReuse() -> Bool {
+        guard canReuseSavedToken,
+              let destination = try? CRMGatewayConfiguration.canonicalOrigin(
+                origin, allowTailscaleHTTP: allowTailscaleHTTP
+              ).absoluteString else { return false }
+        pendingTokenReuse = TokenReuse(
+            source: settings.origin, destination: destination, inputOrigin: origin,
+            settingsGeneration: settings.generation, enabled: enabled,
+            allowTailscaleHTTP: allowTailscaleHTTP
+        )
+        return true
+    }
+
+    func cancelTokenReuse() { pendingTokenReuse = nil }
+
+    func reuseSavedToken() async {
+        guard !isSaving, let request = pendingTokenReuse else { return }
+        pendingTokenReuse = nil
+        guard matches(request) else { return }
+        isSaving = true
+        error = nil
+        saved = false
+        defer { isSaving = false }
+        do {
+            let token = try await settings.tokenForConfirmedReuse(
+                from: request.source, generation: request.settingsGeneration
+            )
+            guard matches(request) else { return }
+            try await settings.save(
+                enabled: request.enabled, origin: request.destination, newToken: token,
+                allowTailscaleHTTP: request.allowTailscaleHTTP
+            )
+            newToken = ""
+            enabled = settings.enabled
+            origin = settings.origin
+            allowTailscaleHTTP = settings.allowTailscaleHTTP
+            saved = true
+        } catch let failure as CRMGatewayError {
+            error = failure
+        } catch {
+            self.error = .keychain
+        }
+    }
+
+    private func matches(_ request: TokenReuse) -> Bool {
+        settings.generation == request.settingsGeneration && settings.origin == request.source
+            && origin == request.inputOrigin && enabled == request.enabled
+            && allowTailscaleHTTP == request.allowTailscaleHTTP && newToken.isEmpty
+    }
+
     func save() async {
         guard !isSaving else { return }
+        pendingTokenReuse = nil
         isSaving = true
         error = nil
         saved = false
@@ -177,6 +264,7 @@ final class CRMGatewaySettingsModel {
 
     func removeToken() async {
         guard !isSaving else { return }
+        pendingTokenReuse = nil
         isSaving = true
         error = nil
         saved = false
@@ -191,6 +279,7 @@ final class CRMGatewaySettingsModel {
     }
 
     func discard() {
+        pendingTokenReuse = nil
         enabled = settings.enabled
         origin = settings.origin
         allowTailscaleHTTP = settings.allowTailscaleHTTP

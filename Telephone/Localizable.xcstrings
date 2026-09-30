@@ -6911,6 +6911,397 @@
           }
         }
       }
+    },
+    "2. In that local setup page, create a device token for this Mac and copy it. Ask the gateway operator if you do not have access.": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. In that local setup page, create a device token for this Mac and copy it. Ask the gateway operator if you do not have access."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Erstellen Sie auf dieser lokalen Einrichtungsseite ein Geräte-Token für diesen Mac und kopieren Sie es. Wenn Sie keinen Zugriff haben, fragen Sie den Gateway-Betreiber."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. На этой локальной странице создайте токен устройства для этого Mac и скопируйте его. Если у вас нет доступа, обратитесь к администратору gateway."
+          }
+        }
+      }
+    },
+    "3. Enter the gateway address and device token here, enable CRM lookup, and select Apply. Tailscale Serve provides network access; it does not sign you in to the gateway.": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Enter the gateway address and device token here, enable CRM lookup, and select Apply. Tailscale Serve provides network access; it does not sign you in to the gateway."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Geben Sie hier Gateway-Adresse und Geräte-Token ein, aktivieren Sie die CRM-Suche und wählen Sie Anwenden. Tailscale Serve ermöglicht den Netzwerkzugriff; es meldet Sie nicht beim Gateway an."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Введите здесь адрес gateway и токен устройства, включите поиск в CRM и нажмите «Применить». Tailscale Serve обеспечивает доступ по сети; вход в gateway он не выполняет."
+          }
+        }
+      }
+    },
+    "For an address beginning with http://, keep Tailscale connected and include the gateway port. Use only the address supplied by your gateway operator.": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For an address beginning with http://, keep Tailscale connected and include the gateway port. Use only the address supplied by your gateway operator."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für eine Adresse mit http:// muss Tailscale verbunden sein und der Gateway-Port angegeben werden. Verwenden Sie nur die Adresse Ihres Gateway-Betreibers."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Для адреса с http:// подключите Tailscale и укажите порт gateway. Используйте только адрес, который сообщил администратор gateway."
+          }
+        }
+      }
+    },
+    "How to connect to the gateway": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to connect to the gateway"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung mit dem Gateway einrichten"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Как подключиться к gateway"
+          }
+        }
+      }
+    },
+    "Paste the device token": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste the device token"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geräte-Token einfügen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставьте токен устройства"
+          }
+        }
+      }
+    },
+    "Remove saved token": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved token"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeichertes Token entfernen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить сохранённый токен"
+          }
+        }
+      }
+    },
+    "Remove the token saved for %@": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the token saved for %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das für %@ gespeicherte Token entfernen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить токен, сохранённый для %@"
+          }
+        }
+      }
+    },
+    "The address has changed. Enter its device token, or reuse the saved token only if both addresses belong to the same gateway.": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The address has changed. Enter its device token, or reuse the saved token only if both addresses belong to the same gateway."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Adresse wurde geändert. Geben Sie ihr Geräte-Token ein oder verwenden Sie das gespeicherte Token nur dann erneut, wenn beide Adressen zum selben Gateway gehören."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Адрес изменён. Введите его токен устройства или используйте сохранённый токен, только если оба адреса ведут к одному gateway."
+          }
+        }
+      }
+    },
+    "This token connects Telephone to the gateway. It is not your CRM password or a Tailscale login. Once saved for this address, it can be left blank.": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This token connects Telephone to the gateway. It is not your CRM password or a Tailscale login. Once saved for this address, it can be left blank."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Token verbindet Telephone mit dem Gateway. Es ist weder Ihr CRM-Passwort noch eine Tailscale-Anmeldung. Nach dem Speichern für diese Adresse kann das Feld leer bleiben."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот токен подключает Telephone к gateway. Это не пароль CRM и не вход в Tailscale. После сохранения токена для этого адреса поле можно оставлять пустым."
+          }
+        }
+      }
+    },
+    "Token saved for: %@": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token saved for: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token gespeichert für: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Токен сохранён для: %@"
+          }
+        }
+      }
+    },
+    "Use saved token and apply": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use saved token and apply"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeichertes Token verwenden und anwenden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использовать токен и применить"
+          }
+        }
+      }
+    },
+    "Use saved token for this address": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use saved token for this address"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeichertes Token für diese Adresse verwenden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использовать сохранённый токен для этого адреса"
+          }
+        }
+      }
+    },
+    "Use the saved token for another address?": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the saved token for another address?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeichertes Token für eine andere Adresse verwenden?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использовать сохранённый токен для другого адреса?"
+          }
+        }
+      }
+    },
+    "Saved address: %@": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved address: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeicherte Adresse: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранённый адрес: %@"
+          }
+        }
+      }
+    },
+    "New address: %@": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New address: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Adresse: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новый адрес: %@"
+          }
+        }
+      }
+    },
+    "Confirm only if both addresses lead to the same gateway. The token will be saved for the new address and these settings will be applied.": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm only if both addresses lead to the same gateway. The token will be saved for the new address and these settings will be applied."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestätigen Sie nur, wenn beide Adressen zum selben Gateway führen. Das Token wird für die neue Adresse gespeichert und diese Einstellungen werden angewendet."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подтвердите, только если оба адреса ведут к одному gateway. Токен будет сохранён для нового адреса, а настройки будут применены."
+          }
+        }
+      }
+    },
+    "1. On the gateway computer, open the gateway setup shortcut and sign in to CRM once. The gateway keeps the CRM session active automatically.": {
+      "comment": "CRM gateway connection settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. On the gateway computer, open the gateway setup shortcut and sign in to CRM once. The gateway keeps the CRM session active automatically."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Öffnen Sie auf dem Gateway-Computer die Verknüpfung zur Gateway-Einrichtung und melden Sie sich einmal beim CRM an. Das Gateway hält die CRM-Sitzung automatisch aktiv."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. На компьютере gateway откройте ярлык его настройки и один раз войдите в CRM. Gateway будет автоматически поддерживать сессию CRM."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

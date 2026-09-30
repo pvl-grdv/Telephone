@@ -7,6 +7,7 @@ import SwiftUI
 
 struct CRMGatewaySettingsView: View {
     @Bindable var model: CRMGatewaySettingsModel
+    @State private var isShowingReuseConfirmation = false
 
     var body: some View {
         Form {
@@ -24,8 +25,14 @@ struct CRMGatewaySettingsView: View {
             }
 
             Section {
-                LabeledContent(NSLocalizedString("Gateway address", comment: "CRM gateway origin label.")) {
-                    TextField("https://gateway.example", text: $model.origin)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(NSLocalizedString("Gateway address", comment: "CRM gateway origin label."))
+                    TextField(
+                        NSLocalizedString("Gateway address", comment: "CRM gateway origin label."),
+                        text: $model.origin,
+                        prompt: Text(verbatim: "https://gateway.example")
+                    )
+                        .labelsHidden()
                         .accessibilityIdentifier("settings.crm.origin")
                 }
                 Toggle(
@@ -35,40 +42,89 @@ struct CRMGatewaySettingsView: View {
                 .accessibilityIdentifier("settings.crm.allowTailscaleHTTP")
                 if model.allowTailscaleHTTP {
                     Text(NSLocalizedString(
-                        "Use this only while Tailscale is connected. Tailscale protects the connection, but the IP address alone does not verify the peer.",
+                        "For an address beginning with http://, keep Tailscale connected and include the gateway port. Use only the address supplied by your gateway operator.",
                         comment: "CRM Tailscale HTTP security explanation."
                     ))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
-                LabeledContent(NSLocalizedString("Gateway token", comment: "CRM gateway token label.")) {
-                    SecureField("", text: $model.newToken)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(NSLocalizedString("Gateway token", comment: "CRM gateway token label."))
+                    SecureField(
+                        NSLocalizedString("Gateway token", comment: "CRM gateway token label."),
+                        text: $model.newToken,
+                        prompt: Text(NSLocalizedString("Paste the device token", comment: "CRM token field prompt."))
+                    )
+                        .labelsHidden()
                         .accessibilityIdentifier("settings.crm.token")
                 }
                 Text(NSLocalizedString(
-                    "Use an HTTPS address, or enable HTTP over Tailscale for a 100.64.0.0/10 IPv4 address with an explicit port. The gateway token is stored in Keychain for this address; leave the field empty to keep it.",
+                    "This token connects Telephone to the gateway. It is not your CRM password or a Tailscale login. Once saved for this address, it can be left blank.",
                     comment: "CRM origin and token settings help."
                 ))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                Text(NSLocalizedString(
-                    "CRM email and password stay on the gateway computer.",
-                    comment: "CRM credentials location help."
-                ))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-                if model.settings.hasSavedToken {
-                    HStack {
-                        Label(NSLocalizedString("Gateway token saved", comment: "CRM token status."), systemImage: "lock.fill")
+                if let savedOrigin = model.savedTokenOrigin {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label(
+                            String(format: NSLocalizedString(
+                                "Token saved for: %@", comment: "CRM token status showing its saved address."
+                            ), savedOrigin),
+                            systemImage: "lock.fill"
+                        )
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Spacer()
-                        Button(NSLocalizedString("Remove token", comment: "CRM token removal action.")) {
+                            .textSelection(.enabled)
+                        if model.canReuseSavedToken {
+                            Text(NSLocalizedString(
+                                "The address has changed. Enter its device token, or reuse the saved token only if both addresses belong to the same gateway.",
+                                comment: "CRM changed address credential guidance."
+                            ))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            Button(NSLocalizedString(
+                                "Use saved token for this address", comment: "CRM explicit token reuse action."
+                            )) {
+                                isShowingReuseConfirmation = model.prepareTokenReuse()
+                            }
+                            .accessibilityIdentifier("settings.crm.reuseToken")
+                        }
+                        Button(NSLocalizedString("Remove saved token", comment: "CRM saved-origin token removal action.")) {
                             Task { await model.removeToken() }
                         }
+                        .help(String(format: NSLocalizedString(
+                            "Remove the token saved for %@", comment: "CRM token removal saved address help."
+                        ), savedOrigin))
                         .disabled(model.isSaving)
                     }
+                }
+            }
+
+            Section {
+                DisclosureGroup(NSLocalizedString(
+                    "How to connect to the gateway", comment: "CRM gateway setup help disclosure."
+                )) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(NSLocalizedString(
+                            "1. On the gateway computer, open the gateway setup shortcut and sign in to CRM once. The gateway keeps the CRM session active automatically.",
+                            comment: "CRM gateway local login setup instruction."
+                        ))
+                        Text(NSLocalizedString(
+                            "2. In that local setup page, create a device token for this Mac and copy it. Ask the gateway operator if you do not have access.",
+                            comment: "CRM gateway device token setup instruction."
+                        ))
+                        Text(NSLocalizedString(
+                            "3. Enter the gateway address and device token here, enable CRM lookup, and select Apply. Tailscale Serve provides network access; it does not sign you in to the gateway.",
+                            comment: "CRM gateway Telephone connection setup instruction."
+                        ))
+                        Text(NSLocalizedString(
+                            "CRM email and password stay on the gateway computer.",
+                            comment: "CRM credentials location help."
+                        ))
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 6)
                 }
             }
 
@@ -102,6 +158,31 @@ struct CRMGatewaySettingsView: View {
         .padding(.vertical, 8)
         .accessibilityIdentifier("settings.crm.content")
         .task { await model.settings.refreshTokenPresence() }
+        .confirmationDialog(
+            NSLocalizedString("Use the saved token for another address?", comment: "CRM token reuse confirmation title."),
+            isPresented: $isShowingReuseConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(NSLocalizedString("Use saved token and apply", comment: "CRM token reuse confirmation action.")) {
+                Task { await model.reuseSavedToken() }
+            }
+            Button(NSLocalizedString("Cancel", comment: "Cancel CRM token reuse."), role: .cancel) {
+                model.cancelTokenReuse()
+            }
+        } message: {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(String(format: NSLocalizedString(
+                    "Saved address: %@", comment: "CRM token reuse saved address."
+                ), model.tokenReuseSource))
+                Text(String(format: NSLocalizedString(
+                    "New address: %@", comment: "CRM token reuse destination address."
+                ), model.tokenReuseDestination))
+                Text(NSLocalizedString(
+                    "Confirm only if both addresses lead to the same gateway. The token will be saved for the new address and these settings will be applied.",
+                    comment: "CRM token reuse confirmation explanation."
+                ))
+            }
+        }
     }
 }
 

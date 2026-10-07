@@ -8,19 +8,19 @@
 import Foundation
 import PJSIPBridge
 
-final class PJSUACallInfo: @unchecked Sendable {
+struct PJSUACallInfo: Sendable {
     let identifier: Int
     let accountIdentifier: Int
-    let state: AKSIPCallState
+    private let stateRawValue: AKSIPCallState.RawValue
     let stateText: String
     let lastStatus: Int
     let lastStatusText: String
-    let localURI: AKSIPURI
-    let remoteURI: AKSIPURI
-    private final let incomingValue: Bool
+    let localURI: SIPURISnapshot
+    let remoteURI: SIPURISnapshot
+    let isIncoming: Bool
 
-    var isIncoming: Bool {
-        incomingValue
+    var state: AKSIPCallState {
+        AKSIPCallState(rawValue: stateRawValue)
     }
 
     init(
@@ -29,15 +29,17 @@ final class PJSUACallInfo: @unchecked Sendable {
     ) {
         identifier = Int(info.id)
         accountIdentifier = Int(info.acc_id)
-        state = info.state
+        stateRawValue = info.state.rawValue
         stateText = pjStringValue(info.state_text)
         lastStatus = Int(info.last_status.rawValue)
         lastStatusText = pjStringValue(info.last_status_text)
-        localURI = parser.sipURI(from: pjStringValue(info.local_info))
-            ?? AKSIPURI()
-        remoteURI = parser.sipURI(from: pjStringValue(info.remote_info))
-            ?? AKSIPURI()
-        incomingValue = info.role == PJSIP_ROLE_UAS
+        localURI = SIPURISnapshot(
+            parser.sipURI(from: pjStringValue(info.local_info))
+        )
+        remoteURI = SIPURISnapshot(
+            parser.sipURI(from: pjStringValue(info.remote_info))
+        )
+        isIncoming = info.role == PJSIP_ROLE_UAS
     }
 }
 

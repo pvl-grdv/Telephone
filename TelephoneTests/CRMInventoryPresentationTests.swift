@@ -120,6 +120,52 @@ struct CRMInventoryPresentationTests {
         #expect(result.visibleRecordCount == 2)
     }
 
+    @Test func preparedInventoryCanBeFilteredRepeatedlyAndRestoredWithoutDroppingRecords() {
+        let prepared = CRMInventoryPresentation(customer: customer(keys: [
+            key(20, programs: [
+                program(1, programID: 100, name: "Alpha", version: "4.9"),
+                program(2, programID: 100, name: "Alpha", version: "4.10"),
+                program(3, programID: 200, name: "Beta", version: "1")
+            ]),
+            key(30, name: "Backup")
+        ]))
+        let alpha = prepared.filtering("4.9")
+        #expect(alpha.keys[0].groups[0].records.map(\.recordId) == [2, 1])
+        // A new query starts from the complete prepared data, even if the
+        // receiver was already filtered to a different program.
+        let beta = alpha.filtering("Beta")
+        #expect(beta.visibleRecordCount == 1)
+        #expect(beta.keys[0].groups[0].records.map(\.recordId) == [3])
+        #expect(beta.filtering("  ") == prepared)
+        #expect(prepared.visibleRecordCount == 3)
+    }
+
+    @Test func measuresPreparingAndSearchingTenThousandSyntheticRecords() {
+        let records = (1...100).map { recordID in
+            let programID = (recordID - 1) / 4 + 1
+            return program(recordID, programID: programID, name: "Program \(programID)",
+                           version: String(100 - recordID), release: "0010")
+        }
+        let source = customer(sourceKeyID: 50, keys: (1...100).map { key($0, programs: records) })
+        let clock = ContinuousClock()
+        let started = clock.now
+        let prepared = CRMInventoryPresentation(customer: source)
+        let preparation = started.duration(to: clock.now)
+        #expect(prepared.keys.first?.id == 50)
+        #expect(prepared.totalRecordCount == 10_000)
+        #expect(prepared.totalProgramGroupCount == 2_500)
+        let searchStarted = clock.now
+        for _ in 0..<30 {
+            let filtered = prepared.filtering("Program 25")
+            #expect(filtered.visibleKeyCount == 100)
+            #expect(filtered.visibleRecordCount == 400)
+            #expect(filtered.totalRecordCount == 10_000)
+        }
+        let searching = searchStarted.duration(to: clock.now)
+        // Record timings without a hardware-dependent or flaky time limit.
+        print("CRM inventory benchmark: 10,000 records; prepare=\(preparation); 30 searches=\(searching)")
+    }
+
     private func customer(sourceKeyID: Int? = nil, keys: [CRMKeyLookupKey]) -> CRMKeyLookupCustomer {
         CRMKeyLookupCustomer(
             sourceKeyId: sourceKeyID,

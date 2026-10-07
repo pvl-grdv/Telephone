@@ -80,8 +80,8 @@ final class AKSIPCall: Call, CustomStringConvertible, @unchecked Sendable {
         lastStatus = info.lastStatus
         lastStatusText = info.lastStatusText
         date = Date()
-        localURI = info.localURI
-        remoteURI = info.remoteURI
+        localURI = info.localURI.makeURI()
+        remoteURI = info.remoteURI.makeURI()
         incomingValue = info.isIncoming
         missedValue = info.isIncoming
         incomingIdentityHeaders = [:]

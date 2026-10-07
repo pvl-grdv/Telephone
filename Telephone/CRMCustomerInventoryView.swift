@@ -11,18 +11,45 @@ import SwiftUI
 struct CRMCustomerInventoryView: View {
     let customer: CRMKeyLookupCustomer
     var scrollsInternally = false
+
+    var body: some View {
+        CRMInventoryPreparationView(customer: customer, scrollsInternally: scrollsInternally)
+            .equatable()
+    }
+}
+
+/// The equality boundary prepares groups only when gateway data changes.
+/// Search and disclosure state belong to the child and cannot invalidate it.
+private struct CRMInventoryPreparationView: View, Equatable {
+    let customer: CRMKeyLookupCustomer
+    let scrollsInternally: Bool
+
+    var body: some View {
+        CRMInventoryContentView(
+            customer: customer,
+            preparedInventory: CRMInventoryPresentation(customer: customer),
+            scrollsInternally: scrollsInternally
+        )
+    }
+}
+
+private struct CRMInventoryContentView: View {
+    let customer: CRMKeyLookupCustomer
+    let preparedInventory: CRMInventoryPresentation
+    let scrollsInternally: Bool
     @State private var searchText = ""
     @State private var expandedKeys: Set<Int>
 
-    init(customer: CRMKeyLookupCustomer, scrollsInternally: Bool = false) {
+    init(customer: CRMKeyLookupCustomer, preparedInventory: CRMInventoryPresentation, scrollsInternally: Bool) {
         self.customer = customer
+        self.preparedInventory = preparedInventory
         self.scrollsInternally = scrollsInternally
         let firstKey = customer.sourceKeyId ?? customer.keys.map(\.id).min()
         _expandedKeys = State(initialValue: Set(firstKey.map { [$0] } ?? []))
     }
 
     var body: some View {
-        let inventory = CRMInventoryPresentation(customer: customer, searchText: searchText)
+        let inventory = preparedInventory.filtering(searchText)
         VStack(alignment: .leading, spacing: 10) {
             organization
             TextField(
@@ -83,6 +110,9 @@ struct CRMCustomerInventoryView: View {
             }
         }
         .onChange(of: customer.sourceKeyId) {
+            // A different lookup within the same organization should reveal
+            // its source key, even if the previous inventory was filtered.
+            searchText = ""
             if let sourceKey = customer.sourceKeyId { expandedKeys.insert(sourceKey) }
         }
     }

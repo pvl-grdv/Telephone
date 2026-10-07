@@ -34,6 +34,7 @@ struct CRMInventoryPresentation: Equatable, Sendable {
     let totalProgramGroupCount: Int
     let totalRecordCount: Int
     let isFiltered: Bool
+    private let preparedKeys: [Key]
 
     var visibleKeyCount: Int { keys.count }
     var visibleProgramGroupCount: Int { keys.reduce(0) { $0 + $1.groups.count } }
@@ -47,16 +48,28 @@ struct CRMInventoryPresentation: Equatable, Sendable {
             if $0.id != $1.id { return $0.id < $1.id }
             return Self.compare($0.key.name, $1.key.name) == .orderedAscending
         }
-        totalKeyCount = allKeys.count
-        totalProgramGroupCount = allKeys.reduce(0) { $0 + $1.groups.count }
-        totalRecordCount = allKeys.reduce(0) { $0 + $1.recordCount }
+        self.init(preparedKeys: allKeys, searchText: searchText)
+    }
+
+    /// Reuse the grouped, sorted inventory when searching. No version sorting
+    /// is performed here, and clearing a filter restores all original records.
+    func filtering(_ searchText: String) -> Self {
+        if !isFiltered, Self.trim(searchText).isEmpty { return self }
+        return Self(preparedKeys: preparedKeys, searchText: searchText)
+    }
+
+    private init(preparedKeys: [Key], searchText: String) {
+        self.preparedKeys = preparedKeys
+        totalKeyCount = preparedKeys.count
+        totalProgramGroupCount = preparedKeys.reduce(0) { $0 + $1.groups.count }
+        totalRecordCount = preparedKeys.reduce(0) { $0 + $1.recordCount }
 
         let query = Self.trim(searchText)
         isFiltered = !query.isEmpty
         if query.isEmpty {
-            keys = allKeys
+            keys = preparedKeys
         } else {
-            keys = allKeys.compactMap { item in
+            keys = preparedKeys.compactMap { item in
                 if Self.matches(String(item.id), query: query) || Self.matches(item.key.name, query: query) {
                     return item
                 }

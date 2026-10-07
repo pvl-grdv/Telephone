@@ -18,30 +18,26 @@
 
 import Foundation
 
+// Thread identity is immutable; all mutable state is protected by its condition.
+// PJSIP requires a dedicated OS thread, so a Swift actor cannot replace it.
 final class SIPRuntimeThread: @unchecked Sendable {
-    private final class Operation: @unchecked Sendable {
-        let body: () -> Void
-
-        init(_ body: @escaping () -> Void) {
-            self.body = body
-        }
+    private final class State: @unchecked Sendable {
+        let condition = NSCondition()
+        var operations: [@Sendable () -> Void] = []
+        var isShuttingDown = false
+        var hasFinished = false
     }
 
-    private let condition = NSCondition()
-    private let finished = DispatchSemaphore(value: 0)
-    private var operations: [Operation] = []
-    private var isShuttingDown = false
-
-    private lazy var thread: Thread = {
-        let thread = Thread { [weak self] in
-            self?.run()
-        }
-        thread.name = "Telephone SIP runtime"
-        thread.qualityOfService = .userInitiated
-        return thread
-    }()
+    private let state: State
+    private let thread: Thread
 
     init() {
+        let state = State()
+        self.state = state
+        // The worker retains only its state, allowing owner deinit to stop it.
+        thread = Thread { Self.run(state) }
+        thread.name = "Telephone SIP runtime"
+        thread.qualityOfService = .userInitiated
         thread.start()
     }
 
@@ -49,66 +45,74 @@ final class SIPRuntimeThread: @unchecked Sendable {
         shutdown()
     }
 
-    func perform(_ body: @escaping () -> Void) {
-        condition.lock()
-        guard !isShuttingDown else {
-            condition.unlock()
-            return
+    @discardableResult
+    func perform(_ body: @escaping @Sendable () -> Void) -> Bool {
+        state.condition.lock()
+        defer { state.condition.unlock() }
+        guard !state.isShuttingDown else {
+            return false
         }
 
-        operations.append(Operation(body))
-        condition.signal()
-        condition.unlock()
+        state.operations.append(body)
+        state.condition.signal()
+        return true
     }
 
-    func performAndWait(_ body: @escaping () -> Void) {
+    @discardableResult
+    func performAndWait(_ body: @escaping @Sendable () -> Void) -> Bool {
         if Thread.current === thread {
+            state.condition.lock()
+            let acceptsWork = !state.isShuttingDown
+            state.condition.unlock()
+            guard acceptsWork else { return false }
             body()
-            return
+            return true
         }
 
         let completed = DispatchSemaphore(value: 0)
-        perform {
+        guard perform({
+            defer { completed.signal() }
             body()
-            completed.signal()
-        }
+        }) else { return false }
         completed.wait()
+        return true
     }
 
     func shutdown() {
-        condition.lock()
-        let shouldWait = !isShuttingDown
-        isShuttingDown = true
-        condition.broadcast()
-        condition.unlock()
-
-        guard shouldWait, Thread.current !== thread else {
-            return
-        }
-
-        finished.wait()
+        state.condition.lock()
+        defer { state.condition.unlock() }
+        state.isShuttingDown = true
+        state.condition.broadcast()
+        guard Thread.current !== thread else { return }
+        // Every external caller joins the worker, including repeated shutdowns.
+        while !state.hasFinished { state.condition.wait() }
     }
 
-    private func run() {
-        defer { finished.signal() }
+    private static func run(_ state: State) {
+        defer {
+            state.condition.lock()
+            state.hasFinished = true
+            state.condition.broadcast()
+            state.condition.unlock()
+        }
 
         while true {
-            condition.lock()
+            state.condition.lock()
 
-            while operations.isEmpty && !isShuttingDown {
-                condition.wait()
+            while state.operations.isEmpty && !state.isShuttingDown {
+                state.condition.wait()
             }
 
-            if operations.isEmpty && isShuttingDown {
-                condition.unlock()
+            if state.operations.isEmpty && state.isShuttingDown {
+                state.condition.unlock()
                 return
             }
 
-            let operation = operations.removeFirst()
-            condition.unlock()
+            let operation = state.operations.removeFirst()
+            state.condition.unlock()
 
             autoreleasepool {
-                operation.body()
+                operation()
             }
         }
     }

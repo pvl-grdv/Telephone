@@ -341,7 +341,7 @@ final class AKSIPAccount: Account, CustomStringConvertible, @unchecked Sendable 
                 }
             }
 
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [snapshot] in
                 request.completion(snapshot)
             }
         }

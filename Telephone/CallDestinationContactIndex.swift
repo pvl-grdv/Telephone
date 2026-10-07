@@ -29,33 +29,84 @@ struct CallDestinationContactRecord: Sendable, Hashable, Identifiable {
 actor CallDestinationContactIndex {
     static let shared = CallDestinationContactIndex()
 
+    private struct PendingLoad: Sendable {
+        let generation: UUID
+        let task: Task<[CallDestinationContactRecord], Never>
+    }
+
+    private let loader: @Sendable () async -> [CallDestinationContactRecord]
+    private var generation = UUID()
+    private var pendingLoad: PendingLoad?
     private var cachedRecords: [CallDestinationContactRecord]?
+
+    init(
+        loader: @escaping @Sendable () async -> [CallDestinationContactRecord] = {
+            CallDestinationContactIndex.loadRecords()
+        }
+    ) {
+        self.loader = loader
+    }
+
+    deinit {
+        pendingLoad?.task.cancel()
+    }
 
     func records(
         forceReload: Bool = false
     ) async -> [CallDestinationContactRecord] {
-        if !forceReload, let cachedRecords {
-            return cachedRecords
+        guard !Task.isCancelled else { return [] }
+        if forceReload {
+            invalidate()
         }
 
-        let records = await Task.detached(priority: .userInitiated) {
-            let interval = PerformanceSignposts.contacts.beginInterval(
-                "LoadContactSuggestionIndex"
-            )
-            let records = Self.loadRecords()
-            PerformanceSignposts.contacts.endInterval(
-                "LoadContactSuggestionIndex",
-                interval,
-                "records=\(records.count)"
-            )
-            return records
-        }.value
+        while !Task.isCancelled {
+            if let cachedRecords {
+                return cachedRecords
+            }
 
-        cachedRecords = records
-        return records
+            let load: PendingLoad
+            if let pendingLoad {
+                load = pendingLoad
+            } else {
+                let loader = self.loader
+                let task = Task<[CallDestinationContactRecord], Never>.detached(
+                    priority: .userInitiated
+                ) {
+                    guard !Task.isCancelled else { return [] }
+                    let interval = PerformanceSignposts.contacts.beginInterval(
+                        "LoadContactSuggestionIndex"
+                    )
+                    let records = await loader()
+                    PerformanceSignposts.contacts.endInterval(
+                        "LoadContactSuggestionIndex",
+                        interval,
+                        "records=\(records.count)"
+                    )
+                    return records
+                }
+                load = PendingLoad(generation: generation, task: task)
+                pendingLoad = load
+            }
+
+            let records = await load.task.value
+            guard !Task.isCancelled else { return [] }
+
+            // An invalidation or a newer forced refresh may have occurred while
+            // awaiting Contacts. Retry the current generation for this caller;
+            // the superseded result must neither escape nor refill the cache.
+            guard load.generation == generation else { continue }
+
+            cachedRecords = records
+            pendingLoad = nil
+            return records
+        }
+        return []
     }
 
     func invalidate() {
+        generation = UUID()
+        pendingLoad?.task.cancel()
+        pendingLoad = nil
         cachedRecords = nil
     }
 
@@ -76,7 +127,11 @@ actor CallDestinationContactIndex {
         var records: [CallDestinationContactRecord] = []
 
         do {
-            try store.enumerateContacts(with: request) { contact, _ in
+            try store.enumerateContacts(with: request) { contact, stop in
+                guard !Task.isCancelled else {
+                    stop.pointee = true
+                    return
+                }
                 let displayName =
                     CNContactFormatter.string(
                         from: contact,

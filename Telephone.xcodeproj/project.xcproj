@@ -35,7 +35,8 @@
             { "path": "AccountWindowScene.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountWindowView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "AccountControllerToAccountAdapter.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "CallDestinationContactIndex.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallDestinationContactIndex.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+            { "path": "<PROJECT>/TelephoneTests/CallDestinationContactIndexTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "CallDestinationComposer.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
@@ -451,7 +452,9 @@
               ],
             },
             { "path": "<PROJECT>/TelephoneTests/AKSIPCallEventSourceTests.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
-            { "path": "AKSIPURI.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AKSIPURI.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+            { "path": "SIPURISnapshot.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+            { "path": "<PROJECT>/TelephoneTests/SIPURISnapshotTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "AKSIPURIParser.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "PJSUACallbacks.h", "encoding": "utf8" },
             { "path": "PJSUACallInfo.swift", "target-membership": [ "Telephone/compile-sources" ] },
@@ -628,7 +631,8 @@
             "TelephoneTests/compile-sources",
           ],
         },
-        { "path": "WaitingThread.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "WaitingThread.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+        { "path": "<PROJECT>/TelephoneTests/SIPRuntimeThreadTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         {
           "path": "WebBrowser.swift",
           "target-membership": [

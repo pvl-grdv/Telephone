@@ -216,8 +216,11 @@ final class AKSIPUserAgent {
 
         storage.state = .stopping
 
-        storage.thread.performAndWait { [weak self] in
+        guard storage.thread.performAndWait({ [weak self] in
             self?.stopPJSIPRuntime()
+        }) else {
+            Log.sip.error("SIP runtime rejected stop after shutdown")
+            return
         }
         finishStopping()
     }

@@ -40,7 +40,18 @@ jobs:
         run: bash ./script/check_swift_only.sh
 
       - name: Run unit tests
+        env:
+          TEST_RUNNER_TELEPHONE_UI_ARTIFACT_DIR: ${{ github.workspace }}/build/crm-ui-preview
         run: ./script/test.sh
+
+      - name: Upload synthetic CRM inventory previews
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: CRM-inventory-preview-${{ github.run_number }}
+          path: build/crm-ui-preview/*.png
+          if-no-files-found: error
+          retention-days: 7
 
   app-build:
     name: Build local app

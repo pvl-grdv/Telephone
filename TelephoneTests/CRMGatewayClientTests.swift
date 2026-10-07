@@ -128,7 +128,6 @@ struct CRMGatewayClientTests {
             sample.replacingOccurrences(of: "\"sourceKeyId\":76543", with: "\"sourceKeyId\":76544"),
             sample.replacingOccurrences(of: "https://integral.ru", with: "http://integral.ru"),
             sample.replacingOccurrences(of: "integral.ru", with: "integral.ru.example"),
-            sample.replacingOccurrences(of: "01-20-0456", with: "98-76-5432"),
             sample.replacingOccurrences(of: "2026-01-01T12:00:00.000Z", with: "not-a-date"),
             String(decoding: GatewayFixture.notFound, as: UTF8.self).replacingOccurrences(of: "\"data\":null,", with: ""),
             "{}",
@@ -137,6 +136,42 @@ struct CRMGatewayClientTests {
             let sut = CRMGatewayClient(transport: GatewayTransportFake(data: Data(fixture.utf8)))
             await expectError(.invalidResponse) {
                 try await sut.customer(forKeyNumber: 76543, configuration: configuration())
+            }
+        }
+    }
+
+    @Test func acceptsGatewayOrganizationSegmentsWithoutDerivingCompanyCodes() async throws {
+        for segment in ["98-76-5432", "01--"] {
+            let sample = String(decoding: GatewayFixture.customer, as: UTF8.self)
+                .replacingOccurrences(of: "01-20-0456", with: segment)
+            let client = CRMGatewayClient(transport: GatewayTransportFake(data: Data(sample.utf8)))
+            let response = try await client.customer(forKeyNumber: 76543, configuration: configuration())
+            let customer = try #require(response.data)
+            #expect(customer.company.id == 1200456)
+            #expect(customer.keys[0].url.absoluteString == "https://integral.ru/personal/keys/\(segment)/76543/")
+        }
+    }
+
+    @Test func portalLinksRejectUnsafeNavigationAndInconsistentInventories() async throws {
+        for url in GatewayFixture.unsafePortalURLs {
+            let data = try GatewayFixture.customerWithPortalURLs(keyURL: url)
+            let client = CRMGatewayClient(transport: GatewayTransportFake(data: data))
+            await expectError(.invalidResponse) {
+                try await client.customer(forKeyNumber: 76543, configuration: configuration())
+            }
+        }
+        let mixedCompany = try GatewayFixture.customerWithPortalURLs(
+            keyURL: GatewayFixture.portalURL,
+            otherKeyURL: "https://integral.ru/personal/keys/98-76-5432/76544/"
+        )
+        let wrongProgram = try GatewayFixture.customerWithPortalURLs(
+            keyURL: GatewayFixture.portalURL,
+            programURL: "https://integral.ru/personal/keys/01-20-0456/76544/"
+        )
+        for data in [mixedCompany, wrongProgram] {
+            let client = CRMGatewayClient(transport: GatewayTransportFake(data: data))
+            await expectError(.invalidResponse) {
+                try await client.customer(forKeyNumber: 76543, configuration: configuration())
             }
         }
     }
@@ -209,6 +244,40 @@ actor GatewayTransportFake: CRMGatewayHTTPTransport {
 }
 
 enum GatewayFixture {
+    static let portalURL = "https://integral.ru/personal/keys/01-20-0456/76543/"
+    static let unsafePortalURLs = [
+        "http://integral.ru/personal/keys/01-20-0456/76543/",
+        "https://integral.ru.example/personal/keys/01-20-0456/76543/",
+        "https://integral.ru:443/personal/keys/01-20-0456/76543/",
+        "https://user:secret@integral.ru/personal/keys/01-20-0456/76543/",
+        "https://integral.ru/personal/keys/01-20-0456/76543/?next=other",
+        "https://integral.ru/personal/keys/01-20-0456/76543/#fragment",
+        "https://integral.ru/personal/keys/01-20-0456/76544/",
+        "https://integral.ru/personal/keys/01-20-0456/076543/",
+        "https://integral.ru/personal/keys/%30%31-20-0456/76543/",
+        "https://integral.ru/personal/keys/01-20-0456%2Fother/76543/",
+        "https://integral.ru/personal/keys/../76543/",
+        "https://integral.ru/personal/keys/company/76543/",
+    ]
+
+    static func customerWithPortalURLs(
+        keyURL: String,
+        programURL: String? = nil,
+        otherKeyURL: String? = nil
+    ) throws -> Data {
+        var root = try JSONSerialization.jsonObject(with: customer) as! [String: Any]
+        var inventory = root["data"] as! [String: Any]
+        var keys = inventory["keys"] as! [[String: Any]]
+        keys[0]["url"] = keyURL
+        var programs = keys[0]["programs"] as! [[String: Any]]
+        for index in programs.indices { programs[index]["keyUrl"] = programURL ?? keyURL }
+        keys[0]["programs"] = programs
+        if let otherKeyURL { keys[1]["url"] = otherKeyURL }
+        inventory["keys"] = keys
+        root["data"] = inventory
+        return try JSONSerialization.data(withJSONObject: root)
+    }
+
     // Deliberately fictional IDs. The displayed organization code differs from its ID.
     static let customer = Data(#"""
     {"data":{"sourceKeyId":76543,"company":{"id":1200456,"name":"Example Company","code":98765432,"formattedCode":"98-76-5432"},"keys":[{"id":76543,"name":"Sample76543","url":"https://integral.ru/personal/keys/01-20-0456/76543/","programs":[{"recordId":7000101,"programId":1000,"name":"  Sample Program  ","version":"4.0","release":"0006","keyUrl":"https://integral.ru/personal/keys/01-20-0456/76543/"},{"recordId":7000102,"programId":1000,"name":"Sample Program","version":"3.2","release":"0010","keyUrl":"https://integral.ru/personal/keys/01-20-0456/76543/"}]},{"id":76544,"name":"Sample76544","url":"https://integral.ru/personal/keys/01-20-0456/76544/","programs":[]}]},"meta":{"requestId":"fictional-request","fetchedAt":"2026-01-01T12:00:00.000Z","complete":true,"fromCache":false}}

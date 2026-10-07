@@ -261,7 +261,10 @@ struct CRMHistoryLookupView: View {
     private func snapshotContent(_ snapshot: CRMHistorySnapshot) -> some View {
         switch snapshot.status {
         case .matched:
-            if let customer = snapshot.customer { CRMHistoryCustomerDetails(customer: customer) }
+            if let customer = snapshot.customer {
+                CRMCustomerInventoryView(customer: customer)
+                    .id(customer.company.id)
+            }
         case .notFound:
             Text(NSLocalizedString("No organization matched this lookup. Try a key number or email.", comment: "History CRM no exact match."))
                 .foregroundStyle(.secondary)
@@ -289,63 +292,6 @@ struct CRMHistoryLookupView: View {
     }
 }
 
-private struct CRMHistoryCustomerDetails: View {
-    let customer: CRMKeyLookupCustomer
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(customer.company.name)
-                .font(.callout.weight(.semibold))
-                .textSelection(.enabled)
-            LabeledContent(
-                NSLocalizedString("Organization code", comment: "History CRM organization code."),
-                value: customer.company.formattedCode
-            )
-            .font(.caption)
-            .textSelection(.enabled)
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(customer.keys) { key in
-                    DisclosureGroup {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Link(
-                                NSLocalizedString("Open key in personal account", comment: "History CRM key portal link."),
-                                destination: key.url
-                            )
-                            if key.programs.isEmpty {
-                                Text(NSLocalizedString("No programs on this key.", comment: "History CRM key has no programs."))
-                                    .foregroundStyle(.secondary)
-                            }
-                            ForEach(key.programs) { program in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Link(programTitle(program), destination: program.keyUrl)
-                                    if program.version != nil || program.release != nil {
-                                        Text(String(
-                                            format: NSLocalizedString("Version: %@ · Release: %@", comment: "History CRM program version and release."),
-                                            program.version ?? "—", program.release ?? "—"
-                                        ))
-                                        .foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                        }
-                        .font(.caption)
-                        .padding(.top, 4)
-                    } label: {
-                        Text("\(key.id) · \(key.name)")
-                            .font(.caption.weight(.medium))
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private func programTitle(_ program: CRMKeyLookupProgram) -> String {
-        program.name.isEmpty
-            ? NSLocalizedString("Unnamed program", comment: "History CRM missing program name.")
-            : program.name
-    }
-}
 
 private extension CRMHistoryLocalError {
     var historyCRMMessage: String {

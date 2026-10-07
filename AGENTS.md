@@ -33,6 +33,12 @@ These rules are authoritative for automated coding agents working on this reposi
 - If a speculative modernization fails platform availability or CI, revert it rather than adding compatibility complexity without a product need.
 - System media pause intentionally uses the private macOS MediaRemote framework in this personal fork. Keep that dependency isolated in `SystemMediaPlayer`, load it dynamically, and let it degrade to a no-op if unavailable. Do not reintroduce per-app Apple Events/ScriptingBridge integrations unless a demonstrated runtime regression requires a fallback.
 
+## CRM integration boundary
+
+- Keep CRM authentication, storage rules, organization lookup, key ownership and write routing on the private gateway. The macOS app calls only its generic `/v1` contract; never add private upstream API routes, credentials, hosts or customer fixtures here.
+- Treat gateway result records as data shared by transport, saved snapshots and presentation. Build portal URLs on the gateway; the client validates navigation safety instead of reproducing CRM ID formatting.
+- Presentation may group/filter/sort received programs but must preserve every record. A high version number does not prove an active license. Use the same inventory component for live calls and history.
+
 ## Build and validation
 
 - The project targets macOS and Apple silicon.

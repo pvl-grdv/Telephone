@@ -78,6 +78,37 @@ struct CRMHistorySnapshotTests {
         #expect(throws: CRMHistorySnapshotError.invalidSnapshot) { try snapshot.storedCheck() }
     }
 
+    @Test func savedPortalLinksAreRevalidatedWithoutRebuildingCompanyCodes() throws {
+        let data = Data(String(decoding: GatewayFixture.customer, as: UTF8.self)
+            .replacingOccurrences(of: "01-20-0456", with: "98-76-5432").utf8)
+        let response = try JSONDecoder().decode(CRMKeyLookupResponse.self, from: data)
+        let snapshot = try CRMHistorySnapshot.checkedKey(
+            response: response, keyNumber: 76543, phone: nil, checkedAt: Date()
+        )
+        let stored = try snapshot.storedCheck()
+        let restored = try CRMHistorySnapshot.restored(from: stored)
+        #expect(restored == snapshot)
+        #expect(restored.customer?.keys[0].url.absoluteString == "https://integral.ru/personal/keys/98-76-5432/76543/")
+
+        let original = try object(Data(stored.snapshotJSON.utf8))
+        var variants = GatewayFixture.unsafePortalURLs.map {
+            replacingPortalLinks(in: original, keyURL: $0)
+        }
+        variants.append(replacingPortalLinks(
+            in: original, keyURL: GatewayFixture.portalURL,
+            otherKeyURL: "https://integral.ru/personal/keys/98-76-5432/76544/"
+        ))
+        variants.append(replacingPortalLinks(
+            in: original, keyURL: GatewayFixture.portalURL,
+            programURL: "https://integral.ru/personal/keys/01-20-0456/76544/"
+        ))
+        for variant in variants {
+            #expect(throws: (any Error).self) {
+                try CRMHistorySnapshot.restored(from: replacingJSON(in: stored, with: variant))
+            }
+        }
+    }
+
     @Test func manualKeyPreservesCallerWithoutInventingAPhoneMatch() throws {
         let response = try JSONDecoder().decode(CRMKeyLookupResponse.self, from: PhoneGatewayFixture.keyCustomer())
         for phone in ["+70005550101", nil] as [String?] {
@@ -294,6 +325,25 @@ struct CRMHistorySnapshotTests {
             companyID: check.companyID, companyName: check.companyName,
             snapshotJSON: String(decoding: try json(object), as: UTF8.self)
         )
+    }
+
+    private func replacingPortalLinks(
+        in original: [String: Any],
+        keyURL: String,
+        programURL: String? = nil,
+        otherKeyURL: String? = nil
+    ) -> [String: Any] {
+        var root = original
+        var customer = root["customer"] as! [String: Any]
+        var keys = customer["keys"] as! [[String: Any]]
+        keys[0]["url"] = keyURL
+        var programs = keys[0]["programs"] as! [[String: Any]]
+        for index in programs.indices { programs[index]["keyUrl"] = programURL ?? keyURL }
+        keys[0]["programs"] = programs
+        if let otherKeyURL { keys[1]["url"] = otherKeyURL }
+        customer["keys"] = keys
+        root["customer"] = customer
+        return root
     }
 
     private func expectNoCredentials(in check: StoredCallCRMCheck) {

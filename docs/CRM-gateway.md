@@ -191,24 +191,57 @@ Releases are strings, so leading zeroes survive. Each `recordId` is a separate
 record; repeated program IDs and older versions are preserved. The decoder
 ignores additional upstream fields.
 
-`company.phone` is the current raw organization phone field, used as an optimistic
-concurrency snapshot. Old read-only gateways may omit it; lookup still works,
-but linking is unavailable until a fresh response includes this field.
+`company.phone` is a compatibility/concurrency snapshot supplied by the gateway.
+Telephone passes it back as `expectedPhone` without interpreting CRM storage.
+Old read-only gateways may omit it; lookup still works, but linking is unavailable
+until a fresh response includes this field. It is not the destination for a new
+phone number and is excluded from saved history snapshots.
 
-`company.phones` is the gateway's canonical, deduplicated phone array. It splits
-the raw comma/semicolon/newline list, handles legacy local numbers using the
-city code, and returns full `+`-prefixed numbers. Telephone uses this array for
+`company.phones` is the gateway's canonical, deduplicated phone array, combining
+all supported phone sources. Parsing existing phone lists, interpreting local
+numbers and merging separate records belong to the gateway. It returns full
+`+`-prefixed numbers. Telephone uses this array for
 association checks before considering raw text. It rejects noncanonical values
 or duplicates. Old gateways may omit the array; the client then uses raw-field
 normalization as a compatibility fallback. `phone` itself remains untouched as
 the exact append concurrency snapshot.
 
-The displayed `formattedCode` need not match the organization ID. Portal URLs
-use **company.id**: convert it to decimal digits, prepend one zero if there are
-fewer than eight digits, insert a hyphen after the first four digits, then after
-the first two, and append the numeric key ID. The client checks the exact HTTPS
-URL before showing a link. Browser portal sessions are independent; gateway
-tokens are never added to portal URLs.
+The gateway resolves ownership and constructs portal URLs. Telephone treats
+`formattedCode` as display text and never derives a portal code from the
+organization ID. Its navigation allowlist accepts only canonical HTTPS URLs on
+`integral.ru`, with path `/personal/keys/<decimal-hyphen-segment>/<key-id>/` and
+no port, credentials, query, fragment or encoded path. The organization segment
+is opaque to the Mac and must match across all keys in an inventory; the numeric
+key segment must match its record. Program links must equal their containing
+key's URL. The same checks run when saved history is restored, preserving the
+validated URL unchanged. The gateway is responsible for the semantic link
+between the organization ID and that URL segment. Browser portal sessions are
+independent; gateway tokens are never added to portal URLs.
+
+### Keys and programs in the app
+
+The gateway fetches every page of keys and program records, in ascending record
+ID order. This transport order does not identify the latest version. Each
+`recordId` remains a separate record, including repeated program IDs and older
+versions; the response does not establish which record is active or licensed.
+
+`CRMInventoryPresentation` prepares a display-only view of that complete
+inventory, shared by live calls and saved history checks:
+
+- The manually searched key appears first; other keys use ascending key number.
+- Programs are grouped by `programId`. Records without that ID use their
+  case-insensitive name; unnamed records stay separate.
+- Program groups use name order. Within a group, version then release use
+  descending numeric text comparison, so `10.0` precedes `9.0`. Missing values
+  follow known values, and record ID breaks ties. This is display ordering, not
+  semantic version parsing or an active-license decision.
+- Search matches key number/name or program name/version/release. A matching
+  program keeps its complete version history visible. Clearing search restores
+  the full inventory. Filtering sends no additional gateway request.
+
+Displayed totals distinguish keys, program groups and individual records. The
+gateway response and persisted history data retain the original records and
+order; presentation sorting does not discard or rewrite them.
 
 ## Explicit phone association
 
@@ -234,7 +267,7 @@ POST /v1/customer-phone/append
 {
   "data": {
     "companyId":1200456,
-    "phone":"+12025550100, +70005550101",
+    "phone":"+12025550100",
     "phones":["+12025550100", "+70005550101"],
     "added":true
   },
@@ -247,11 +280,13 @@ POST /v1/customer-phone/append
 }
 ```
 
-The gateway checks permission, key ownership and the complete current phone
-field against `expectedPhone`. It preserves existing text, adds the canonical
-number separated by a comma, avoids equivalent duplicates and verifies the
-result. `added:false` means the number was already associated. Existing local
-values can match through a city code even if the raw field lacks the full number.
+The gateway checks permission, key ownership, the current compatibility snapshot
+against `expectedPhone` and existing phone associations. It adds the canonical
+number to its configured phone storage, avoids equivalent duplicates and verifies
+the result. Separate phone storage can leave `phone` unchanged while extending
+`phones`; Telephone does not require the legacy text to change. `added:false`
+means the number was already associated. The client does not know the upstream
+write route, storage schema or regional rules.
 
 `403` means missing append permission. `409` means the field changed. A network
 failure or `PHONE_WRITE_UNCONFIRMED` can leave the write outcome unknown.
@@ -361,6 +396,10 @@ does not automatically backfill old calls or run CRM checks when a call ends.
 
 ### Shared gateway behavior
 
+- `CRMIntegrationRecords` contains the typed gateway results and provider
+  interface shared by lookup models, history snapshots and inventory views.
+  `CRMGatewayClient` owns transport and response validation. Presentation does
+  not parse upstream CRM responses or choose upstream endpoints.
 - `CompositionRoot` creates one provider/settings store and passes them through
   account controllers to each call window.
 - `CRMGatewayClient` is an actor with four fixed typed requests and an ephemeral
@@ -376,6 +415,12 @@ does not automatically backfill old calls or run CRM checks when a call ends.
   Requests, tokens and customer responses are not logged by the client.
 - Production origins/tokens, upstream credentials, real customers and captured
   responses stay outside the public repository. Tests use invented data.
+
+CRM login/session recovery, upstream pagination, owner resolution, legacy and
+separate phone storage, duplicate detection and phone writes belong to the
+gateway. The Mac keeps caller input validation, token/origin security, safe link
+validation, explicit choices/confirmations and local history persistence. It
+does not receive CRM credentials or expose a general CRM request editor.
 
 The legacy address-based `CRMProvider` remains compatible and disabled by
 default. Key, email and phone lookup use explicit typed gateway methods instead of

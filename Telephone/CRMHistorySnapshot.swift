@@ -338,13 +338,16 @@ struct CRMHistorySnapshot: Codable, Equatable, Sendable {
             formattedCode: trim(customer.company.formattedCode), phone: nil, phones: phones,
             emails: customer.company.emails
         )
+        var organizationSegment: String?
         let keys = try customer.keys.map { key in
             guard CRMKeyNumber.isValid(key.id),
-                  let url = CRMKeyPortalURL.make(companyID: company.id, keyID: key.id),
-                  key.url.absoluteString == url.absoluteString,
+                  let segment = CRMKeyPortalURL.organizationSegment(in: key.url, keyID: key.id),
+                  organizationSegment.map({ $0 == segment }) ?? true,
                   Set(key.programs.map(\.recordId)).count == key.programs.count else {
                 throw CRMGatewayError.invalidResponse
             }
+            organizationSegment = segment
+            let url = key.url
             let programs = try key.programs.map { program in
                 guard CRMKeyNumber.isValid(program.recordId),
                       program.programId.map(CRMKeyNumber.isValid) ?? true,

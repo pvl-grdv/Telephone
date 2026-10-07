@@ -14,14 +14,6 @@ enum CRMHistoryLocalError: Equatable {
     case callerChanged
 }
 
-enum CRMHistoryPhoneLinkState: Equatable {
-    case idle
-    case refreshing
-    case saving
-    case saved(added: Bool)
-    case failed(CRMGatewayError)
-}
-
 struct CRMHistoryPhoneLinkConfirmation: Equatable, Identifiable, Sendable {
     let id = UUID()
     let phone: String
@@ -29,6 +21,7 @@ struct CRMHistoryPhoneLinkConfirmation: Equatable, Identifiable, Sendable {
     let companyName: String
     let sourceKeyID: Int
     let expectedPhone: String
+    let appendRevision: Int
     let contextGeneration: Int
     let checkGeneration: Int
     let linkGeneration: Int
@@ -45,7 +38,13 @@ final class CRMHistoryLookupModel {
     private(set) var isChecking = false
     private(set) var isSaving = false
     private(set) var localError: CRMHistoryLocalError?
-    private(set) var phoneLinkState: CRMHistoryPhoneLinkState = .idle
+    private var appendOperation = CRMPhoneAppendOperation()
+    @ObservationIgnored private let appendRegistry: CRMPhoneAppendRegistry
+    @ObservationIgnored private var appendAttemptID: UUID?
+    private(set) var phoneLinkState: CRMHistoryPhoneLinkState {
+        get { appendOperation.state }
+        set { appendOperation.state = newValue }
+    }
     private(set) var pendingPhoneLink: CRMHistoryPhoneLinkConfirmation?
     var keyNumber = "" {
         didSet { if oldValue != keyNumber { cancelCheck() } }
@@ -71,11 +70,13 @@ final class CRMHistoryLookupModel {
         storage: any CallHistoryCRMStorage,
         settings: CRMGatewaySettings,
         provider: any CRMKeyLookupProvider,
+        appendRegistry: CRMPhoneAppendRegistry = CRMPhoneAppendRegistry(),
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.storage = storage
         self.settings = settings
         self.provider = provider
+        self.appendRegistry = appendRegistry
         self.now = now
         settingsGeneration = settings.generation
         observeSettings()
@@ -89,7 +90,7 @@ final class CRMHistoryLookupModel {
 
     var canLinkPhone: Bool {
         if case .saved = phoneLinkState { return false }
-        guard canCheck, let phone = callerPhone, let snapshot,
+        guard !appendOperation.hasPendingRequest, canCheck, let phone = callerPhone, let snapshot,
               snapshot.status == .matched, case .key(let keyID) = snapshot.lookupIdentity,
               let customer = snapshot.customer, customer.sourceKeyId == keyID,
               CRMKeyNumber.parse(keyNumber) == keyID,
@@ -135,6 +136,7 @@ final class CRMHistoryLookupModel {
                         guard restored.phone == self.callerPhone else {
                             throw CRMHistorySnapshotError.invalidSnapshot
                         }
+                        self.bindAppendOperation(for: restored)
                         self.snapshot = restored
                         switch restored.lookupIdentity {
                         case .key(let number): self.keyNumber = String(number)
@@ -205,6 +207,7 @@ final class CRMHistoryLookupModel {
         let settingsGeneration = settings.generation
         localError = nil
         phoneLinkState = .refreshing
+        let appendReceipt = appendRegistry.readReceipt()
         linkTask = Task { [weak self, storage, settings, provider, now] in
             do {
                 guard let raw = try await storage.phone(
@@ -234,6 +237,14 @@ final class CRMHistoryLookupModel {
                       company.id == originalCompanyID else {
                     throw CRMGatewayError.conflict
                 }
+                self.bindAppendOperation(for: verified)
+                guard self.appendRegistry.acceptFreshRead(
+                    origin: settings.origin, phone: phone, companyID: company.id, receipt: appendReceipt
+                ) else {
+                    self.linkTask = nil
+                    self.appendOperation.cancelPresentation(for: nil)
+                    return
+                }
                 if company.containsPhone(phone) {
                     self.snapshot = verified
                     self.phoneLinkState = .saved(added: false)
@@ -249,19 +260,18 @@ final class CRMHistoryLookupModel {
                     throw CRMGatewayError.invalidResponse
                 }
                 self.preparedKeySnapshot = verified
-                self.phoneLinkState = .idle
                 self.linkTask = nil
                 self.pendingPhoneLink = CRMHistoryPhoneLinkConfirmation(
                     phone: phone, companyID: company.id, companyName: company.name,
                     sourceKeyID: keyID, expectedPhone: expectedPhone,
+                    appendRevision: self.appendOperation.revision,
                     contextGeneration: contextGeneration, checkGeneration: checkGeneration,
                     linkGeneration: linkGeneration, settingsGeneration: settingsGeneration
                 )
             } catch {
                 guard let self, self.isCurrentLink(context, contextGeneration, checkGeneration, linkGeneration, settingsGeneration) else { return }
                 self.linkTask = nil
-                self.phoneLinkState = error is CancellationError ? .idle
-                    : .failed((error as? CRMGatewayError) ?? .unavailable)
+                self.appendOperation.failRefresh(error)
             }
         }
     }
@@ -276,7 +286,8 @@ final class CRMHistoryLookupModel {
         // action has consumed it. A stale/repeated action must never cancel
         // the one write already in flight.
         guard pendingPhoneLink == confirmation else { return }
-        guard let context,
+        guard let context, !appendOperation.hasPendingRequest,
+              appendOperation.revision == confirmation.appendRevision,
               isCurrentLink(context, confirmation.contextGeneration, confirmation.checkGeneration,
                             confirmation.linkGeneration, confirmation.settingsGeneration),
               callerPhone == confirmation.phone,
@@ -289,8 +300,10 @@ final class CRMHistoryLookupModel {
         }
         pendingPhoneLink = nil
         preparedKeySnapshot = nil
-        phoneLinkState = .saving
-        linkTask = Task { [weak self, storage, settings, provider, now] in
+        guard let attempt = appendOperation.begin() else { return }
+        appendAttemptID = attempt
+        linkTask = Task { [weak self, storage, settings, provider, now, appendOperation] in
+            defer { appendOperation.abandonBeforeDispatch(attempt) }
             var appendDispatched = false
             do {
                 let configuration = try await settings.configuration()
@@ -300,7 +313,7 @@ final class CRMHistoryLookupModel {
                 ) else {
                     guard let self, self.isCurrentLink(context, confirmation.contextGeneration, confirmation.checkGeneration,
                                                        confirmation.linkGeneration, confirmation.settingsGeneration) else { return }
-                    self.phoneLinkState = .idle
+                    self.appendOperation.invalidatePresentation()
                     self.linkTask = nil
                     self.localError = .recordRemoved
                     return
@@ -308,7 +321,7 @@ final class CRMHistoryLookupModel {
                 guard CRMPhoneNumber.normalize(raw) == confirmation.phone else {
                     guard let self, self.isCurrentLink(context, confirmation.contextGeneration, confirmation.checkGeneration,
                                                        confirmation.linkGeneration, confirmation.settingsGeneration) else { return }
-                    self.phoneLinkState = .idle
+                    self.appendOperation.invalidatePresentation()
                     self.linkTask = nil
                     self.localError = .callerChanged
                     return
@@ -316,17 +329,19 @@ final class CRMHistoryLookupModel {
                 try Task.checkCancellation()
                 guard let self, self.isCurrentLink(context, confirmation.contextGeneration, confirmation.checkGeneration,
                                                    confirmation.linkGeneration, confirmation.settingsGeneration) else { return }
+                guard appendOperation.dispatch(attempt) else { return }
                 appendDispatched = true
                 let result = try await provider.appendPhone(
                     confirmation.phone, companyID: confirmation.companyID,
                     sourceKeyID: confirmation.sourceKeyID, expectedPhone: confirmation.expectedPhone,
                     configuration: configuration
                 )
-                guard self.isCurrentLink(context, confirmation.contextGeneration, confirmation.checkGeneration,
-                                         confirmation.linkGeneration, confirmation.settingsGeneration) else { return }
                 guard result.data.companyId == confirmation.companyID else {
                     throw CRMGatewayError.phoneWriteUnconfirmed
                 }
+                appendOperation.finish(attempt, added: result.data.added)
+                guard self.isCurrentLink(context, confirmation.contextGeneration, confirmation.checkGeneration,
+                                         confirmation.linkGeneration, confirmation.settingsGeneration) else { return }
                 var phones = preparedCustomer.company.phones ?? []
                 if let returned = result.data.phones {
                     phones = returned
@@ -361,24 +376,14 @@ final class CRMHistoryLookupModel {
                     settingsGeneration: confirmation.settingsGeneration
                 )
             } catch {
+                appendOperation.fail(attempt, error: error)
                 guard let self, self.isCurrentLink(context, confirmation.contextGeneration, confirmation.checkGeneration,
                                                    confirmation.linkGeneration, confirmation.settingsGeneration) else { return }
                 self.linkTask = nil
-                if !appendDispatched, !(error is CRMGatewayError) {
+                self.appendAttemptID = nil
+                if !appendDispatched, !(error is CRMGatewayError), !(error is CancellationError) {
                     self.phoneLinkState = .idle
                     self.localError = .loadFailed
-                    return
-                }
-                let typed = (error as? CRMGatewayError) ?? .phoneWriteUnconfirmed
-                if appendDispatched {
-                    switch typed {
-                    case .forbidden, .unauthorized, .conflict, .rateLimited, .phoneWriteUnconfirmed:
-                        self.phoneLinkState = .failed(typed)
-                    default:
-                        self.phoneLinkState = .failed(.phoneWriteUnconfirmed)
-                    }
-                } else {
-                    self.phoneLinkState = .failed(typed)
                 }
             }
         }
@@ -408,13 +413,13 @@ final class CRMHistoryLookupModel {
     }
 
     private func invalidatePhoneLink() {
-        let wasSaving = phoneLinkState == .saving
         linkTask?.cancel()
         linkTask = nil
         linkGeneration &+= 1
         pendingPhoneLink = nil
         preparedKeySnapshot = nil
-        phoneLinkState = wasSaving ? .failed(.phoneWriteUnconfirmed) : .idle
+        appendOperation.cancelPresentation(for: appendAttemptID)
+        appendAttemptID = nil
     }
 
     private func isCurrentLink(
@@ -435,6 +440,7 @@ final class CRMHistoryLookupModel {
         context = nil
         snapshot = nil
         callerPhone = nil
+        appendOperation = CRMPhoneAppendOperation()
         keyNumber = ""
         email = ""
         localError = nil
@@ -450,6 +456,7 @@ final class CRMHistoryLookupModel {
         self.settingsGeneration = settingsGeneration
         localError = nil
         isChecking = true
+        let appendReceipt = appendRegistry.readReceipt()
         checkTask = Task { [weak self, storage, settings, provider, now] in
             let checked: CRMHistorySnapshot
             let phone: String?
@@ -521,6 +528,14 @@ final class CRMHistoryLookupModel {
                 context, contextGeneration: contextGeneration,
                 checkGeneration: checkGeneration, settingsGeneration: settingsGeneration
             ) else { return }
+            if checked.status != .failed {
+                self.bindAppendOperation(for: checked)
+                if let phone = self.callerPhone, let companyID = checked.customer?.company.id {
+                    self.appendRegistry.acceptFreshRead(
+                        origin: settings.origin, phone: phone, companyID: companyID, receipt: appendReceipt
+                    )
+                }
+            }
             self.snapshot = checked
             self.isChecking = false
             self.isSaving = true
@@ -551,6 +566,11 @@ final class CRMHistoryLookupModel {
                 self.localError = .saveFailed
             }
         }
+    }
+
+    private func bindAppendOperation(for snapshot: CRMHistorySnapshot) {
+        guard let phone = callerPhone, let customer = snapshot.customer else { return }
+        appendOperation = appendRegistry.operation(origin: settings.origin, phone: phone, companyID: customer.company.id)
     }
 
     private func isCurrent(_ context: HistoryContext, generation: Int) -> Bool {

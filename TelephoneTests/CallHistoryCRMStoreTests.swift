@@ -112,16 +112,17 @@ struct CallHistoryCRMStoreTests {
     }
 
     @Test func futureSchemaFailsWithoutDowngradingOrWritingACheck() throws {
-        let fixture = try CRMStoreFixture(version: 4)
+        let futureVersion = TelephoneDatabaseSchema.currentVersion + 1
+        let fixture = try CRMStoreFixture(version: futureVersion)
         defer { fixture.cleanup() }
         let store = try CallHistoryCRMStore(databaseURL: fixture.url)
         do {
             _ = try store.save(makeCheck(), accountUUID: "account-a", callIdentifier: "call-a")
             Issue.record("Expected unsupported future schema")
         } catch SQLiteStoreError.unsupportedSchema(let version) {
-            #expect(version == 4)
+            #expect(version == futureVersion)
         }
-        #expect(try fixture.scalar("PRAGMA user_version") == 4)
+        #expect(try fixture.scalar("PRAGMA user_version") == futureVersion)
         #expect(try fixture.scalar("SELECT COUNT(*) FROM calls") == 0)
     }
 

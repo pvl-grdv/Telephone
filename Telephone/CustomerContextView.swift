@@ -9,6 +9,7 @@ import SwiftUI
 struct CustomerContextView: View {
     @Bindable var model: CallWindowModel
     @State private var isExpanded = false
+    @State private var confirmsDiscardDraft = false
     var crmKeyLookupModel: CRMKeyLookupModel? = nil
 
     let changed: () -> Void
@@ -23,6 +24,13 @@ struct CustomerContextView: View {
                 Divider()
                 CRMKeyLookupView(model: crmKeyLookupModel)
             }
+        }
+        .confirmationDialog(
+            NSLocalizedString("Reload saved details and discard this draft?", comment: "Explicitly discard conflicting local draft."),
+            isPresented: $confirmsDiscardDraft,
+            titleVisibility: .visible
+        ) {
+            Button(NSLocalizedString("Reload saved details", comment: "Reload after local edit conflict."), role: .destructive, action: reload)
         }
         .onChange(of: model.customerCompany) {
             changed()
@@ -116,6 +124,16 @@ struct CustomerContextView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
+        } else if model.customerContextSaveConflict {
+            VStack(alignment: .leading, spacing: 6) {
+                Label(NSLocalizedString("Client details changed in another call", comment: "Optimistic local save conflict."), systemImage: "exclamationmark.triangle")
+                    .font(.caption)
+                Text(NSLocalizedString("Your draft is kept. Reload saved details to start again.", comment: "Local conflicting draft is preserved."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Button(NSLocalizedString("Reload saved details", comment: "Reload after local edit conflict.")) { confirmsDiscardDraft = true }
+                    .controlSize(.small)
+            }
         } else if model.customerContextSaveFailed {
             HStack(spacing: 8) {
                 Label(
@@ -172,11 +190,6 @@ struct CustomerContextView: View {
 
     private var editor: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if let profile = model.crmProfile, profile.hasContent {
-                crmDetails(profile)
-                Divider()
-            }
-
             Grid(
                 alignment: .leading,
                 horizontalSpacing: 8,
@@ -260,59 +273,6 @@ struct CustomerContextView: View {
         }
     }
 
-    @ViewBuilder
-    private func crmDetails(
-        _ profile: CRMCustomerProfile
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("CRM")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            if !profile.company.isEmpty {
-                LabeledContent(
-                    NSLocalizedString(
-                        "Organization",
-                        comment: "CRM organization label."
-                    ),
-                    value: profile.company
-                )
-                .font(.caption)
-            }
-
-            ForEach(
-                Array(profile.keys.enumerated()),
-                id: \.offset
-            ) { _, key in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(key.value)
-                        .font(.caption.weight(.medium))
-
-                    if !key.programs.isEmpty {
-                        Text(
-                            String(
-                                format: NSLocalizedString(
-                                    "Programs: %@",
-                                    comment: "Programs associated with CRM reference key."
-                                ),
-                                key.programs.joined(separator: ", ")
-                            )
-                        )
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    }
-                }
-            }
-
-            if !profile.emails.isEmpty {
-                Text(profile.emails.joined(separator: ", "))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-            }
-        }
-    }
-
     private func customerFieldRow(
         _ label: String,
         text: Binding<String>
@@ -330,14 +290,6 @@ struct CustomerContextView: View {
     }
 
     private var summaryTitle: String {
-        let crmCompany = model.crmProfile?.company.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        ) ?? ""
-        if !crmCompany.isEmpty,
-           !identityAlreadyShows(crmCompany) {
-            return crmCompany
-        }
-
         let company = model.customerCompany.trimmingCharacters(
             in: .whitespacesAndNewlines
         )

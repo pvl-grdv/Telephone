@@ -3,8 +3,11 @@
 //  Telephone
 //
 
+import SQLite3
+import UseCases
+
 enum TelephoneDatabaseSchema {
-    static let currentVersion = 3
+    static let currentVersion = 4
 
     static func createCallCRMSnapshotTable(
         execute: (String) throws -> Void
@@ -96,12 +99,13 @@ enum TelephoneDatabaseSchema {
             CREATE TABLE IF NOT EXISTS party_notes (
                 id INTEGER PRIMARY KEY,
                 party_id INTEGER NOT NULL,
+                account_uuid TEXT NOT NULL DEFAULT '',
                 call_identifier TEXT NOT NULL,
                 body TEXT NOT NULL,
                 created_at REAL NOT NULL,
                 updated_at REAL NOT NULL,
                 FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
-                UNIQUE (party_id, call_identifier)
+                UNIQUE (party_id, account_uuid, call_identifier)
             )
             """
         )
@@ -124,5 +128,35 @@ enum TelephoneDatabaseSchema {
             )
             """
         )
+    }
+
+    // A note can precede its completed call row. No calls foreign key is added:
+    // deleting call history deliberately retains historical customer notes.
+    // Legacy notes have no reliable call/account identity and remain unmatched.
+    @CallHistoryActor
+    static func migrateCustomerContextTables(connection: SQLiteConnection) throws {
+        try createCustomerContextTables(execute: connection.execute)
+        let columns = try connection.prepare("PRAGMA table_info(party_notes)")
+        var hasAccount = false
+        while columns.step() == SQLITE_ROW {
+            if columns.string(at: 1) == "account_uuid" { hasAccount = true }
+        }
+        if hasAccount {
+            try connection.execute("CREATE INDEX IF NOT EXISTS party_notes_call ON party_notes(account_uuid, call_identifier)")
+            return
+        }
+        try connection.execute("ALTER TABLE party_notes RENAME TO legacy_party_notes")
+        try createCustomerContextTables(execute: connection.execute)
+        try connection.execute(
+            """
+            INSERT INTO party_notes(id, party_id, account_uuid, call_identifier, body, created_at, updated_at)
+            SELECT id, party_id, '', call_identifier, body, created_at, updated_at
+            FROM legacy_party_notes
+            """
+        )
+        try connection.execute("DROP TABLE legacy_party_notes")
+        // The previous index name belonged to the renamed table until DROP.
+        try connection.execute("CREATE INDEX IF NOT EXISTS party_notes_party_date ON party_notes(party_id, updated_at DESC)")
+        try connection.execute("CREATE INDEX IF NOT EXISTS party_notes_call ON party_notes(account_uuid, call_identifier)")
     }
 }

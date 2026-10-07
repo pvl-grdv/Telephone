@@ -68,7 +68,7 @@ struct LocalizationAndLayoutSmokeTests {
         }
     }
 
-    @Test
+    @Test @MainActor
     func accountConnectionFailureIsDistinctFromUserUnavailable() throws {
         let viewSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent(
@@ -83,7 +83,11 @@ struct LocalizationAndLayoutSmokeTests {
             encoding: .utf8
         )
 
-        #expect(viewSource.contains("case connectionLost"))
+        let session = AccountSession()
+        session.transition(to: .connectionLost)
+        #expect(session.state == .connectionLost)
+        session.transition(to: .unavailable)
+        #expect(session.state == .unavailable)
         #expect(viewSource.contains("\"Connection Lost\""))
         #expect(
             viewSource.contains(

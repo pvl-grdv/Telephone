@@ -8,12 +8,7 @@ import Observation
 import SwiftUI
 import UseCases
 
-enum AccountWindowDisplayState: Equatable {
-    case offline
-    case connecting
-    case available
-    case unavailable
-    case connectionLost
+extension AccountConnectionState {
 
     var title: String {
         switch self {
@@ -46,38 +41,6 @@ enum AccountWindowDisplayState: Equatable {
     }
 }
 
-@MainActor
-@Observable
-final class AccountSession {
-    var state: AccountWindowDisplayState = .offline
-    var showsCallComposer = false
-
-    var attemptingToRegister = false
-    var attemptingToUnregister = false
-    var shouldPresentRegistrationError = false
-    var accountUnavailable = false
-
-    @ObservationIgnored
-    var userAgentDidFinishStarting: (() -> Void)?
-
-    func resetRegistrationIntent() {
-        attemptingToRegister = false
-        attemptingToUnregister = false
-        shouldPresentRegistrationError = false
-    }
-}
-
-extension AccountSession: @preconcurrency UserAgentEventTarget {
-    func didFinishStarting(_ agent: UserAgent) {
-        userAgentDidFinishStarting?()
-    }
-
-    func didFinishStopping(_ agent: UserAgent) {}
-    func didDetectNAT(_ agent: UserAgent) {}
-    func didMakeCall(_ agent: UserAgent) {}
-    func didReceiveCall(_ agent: UserAgent) {}
-}
-
 struct RegistrarConnectionError: Equatable {
     let registrar: String
     let details: String?
@@ -105,14 +68,12 @@ struct RegistrarConnectionError: Equatable {
 final class AccountWindowModel {
     let session: AccountSession
 
-    var state: AccountWindowDisplayState {
-        get { session.state }
-        set { session.state = newValue }
+    var state: AccountConnectionState {
+        session.state
     }
 
     var showsCallComposer: Bool {
-        get { session.showsCallComposer }
-        set { session.showsCallComposer = newValue }
+        session.canMakeCalls
     }
 
     var authenticationFailure: AuthenticationFailureModel?
@@ -165,6 +126,7 @@ struct AccountWindowRootView: View {
                 )
             }
         }
+        .animation(.easeInOut(duration: 0.15), value: model.state)
         .onGeometryChange(for: Bool.self) { proxy in
             AccountToolbarLayout.showsStateTitle(
                 for: proxy.size.width
@@ -218,7 +180,7 @@ enum AccountToolbarLayout {
 }
 
 private struct AccountStateMenu: View {
-    let state: AccountWindowDisplayState
+    let state: AccountConnectionState
     let showsTitle: Bool
     let changeState: (AccountAvailabilityState) -> Void
 
@@ -284,7 +246,7 @@ private struct AccountStateMenu: View {
 }
 
 private struct AccountStateIndicator: View {
-    let state: AccountWindowDisplayState
+    let state: AccountConnectionState
 
     @ViewBuilder
     var body: some View {

@@ -31,8 +31,13 @@ public final class CallHistoryRecordAddUseCase: Sendable {
 extension CallHistoryRecordAddUseCase: UseCase {
     public func execute() {
         Task {
-            await history.add(recordByRemovingHostIfNeeded(from: record))
+            await executeAndWait()
         }
+    }
+
+    /// Completes after the history write and its notifications finish.
+    public func executeAndWait() async {
+        await history.add(recordByRemovingHostIfNeeded(from: record))
     }
 
     private func recordByRemovingHostIfNeeded(from record: CallHistoryRecord) -> CallHistoryRecord {

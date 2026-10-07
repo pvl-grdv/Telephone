@@ -7638,6 +7638,98 @@
           }
         }
       }
+    },
+    "Reload saved details and discard this draft?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload saved details and discard this draft?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузить сохранённые данные и отменить этот черновик?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeicherte Angaben laden und diesen Entwurf verwerfen?"
+          }
+        }
+      }
+    },
+    "Reload saved details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload saved details"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузить сохранённые данные"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeicherte Angaben laden"
+          }
+        }
+      }
+    },
+    "Client details changed in another call": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client details changed in another call"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Данные клиента изменены в другом звонке"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundendaten wurden in einem anderen Anruf geändert"
+          }
+        }
+      }
+    },
+    "Your draft is kept. Reload saved details to start again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your draft is kept. Reload saved details to start again."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш черновик сохранён в окне. Загрузите сохранённые данные, чтобы начать заново."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihr Entwurf bleibt erhalten. Laden Sie die gespeicherten Angaben, um neu zu beginnen."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

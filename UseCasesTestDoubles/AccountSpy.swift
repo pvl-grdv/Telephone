@@ -34,7 +34,7 @@ public final class AccountSpy {
     }
 }
 
-extension AccountSpy: Account {
+extension AccountSpy: CallMakingAccount {
     public func makeCall(to uri: URI, label: String) {
         didCallMakeCall = true
         invokedURI = uri

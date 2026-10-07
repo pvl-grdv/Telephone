@@ -9,23 +9,22 @@ import Foundation
 import UseCases
 
 final class AccountControllerToAccountAdapter:
-    Account,
-    @unchecked Sendable
+    CallMakingAccount,
+    Sendable
 {
-    private weak var controller: AccountController?
+    @MainActor private weak var controller: AccountController?
 
+    let uuid: String
+    let domain: String
+
+    @MainActor
     init(controller: AccountController) {
         self.controller = controller
+        uuid = controller.account.uuid
+        domain = controller.account.domain
     }
 
-    var uuid: String {
-        controller?.account.uuid ?? ""
-    }
-
-    var domain: String {
-        controller?.account.domain ?? ""
-    }
-
+    @MainActor
     func makeCall(to uri: URI, label: String) {
         guard let controller else { return }
 

@@ -38,12 +38,15 @@ final class CompositionRoot {
     let incomingCallContactResolver: IncomingCallContactResolver
     let crmGatewaySettings: CRMGatewaySettings
     let crmKeyLookupProvider: any CRMKeyLookupProvider
+    let crmPhoneAppendRegistry: CRMPhoneAppendRegistry
+    let customerContextPendingWrites: CustomerContextPendingWrites
     private let defaults: UserDefaults
 
     private let userAgentEventSource: AKSIPUserAgentEventSource
     private let devicesChangeEventSource: CoreAudioSystemAudioDevicesChangeEventSource
     private let soundIOChangeEventSource: CoreAudioDefaultSystemSoundIOChangeEventSource
     private let accountsEventSource: PreferencesControllerAccountsEventSource
+    let callHistoryRecorder: CallHistoryCallEventTarget
     private let callEventSource: AKSIPCallEventSource
     private let contactsChangeEventSource: Any
     private let dayChangeEventSource: NSCalendarDayChangeEventSource
@@ -53,6 +56,8 @@ final class CompositionRoot {
         defaults = UserDefaults.standard
         crmGatewaySettings = CRMGatewaySettings(defaults: defaults)
         crmKeyLookupProvider = CRMGatewayClient()
+        crmPhoneAppendRegistry = CRMPhoneAppendRegistry()
+        customerContextPendingWrites = CustomerContextPendingWrites()
 
         let systemAudioDevicesFactory = CoreAudioSystemAudioDevicesFactory(objectIDs: CoreAudioDevicesAudioObjectIDs())
 
@@ -154,6 +159,8 @@ final class CompositionRoot {
             )
         )
 
+        callHistoryRecorder = CallHistoryCallEventTarget(histories: callHistories)
+
         accountsEventSource = PreferencesControllerAccountsEventSource(
             center: NotificationCenter.default, target: CallHistoriesHistoryRemoveUseCase(histories: callHistories)
         )
@@ -162,7 +169,7 @@ final class CompositionRoot {
             center: NotificationCenter.default,
             target: CallEventTargets(
                 targets: [
-                    CallHistoryCallEventTarget(histories: callHistories),
+                    callHistoryRecorder,
                     MusicPlayerCallEventTarget(
                         player: SystemMediaPlayer(),
                         calls: userAgent,

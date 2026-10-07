@@ -32,12 +32,13 @@ enum CustomerContextLoadResult: Sendable {
 }
 
 enum CustomerContextSaveResult: Sendable {
-    case success
+    case success(CustomerContextSnapshot)
+    case conflict(CustomerContextSnapshot)
     case failure
 }
 
 @CallHistoryActor
-final class CustomerContextStore {
+final class CustomerContextStore: CustomerContextStoring {
     static let shared = CustomerContextStore()
 
     private var connection: SQLiteConnection?
@@ -95,11 +96,19 @@ final class CustomerContextStore {
         }
     }
 
+    init(databaseURL: URL) throws {
+        guard databaseURL.isFileURL else { throw SQLiteStoreError.databaseUnavailable }
+        connection = try SQLiteConnectionPool.shared.connection(at: databaseURL)
+        try ensureSchema()
+    }
+
     func load(
         address: CustomerPartyAddress,
         displayName: String,
+        accountUUID: String,
         callIdentifier: String
     ) -> CustomerContextLoadResult {
+        guard !accountUUID.isEmpty, !callIdentifier.isEmpty else { return .failure }
         let interval = PerformanceSignposts.database.beginInterval(
             "LoadCustomerContext"
         )
@@ -119,6 +128,7 @@ final class CustomerContextStore {
             )
             let result = try snapshot(
                 partyID: partyID,
+                accountUUID: accountUUID,
                 callIdentifier: callIdentifier
             )
             PerformanceSignposts.database.endInterval(
@@ -149,12 +159,11 @@ final class CustomerContextStore {
     func save(
         address: CustomerPartyAddress,
         displayName: String,
+        accountUUID: String,
         callIdentifier: String,
-        company: String,
-        keys: [String],
-        emails: [String],
-        note: String
+        edit: CustomerContextEdit
     ) -> CustomerContextSaveResult {
+        guard !accountUUID.isEmpty, !callIdentifier.isEmpty else { return .failure }
         let interval = PerformanceSignposts.database.beginInterval(
             "SaveCustomerContext"
         )
@@ -173,26 +182,35 @@ final class CustomerContextStore {
                 displayName: displayName
             )
 
+            var savedSnapshot: CustomerContextSnapshot?
+            var conflictSnapshot: CustomerContextSnapshot?
             try transaction {
-                try updateParty(
-                    partyID: partyID,
-                    displayName: displayName,
-                    company: company
-                )
-                try replaceKeys(keys, partyID: partyID)
-                try replaceEmails(emails, partyID: partyID)
-                try saveNote(
-                    note,
-                    partyID: partyID,
-                    callIdentifier: callIdentifier
-                )
+                let current = try snapshot(partyID: partyID, accountUUID: accountUUID, callIdentifier: callIdentifier)
+                guard !edit.conflicts(with: current) else {
+                    conflictSnapshot = current
+                    return
+                }
+                if let company = edit.company {
+                    try updateParty(partyID: partyID, displayName: displayName, company: company)
+                }
+                if let keys = edit.keys { try replaceKeys(keys, partyID: partyID) }
+                if let emails = edit.emails { try replaceEmails(emails, partyID: partyID) }
+                if let note = edit.note {
+                    try saveNote(note, partyID: partyID, accountUUID: accountUUID, callIdentifier: callIdentifier)
+                }
+                savedSnapshot = try snapshot(partyID: partyID, accountUUID: accountUUID, callIdentifier: callIdentifier)
+            }
+            if let conflictSnapshot {
+                PerformanceSignposts.database.endInterval("SaveCustomerContext", interval, "result=conflict")
+                return .conflict(conflictSnapshot)
             }
             PerformanceSignposts.database.endInterval(
                 "SaveCustomerContext",
                 interval,
                 "result=success"
             )
-            return .success
+            guard let savedSnapshot else { return .failure }
+            return .success(savedSnapshot)
         } catch {
             PerformanceSignposts.database.endInterval(
                 "SaveCustomerContext",
@@ -219,9 +237,10 @@ final class CustomerContextStore {
         }
 
         try TelephoneDatabaseSchema.createPartyTables(execute: execute)
-        try TelephoneDatabaseSchema.createCustomerContextTables(
-            execute: execute
-        )
+        guard let connection else { throw SQLiteStoreError.databaseUnavailable }
+        try connection.transaction {
+            try TelephoneDatabaseSchema.migrateCustomerContextTables(connection: connection)
+        }
     }
 
     private func ensureParty(
@@ -285,6 +304,7 @@ final class CustomerContextStore {
 
     private func snapshot(
         partyID: Int64,
+        accountUUID: String,
         callIdentifier: String
     ) throws -> CustomerContextSnapshot {
         var result = CustomerContextSnapshot()
@@ -327,12 +347,13 @@ final class CustomerContextStore {
             """
             SELECT body
             FROM party_notes
-            WHERE party_id = ? AND call_identifier = ?
+            WHERE party_id = ? AND account_uuid = ? AND call_identifier = ?
             LIMIT 1
             """
         )
         sqlite3_bind_int64(currentNote.handle, 1, partyID)
-        try bind(callIdentifier, at: 2, to: currentNote)
+        try bind(accountUUID, at: 2, to: currentNote)
+        try bind(callIdentifier, at: 3, to: currentNote)
         if currentNote.step() == SQLITE_ROW {
             result.currentCallNote = string(at: 0, from: currentNote)
         }
@@ -342,14 +363,15 @@ final class CustomerContextStore {
             SELECT id, body, updated_at
             FROM party_notes
             WHERE party_id = ?
-              AND call_identifier <> ?
+              AND NOT (account_uuid = ? AND call_identifier = ?)
               AND TRIM(body) <> ''
             ORDER BY updated_at DESC
             LIMIT 3
             """
         )
         sqlite3_bind_int64(recentNotes.handle, 1, partyID)
-        try bind(callIdentifier, at: 2, to: recentNotes)
+        try bind(accountUUID, at: 2, to: recentNotes)
+        try bind(callIdentifier, at: 3, to: recentNotes)
         while recentNotes.step() == SQLITE_ROW {
             result.recentNotes.append(
                 CustomerContextNote(
@@ -497,6 +519,7 @@ final class CustomerContextStore {
     private func saveNote(
         _ value: String,
         partyID: Int64,
+        accountUUID: String,
         callIdentifier: String
     ) throws {
         let body = value.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -504,11 +527,12 @@ final class CustomerContextStore {
             let delete = try prepare(
                 """
                 DELETE FROM party_notes
-                WHERE party_id = ? AND call_identifier = ?
+                WHERE party_id = ? AND account_uuid = ? AND call_identifier = ?
                 """
             )
             sqlite3_bind_int64(delete.handle, 1, partyID)
-            try bind(callIdentifier, at: 2, to: delete)
+            try bind(accountUUID, at: 2, to: delete)
+            try bind(callIdentifier, at: 3, to: delete)
             try stepDone(delete)
             return
         }
@@ -519,22 +543,24 @@ final class CustomerContextStore {
             INSERT INTO party_notes
                 (
                     party_id,
+                    account_uuid,
                     call_identifier,
                     body,
                     created_at,
                     updated_at
                 )
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(party_id, call_identifier) DO UPDATE SET
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(party_id, account_uuid, call_identifier) DO UPDATE SET
                 body = excluded.body,
                 updated_at = excluded.updated_at
             """
         )
         sqlite3_bind_int64(statement.handle, 1, partyID)
-        try bind(callIdentifier, at: 2, to: statement)
-        try bind(body, at: 3, to: statement)
-        sqlite3_bind_double(statement.handle, 4, now)
+        try bind(accountUUID, at: 2, to: statement)
+        try bind(callIdentifier, at: 3, to: statement)
+        try bind(body, at: 4, to: statement)
         sqlite3_bind_double(statement.handle, 5, now)
+        sqlite3_bind_double(statement.handle, 6, now)
         try stepDone(statement)
     }
 

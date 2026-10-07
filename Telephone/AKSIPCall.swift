@@ -9,7 +9,16 @@ import Foundation
 import UseCases
 import PJSIPBridge
 
-final class AKSIPCall: Call, CustomStringConvertible, @unchecked Sendable {
+final class AKSIPCall: Call, CallHistoryIdentified, CustomStringConvertible, @unchecked Sendable {
+    let historyIdentifier: String
+    @MainActor private(set) var hasPublishedDisconnect = false
+
+    @MainActor
+    func markDisconnectPublished() -> Bool {
+        guard !hasPublishedDisconnect else { return false }
+        hasPublishedDisconnect = true
+        return true
+    }
     let sipAccount: AKSIPAccount
     var account: any Account { sipAccount }
     var identifier: Int
@@ -71,8 +80,10 @@ final class AKSIPCall: Call, CustomStringConvertible, @unchecked Sendable {
 
     init(
         account: AKSIPAccount,
-        info: PJSUACallInfo
+        info: PJSUACallInfo,
+        historyIdentifier: String = UUID().uuidString
     ) {
+        self.historyIdentifier = historyIdentifier
         sipAccount = account
         identifier = info.identifier
         state = info.state

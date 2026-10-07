@@ -91,7 +91,7 @@ extension SQLiteCallHistory: CallHistory {
         }
 
         let sql = """
-        SELECT user, host, display_name, date, duration, incoming, missed
+        SELECT user, host, display_name, date, duration, incoming, missed, identifier
         FROM calls
         WHERE account_uuid = ?
         ORDER BY date ASC, rowid ASC
@@ -117,7 +117,8 @@ extension SQLiteCallHistory: CallHistory {
                         date: date,
                         duration: duration,
                         isIncoming: incoming,
-                        isMissed: missed
+                        isMissed: missed,
+                        identifier: string(at: 7, from: statement)
                     )
                 )
             }
@@ -232,6 +233,14 @@ private extension SQLiteCallHistory {
                     execute: execute
                 )
                 try execute("PRAGMA user_version = 3")
+            }
+            version = 3
+        }
+        if version < 4 {
+            try transaction {
+                guard let connection else { throw SQLiteStoreError.databaseUnavailable }
+                try TelephoneDatabaseSchema.migrateCustomerContextTables(connection: connection)
+                try execute("PRAGMA user_version = 4")
             }
         }
     }

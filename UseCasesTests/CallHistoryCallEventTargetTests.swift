@@ -36,6 +36,43 @@ final class CallHistoryCallEventTargetTests: XCTestCase {
         let records = await history.allRecords
         XCTAssertEqual(records, [CallHistoryRecord(call: call)])
     }
+    func testDrainWaitsForAllWritesInEventOrder() async {
+        let history = CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})
+        let factory = CallHistoryFactorySpy(history: history)
+        let sut = CallHistoryCallEventTarget(histories: DefaultCallHistories(factory: factory))
+        let account = SimpleAccount(uuid: "account-id", domain: "account.invalid")
+        let calls = (0..<20).map { i in
+            SimpleCall(account: account, remote: URI(user: "user-\(i)", host: "remote.invalid", displayName: ""),
+                date: Date(timeIntervalSinceReferenceDate: Double(i)), duration: i,
+                isIncoming: false, isMissed: false)
+        }
+        for call in calls { sut.didDisconnect(call) }
+        await sut.drain()
+        let records = await history.allRecords
+        XCTAssertEqual(records.map { $0.uri.user }, calls.map { $0.remote.user })
+        await sut.drain()
+        let secondRead = await history.allRecords
+        XCTAssertEqual(secondRead.count, 20)
+    }
+
+    func testDisconnectSnapshotsCallAndAccountBeforeSuspension() async {
+        let history = CallHistorySpy(addCallback: {}, removeCallback: {}, removeAllCallback: {})
+        let factory = CallHistoryFactorySpy(history: history)
+        let sut = CallHistoryCallEventTarget(histories: DefaultCallHistories(factory: factory))
+        let call = MutableHistoryCall()
+        sut.didDisconnect(call)
+        call.duration = 999
+        call.remote = URI(user: "changed", host: "changed.invalid", displayName: "")
+        call.account = SimpleAccount(uuid: "other-account", domain: "other.invalid")
+        await sut.drain()
+        let records = await history.allRecords
+        XCTAssertEqual(factory.invokedUUID, "original-account")
+        XCTAssertEqual(records.first?.duration, 12)
+        XCTAssertEqual(records.first?.uri.user, "original")
+        XCTAssertEqual(records.first?.identifier, "stable-call")
+        XCTAssertEqual(records.first?.uri.host, "")
+    }
+
 }
 
 private func makeCall(account: Account) -> Call {
@@ -47,4 +84,15 @@ private func makeCall(account: Account) -> Call {
         isIncoming: false,
         isMissed: false
     )
+}
+
+
+private final class MutableHistoryCall: NSObject, Call, CallHistoryIdentified, @unchecked Sendable {
+    let historyIdentifier = "stable-call"
+    var account: Account = SimpleAccount(uuid: "original-account", domain: "original.invalid")
+    var remote = URI(user: "original", host: "original.invalid", displayName: "")
+    let date = Date(timeIntervalSinceReferenceDate: 10)
+    var duration = 12
+    let isIncoming = true
+    let isMissed = false
 }

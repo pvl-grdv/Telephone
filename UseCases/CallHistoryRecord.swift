@@ -26,8 +26,8 @@ public struct CallHistoryRecord: Sendable {
     public let isIncoming: Bool
     public let isMissed: Bool
 
-    public init(uri: URI, date: Date, duration: Int, isIncoming: Bool, isMissed: Bool) {
-        identifier = "\(uri.user)@\(uri.host)|\(date.timeIntervalSinceReferenceDate)|\(duration)|\(isIncoming ? 1 : 0)"
+    public init(uri: URI, date: Date, duration: Int, isIncoming: Bool, isMissed: Bool, identifier: String? = nil) {
+        self.identifier = identifier ?? "\(uri.user)@\(uri.host)|\(date.timeIntervalSinceReferenceDate)|\(duration)|\(isIncoming ? 1 : 0)"
         self.uri = uri
         self.date = date
         self.duration = duration
@@ -41,7 +41,8 @@ public struct CallHistoryRecord: Sendable {
             date: date,
             duration: duration,
             isIncoming: isIncoming,
-            isMissed: isMissed
+            isMissed: isMissed,
+            identifier: identifier
         )
     }
 }
@@ -49,6 +50,7 @@ public struct CallHistoryRecord: Sendable {
 extension CallHistoryRecord: Equatable {
     public static func ==(lhs: CallHistoryRecord, rhs: CallHistoryRecord) -> Bool {
         return
+            lhs.identifier == rhs.identifier &&
             lhs.uri == rhs.uri &&
             lhs.date == rhs.date &&
             lhs.duration == rhs.duration &&
@@ -64,7 +66,8 @@ extension CallHistoryRecord {
             date: call.date,
             duration: call.duration,
             isIncoming: call.isIncoming,
-            isMissed: call.isMissed
+            isMissed: call.isMissed,
+            identifier: (call as? any CallHistoryIdentified)?.historyIdentifier
         )
     }
 }

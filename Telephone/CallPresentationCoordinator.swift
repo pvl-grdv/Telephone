@@ -66,7 +66,8 @@ final class CallPresentationCoordinator: Identifiable {
 
         crmKeyLookupModel = isTransfer ? nil : CRMKeyLookupModel(
             settings: accountController.crmGatewaySettings,
-            provider: accountController.crmKeyLookupProvider
+            provider: accountController.crmKeyLookupProvider,
+            appendRegistry: accountController.crmPhoneAppendRegistry
         )
 
         transferCoordinator = CallTransferCoordinator(
@@ -78,7 +79,8 @@ final class CallPresentationCoordinator: Identifiable {
             ? nil
             : CustomerContextCoordinator(
                 callController: callController,
-                model: model
+                model: model,
+                pendingWrites: accountController.customerContextPendingWrites
             )
 
         CallPresentationRegistry.shared.register(self, key: id)

@@ -39,4 +39,29 @@ final class CallHistoryRecordTests: XCTestCase {
             "\(user)@\(host)|\(date.timeIntervalSinceReferenceDate)|\(duration)|\(sut.isIncoming ? 1 : 0)"
         )
     }
+    func testRemovingHostPreservesExplicitCallIdentity() {
+        let record = CallHistoryRecord(uri: URI(user: "+70005550101", host: "account.invalid", displayName: ""),
+            date: Date(timeIntervalSinceReferenceDate: 10), duration: 12,
+            isIncoming: true, isMissed: false, identifier: "stable-conversation")
+        XCTAssertEqual(record.removingHost().identifier, "stable-conversation")
+        XCTAssertEqual(record.removingHost().uri.host, "")
+    }
+
+    func testRemovingHostPreservesLegacyStoredIdentity() {
+        let record = CallHistoryRecord(uri: URI(user: "101", host: "account.invalid", displayName: ""),
+            date: Date(timeIntervalSinceReferenceDate: 10), duration: 0,
+            isIncoming: true, isMissed: true)
+        XCTAssertEqual(record.removingHost().identifier, record.identifier)
+    }
+
+    func testIdenticalCallDetailsDoNotCollapseDistinctConversationIdentities() {
+        let uri = URI(user: "101", host: "account.invalid", displayName: "")
+        let date = Date(timeIntervalSinceReferenceDate: 10)
+        let first = CallHistoryRecord(uri: uri, date: date, duration: 0,
+            isIncoming: true, isMissed: true, identifier: "first")
+        let second = CallHistoryRecord(uri: uri, date: date, duration: 0,
+            isIncoming: true, isMissed: true, identifier: "second")
+        XCTAssertNotEqual(first, second)
+    }
+
 }

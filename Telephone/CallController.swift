@@ -107,6 +107,10 @@ class CallController: AKSIPCallDelegate {
         call?.isMissed ?? false
     }
 
+    var customerContextAccountUUID: String? {
+        accountController?.account.uuid ?? call?.sipAccount.uuid
+    }
+
     let userAgent: AKSIPUserAgent
     let defaults: UserDefaults
     private(set) var presentation: CallPresentationCoordinator!

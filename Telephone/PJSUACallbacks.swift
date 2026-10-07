@@ -173,14 +173,16 @@ func PJSUAOnIncomingCall(
         )
     }
 
-    Task { @MainActor in
-        guard let account = agent.account(
-            withIdentifier: Int(accountID)
-        ) else {
+    SIPCallEventSequence.shared.enqueueCall(
+        identifier: Int(callID), account: agent.captureAccount(withIdentifier: Int(accountID)), incoming: true
+    ) { incarnation in
+        guard let account = incarnation.account as? AKSIPAccount else { return }
+        let call = account.addCall(info: snapshot, incarnation: incarnation)
+        guard account.identifier >= 0 else {
+            call.duration = incarnation.latestDuration.withLock { $0 } ?? 0
+            agent.finalizeCall(call)
             return
         }
-
-        let call = account.addCall(info: snapshot)
         call.incomingIdentityHeaders = headers
         account.delegate?.sipAccount(account, didReceive: call)
 
@@ -306,21 +308,18 @@ func PJSUAOnCallState(
         && firstMedia?.status.rawValue
             == PJSUA_CALL_MEDIA_NONE.rawValue
 
-    Task { @MainActor in
-        var call = agent.call(
-            withIdentifier: Int(callID)
-        )
+    SIPCallEventSequence.shared.enqueueCall(
+        identifier: Int(callID),
+        account: agent.captureAccount(withIdentifier: snapshot.accountIdentifier),
+        startsCall: snapshot.state == PJSIP_INV_STATE_CALLING,
+        endsCall: snapshot.state == PJSIP_INV_STATE_DISCONNECTED,
+        duration: duration
+    ) { incarnation in
+        guard let account = incarnation.account as? AKSIPAccount else { return }
+        var call = incarnation.call.withLock { $0 as? AKSIPCall }
 
         if call == nil, snapshot.state == PJSIP_INV_STATE_CALLING {
-            guard let account = agent.account(
-                withIdentifier: snapshot.accountIdentifier
-            ) else {
-                Log.sip.error(
-                    "Could not find account for call=\(callID, privacy: .public)"
-                )
-                return
-            }
-            call = account.addCall(info: snapshot)
+            call = account.addCall(info: snapshot, incarnation: incarnation)
         }
 
         guard let call else {
@@ -330,6 +329,12 @@ func PJSUAOnCallState(
             return
         }
 
+        guard !call.hasPublishedDisconnect else { return }
+        call.duration = duration
+        guard account.identifier >= 0 else {
+            agent.finalizeCall(call)
+            return
+        }
         call.state = snapshot.state
         call.stateText = snapshot.stateText
         call.lastStatus = snapshot.lastStatus
@@ -338,9 +343,7 @@ func PJSUAOnCallState(
 
         switch snapshot.state {
         case PJSIP_INV_STATE_DISCONNECTED:
-            agent.stopRingback(for: call)
-            call.sipAccount.remove(call)
-            publishCallEvent(.AKSIPCallDidDisconnect, call: call)
+            agent.finalizeCall(call)
 
         case PJSIP_INV_STATE_EARLY:
             if shouldStartRingback {
@@ -401,19 +404,20 @@ func PJSUAOnCallMediaState(_ callID: pjsua_call_id) {
         return
     }
 
-    let status = audio.status
+    let statusRawValue = audio.status.rawValue
     let conferencePort = audio.stream.aud.conf_slot
 
-    Task { @MainActor in
-        let agent = AKSIPUserAgent.shared()
-        guard let call = agent.call(
-            withIdentifier: Int(callID)
-        ) else {
-            return
-        }
+    let agent = AKSIPUserAgent.shared()
+    SIPCallEventSequence.shared.enqueueCall(
+        identifier: Int(callID), account: agent.captureAccount(withIdentifier: Int(info.acc_id))
+    ) { incarnation in
+        guard agent.isStarted,
+              let call = incarnation.call.withLock({ $0 as? AKSIPCall }),
+              !call.hasPublishedDisconnect,
+              call.sipAccount.identifier >= 0 else { return }
 
-        if status.rawValue == PJSUA_CALL_MEDIA_ACTIVE.rawValue
-            || status.rawValue
+        if statusRawValue == PJSUA_CALL_MEDIA_ACTIVE.rawValue
+            || statusRawValue
                 == PJSUA_CALL_MEDIA_REMOTE_HOLD.rawValue
         {
             _ = pjsua_conf_connect(conferencePort, 0)
@@ -425,7 +429,7 @@ func PJSUAOnCallMediaState(_ callID: pjsua_call_id) {
         agent.stopRingback(for: call)
 
         let name: Notification.Name?
-        switch status.rawValue {
+        switch statusRawValue {
         case PJSUA_CALL_MEDIA_ACTIVE.rawValue:
             name = .AKSIPCallMediaDidBecomeActive
         case PJSUA_CALL_MEDIA_LOCAL_HOLD.rawValue:
@@ -524,7 +528,7 @@ private func equalsIgnoringCase(
 
 
 @MainActor
-private func publishCallEvent(
+func publishCallEvent(
     _ name: Notification.Name,
     call: AKSIPCall,
     userInfo: [AnyHashable: Any]? = nil

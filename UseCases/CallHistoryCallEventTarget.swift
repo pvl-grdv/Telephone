@@ -11,8 +11,30 @@
 //  (at your option) any later version.
 //
 
+import Synchronization
+
 public final class CallHistoryCallEventTarget: Sendable {
     private let histories: CallHistories
+    private let pending = Mutex<PendingWrites>(PendingWrites())
+
+    private struct PendingWrites {
+        var generation: UInt64 = 0
+        var tail: Task<Void, Never>?
+    }
+
+    /// Drain after the SIP producer has finalized its remaining calls.
+    public func drain() async {
+        while true {
+            let snapshot = pending.withLock { ($0.generation, $0.tail) }
+            await snapshot.1?.value
+            let finished = pending.withLock { state in
+                guard state.generation == snapshot.0 else { return false }
+                state.tail = nil
+                return true
+            }
+            if finished { return }
+        }
+    }
 
     public init(histories: CallHistories) {
         self.histories = histories
@@ -21,12 +43,23 @@ public final class CallHistoryCallEventTarget: Sendable {
 
 extension CallHistoryCallEventTarget: CallEventTarget {
     public func didDisconnect(_ call: Call) {
-        Task {
-            CallHistoryRecordAddUseCase(
-                history: await histories.history(withUUID: call.account.uuid),
-                record: CallHistoryRecord(call: call),
-                domain: call.account.domain
-            ).execute()
+        // Capture mutable SIP/account objects before the first suspension.
+        let accountUUID = call.account.uuid
+        let domain = call.account.domain
+        let record = CallHistoryRecord(call: call)
+        let histories = histories
+        pending.withLock { state in
+            let previous = state.tail
+            state.generation &+= 1
+            state.tail = Task {
+                await previous?.value
+                let history = await histories.history(withUUID: accountUUID)
+                await CallHistoryRecordAddUseCase(
+                    history: history,
+                    record: record,
+                    domain: domain
+                ).executeAndWait()
+            }
         }
     }
 

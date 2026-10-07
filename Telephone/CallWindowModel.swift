@@ -260,11 +260,11 @@ final class CallWindowModel {
     var previousConversationCount = 0
     var lastCallDate: Date?
     var recentCustomerNotes: [CustomerContextNote] = []
-    var crmProfile: CRMCustomerProfile?
     var customerContextLoaded = false
     var customerContextLoadFailed = false
     var customerContextSaving = false
     var customerContextSaveFailed = false
+    var customerContextSaveConflict = false
     var customerContextSaveSucceeded = false
 
     var hasCustomerContextData: Bool {
@@ -282,7 +282,6 @@ final class CallWindowModel {
             ).isEmpty
             || previousConversationCount > 0
             || !recentCustomerNotes.isEmpty
-            || crmProfile?.hasContent == true
     }
 
     func showIncomingState() {

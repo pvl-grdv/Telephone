@@ -22,34 +22,38 @@ final class AccountController:
     CallControllerDelegate,
     AccountPresentationCoordinatorDelegate
 {
+    private let session = AccountSession()
+    private var userAgentEventSource: AKSIPUserAgentEventSource?
     let account: AKSIPAccount
     let ringtonePlayback: any RingtonePlaybackUseCase
     let accountDescription: String
     let crmGatewaySettings: CRMGatewaySettings
     let crmKeyLookupProvider: any CRMKeyLookupProvider
+    let crmPhoneAppendRegistry: CRMPhoneAppendRegistry
+    let customerContextPendingWrites: CustomerContextPendingWrites
 
     var enabled = false
 
     var callControllers: [CallController] = []
 
     var attemptingToRegisterAccount: Bool {
-        get { presentation.attemptingToRegister }
-        set { presentation.attemptingToRegister = newValue }
+        get { session.attemptingToRegister }
+        set { session.attemptingToRegister = newValue }
     }
 
     var attemptingToUnregisterAccount: Bool {
-        get { presentation.attemptingToUnregister }
-        set { presentation.attemptingToUnregister = newValue }
+        get { session.attemptingToUnregister }
+        set { session.attemptingToUnregister = newValue }
     }
 
     var shouldPresentRegistrationError: Bool {
-        get { presentation.shouldPresentRegistrationError }
-        set { presentation.shouldPresentRegistrationError = newValue }
+        get { session.shouldPresentRegistrationError }
+        set { session.shouldPresentRegistrationError = newValue }
     }
 
     var accountUnavailable: Bool {
-        get { presentation.accountUnavailable }
-        set { presentation.accountUnavailable = newValue }
+        get { session.accountUnavailable }
+        set { session.accountUnavailable = newValue }
     }
 
     var substitutesPlusCharacter = false
@@ -70,7 +74,7 @@ final class AccountController:
     }
 
     var canMakeCalls: Bool {
-        presentation.canMakeCalls
+        session.canMakeCalls
     }
 
     private let userAgent: AKSIPUserAgent
@@ -96,12 +100,16 @@ final class AccountController:
         callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
         crmGatewaySettings: CRMGatewaySettings = CRMGatewaySettings(),
         crmKeyLookupProvider: any CRMKeyLookupProvider = CRMGatewayClient(),
+        crmPhoneAppendRegistry: CRMPhoneAppendRegistry = CRMPhoneAppendRegistry(),
+        customerContextPendingWrites: CustomerContextPendingWrites = CustomerContextPendingWrites(),
         callControllerDidClose: @escaping @MainActor () -> Void = {}
     ) {
         self.account = account
         self.accountDescription = accountDescription
         self.crmGatewaySettings = crmGatewaySettings
         self.crmKeyLookupProvider = crmKeyLookupProvider
+        self.crmPhoneAppendRegistry = crmPhoneAppendRegistry
+        self.customerContextPendingWrites = customerContextPendingWrites
         self.userAgent = userAgent
         self.ringtonePlayback = ringtonePlayback
         self.sleepStatus = sleepStatus
@@ -119,7 +127,12 @@ final class AccountController:
             account: AccountControllerToAccountAdapter(
                 controller: self
             ),
+            session: session,
             delegate: self
+        )
+        userAgentEventSource = AKSIPUserAgentEventSource(
+            target: AccountRegistrationEvents(controller: self),
+            agent: userAgent
         )
     }
 
@@ -156,7 +169,7 @@ final class AccountController:
     }
 
     func resetRegistrationIntent() {
-        presentation.resetRegistrationIntent()
+        session.resetRegistrationIntent()
     }
 
     func disableAccount() {
@@ -359,15 +372,18 @@ final class AccountController:
     }
 
     func showUnavailableState() {
-        presentation.showUnavailableState()
+        session.transition(to: .unavailable)
+        presentation.accountStateDidChange()
     }
 
     func showConnectionLostState() {
-        presentation.showConnectionLostState()
+        session.transition(to: .connectionLost)
+        presentation.accountStateDidChange()
     }
 
     func showConnectingState() {
-        presentation.showConnectingState()
+        session.transition(to: .connecting)
+        presentation.accountStateDidChange()
     }
 
     // MARK: - AccountPresentationCoordinatorDelegate
@@ -600,11 +616,13 @@ final class AccountController:
     }
 
     private func showAvailableState() {
-        presentation.showAvailableState()
+        session.transition(to: .available)
+        presentation.accountStateDidChange()
     }
 
     private func showOfflineState() {
-        presentation.showOfflineState()
+        session.transition(to: .offline)
+        presentation.accountStateDidChange()
     }
 
     // MARK: - Outgoing calls
@@ -860,4 +878,16 @@ private func isTelephoneNumber(_ value: String) -> Bool {
 
     return !digits.isEmpty
         && digits.allSatisfy { $0 >= "0" && $0 <= "9" }
+}
+
+/// Weak event adapter keeps registration ownership outside window presentation.
+@MainActor
+private final class AccountRegistrationEvents: @preconcurrency UserAgentEventTarget {
+    private weak var controller: AccountController?
+    init(controller: AccountController) { self.controller = controller }
+    func didFinishStarting(_ agent: UserAgent) { controller?.userAgentDidFinishStarting() }
+    func didFinishStopping(_ agent: UserAgent) {}
+    func didDetectNAT(_ agent: UserAgent) {}
+    func didMakeCall(_ agent: UserAgent) {}
+    func didReceiveCall(_ agent: UserAgent) {}
 }

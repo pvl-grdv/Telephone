@@ -374,6 +374,82 @@ struct CRMHistoryLookupModelTests {
         #expect(await fixture.storage.saved.isEmpty)
     }
 
+    @Test func closingAfterDispatchCannotBeBypassedWithASavedSnapshotInANewWindow() async throws {
+        let fixture = try await linkFixture()
+        fixture.model.preparePhoneLink()
+        await waitForLinkPreparation(fixture.model)
+        let confirmation = try #require(fixture.model.pendingPhoneLink)
+        await fixture.provider.setAppendData(try PhoneGatewayFixture.appended())
+        await fixture.provider.holdNextAppend()
+        fixture.model.confirmPhoneLink(confirmation)
+        await fixture.provider.waitForAppend()
+        fixture.model.close()
+        let now = fixture.now
+        let reopened = CRMHistoryLookupModel(storage: fixture.storage, settings: fixture.settings, provider: fixture.provider, appendRegistry: fixture.registry, now: { now })
+        reopened.load(accountUUID: "account-a", callIdentifier: "call-a")
+        await waitUntilIdle(reopened)
+        #expect(reopened.phoneLinkState == .failed(.phoneWriteUnconfirmed))
+        #expect(!reopened.canLinkPhone)
+        reopened.cancelCheck()
+        reopened.cancelCheck()
+        #expect(reopened.phoneLinkState == .failed(.phoneWriteUnconfirmed))
+        reopened.preparePhoneLink()
+        #expect(reopened.pendingPhoneLink == nil)
+        #expect(await fixture.provider.appendCalls == 1)
+        await fixture.provider.finishAppend()
+        for _ in 0..<30 { await Task.yield() }
+        #expect(reopened.phoneLinkState == .failed(.phoneWriteUnconfirmed))
+        reopened.preparePhoneLink()
+        await waitForLinkPreparation(reopened)
+        #expect(reopened.pendingPhoneLink != nil)
+        #expect(await fixture.provider.appendCalls == 1)
+        #expect(await fixture.provider.keyCalls == 2)
+    }
+
+    @Test func failedFreshReadKeepsAnUnconfirmedWriteVisible() async throws {
+        let fixture = try await linkFixture()
+        let operation = fixture.registry.operation(origin: fixture.settings.origin, phone: "+70005550101", companyID: 1200456)
+        let attempt = try #require(operation.begin())
+        #expect(operation.dispatch(attempt))
+        operation.fail(attempt, error: CRMGatewayError.phoneWriteUnconfirmed)
+        await fixture.provider.setKeyError(.unavailable)
+        fixture.model.preparePhoneLink()
+        await waitForLinkPreparation(fixture.model)
+        #expect(fixture.model.phoneLinkState == .failed(.phoneWriteUnconfirmed))
+        #expect(fixture.model.pendingPhoneLink == nil)
+        #expect(await fixture.provider.appendCalls == 0)
+        #expect(operation.begin() == nil)
+    }
+
+    @Test func alreadyPresentReadCannotReplaceAnotherWindowsPendingWrite() async throws {
+        let fixture = try await linkFixture()
+        var payload = try #require(JSONSerialization.jsonObject(with: PhoneGatewayFixture.keyCustomer()) as? [String: Any])
+        var data = try #require(payload["data"] as? [String: Any])
+        var company = try #require(data["company"] as? [String: Any])
+        company["phone"] = "+70005550101"
+        company["phones"] = ["+70005550101"]
+        data["company"] = company
+        payload["data"] = data
+        await fixture.provider.setKeyResponse(try JSONSerialization.data(withJSONObject: payload))
+        await fixture.provider.holdNextKeyLookup()
+        fixture.model.preparePhoneLink()
+        await fixture.provider.waitForRequest()
+        let operation = fixture.registry.operation(origin: fixture.settings.origin, phone: "+70005550101", companyID: 1200456)
+        // Another window completes its fresh read and explicitly starts a write.
+        operation.acceptFreshRead()
+        let attempt = try #require(operation.begin())
+        #expect(operation.dispatch(attempt))
+        await fixture.provider.finishPending()
+        for _ in 0..<50 { await Task.yield() }
+        #expect(operation.state == .saving)
+        #expect(operation.hasPendingRequest)
+        #expect(fixture.model.snapshot?.customer?.company.containsPhone("+70005550101") == false)
+        #expect(fixture.model.pendingPhoneLink == nil)
+        #expect(await fixture.storage.saved.isEmpty)
+        #expect(await fixture.provider.appendCalls == 0)
+        operation.finish(attempt, added: true)
+    }
+
     private func linkFixture() async throws -> HistoryFixture {
         let fixture = try await makeFixture()
         let data = try PhoneGatewayFixture.keyCustomer()
@@ -411,8 +487,9 @@ struct CRMHistoryLookupModelTests {
         let storage = HistoryStorageFake()
         let provider = HistoryProviderFake(response: try response ?? PhoneGatewayFixture.oneMatch(), hold: hold)
         let now = Date(timeIntervalSince1970: 1_800_000_000.125)
-        let model = CRMHistoryLookupModel(storage: storage, settings: settings, provider: provider, now: { now })
-        return HistoryFixture(settings: settings, storage: storage, provider: provider, model: model, now: now)
+        let registry = CRMPhoneAppendRegistry()
+        let model = CRMHistoryLookupModel(storage: storage, settings: settings, provider: provider, appendRegistry: registry, now: { now })
+        return HistoryFixture(settings: settings, storage: storage, provider: provider, registry: registry, model: model, now: now)
     }
 
     private func waitUntilIdle(_ model: CRMHistoryLookupModel) async {
@@ -429,6 +506,7 @@ private struct HistoryFixture {
     let settings: CRMGatewaySettings
     let storage: HistoryStorageFake
     let provider: HistoryProviderFake
+    let registry: CRMPhoneAppendRegistry
     let model: CRMHistoryLookupModel
     let now: Date
 }
@@ -477,10 +555,14 @@ private actor HistoryProviderFake: CRMKeyLookupProvider {
     private var error: CRMGatewayError?
     private var pending: CheckedContinuation<Void, Never>?
     private var ready: CheckedContinuation<Void, Never>?
+    private var keyError: CRMGatewayError?
     private var keyResponse = GatewayFixture.customer
     private var holdKey = false
     private var appendError: CRMGatewayError? = .forbidden
     private var appendData: Data?
+    private var holdAppend = false
+    private var pendingAppend: CheckedContinuation<Void, Never>?
+    private var appendReady: CheckedContinuation<Void, Never>?
     private(set) var calls: [Call] = []
     private(set) var emailCalls: [EmailCall] = []
     private(set) var keyCalls = 0
@@ -497,6 +579,7 @@ private actor HistoryProviderFake: CRMKeyLookupProvider {
                 ready = nil
             }
         }
+        if let keyError { throw keyError }
         return try JSONDecoder().decode(CRMKeyLookupResponse.self, from: keyResponse)
     }
     func customer(forEmail email: String, companyID: Int?, configuration: CRMGatewayConfiguration) async throws -> CRMPhoneLookupResponse {
@@ -524,9 +607,17 @@ private actor HistoryProviderFake: CRMKeyLookupProvider {
         let data = try companyID == nil ? response : PhoneGatewayFixture.ambiguous(includeInventory: true)
         return try JSONDecoder().decode(CRMPhoneLookupResponse.self, from: data)
     }
-    func appendPhone(_ phoneNumber: String, companyID: Int, sourceKeyID: Int, expectedPhone: String, configuration: CRMGatewayConfiguration) throws -> CRMPhoneAppendResponse {
+    func appendPhone(_ phoneNumber: String, companyID: Int, sourceKeyID: Int, expectedPhone: String, configuration: CRMGatewayConfiguration) async throws -> CRMPhoneAppendResponse {
         appendCalls += 1
         appendArguments.append(AppendCall(phone: phoneNumber, companyID: companyID, sourceKeyID: sourceKeyID, expectedPhone: expectedPhone))
+        if holdAppend {
+            holdAppend = false
+            await withCheckedContinuation { continuation in
+                pendingAppend = continuation
+                appendReady?.resume()
+                appendReady = nil
+            }
+        }
         if let appendError { throw appendError }
         guard let appendData else { throw CRMGatewayError.invalidResponse }
         return try JSONDecoder().decode(CRMPhoneAppendResponse.self, from: appendData)
@@ -537,8 +628,15 @@ private actor HistoryProviderFake: CRMKeyLookupProvider {
     }
     func finishPending() { pending?.resume(); pending = nil }
     func setError(_ value: CRMGatewayError) { error = value }
-    func setKeyResponse(_ data: Data) { keyResponse = data }
+    func setKeyError(_ value: CRMGatewayError) { keyError = value }
+    func setKeyResponse(_ data: Data) { keyError = nil; keyResponse = data }
     func holdNextKeyLookup() { holdKey = true }
     func setAppendError(_ value: CRMGatewayError) { appendError = value }
     func setAppendData(_ data: Data) { appendError = nil; appendData = data }
+    func holdNextAppend() { holdAppend = true }
+    func waitForAppend() async {
+        if pendingAppend != nil { return }
+        await withCheckedContinuation { appendReady = $0 }
+    }
+    func finishAppend() { pendingAppend?.resume(); pendingAppend = nil }
 }

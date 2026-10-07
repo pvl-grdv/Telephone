@@ -87,7 +87,8 @@ struct CRMPhoneLookupModelTests {
         let confirmation = try #require(fixture.model.pendingPhoneLink)
         fixture.model.confirmPhoneLink(confirmation)
         await waitForWrite(fixture.model)
-        #expect(fixture.model.phoneLinkState == .failed(error))
+        let expected: CRMGatewayError = error == .unavailable ? .phoneWriteUnconfirmed : error
+        #expect(fixture.model.phoneLinkState == .failed(expected))
         #expect(!fixture.model.canLinkPhone)
         fixture.model.preparePhoneLink()
         #expect(fixture.model.pendingPhoneLink == nil)
@@ -111,6 +112,38 @@ struct CRMPhoneLookupModelTests {
         #expect(fixture.model.state == .idle)
     }
 
+    @Test func cancelledDispatchedAppendSurvivesNewWindowAndNeedsAnotherFreshRead() async throws {
+        let fixture = try await manualKeyFixture()
+        await fixture.provider.holdNextAppend()
+        fixture.model.preparePhoneLink()
+        let confirmation = try #require(fixture.model.pendingPhoneLink)
+        fixture.model.confirmPhoneLink(confirmation)
+        await fixture.provider.waitForAppend()
+        fixture.model.deactivateContext()
+        fixture.model.cancel()
+        #expect(fixture.model.phoneLinkState == .failed(.phoneWriteUnconfirmed))
+        let reopened = CRMKeyLookupModel(settings: fixture.settings, provider: fixture.provider, appendRegistry: fixture.registry)
+        reopened.setCallerPhone("70005550101", isActive: false)
+        reopened.keyNumber = "76543"
+        reopened.activateContext()
+        await waitUntilFinished(reopened)
+        reopened.search()
+        await waitUntilFinished(reopened)
+        #expect(reopened.phoneLinkState == .failed(.phoneWriteUnconfirmed))
+        #expect(!reopened.canLinkPhone)
+        reopened.preparePhoneLink()
+        #expect(reopened.pendingPhoneLink == nil)
+        #expect(await fixture.provider.appendCalls.count == 1)
+        await fixture.provider.finishAppend()
+        for _ in 0..<30 { await Task.yield() }
+        #expect(reopened.phoneLinkState == .failed(.phoneWriteUnconfirmed))
+        #expect(!reopened.canLinkPhone)
+        reopened.search()
+        await waitUntilFinished(reopened)
+        #expect(reopened.canLinkPhone)
+        #expect(await fixture.provider.appendCalls.count == 1)
+    }
+
     private func manualKeyFixture() async throws -> PhoneModelFixture {
         let missing = Data(#"""
         {"data":null,"matches":[],"meta":{"requestId":"fictional-missing","fetchedAt":"2026-01-01T12:00:00Z","complete":true,"fromCache":false}}
@@ -130,7 +163,8 @@ struct CRMPhoneLookupModelTests {
         let settings = CRMGatewaySettings(defaults: defaults, tokenStore: PhoneTestTokenStore())
         try await settings.save(enabled: true, origin: "https://gateway.example", newToken: "fictional-test-token")
         let provider = PhoneModelProviderFake(phoneData: phoneData)
-        return PhoneModelFixture(settings: settings, provider: provider, model: CRMKeyLookupModel(settings: settings, provider: provider))
+        let registry = CRMPhoneAppendRegistry()
+        return PhoneModelFixture(settings: settings, provider: provider, registry: registry, model: CRMKeyLookupModel(settings: settings, provider: provider, appendRegistry: registry))
     }
 
     private func waitUntilFinished(_ model: CRMKeyLookupModel) async {
@@ -148,6 +182,7 @@ struct CRMPhoneLookupModelTests {
 private struct PhoneModelFixture {
     let settings: CRMGatewaySettings
     let provider: PhoneModelProviderFake
+    let registry: CRMPhoneAppendRegistry
     let model: CRMKeyLookupModel
 }
 
@@ -171,6 +206,9 @@ private actor PhoneModelProviderFake: CRMKeyLookupProvider {
     private(set) var companyChoices: [Int?] = []
     private(set) var appendCalls: [AppendCall] = []
     private var appendError: CRMGatewayError?
+    private var holdAppend = false
+    private var pendingAppend: CheckedContinuation<Void, Never>?
+    private var appendReady: CheckedContinuation<Void, Never>?
 
     init(phoneData: Data) { self.phoneData = phoneData }
 
@@ -185,11 +223,25 @@ private actor PhoneModelProviderFake: CRMKeyLookupProvider {
         return try JSONDecoder().decode(CRMPhoneLookupResponse.self, from: data)
     }
 
-    func appendPhone(_ phoneNumber: String, companyID: Int, sourceKeyID: Int, expectedPhone: String, configuration: CRMGatewayConfiguration) throws -> CRMPhoneAppendResponse {
+    func appendPhone(_ phoneNumber: String, companyID: Int, sourceKeyID: Int, expectedPhone: String, configuration: CRMGatewayConfiguration) async throws -> CRMPhoneAppendResponse {
         appendCalls.append(AppendCall(phone: phoneNumber, companyID: companyID, sourceKeyID: sourceKeyID, expectedPhone: expectedPhone))
+        if holdAppend {
+            holdAppend = false
+            await withCheckedContinuation { continuation in
+                pendingAppend = continuation
+                appendReady?.resume()
+                appendReady = nil
+            }
+        }
         if let appendError { throw appendError }
         return try JSONDecoder().decode(CRMPhoneAppendResponse.self, from: PhoneGatewayFixture.appended())
     }
 
     func setAppendError(_ error: CRMGatewayError) { appendError = error }
+    func holdNextAppend() { holdAppend = true }
+    func waitForAppend() async {
+        if pendingAppend != nil { return }
+        await withCheckedContinuation { appendReady = $0 }
+    }
+    func finishAppend() { pendingAppend?.resume(); pendingAppend = nil }
 }

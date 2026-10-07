@@ -14,16 +14,16 @@
 //
 
 public final class CallHistoryCallMakeUseCase {
-    private let account: Account
+    private let account: CallMakingAccount
 
-    public init(account: Account) {
+    public init(account: CallMakingAccount) {
         self.account = account
     }
 }
 
 extension CallHistoryCallMakeUseCase: ContactCallHistoryRecordGetUseCaseOutput {
     public func update(record: ContactCallHistoryRecord) {
-        Task {
+        Task { [account] in
             await account.makeCall(to: URI(record: record), label: label(for: record.contact.address))
         }
     }

@@ -7,10 +7,16 @@
 
 import Foundation
 import UseCases
+import Synchronization
 import PJSIPBridge
 
 final class AKSIPUserAgent {
     private final let storage = SIPUserAgentStorage()
+    private let eventAccounts = Mutex<[Int: AKSIPAccount]>([:])
+
+    func captureAccount(withIdentifier identifier: Int) -> AKSIPAccount? {
+        eventAccounts.withLock { $0[identifier] }
+    }
 
     weak var delegate: (any AKSIPUserAgentDelegate)?
 
@@ -331,6 +337,7 @@ final class AKSIPUserAgent {
         account.updateIdentifier(Int(identifier))
         account.thread = storage.thread
         storage.accounts.append(account)
+        eventAccounts.withLock { $0[Int(identifier)] = account }
         account.isOnline = true
         return true
     }
@@ -341,16 +348,52 @@ final class AKSIPUserAgent {
             return false
         }
 
-        account.delegate?.sipAccountWillRemove(account)
-        account.removeAllCalls()
-
+        let calls = account.allCalls
+        for call in calls { captureCallDetails(call, readsRuntimeInfo: true) }
         guard pjsua_acc_del(pjsua_acc_id(account.identifier)) == 0 else {
             return false
         }
 
+        // Ringback is owned by the still-running global runtime, not the deleted account.
+        for call in calls { stopRingback(for: call) }
+        eventAccounts.withLock { $0.removeValue(forKey: account.identifier) }
         storage.accounts.removeAll { $0 === account }
         account.updateIdentifier(-1)
+        for call in calls { finalizeCall(call, cleansRuntime: false) }
+        account.delegate?.sipAccountWillRemove(account)
         return true
+    }
+
+    @MainActor
+    func finalizeCalls(in account: AKSIPAccount, readsRuntimeInfo: Bool = true) {
+        for call in account.allCalls {
+            captureCallDetails(call, readsRuntimeInfo: readsRuntimeInfo)
+            finalizeCall(call)
+        }
+    }
+
+    @MainActor
+    private func captureCallDetails(_ call: AKSIPCall, readsRuntimeInfo: Bool) {
+        if let captured = SIPCallEventSequence.shared.capturedDuration(
+            identifier: call.identifier, historyIdentifier: call.historyIdentifier
+        ) { call.duration = captured }
+        if readsRuntimeInfo, isStarted {
+            var info = pjsua_call_info()
+            if pjsua_call_get_info(pjsua_call_id(call.identifier), &info) == 0 {
+                call.duration = Int(info.connect_duration.sec)
+                call.lastStatus = Int(info.last_status.rawValue)
+                call.lastStatusText = pjStringValue(info.last_status_text)
+            }
+        }
+    }
+
+    @MainActor
+    func finalizeCall(_ call: AKSIPCall, cleansRuntime: Bool = true) {
+        guard call.markDisconnectPublished() else { return }
+        call.state = PJSIP_INV_STATE_DISCONNECTED
+        if cleansRuntime, isStarted, call.sipAccount.identifier >= 0 { stopRingback(for: call) }
+        call.sipAccount.remove(call)
+        publishCallEvent(.AKSIPCallDidDisconnect, call: call)
     }
 
     func account(
@@ -377,6 +420,7 @@ final class AKSIPUserAgent {
     }
 
     func startRingback(for call: AKSIPCall) {
+        guard isStarted else { return }
         guard storage.callData.indices.contains(call.identifier) else {
             return
         }
@@ -397,6 +441,7 @@ final class AKSIPUserAgent {
     }
 
     func stopRingback(for call: AKSIPCall) {
+        guard isStarted else { return }
         guard storage.callData.indices.contains(call.identifier) else {
             return
         }
@@ -713,6 +758,12 @@ final class AKSIPUserAgent {
 
     @MainActor
     private final func finishStopping() {
+        for account in storage.accounts {
+            finalizeCalls(in: account, readsRuntimeInfo: false)
+            account.updateIdentifier(-1)
+        }
+        eventAccounts.withLock { $0.removeAll() }
+        SIPCallEventSequence.shared.resetAfterStopping()
         pj_shutdown()
         storage.accounts.removeAll()
         storage.state = .stopped

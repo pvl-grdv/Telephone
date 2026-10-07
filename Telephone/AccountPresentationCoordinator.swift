@@ -27,26 +27,22 @@ final class AccountPresentationCoordinator {
     private let callDestinationComposer: CallDestinationComposer
     private let callHistoryPresenter: CallHistoryPresenter
     private let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
-    private let account: Account
+    private let account: any CallMakingAccount
     private let authenticationFailureController: AuthenticationFailureController
     private weak var accountDelegate: AccountPresentationCoordinatorDelegate?
     private let session: AccountSession
-    private let userAgentEventSource: AKSIPUserAgentEventSource
     private let model: AccountWindowModel
 
     private var callHistoryViewEventTarget: CallHistoryViewEventTarget?
     private var callHistoryConfigured = false
-
-    var canMakeCalls: Bool {
-        model.showsCallComposer
-    }
 
     init(
         accountDescription: String,
         accountController: AccountController,
         userAgent: AKSIPUserAgent,
         callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
-        account: Account,
+        account: any CallMakingAccount,
+        session: AccountSession,
         delegate: AccountPresentationCoordinatorDelegate
     ) {
         self.accountDescription = accountDescription
@@ -58,7 +54,8 @@ final class AccountPresentationCoordinator {
             crmLookupModel: CRMHistoryLookupModel(
                 storage: DefaultCallHistoryCRMStorage(),
                 settings: accountController.crmGatewaySettings,
-                provider: accountController.crmKeyLookupProvider
+                provider: accountController.crmKeyLookupProvider,
+                appendRegistry: accountController.crmPhoneAppendRegistry
             ),
             accountUUID: account.uuid
         )
@@ -70,19 +67,10 @@ final class AccountPresentationCoordinator {
         )
         accountDelegate = delegate
 
-        let session = AccountSession()
-        session.userAgentDidFinishStarting = { [weak accountController] in
-            accountController?.userAgentDidFinishStarting()
-        }
         self.session = session
-        userAgentEventSource = AKSIPUserAgentEventSource(
-            target: session,
-            agent: userAgent
-        )
         model = AccountWindowModel(session: session)
 
         AccountPresentationRegistry.shared.register(self, key: windowKey)
-        show(.offline, callComposerVisible: false, animated: false)
     }
 
     var contentView: some View {
@@ -109,52 +97,11 @@ final class AccountPresentationCoordinator {
         }
     }
 
-    var attemptingToRegister: Bool {
-        get { session.attemptingToRegister }
-        set { session.attemptingToRegister = newValue }
-    }
-
-    var attemptingToUnregister: Bool {
-        get { session.attemptingToUnregister }
-        set { session.attemptingToUnregister = newValue }
-    }
-
-    var shouldPresentRegistrationError: Bool {
-        get { session.shouldPresentRegistrationError }
-        set { session.shouldPresentRegistrationError = newValue }
-    }
-
-    var accountUnavailable: Bool {
-        get { session.accountUnavailable }
-        set { session.accountUnavailable = newValue }
-    }
-
-    func resetRegistrationIntent() {
-        session.resetRegistrationIntent()
-    }
-
-    func showAvailableState() {
-        show(.available, callComposerVisible: true, animated: true)
-    }
-
-    func showUnavailableState() {
-        show(.unavailable, callComposerVisible: true, animated: true)
-    }
-
-    func showConnectionLostState() {
-        show(.connectionLost, callComposerVisible: true, animated: true)
-    }
-
-    func showOfflineState() {
-        show(.offline, callComposerVisible: false, animated: true)
-    }
-
-    func showConnectingState() {
-        withAnimation(.easeInOut(duration: 0.15)) {
-            model.state = .connecting
+    func accountStateDidChange() {
+        if session.state != .connecting, session.canMakeCalls {
+            callDestinationComposer.focus()
         }
     }
-
     func showAuthenticationFailure() {
         guard model.authenticationFailure == nil else { return }
         model.authenticationFailure = authenticationFailureController.makeModel()
@@ -214,24 +161,4 @@ final class AccountPresentationCoordinator {
         }
     }
 
-    private func show(
-        _ state: AccountWindowDisplayState,
-        callComposerVisible: Bool,
-        animated: Bool
-    ) {
-        let update = {
-            self.model.state = state
-            self.model.showsCallComposer = callComposerVisible
-        }
-
-        if animated {
-            withAnimation(.easeInOut(duration: 0.15), update)
-        } else {
-            update()
-        }
-
-        if callComposerVisible {
-            callDestinationComposer.focus()
-        }
-    }
 }

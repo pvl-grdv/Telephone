@@ -18,6 +18,11 @@
 
 import Foundation
 
+/// A stable identity shared by history and call-specific notes, scoped by account UUID.
+public protocol CallHistoryIdentified: Sendable {
+    var historyIdentifier: String { get }
+}
+
 @objc public protocol Call: Sendable {
     var account: Account { get }
     var remote: URI { get }

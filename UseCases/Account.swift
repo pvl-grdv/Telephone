@@ -22,6 +22,10 @@ import Foundation
     var uuid: String { get }
     var domain: String { get }
 
-    @MainActor
+}
+
+/// An account identity does not imply that it can originate calls.
+@MainActor
+public protocol CallMakingAccount: Account {
     func makeCall(to uri: URI, label: String)
 }

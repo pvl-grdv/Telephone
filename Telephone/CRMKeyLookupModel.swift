@@ -15,13 +15,6 @@ enum CRMKeyLookupState: Equatable, Sendable {
     case failed(CRMGatewayError)
 }
 
-enum CRMPhoneLinkState: Equatable {
-    case idle
-    case saving
-    case saved(added: Bool)
-    case failed(CRMGatewayError)
-}
-
 struct CRMPhoneLinkConfirmation: Equatable, Identifiable, Sendable {
     let id = UUID()
     let phone: String
@@ -29,6 +22,7 @@ struct CRMPhoneLinkConfirmation: Equatable, Identifiable, Sendable {
     let companyName: String
     let sourceKeyID: Int
     let expectedPhone: String
+    let appendRevision: Int
     let contextGeneration: Int
     let requestGeneration: Int
     let settingsGeneration: Int
@@ -46,7 +40,13 @@ final class CRMKeyLookupModel {
     }
     private(set) var callerPhone: String?
     private(set) var state: CRMKeyLookupState = .idle
-    private(set) var phoneLinkState: CRMPhoneLinkState = .idle
+    private var appendOperation = CRMPhoneAppendOperation()
+    @ObservationIgnored private let appendRegistry: CRMPhoneAppendRegistry
+    @ObservationIgnored private var appendAttemptID: UUID?
+    private(set) var phoneLinkState: CRMPhoneLinkState {
+        get { appendOperation.state }
+        set { appendOperation.state = newValue }
+    }
     var pendingPhoneLink: CRMPhoneLinkConfirmation?
 
     @ObservationIgnored private let provider: any CRMKeyLookupProvider
@@ -60,9 +60,13 @@ final class CRMKeyLookupModel {
     @ObservationIgnored private var loadedFromKey = false
     @ObservationIgnored private var lookupIdentity: LiveCRMQuery?
 
-    init(settings: CRMGatewaySettings, provider: any CRMKeyLookupProvider) {
+    init(
+        settings: CRMGatewaySettings, provider: any CRMKeyLookupProvider,
+        appendRegistry: CRMPhoneAppendRegistry = CRMPhoneAppendRegistry()
+    ) {
         self.settings = settings
         self.provider = provider
+        self.appendRegistry = appendRegistry
         presentedSettingsGeneration = settings.generation
         observeSettings()
     }
@@ -80,7 +84,7 @@ final class CRMKeyLookupModel {
     var canLinkPhone: Bool {
         if case .saved = phoneLinkState { return false }
         if case .failed = phoneLinkState { return false }
-        guard settings.enabled, isContextActive, loadedFromKey,
+        guard !appendOperation.hasPendingRequest, settings.enabled, isContextActive, loadedFromKey,
               presentedSettingsGeneration == settings.generation,
               let phone = callerPhone, case .loaded(let response) = state,
               let customer = response.data, customer.sourceKeyId != nil,
@@ -183,6 +187,7 @@ final class CRMKeyLookupModel {
         pendingPhoneLink = CRMPhoneLinkConfirmation(
             phone: phone, companyID: customer.company.id, companyName: customer.company.name,
             sourceKeyID: keyID, expectedPhone: expectedPhone,
+            appendRevision: appendOperation.revision,
             contextGeneration: contextGeneration, requestGeneration: requestGeneration,
             settingsGeneration: settings.generation
         )
@@ -190,6 +195,7 @@ final class CRMKeyLookupModel {
 
     func confirmPhoneLink(_ confirmation: CRMPhoneLinkConfirmation) {
         guard pendingPhoneLink == confirmation, canLinkPhone,
+              appendOperation.revision == confirmation.appendRevision,
               callerPhone == confirmation.phone,
               contextGeneration == confirmation.contextGeneration,
               requestGeneration == confirmation.requestGeneration,
@@ -199,18 +205,27 @@ final class CRMKeyLookupModel {
             return
         }
         pendingPhoneLink = nil
-        phoneLinkState = .saving
-        linkTask = Task { [weak self, settings, provider] in
+        guard let attempt = appendOperation.begin() else { return }
+        appendAttemptID = attempt
+        linkTask = Task { [weak self, settings, provider, appendOperation] in
+            defer { appendOperation.abandonBeforeDispatch(attempt) }
             do {
                 let configuration = try await settings.configuration()
                 try Task.checkCancellation()
-                guard settings.generation == confirmation.settingsGeneration else { return }
+                guard let self, self.isCurrent(
+                    request: confirmation.requestGeneration, context: confirmation.contextGeneration,
+                    settings: confirmation.settingsGeneration
+                ), appendOperation.dispatch(attempt) else { return }
                 let result = try await provider.appendPhone(
                     confirmation.phone, companyID: confirmation.companyID,
                     sourceKeyID: confirmation.sourceKeyID, expectedPhone: confirmation.expectedPhone,
                     configuration: configuration
                 )
-                guard let self, self.isCurrent(
+                guard result.data.companyId == confirmation.companyID else {
+                    throw CRMGatewayError.phoneWriteUnconfirmed
+                }
+                appendOperation.finish(attempt, added: result.data.added)
+                guard self.isCurrent(
                     request: confirmation.requestGeneration,
                     context: confirmation.contextGeneration,
                     settings: confirmation.settingsGeneration
@@ -222,20 +237,17 @@ final class CRMKeyLookupModel {
                     ),
                     meta: result.meta
                 ))
-                self.phoneLinkState = .saved(added: result.data.added)
                 self.linkTask = nil
+                self.appendAttemptID = nil
             } catch {
+                appendOperation.fail(attempt, error: error)
                 guard let self, self.isCurrent(
                     request: confirmation.requestGeneration,
                     context: confirmation.contextGeneration,
                     settings: confirmation.settingsGeneration
                 ) else { return }
                 self.linkTask = nil
-                if error is CancellationError {
-                    self.phoneLinkState = .failed(.phoneWriteUnconfirmed)
-                } else {
-                    self.phoneLinkState = .failed((error as? CRMGatewayError) ?? .unavailable)
-                }
+                self.appendAttemptID = nil
             }
         }
     }
@@ -247,7 +259,8 @@ final class CRMKeyLookupModel {
         linkTask = nil
         requestGeneration &+= 1
         pendingPhoneLink = nil
-        phoneLinkState = .idle
+        appendOperation.cancelPresentation(for: appendAttemptID)
+        appendAttemptID = nil
         state = .idle
         loadedFromKey = false
         lookupIdentity = nil
@@ -259,6 +272,7 @@ final class CRMKeyLookupModel {
         keyNumber = ""
         email = ""
         callerPhone = nil
+        appendOperation = CRMPhoneAppendOperation()
         automaticLookupAttempted = false
     }
 
@@ -286,8 +300,8 @@ final class CRMKeyLookupModel {
         let settingsGeneration = settings.generation
         presentedSettingsGeneration = settingsGeneration
         pendingPhoneLink = nil
-        phoneLinkState = .idle
         state = .loading
+        let appendReceipt = appendRegistry.readReceipt()
         task = Task { [weak self, settings, provider] in
             do {
                 let configuration = try await settings.configuration()
@@ -297,6 +311,14 @@ final class CRMKeyLookupModel {
                 guard let self, self.isCurrent(
                     request: requestGeneration, context: contextGeneration, settings: settingsGeneration
                 ) else { return }
+                if case .loaded(let response) = result, let customer = response.data, let phone = self.callerPhone {
+                    self.appendOperation = self.appendRegistry.operation(
+                        origin: settings.origin, phone: phone, companyID: customer.company.id
+                    )
+                    self.appendRegistry.acceptFreshRead(
+                        origin: settings.origin, phone: phone, companyID: customer.company.id, receipt: appendReceipt
+                    )
+                }
                 self.state = result
                 self.task = nil
             } catch {

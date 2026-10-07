@@ -242,13 +242,6 @@ final class AKSIPAccount: Account, CustomStringConvertible, @unchecked Sendable 
         self.identifier = identifier
     }
 
-    @MainActor
-    func makeCall(to uri: URI, label: String) {
-        Log.sip.debug(
-            "Ignoring unsupported call target \(String(describing: uri), privacy: .private)"
-        )
-    }
-
     func makeCall(
         to destination: AKSIPURI,
         completion: @escaping (AKSIPCall?) -> Void
@@ -269,13 +262,13 @@ final class AKSIPAccount: Account, CustomStringConvertible, @unchecked Sendable 
             destination: destination,
             accountIdentifier: pjsua_acc_id(identifier),
             parser: parser
-        ) { [weak self, completion] info in
+        ) { [weak self, completion] info, incarnation in
             guard let self, let info else {
                 completion.call(nil)
                 return
             }
 
-            completion.call(addCall(info: info))
+            completion.call(addCall(info: info, incarnation: incarnation))
         }
 
         thread.perform { [weak self, request] in
@@ -283,13 +276,19 @@ final class AKSIPAccount: Account, CustomStringConvertible, @unchecked Sendable 
         }
     }
 
-    func addCall(info: PJSUACallInfo) -> AKSIPCall {
-        if let existing = call(identifier: info.identifier) {
+    @MainActor
+    func addCall(info: PJSUACallInfo, incarnation: SIPCallIncarnation? = nil) -> AKSIPCall {
+        let token = incarnation ?? SIPCallEventSequence.shared.capture(
+            identifier: info.identifier, account: self
+        )!
+        if let existing = token.call.withLock({ $0 as? AKSIPCall }) { return existing }
+        if let existing = call(identifier: info.identifier), existing.historyIdentifier == token.historyIdentifier {
+            token.call.withLock { $0 = existing }
             return existing
         }
-
-        let call = AKSIPCall(account: self, info: info)
+        let call = AKSIPCall(account: self, info: info, historyIdentifier: token.historyIdentifier)
         calls.append(call)
+        token.call.withLock { $0 = call }
         return call
     }
 
@@ -300,6 +299,8 @@ final class AKSIPAccount: Account, CustomStringConvertible, @unchecked Sendable 
     func remove(_ call: AKSIPCall) {
         calls.removeAll { $0 === call }
     }
+
+    var allCalls: [AKSIPCall] { calls }
 
     func removeAllCalls() {
         calls.removeAll()
@@ -341,8 +342,17 @@ final class AKSIPAccount: Account, CustomStringConvertible, @unchecked Sendable 
                 }
             }
 
-            DispatchQueue.main.async { [snapshot] in
-                request.completion(snapshot)
+            if let snapshot {
+                SIPCallEventSequence.shared.enqueueCall(
+                    identifier: snapshot.identifier,
+                    account: self
+                ) { incarnation in
+                    request.completion(snapshot, incarnation)
+                }
+            } else {
+                SIPCallEventSequence.shared.enqueue {
+                    request.completion(nil, nil)
+                }
             }
         }
     }
@@ -381,13 +391,13 @@ private final class SIPCallRequest: @unchecked Sendable {
     let destination: URI
     let accountIdentifier: pjsua_acc_id
     let parser: AKSIPURIParser
-    let completion: @MainActor (PJSUACallInfo?) -> Void
+    let completion: @MainActor (PJSUACallInfo?, SIPCallIncarnation?) -> Void
 
     init(
         destination: URI,
         accountIdentifier: pjsua_acc_id,
         parser: AKSIPURIParser,
-        completion: @escaping @MainActor (PJSUACallInfo?) -> Void
+        completion: @escaping @MainActor (PJSUACallInfo?, SIPCallIncarnation?) -> Void
     ) {
         self.destination = destination
         self.accountIdentifier = accountIdentifier

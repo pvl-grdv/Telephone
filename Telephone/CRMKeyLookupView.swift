@@ -144,7 +144,7 @@ struct CRMKeyLookupView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-        case .saving:
+        case .refreshing, .saving:
             HStack {
                 ProgressView().controlSize(.mini)
                 Text(NSLocalizedString("Linking number…", comment: "CRM phone write progress."))

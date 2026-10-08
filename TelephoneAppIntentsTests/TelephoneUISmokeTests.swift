@@ -203,6 +203,77 @@ final class TelephoneUISmokeTests: XCTestCase {
         call.terminate()
     }
 
+    func testTypingInClientDetailsDoesNotAnswerOrDeclineTheCall() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["TELEPHONE_UI_TEST_SCENARIO"] = "incoming-call-details"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        defer { app.terminate() }
+
+        let answer = element("call.answer", in: app)
+        XCTAssertTrue(answer.waitForExistence(timeout: 5))
+        let openDetails = element("call.customerDetails", in: app)
+        XCTAssertTrue(openDetails.waitForExistence(timeout: 3), app.debugDescription)
+        openDetails.click()
+        let selector = element("call.customerDetails.section", in: app)
+        XCTAssertTrue(selector.waitForExistence(timeout: 3), app.debugDescription)
+        let crm = selector.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "CRM")).firstMatch
+        let notes = selector.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Local notes")).firstMatch
+        XCTAssertTrue(crm.isHittable, app.debugDescription)
+        XCTAssertTrue(notes.isHittable, app.debugDescription)
+
+        let key = element("customer.crm.keyNumber", in: app)
+        XCTAssertTrue(key.waitForExistence(timeout: 3))
+        key.click()
+        key.typeText("1")
+        key.typeKey(XCUIKeyboardKey.return, modifierFlags: [])
+        XCTAssertTrue(answer.exists, "Return in CRM lookup must not answer the call.")
+        XCTAssertFalse(element("call.end", in: app).exists)
+        let search = element("crm.inventory.search", in: app)
+        XCTAssertTrue(search.waitForExistence(timeout: 3))
+        search.click()
+        search.typeText("Air")
+
+        notes.click()
+        let note = element("customer.local.note", in: app)
+        XCTAssertTrue(note.waitForExistence(timeout: 3))
+        XCTAssertTrue(note.isHittable)
+        note.click()
+        note.typeText("Synthetic draft")
+        note.typeKey(XCUIKeyboardKey.return, modifierFlags: [])
+        note.typeText("Second line")
+        XCTAssertTrue(answer.exists, "Return in notes must leave the call ringing.")
+        XCTAssertFalse(element("call.end", in: app).exists)
+        XCTAssertFalse(search.exists, "Inactive CRM controls must leave the accessibility tree.")
+        crm.click()
+        XCTAssertTrue(search.waitForExistence(timeout: 3))
+        XCTAssertEqual(search.value as? String, "Air", "Inventory filter survives changing sections.")
+        XCTAssertFalse(note.exists, "Inactive note controls must leave the accessibility tree.")
+        notes.click()
+        XCTAssertTrue(note.waitForExistence(timeout: 3))
+        XCTAssertTrue((note.value as? String)?.contains("Synthetic draft") == true)
+
+        app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
+        let closeDetails = element("call.closeCustomerDetails", in: app)
+        XCTAssertTrue(closeDetails.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(answer.exists, "Escape closes details without declining the incoming call.")
+
+        openDetails.click()
+        XCTAssertTrue(note.waitForExistence(timeout: 3))
+        XCTAssertTrue((note.value as? String)?.contains("Synthetic draft") == true)
+        // The details window can cover the call controls. Use macOS's normal
+        // Next Window shortcut, leaving details open, before clicking Answer.
+        app.typeKey("`", modifierFlags: .command)
+        answer.click()
+        let endCall = element("call.end", in: app)
+        XCTAssertTrue(endCall.waitForExistence(timeout: 3))
+        XCTAssertTrue(closeDetails.exists, "Answering preserves the open details window.")
+        XCTAssertTrue((note.value as? String)?.contains("Second line") == true)
+        endCall.click()
+        XCTAssertTrue(endCall.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(closeDetails.waitForNonExistence(timeout: 3))
+    }
+
     private func launch(
         scenario: String,
         locale: LocaleFixture

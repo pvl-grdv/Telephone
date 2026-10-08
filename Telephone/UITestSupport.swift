@@ -26,6 +26,7 @@ enum TelephoneUITestSupport {
             scenario == "settings"
                 || scenario == "account-setup"
                 || scenario == "incoming-call"
+                || scenario == "incoming-call-details"
         else {
             return false
         }
@@ -38,8 +39,11 @@ enum TelephoneUITestSupport {
                 coordinator.showPreferencesForUITesting()
             case "account-setup":
                 coordinator.showAccountSetupForUITesting()
-            case "incoming-call":
-                UITestCallSceneController.shared.show()
+            case "incoming-call", "incoming-call-details":
+                if scenario != "incoming-call" {
+                    UserDefaults.standard.set(true, forKey: UserDefaultsKeys.showCustomerContext)
+                }
+                await UITestCallSceneController.shared.show(includeCRM: scenario == "incoming-call-details")
             default:
                 break
             }
@@ -101,7 +105,24 @@ private final class UITestCallSceneController {
     static let shared = UITestCallSceneController()
     static let sceneID = "telephone-ui-test-call"
 
-    func show() {
+    private(set) var crmKeyLookupModel: CRMKeyLookupModel?
+
+    func show(includeCRM: Bool) async {
+        crmKeyLookupModel = nil
+        if includeCRM {
+            // A private synthetic provider and token store; never use saved
+            // account settings, Keychain credentials, SIP, or a real gateway.
+            let defaults = UserDefaults(suiteName: "Telephone.UITestCRM.\(UUID())")!
+            let settings = CRMGatewaySettings(defaults: defaults, tokenStore: UITestCRMTokenStore())
+            do {
+                try await settings.save(enabled: true, origin: "https://gateway.example", newToken: "synthetic-token")
+                let lookup = CRMKeyLookupModel(settings: settings, provider: UITestCRMProvider())
+                lookup.setCallerPhone("+12025550100", isActive: true)
+                crmKeyLookupModel = lookup
+            } catch {
+                assertionFailure("Could not configure synthetic CRM fixture: \(error)")
+            }
+        }
         SceneRouter.shared.openWindow(id: Self.sceneID)
     }
 }
@@ -112,11 +133,17 @@ private struct UITestIncomingCallView: View {
 
     @State private var model = CallWindowModel(isTransfer: false)
     @State private var configured = false
+    @State private var customerDetailsWindow: CallCustomerDetailsWindowController?
+
+    private var crmKeyLookupModel: CRMKeyLookupModel? {
+        UITestCallSceneController.shared.crmKeyLookupModel
+    }
 
     var body: some View {
         CallWindowView(
             model: model,
             transferDestinationComposer: nil,
+            crmKeyLookupModel: crmKeyLookupModel,
             answer: answer,
             decline: close,
             hangUp: close,
@@ -132,9 +159,7 @@ private struct UITestIncomingCallView: View {
             closeTransfer: {},
             cancelTransfer: {},
             completeTransfer: {},
-            customerContextChanged: {},
-            reloadCustomerContext: {},
-            saveCustomerContext: {},
+            showCustomerDetails: showCustomerDetails,
             customerContextVisibilityChanged: { _ in },
             sendDTMF: { _ in }
         )
@@ -147,6 +172,7 @@ private struct UITestIncomingCallView: View {
         guard !configured else { return }
         configured = true
 
+        model.customerContextLoaded = true
         model.displayedName = "Ada Lovelace"
         model.identityDetail = "+1 202 555 0100"
         model.status = NSLocalizedString(
@@ -174,9 +200,45 @@ private struct UITestIncomingCallView: View {
         model.requestCallSurfaceFocus()
     }
 
+    private func showCustomerDetails() {
+        if customerDetailsWindow == nil {
+            customerDetailsWindow = CallCustomerDetailsWindowController(
+                model: model, crmKeyLookupModel: crmKeyLookupModel, changed: {}, reload: {}, save: {}, saveOnClose: {}
+            )
+        }
+        customerDetailsWindow?.present()
+    }
+
     private func close() {
+        customerDetailsWindow?.close()
+        customerDetailsWindow = nil
         dismissWindow(id: UITestCallSceneController.sceneID)
     }
+}
+
+/// Deterministic, in-memory CRM data for the actual hosted-window UI smoke test.
+private struct UITestCRMProvider: CRMKeyLookupProvider {
+    func customer(forKeyNumber keyNumber: Int, configuration: CRMGatewayConfiguration) async throws -> CRMKeyLookupResponse {
+        try JSONDecoder().decode(CRMKeyLookupResponse.self, from: Self.response)
+    }
+
+    func customer(forPhoneNumber phoneNumber: String, companyID: Int?, configuration: CRMGatewayConfiguration) async throws -> CRMPhoneLookupResponse {
+        try JSONDecoder().decode(CRMPhoneLookupResponse.self, from: Self.response)
+    }
+
+    func customer(forEmail email: String, companyID: Int?, configuration: CRMGatewayConfiguration) async throws -> CRMPhoneLookupResponse {
+        try JSONDecoder().decode(CRMPhoneLookupResponse.self, from: Self.response)
+    }
+
+    private static let response = Data("""
+    {"data":{"sourceKeyId":1,"company":{"id":7000,"name":"Synthetic Organization","formattedCode":"00-00-7000","phone":"+12025550100","phones":["+12025550100"]},"keys":[{"id":1,"name":"Synthetic key","url":"https://example.test/keys/1","programs":[{"recordId":1,"programId":1,"name":"Synthetic Air","version":"1.0","release":"0010","keyUrl":"https://example.test/keys/1"}]}]},"matches":[],"meta":{"requestId":"synthetic-ui","fetchedAt":"2026-10-08T08:00:00Z","complete":true,"fromCache":false}}
+    """.utf8)
+}
+
+private actor UITestCRMTokenStore: CRMGatewayTokenStoring {
+    func token(for origin: String) -> String { "synthetic-token" }
+    func save(_ token: String, for origin: String) -> Bool { true }
+    func remove(for origin: String) -> Bool { true }
 }
 
 #endif

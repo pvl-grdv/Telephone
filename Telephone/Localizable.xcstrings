@@ -8144,6 +8144,75 @@
           }
         }
       }
+    },
+    "%ld keys · %ld records": {
+      "comment": "Compact CRM inventory count.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld keys · %ld records"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld Schlüssel · %ld Einträge"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключей: %ld · записей: %ld"
+          }
+        }
+      }
+    },
+    "Local notes": {
+      "comment": "Telephone-only client notes tab.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local notes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokale Notizen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Локальные заметки"
+          }
+        }
+      }
+    },
+    "These details are saved in Telephone and do not change CRM.": {
+      "comment": "Local fields are independent of gateway CRM data.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These details are saved in Telephone and do not change CRM."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Angaben werden in Telephone gespeichert und ändern keine CRM-Daten."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эти сведения сохраняются в Telephone и не изменяют данные CRM."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

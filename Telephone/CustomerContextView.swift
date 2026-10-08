@@ -8,9 +8,8 @@ import SwiftUI
 
 struct CustomerContextView: View {
     @Bindable var model: CallWindowModel
-    @State private var isExpanded = false
+    @State private var isExpanded = true
     @State private var confirmsDiscardDraft = false
-    var crmKeyLookupModel: CRMKeyLookupModel? = nil
 
     let changed: () -> Void
     let reload: () -> Void
@@ -20,10 +19,6 @@ struct CustomerContextView: View {
         VStack(alignment: .leading, spacing: 6) {
             contextContent
             persistenceStatus
-            if let crmKeyLookupModel, crmKeyLookupModel.settings.enabled {
-                Divider()
-                CRMKeyLookupView(model: crmKeyLookupModel)
-            }
         }
         .confirmationDialog(
             NSLocalizedString("Reload saved details and discard this draft?", comment: "Explicitly discard conflicting local draft."),
@@ -234,6 +229,7 @@ struct CustomerContextView: View {
 
                 TextEditor(text: $model.customerNote)
                     .font(.body)
+                    .accessibilityIdentifier("customer.local.note")
                     .accessibilityLabel(
                         NSLocalizedString(
                             "Notes for this call",

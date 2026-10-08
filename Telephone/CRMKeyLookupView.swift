@@ -56,9 +56,8 @@ struct CRMKeyLookupView: View {
             lookupContent
             phoneLinkContent
         }
-        .onChange(of: model.settings.generation) { model.settingsDidChange() }
-        .onAppear { model.activateContext() }
-        .onDisappear { model.deactivateContext() }
+        // The call presentation owns lookup lifetime. Hiding this editor must
+        // not cancel the automatic caller lookup or a dispatched phone append.
         .confirmationDialog(
             NSLocalizedString("Link phone to organization", comment: "CRM phone linking confirmation title."),
             isPresented: Binding(
@@ -105,17 +104,20 @@ struct CRMKeyLookupView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         case .choosing(let matches):
-            VStack(alignment: .leading, spacing: 6) {
-                Text(NSLocalizedString("Several organizations match. Choose one.", comment: "Ambiguous CRM phone or email matches."))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                ForEach(matches) { match in
-                    Button { model.chooseCompany(match) } label: {
-                        Text("\(match.name) · \(match.formattedCode)")
-                            .multilineTextAlignment(.leading)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(NSLocalizedString("Several organizations match. Choose one.", comment: "Ambiguous CRM phone or email matches."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    ForEach(matches) { match in
+                        Button { model.chooseCompany(match) } label: {
+                            Text("\(match.name) · \(match.formattedCode)")
+                                .multilineTextAlignment(.leading)
+                        }
+                        .buttonStyle(.link)
                     }
-                    .buttonStyle(.link)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         case .failed(let error):
             Label(error.crmMessage, systemImage: "exclamationmark.triangle")
@@ -172,7 +174,7 @@ struct CRMKeyLookupView: View {
     }
 
     private func customerDetails(_ customer: CRMKeyLookupCustomer) -> some View {
-        CRMCustomerInventoryView(customer: customer, scrollsInternally: true)
+        CRMCustomerInventoryView(customer: customer, usesBrowserLayout: true)
             .id(customer.company.id)
     }
 }

@@ -18,6 +18,7 @@ final class CallPresentationCoordinator: Identifiable {
     private let transferCoordinator: CallTransferCoordinator
     private let customerContextCoordinator: CustomerContextCoordinator?
     private let crmKeyLookupModel: CRMKeyLookupModel?
+    private var customerDetailsWindow: CallCustomerDetailsWindowController?
 
     private let clock = ContinuousClock()
     private var callTimerTask: Task<Void, Never>?
@@ -110,21 +111,14 @@ final class CallPresentationCoordinator: Identifiable {
             completeTransfer: { [weak self] in
                 self?.transferCoordinator.complete()
             },
-            customerContextChanged: { [weak self] in
-                self?.customerContextCoordinator?.scheduleSave()
-            },
-            reloadCustomerContext: { [weak self] in
-                self?.customerContextCoordinator?.reload()
-            },
-            saveCustomerContext: { [weak self] in
-                self?.customerContextCoordinator?.retrySave()
-            },
+            showCustomerDetails: { [weak self] in self?.showCustomerDetails() },
             customerContextVisibilityChanged: { [weak self] isVisible in
                 self?.customerContextCoordinator?
                     .visibilityChanged(isVisible)
                 if isVisible {
                     self?.updateCRMCallerPhone()
                 } else {
+                    self?.closeCustomerDetails()
                     self?.crmKeyLookupModel?.deactivateContext()
                 }
             },
@@ -150,6 +144,7 @@ final class CallPresentationCoordinator: Identifiable {
 
     func closeWindow() {
         guard !model.isTransfer else { return }
+        closeCustomerDetails()
         SceneRouter.shared.dismissWindow(
             id: CallWindowScene.id,
             value: id
@@ -161,6 +156,7 @@ final class CallPresentationCoordinator: Identifiable {
     }
 
     func invalidate() {
+        closeCustomerDetails()
         PerformanceStateReporting.removeCall(id: id)
         endActiveCallInterval()
         stopCallTimer()
@@ -191,6 +187,7 @@ final class CallPresentationCoordinator: Identifiable {
     }
 
     func setCall(_ call: AKSIPCall?) {
+        closeCustomerDetails()
         stopCallTimer()
         cancelRedialEnable()
         cancelIntermediateStatusRestore()
@@ -541,6 +538,28 @@ final class CallPresentationCoordinator: Identifiable {
         call.sendDTMF(text)
     }
 
+    private func showCustomerDetails() {
+        guard !model.isTransfer else { return }
+        if customerDetailsWindow == nil {
+            customerDetailsWindow = CallCustomerDetailsWindowController(
+                model: model,
+                crmKeyLookupModel: crmKeyLookupModel,
+                changed: { [weak self] in self?.customerContextCoordinator?.scheduleSave() },
+                reload: { [weak self] in self?.customerContextCoordinator?.reload() },
+                save: { [weak self] in self?.customerContextCoordinator?.retrySave() },
+                saveOnClose: { [weak self] in
+                    self?.customerContextCoordinator?.saveNow(ignoringPreference: true)
+                }
+            )
+        }
+        customerDetailsWindow?.present()
+    }
+
+    private func closeCustomerDetails() {
+        customerDetailsWindow?.close()
+        customerDetailsWindow = nil
+    }
+
     private func windowDidDisappear() {
         guard
             !model.isTransfer,
@@ -549,6 +568,7 @@ final class CallPresentationCoordinator: Identifiable {
             return
         }
 
+        closeCustomerDetails()
         customerContextCoordinator?.saveNow(ignoringPreference: true)
         crmKeyLookupModel?.deactivateContext()
         callController?.callWindowDidClose()

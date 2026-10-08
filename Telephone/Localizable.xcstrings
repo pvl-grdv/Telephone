@@ -8168,25 +8168,25 @@
         }
       }
     },
-    "Local notes": {
-      "comment": "Telephone-only client notes tab.",
+    "Local details": {
+      "comment": "Telephone-only organization, reference keys, and email tab.",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Local notes"
+            "value": "Local details"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lokale Notizen"
+            "value": "Lokale Angaben"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Локальные заметки"
+            "value": "Локальные данные"
           }
         }
       }

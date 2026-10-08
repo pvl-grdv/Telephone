@@ -173,6 +173,10 @@ private struct UITestIncomingCallView: View {
         configured = true
 
         model.customerContextLoaded = true
+        model.customerNote = "Saved synthetic call note"
+        model.recentCustomerNotes = [
+            CustomerContextNote(id: 1, body: "Saved synthetic previous note", updatedAt: .distantPast)
+        ]
         model.displayedName = "Ada Lovelace"
         model.identityDetail = "+1 202 555 0100"
         model.status = NSLocalizedString(

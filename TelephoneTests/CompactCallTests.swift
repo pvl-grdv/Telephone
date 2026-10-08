@@ -183,7 +183,7 @@ struct CompactCallTests {
             local.present()
             localWindow.setContentSize(NSSize(width: 660, height: 500))
             try capture(try #require(localWindow.contentView),
-                        to: output.appendingPathComponent("live-client-notes-\(appearance)-660.png"))
+                        to: output.appendingPathComponent("live-client-local-details-\(appearance)-660.png"))
             local.close()
         }
     }

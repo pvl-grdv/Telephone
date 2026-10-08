@@ -5,6 +5,26 @@ import UseCases
 
 @Suite @CallHistoryActor
 struct CustomerContextStoreTests {
+    @Test func editingVisibleProfilePreservesHiddenCurrentAndPreviousNotes() throws {
+        let fixture = try CustomerStoreFixture()
+        defer { fixture.cleanup() }
+        let previous = try fixture.load(call: "previous")
+        _ = try fixture.save(call: "previous", baseline: previous, note: "Previous saved note")
+        let current = try fixture.load(call: "current")
+        let baseline = try fixture.save(call: "current", baseline: current, note: "Current saved note")
+        let saved = try fixture.save(call: "current", baseline: baseline,
+            company: "Updated company", keys: ["4200"], emails: ["updated@example.invalid"])
+        #expect(saved.currentCallNote == "Current saved note")
+        #expect(saved.recentNotes.map(\.body) == ["Previous saved note"])
+        let reopened = try fixture.load(call: "current")
+        #expect(reopened.company == "Updated company")
+        #expect(reopened.keys == ["4200"])
+        #expect(reopened.emails == ["updated@example.invalid"])
+        #expect(reopened.currentCallNote == "Current saved note")
+        #expect(reopened.recentNotes.map(\.body) == ["Previous saved note"])
+        #expect(try fixture.scalar("SELECT COUNT(*) FROM party_notes") == 2)
+    }
+
     @Test func noteOnlySaveDoesNotRestoreStaleProfileFromAnotherWindow() throws {
         let fixture = try CustomerStoreFixture()
         defer { fixture.cleanup() }

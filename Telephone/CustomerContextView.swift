@@ -36,9 +36,6 @@ struct CustomerContextView: View {
         .onChange(of: model.customerEmails) {
             changed()
         }
-        .onChange(of: model.customerNote) {
-            changed()
-        }
     }
 
     @ViewBuilder
@@ -183,6 +180,8 @@ struct CustomerContextView: View {
         }
     }
 
+    // Notes stay in local persistence, but are intentionally not exposed
+    // until the CRM notes contract is known.
     private var editor: some View {
         VStack(alignment: .leading, spacing: 8) {
             Grid(
@@ -213,58 +212,6 @@ struct CustomerContextView: View {
                     ),
                     text: $model.customerEmails
                 )
-            }
-
-            HStack(alignment: .top, spacing: 8) {
-                Text(
-                    NSLocalizedString(
-                        "Notes for this call",
-                        comment: "Call note editor placeholder."
-                    )
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: 82, alignment: .trailing)
-                .padding(.top, 5)
-
-                TextEditor(text: $model.customerNote)
-                    .font(.body)
-                    .accessibilityIdentifier("customer.local.note")
-                    .accessibilityLabel(
-                        NSLocalizedString(
-                            "Notes for this call",
-                            comment: "Call note editor accessibility label."
-                        )
-                    )
-                    .scrollContentBackground(.hidden)
-                    .padding(3)
-                    .frame(
-                        minHeight: 62,
-                        idealHeight: 86,
-                        maxHeight: 110
-                    )
-                    .background(.background, in: .rect(cornerRadius: 5))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 5)
-                            .stroke(.separator, lineWidth: 0.5)
-                    }
-            }
-
-            if let recent = model.recentCustomerNotes.first {
-                Text(
-                    String(
-                        format: NSLocalizedString(
-                            "Previous note: %@",
-                            comment: "Most recent previous customer note."
-                        ),
-                        recent.body
-                    )
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .help(recent.body)
             }
         }
     }

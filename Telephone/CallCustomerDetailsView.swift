@@ -17,7 +17,7 @@ struct CallCustomerDetailsView: View {
     @State private var selectedSection = Section.crm
 
     private enum Section: Hashable {
-        case crm, localNotes
+        case crm, localDetails
     }
 
     var body: some View {
@@ -38,7 +38,7 @@ struct CallCustomerDetailsView: View {
                 Picker(NSLocalizedString("Client details", comment: "Live client details section selector."),
                        selection: $selectedSection) {
                     Text(NSLocalizedString("CRM", comment: "Live CRM tab.")).tag(Section.crm)
-                    Text(NSLocalizedString("Local notes", comment: "Telephone-only client notes tab.")).tag(Section.localNotes)
+                    Text(NSLocalizedString("Local details", comment: "Telephone-only organization, reference keys, and email tab.")).tag(Section.localDetails)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
@@ -56,10 +56,10 @@ struct CallCustomerDetailsView: View {
                         .allowsHitTesting(selectedSection == .crm)
                         .accessibilityHidden(selectedSection != .crm)
                     localDetails
-                        .opacity(selectedSection == .localNotes ? 1 : 0)
-                        .disabled(selectedSection != .localNotes)
-                        .allowsHitTesting(selectedSection == .localNotes)
-                        .accessibilityHidden(selectedSection != .localNotes)
+                        .opacity(selectedSection == .localDetails ? 1 : 0)
+                        .disabled(selectedSection != .localDetails)
+                        .allowsHitTesting(selectedSection == .localDetails)
+                        .accessibilityHidden(selectedSection != .localDetails)
                 }
             } else {
                 localDetails

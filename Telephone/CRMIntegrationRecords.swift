@@ -214,3 +214,56 @@ enum CRMKeyPortalURL {
     }
 }
 
+
+
+protocol CRMGatewayStatusProvider: Sendable {
+    func runtime(configuration: CRMGatewayConfiguration) async throws -> CRMGatewayRuntime
+}
+
+struct CRMGatewayStatusResponse: Decodable, Sendable { let runtime: CRMGatewayRuntime }
+
+/// Exact POST /v1/status contract, pinned to gateway 30a523a.
+/// This identifies the running process; it makes no claim about the latest release.
+struct CRMGatewayRuntime: Decodable, Equatable, Sendable {
+    struct Build: Decodable, Equatable, Sendable {
+        let version: String?
+        let commit: String?
+        let builtAt: String?
+        let integrity: String
+
+        private enum CodingKeys: String, CodingKey { case version, commit, builtAt, integrity }
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            // Nullable fields are required by the contract: missing is not unknown.
+            version = try container.decode(String?.self, forKey: .version)
+            commit = try container.decode(String?.self, forKey: .commit)
+            builtAt = try container.decode(String?.self, forKey: .builtAt)
+            integrity = try container.decode(String.self, forKey: .integrity)
+        }
+    }
+    let build: Build
+    let startedAt: String
+    let processId: Int
+
+    func validate() throws {
+        guard processId > 0, Self.date(startedAt) != nil else { throw CRMGatewayError.invalidResponse }
+        switch build.integrity {
+        case "unknown":
+            guard build.version == nil, build.commit == nil, build.builtAt == nil else { throw CRMGatewayError.invalidResponse }
+        case "verified":
+            guard let version = build.version,
+                  !version.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  let commit = build.commit, commit.range(of: #"^[a-f0-9]{40}$"#, options: .regularExpression) != nil,
+                  let builtAt = build.builtAt, Self.date(builtAt) != nil else { throw CRMGatewayError.invalidResponse }
+        default: throw CRMGatewayError.invalidResponse
+        }
+    }
+
+    static func date(_ value: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: value) { return date }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: value)
+    }
+}

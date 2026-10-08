@@ -83,6 +83,7 @@ final class CallHistoryViewModel {
     var pendingDeletion: CallHistoryDeletion?
     var pendingCRMRecord: PresentationCallHistoryRecord?
     private(set) var crmCheckRequested = true
+    private(set) var crmPresentationRequest = 0
     var searchFocusRequest = 0
 
     private(set) var allRecords: [PresentationCallHistoryRecord] = []
@@ -111,6 +112,7 @@ final class CallHistoryViewModel {
         selection = record.identifier
         crmCheckRequested = checkNow
         pendingCRMRecord = record
+        crmPresentationRequest &+= 1
     }
 
     func callSelected(action: (String) -> Void) -> Bool {

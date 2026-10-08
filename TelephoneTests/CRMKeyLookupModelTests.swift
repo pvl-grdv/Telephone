@@ -8,6 +8,26 @@ import Testing
 
 @MainActor
 struct CRMKeyLookupModelTests {
+    @Test func gatewayConnectionCheckUsesSavedSettingsAndKeepsUnsupportedVersionUnknown() async throws {
+        let settings = CRMGatewaySettings(defaults: freshDefaults(), tokenStore: GatewayTokenStoreFake())
+        try await settings.save(enabled: true, origin: "https://gateway.example", newToken: "synthetic-token")
+        let transport = GatewayTransportFake(status: 404, data: Data())
+        let model = CRMGatewaySettingsModel(settings: settings, statusProvider: CRMGatewayClient(transport: transport))
+        #expect(model.canCheckConnection)
+        await model.checkConnection()
+        #expect(model.gatewayRuntime == nil)
+        #expect(model.gatewayStatusError == .statusUnsupported)
+        #expect(model.hasCurrentGatewayStatus)
+        model.origin = "https://other.example"
+        #expect(!model.canCheckConnection)
+        #expect(!model.hasCurrentGatewayStatus)
+        await model.checkConnection()
+        #expect(await transport.requests.count == 1)
+        model.discard()
+        try await settings.removeToken()
+        #expect(!model.hasCurrentGatewayStatus)
+    }
+
     @Test func disabledByDefaultAndTokenIsScopedToCanonicalOrigin() async throws {
         let defaults = freshDefaults()
         let tokens = GatewayTokenStoreFake()

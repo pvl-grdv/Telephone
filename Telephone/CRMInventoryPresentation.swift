@@ -29,6 +29,27 @@ struct CRMInventoryPresentation: Equatable, Sendable {
         var recordCount: Int { records.count }
     }
 
+    struct Row: Identifiable, Equatable, Sendable {
+        struct ID: Hashable, Sendable { let keyID: Int; let recordID: Int }
+        let key: CRMKeyLookupKey
+        let program: CRMKeyLookupProgram
+        var id: ID { ID(keyID: key.id, recordID: program.recordId) }
+    }
+
+    /// Flatten only for display; retain every version, including repeated names.
+    func rows(for keyID: Int? = nil) -> [Row] {
+        keys.filter { keyID == nil || $0.id == keyID }.flatMap { item in
+            item.groups.flatMap { group in group.records.map { Row(key: item.key, program: $0) } }
+        }
+    }
+
+    /// Preserve a desktop sidebar selection while it exists. Zero is the
+    /// "All keys" row; a removed key must not leave an empty, stale detail pane.
+    func retainedKeySelection(_ selection: Int?) -> Int? {
+        guard let selection, selection != 0 else { return selection }
+        return keys.contains { $0.id == selection } ? selection : 0
+    }
+
     let keys: [Key]
     let totalKeyCount: Int
     let totalProgramGroupCount: Int

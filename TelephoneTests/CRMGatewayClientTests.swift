@@ -208,6 +208,68 @@ struct CRMGatewayClientTests {
         task.cancel()
     }
 
+    @Test func statusUsesOnlyEmptyAuthenticatedPOSTAndReturnsRunningBuild() async throws {
+        let transport = GatewayTransportFake(data: statusFixture())
+        let runtime = try await CRMGatewayClient(transport: transport).runtime(configuration: configuration())
+        #expect(runtime.build.version == "1.4.0")
+        #expect(runtime.build.commit == String(repeating: "a", count: 40))
+        #expect(runtime.processId == 123)
+        let requests = await transport.requests
+        #expect(requests.count == 1)
+        let request = try #require(requests.first)
+        #expect(request.url?.absoluteString == "https://gateway.example/v1/status")
+        #expect(request.httpMethod == "POST")
+        #expect(request.httpBody == Data("{}".utf8))
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer fictional-test-token")
+        #expect(request.timeoutInterval == 10)
+    }
+
+    @Test func oldGatewayIsUnsupportedAndUnstampedRuntimeRemainsUnknown() async throws {
+        let old = CRMGatewayClient(transport: GatewayTransportFake(status: 404, data: Data()))
+        await #expect(throws: CRMGatewayError.statusUnsupported) {
+            try await old.runtime(configuration: configuration())
+        }
+        let transport = GatewayTransportFake(data: Data(#"{"runtime":{"build":{"version":null,"commit":null,"builtAt":null,"integrity":"unknown"},"startedAt":"2026-10-08T00:00:00.000Z","processId":123}}"#.utf8))
+        let runtime = try await CRMGatewayClient(transport: transport).runtime(configuration: configuration())
+        #expect(runtime.build.integrity == "unknown")
+        #expect(runtime.build.version == nil)
+    }
+
+    @Test func statusRejectsMalformedOrMisleadingBuildIdentity() async throws {
+        for patch in [
+            ["integrity": "latest"], ["commit": "master"], ["version": ""], ["builtAt": "yesterday"],
+            ["integrity": "unknown"]
+        ] {
+            var root = try JSONSerialization.jsonObject(with: statusFixture()) as! [String: Any]
+            var runtime = root["runtime"] as! [String: Any]
+            var build = runtime["build"] as! [String: Any]
+            build.merge(patch) { _, new in new }
+            runtime["build"] = build; root["runtime"] = runtime
+            let transport = GatewayTransportFake(data: try JSONSerialization.data(withJSONObject: root))
+            await #expect(throws: CRMGatewayError.invalidResponse) {
+                try await CRMGatewayClient(transport: transport).runtime(configuration: configuration())
+            }
+        }
+        for data in [Data("{}".utf8), Data(#"{"runtime":{"build":{"integrity":"unknown"},"startedAt":"2026-10-08T00:00:00Z","processId":1}}"#.utf8)] {
+            await #expect(throws: CRMGatewayError.invalidResponse) {
+                try await CRMGatewayClient(transport: GatewayTransportFake(data: data)).runtime(configuration: configuration())
+            }
+        }
+    }
+
+    @Test func statusPreservesGatewayVersionLabelsWithoutAssumingSemanticVersioning() async throws {
+        let fixture = String(decoding: statusFixture(), as: UTF8.self)
+            .replacingOccurrences(of: "1.4.0", with: "2026.10-preview")
+        let runtime = try await CRMGatewayClient(
+            transport: GatewayTransportFake(data: Data(fixture.utf8))
+        ).runtime(configuration: configuration())
+        #expect(runtime.build.version == "2026.10-preview")
+    }
+
+    private func statusFixture() -> Data {
+        Data(("{\"runtime\":{\"build\":{\"version\":\"1.4.0\",\"commit\":\"" + String(repeating: "a", count: 40) + "\",\"builtAt\":\"2026-10-08T00:00:00.000Z\",\"integrity\":\"verified\"},\"startedAt\":\"2026-10-08T01:00:00.000Z\",\"processId\":123}}").utf8)
+    }
+
     private func configuration() throws -> CRMGatewayConfiguration {
         try CRMGatewayConfiguration(origin: "https://gateway.example", token: "fictional-test-token")
     }

@@ -116,6 +116,9 @@ struct CallHistoryViewModelTests {
         #expect(model.selection == first.identifier)
         #expect(model.pendingCRMRecord == first)
         #expect(!model.crmCheckRequested)
+        let firstRequest = model.crmPresentationRequest
+        model.selectForCRM(first, checkNow: false)
+        #expect(model.crmPresentationRequest == firstRequest + 1)
         model.show([second])
         #expect(model.pendingCRMRecord == nil)
 

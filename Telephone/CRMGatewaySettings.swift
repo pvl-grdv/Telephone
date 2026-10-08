@@ -150,6 +150,12 @@ final class CRMGatewaySettingsModel {
     private(set) var saved = false
     private(set) var error: CRMGatewayError?
     private var pendingTokenReuse: TokenReuse?
+    private(set) var isCheckingGateway = false
+    private(set) var gatewayRuntime: CRMGatewayRuntime?
+    private(set) var gatewayStatusError: CRMGatewayError?
+    private(set) var gatewayCheckedAt: Date?
+    private(set) var gatewayCheckedGeneration: Int?
+    @ObservationIgnored private let statusProvider: any CRMGatewayStatusProvider
 
     private struct TokenReuse {
         let source: String
@@ -160,11 +166,44 @@ final class CRMGatewaySettingsModel {
         let allowTailscaleHTTP: Bool
     }
 
-    init(settings: CRMGatewaySettings = CRMGatewaySettings()) {
+    init(settings: CRMGatewaySettings = CRMGatewaySettings(), statusProvider: any CRMGatewayStatusProvider = CRMGatewayClient()) {
+        self.statusProvider = statusProvider
         self.settings = settings
         enabled = settings.enabled
         origin = settings.origin
         allowTailscaleHTTP = settings.allowTailscaleHTTP
+    }
+
+    var canCheckConnection: Bool {
+        !hasChanges && settings.enabled && !isSaving && !isCheckingGateway
+    }
+
+    var hasCurrentGatewayStatus: Bool {
+        !hasChanges && gatewayCheckedGeneration == settings.generation
+    }
+
+    func checkConnection() async {
+        guard canCheckConnection else { return }
+        let generation = settings.generation
+        isCheckingGateway = true
+        gatewayRuntime = nil
+        gatewayStatusError = nil
+        gatewayCheckedAt = nil
+        gatewayCheckedGeneration = nil
+        defer { isCheckingGateway = false }
+        do {
+            let configuration = try await settings.configuration()
+            let runtime = try await statusProvider.runtime(configuration: configuration)
+            try Task.checkCancellation()
+            guard settings.generation == generation, !hasChanges else { return }
+            gatewayRuntime = runtime
+        } catch is CancellationError { return }
+        catch {
+            guard settings.generation == generation, !hasChanges else { return }
+            gatewayStatusError = (error as? CRMGatewayError) ?? .unavailable
+        }
+        gatewayCheckedAt = Date()
+        gatewayCheckedGeneration = generation
     }
 
     var hasChanges: Bool {

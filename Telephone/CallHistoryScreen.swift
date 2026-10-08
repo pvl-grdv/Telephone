@@ -8,6 +8,7 @@ import SwiftUI
 struct CallHistoryScreen: View {
     @Bindable var model: CallHistoryViewModel
     @FocusState private var searchFocused: Bool
+    @State private var crmWindow: CRMHistoryWindowController?
 
     let call: (String) -> Void
     let copy: (String) -> Void
@@ -71,20 +72,24 @@ struct CallHistoryScreen: View {
         .onChange(of: model.searchFocusRequest) {
             searchFocused = true
         }
-        .sheet(item: $model.pendingCRMRecord) { record in
-            if let crmLookupModel, let crmAccountUUID {
-                CRMHistoryLookupView(model: crmLookupModel)
-                    .task(id: record.identifier) {
-                        crmLookupModel.load(
-                            accountUUID: crmAccountUUID,
-                            callIdentifier: record.identifier,
-                            checkNow: model.crmCheckRequested
-                        )
-                    }
-                    .onDisappear { crmLookupModel.close() }
+        .onChange(of: model.crmPresentationRequest) {
+            guard let record = model.pendingCRMRecord, let crmLookupModel, let crmAccountUUID else {
+                crmWindow?.close()
+                crmWindow = nil
+                return
             }
+            if crmWindow == nil {
+                crmWindow = CRMHistoryWindowController(model: crmLookupModel) { model.pendingCRMRecord = nil }
+            }
+            crmLookupModel.load(accountUUID: crmAccountUUID, callIdentifier: record.identifier,
+                                checkNow: model.crmCheckRequested)
+            crmWindow?.showWindow(nil)
+            crmWindow?.window?.makeKeyAndOrderFront(nil)
         }
-        .onDisappear { crmLookupModel?.close() }
+        .onChange(of: model.pendingCRMRecord?.identifier) {
+            if model.pendingCRMRecord == nil { crmWindow?.close(); crmWindow = nil }
+        }
+        .onDisappear { crmWindow?.close(); crmWindow = nil; crmLookupModel?.close() }
     }
 
     private var controls: some View {

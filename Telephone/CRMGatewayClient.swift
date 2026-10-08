@@ -20,6 +20,7 @@ enum CRMGatewayError: String, Error, Equatable, Sendable, Codable {
     case rateLimited
     case redirectDenied
     case invalidResponse
+    case statusUnsupported
     case keychain
 }
 
@@ -131,11 +132,17 @@ final class CRMGatewayURLSessionTransport: CRMGatewayHTTPTransport {
     }
 }
 
-actor CRMGatewayClient: CRMKeyLookupProvider {
+actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
     private let transport: any CRMGatewayHTTPTransport
 
     init(transport: any CRMGatewayHTTPTransport = CRMGatewayURLSessionTransport()) {
         self.transport = transport
+    }
+
+    func runtime(configuration: CRMGatewayConfiguration) async throws -> CRMGatewayRuntime {
+        let response: CRMGatewayStatusResponse = try await send(route: .status, body: EmptyStatusRequest(), configuration: configuration)
+        try response.runtime.validate()
+        return response.runtime
     }
 
     func customer(
@@ -270,6 +277,7 @@ actor CRMGatewayClient: CRMKeyLookupProvider {
         let endpoint = configuration.origin.appendingPathComponent(route.rawValue)
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
+        if route == .status { request.timeoutInterval = 10 }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue(
@@ -301,6 +309,7 @@ actor CRMGatewayClient: CRMKeyLookupProvider {
         case 401: throw CRMGatewayError.unauthorized
         case 403: throw route == .phoneAppend ? CRMGatewayError.forbidden : .unauthorized
         case 409: throw route == .phoneAppend ? CRMGatewayError.conflict : .invalidResponse
+        case 404 where route == .status: throw CRMGatewayError.statusUnsupported
         case 429: throw CRMGatewayError.rateLimited
         case 500...599:
             if route == .phoneAppend, Self.errorCode(in: data) == "PHONE_WRITE_UNCONFIRMED" {
@@ -310,7 +319,7 @@ actor CRMGatewayClient: CRMKeyLookupProvider {
         default: throw CRMGatewayError.invalidResponse
         }
         // A gateway must return the original endpoint, never an alternate origin.
-        guard response.url == endpoint, data.count <= 16 * 1024 * 1024 else {
+        guard response.url == endpoint, data.count <= (route == .status ? 64 * 1024 : 16 * 1024 * 1024) else {
             throw CRMGatewayError.invalidResponse
         }
         do {
@@ -400,7 +409,10 @@ private struct PhoneAppendRequest: Encodable {
     let expectedPhone: String
 }
 
+private struct EmptyStatusRequest: Encodable {}
+
 private enum GatewayRoute: String {
+    case status = "v1/status"
     case keyLookup = "v1/customer-by-key/filter"
     case phoneLookup = "v1/customer-by-phone/filter"
     case emailLookup = "v1/customer-by-email/filter"

@@ -4,86 +4,65 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct CRMHistoryLookupView: View {
     @Bindable var model: CRMHistoryLookupModel
-    @Environment(\.dismiss) private var dismiss
+    var onClose: () -> Void = {}
+    @State private var searchKind = SearchKind.key
+    @FocusState private var lookupFocused: Bool
+
+    private enum SearchKind: String, CaseIterable {
+        case key, email
+        var title: String {
+            NSLocalizedString(self == .key ? "Key number" : "Email address", comment: "Manual CRM search kind.")
+        }
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(NSLocalizedString("CRM check for this call", comment: "Call history CRM sheet title."))
-                    .font(.headline)
+                if let phone = model.callerPhone {
+                    Label(phone, systemImage: "phone").textSelection(.enabled)
+                }
                 Spacer()
-                Button(NSLocalizedString("Check CRM now", comment: "Explicit fresh call-history CRM lookup.")) {
+                Button(NSLocalizedString("Refresh lookup", comment: "Repeat the displayed lookup, preserving its query and selected organization.")) {
                     model.checkNow()
                 }
+                .keyboardShortcut("r", modifiers: .command)
                 .disabled(!model.canCheck)
                 .accessibilityIdentifier("history.crm.checkNow")
+                Button(NSLocalizedString("Close", comment: "Close CRM window."), action: onClose)
+                    .keyboardShortcut(.cancelAction)
             }
-
-            if let phone = model.callerPhone {
-                Text(phone)
-                    .font(.callout)
-                    .textSelection(.enabled)
-            }
-
-            Text(NSLocalizedString(
-                "This check shows CRM data at the time of verification, not at the time of the call.",
-                comment: "Historical call CRM check temporal scope."
-            ))
-            .font(.caption)
-            .foregroundStyle(.secondary)
-
             manualSearch
-            Divider()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    progress
-                    localStatus
-
-                    if let snapshot = model.snapshot {
-                        Text(String(
-                            format: NSLocalizedString("Checked: %@", comment: "Saved CRM check local timestamp."),
-                            snapshot.checkedAt.formatted(date: .abbreviated, time: .standard)
-                        ))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                        lookupIdentity(snapshot)
-                        snapshotContent(snapshot)
-                        phoneLinkContent
-                    } else if !model.isLoading && !model.isChecking && model.localError == nil {
-                        Text(NSLocalizedString("This call has no saved CRM check.", comment: "Call history has no previous CRM verification."))
-                            .foregroundStyle(.secondary)
-                    }
-
-                    if !model.settings.enabled {
-                        Text(CRMGatewayError.disabled.crmMessage)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+            progress
+            localStatus
+            if let snapshot = model.snapshot {
+                HStack {
+                    Text(String(format: NSLocalizedString(
+                        model.isChecking ? "Previous result: %@" : "Checked: %@", comment: "Result time, separate from current request."),
+                        snapshot.checkedAt.formatted(date: .abbreviated, time: .standard)))
+                    lookupIdentity(snapshot)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 2)
-            }
-            .frame(minHeight: 160, idealHeight: 320)
-
-            Divider()
-
-            HStack {
+                .font(.caption).foregroundStyle(.secondary)
+                snapshotContent(snapshot)
+                phoneLinkContent
+            } else if !model.isLoading && !model.isChecking && model.localError == nil {
+                Text(NSLocalizedString("This call has no saved CRM check.", comment: "No saved CRM data."))
+                    .foregroundStyle(.secondary)
                 Spacer()
-                Button(NSLocalizedString("Close", comment: "Close history CRM verification sheet.")) {
-                    model.close()
-                    dismiss()
-                }
-                .keyboardShortcut(.cancelAction)
+            } else {
+                Spacer()
             }
+            if !model.settings.enabled {
+                Text(CRMGatewayError.disabled.crmMessage).font(.caption).foregroundStyle(.secondary)
+            }
+            Text(NSLocalizedString("This check shows CRM data at the time of verification, not at the time of the call.", comment: "CRM temporal scope."))
+                .font(.caption2).foregroundStyle(.secondary)
         }
-        .padding(18)
-        .frame(minWidth: 500, idealWidth: 560, maxWidth: 720,
-               minHeight: 420, idealHeight: 560, maxHeight: 760, alignment: .topLeading)
+        .padding(12)
+        .frame(minWidth: 660, maxWidth: .infinity, minHeight: 440, maxHeight: .infinity, alignment: .topLeading)
         .confirmationDialog(
             NSLocalizedString("Link phone to organization", comment: "Confirm CRM history phone append."),
             isPresented: Binding(
@@ -109,35 +88,36 @@ struct CRMHistoryLookupView: View {
     }
 
     private var manualSearch: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(NSLocalizedString("Find an organization manually", comment: "History CRM manual fallback heading."))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if model.callerPhone != nil {
-                    Button(NSLocalizedString("Find by phone", comment: "History CRM reset to actual call phone.")) { model.searchCallerPhone() }
-                        .disabled(!model.canCheck)
+        HStack(spacing: 8) {
+            Picker(NSLocalizedString("Search by", comment: "Manual CRM lookup kind."), selection: $searchKind) {
+                ForEach(SearchKind.allCases, id: \.self) { kind in Text(kind.title).tag(kind) }
+            }
+            .labelsHidden().frame(width: 120)
+            TextField(searchKind.title, text: searchKind == .key ? $model.keyNumber : $model.email)
+                .textFieldStyle(.roundedBorder).focused($lookupFocused)
+                .onSubmit { submitSearch() }
+                .accessibilityIdentifier("history.crm.query")
+            Button(NSLocalizedString("Find", comment: "Run manual CRM lookup.")) { submitSearch() }
+                .disabled(searchKind == .key ? !model.canSearchKey : !model.canSearchEmail)
+            if model.callerPhone != nil {
+                Button(NSLocalizedString("Find by call number", comment: "Reset lookup to actual caller, distinct from refresh.")) {
+                    model.searchCallerPhone()
                 }
-            }
-            HStack {
-                TextField(NSLocalizedString("Key number", comment: "History CRM key input."), text: $model.keyNumber)
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(model.isSaving || model.phoneLinkState == .saving || model.phoneLinkState == .refreshing)
-                    .onSubmit { if model.canSearchKey { model.searchKey() } }
-                Button(NSLocalizedString("Find by key", comment: "History CRM key lookup.")) { model.searchKey() }
-                    .disabled(!model.canSearchKey)
-            }
-            HStack {
-                TextField(NSLocalizedString("Email address", comment: "History CRM email input."), text: $model.email)
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(model.isSaving || model.phoneLinkState == .saving || model.phoneLinkState == .refreshing)
-                    .onSubmit { if model.canSearchEmail { model.searchEmail() } }
-                Button(NSLocalizedString("Find by email", comment: "History CRM email lookup.")) { model.searchEmail() }
-                    .disabled(!model.canSearchEmail)
+                .disabled(!model.canCheck)
+                .accessibilityIdentifier("history.crm.callerLookup")
             }
         }
         .controlSize(.small)
+        .disabled(model.isSaving || model.phoneLinkState == .saving || model.phoneLinkState == .refreshing)
+        .onChange(of: searchKind) { lookupFocused = true }
+        .onChange(of: model.snapshot?.lookupIdentity) {
+            if case .email = model.snapshot?.lookupIdentity { searchKind = .email }
+            else if case .key = model.snapshot?.lookupIdentity { searchKind = .key }
+        }
+    }
+
+    private func submitSearch() {
+        if searchKind == .key { model.searchKey() } else { model.searchEmail() }
     }
 
     @ViewBuilder
@@ -262,7 +242,7 @@ struct CRMHistoryLookupView: View {
         switch snapshot.status {
         case .matched:
             if let customer = snapshot.customer {
-                CRMCustomerInventoryView(customer: customer)
+                CRMCustomerInventoryView(customer: customer, usesBrowserLayout: true)
                     .id(customer.company.id)
             }
         case .notFound:
@@ -272,7 +252,7 @@ struct CRMHistoryLookupView: View {
             Text(NSLocalizedString("Several organizations match. Choose one.", comment: "History CRM ambiguous match choice."))
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 8) {
+            List {
                 ForEach(snapshot.matches) { match in
                     Button { model.chooseCompany(match) } label: {
                         Text("\(match.name) · \(match.formattedCode)")
@@ -284,7 +264,7 @@ struct CRMHistoryLookupView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         case .failed:
-            if let error = snapshot.errorCode {
+            if !model.isChecking, let error = snapshot.errorCode {
                 Label(error.crmMessage, systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.secondary)
             }
@@ -307,5 +287,36 @@ private extension CRMHistoryLocalError {
         case .callerChanged:
             NSLocalizedString("The phone stored for this call changed. Reopen its CRM check before linking.", comment: "History CRM caller changed before append.")
         }
+    }
+}
+
+
+/// A resizable auxiliary window: opening CRM never blocks the call-history window.
+@MainActor
+final class CRMHistoryWindowController: NSWindowController, NSWindowDelegate {
+    private let model: CRMHistoryLookupModel
+    private let didClose: () -> Void
+
+    init(model: CRMHistoryLookupModel, didClose: @escaping () -> Void) {
+        self.model = model
+        self.didClose = didClose
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1100, height: 720),
+                              styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                              backing: .buffered, defer: false)
+        window.title = NSLocalizedString("CRM check for this call", comment: "CRM auxiliary window title.")
+        window.contentMinSize = NSSize(width: 660, height: 440)
+        window.isReleasedWhenClosed = false
+        super.init(window: window)
+        window.delegate = self
+        window.contentViewController = NSHostingController(rootView: CRMHistoryLookupView(model: model) { [weak self] in self?.close() })
+        window.center()
+        window.setFrameAutosaveName("Telephone.CRMHistory")
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    func windowWillClose(_ notification: Notification) {
+        model.close()
+        didClose()
     }
 }

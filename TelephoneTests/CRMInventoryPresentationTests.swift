@@ -2,6 +2,36 @@ import Foundation
 import Testing
 
 struct CRMInventoryPresentationTests {
+    @Test func desktopSelectionSurvivesRefreshOnlyWhileItsKeyExists() {
+        let original = CRMInventoryPresentation(customer: customer(keys: [key(20), key(30)]))
+        #expect(original.retainedKeySelection(20) == 20)
+        #expect(original.retainedKeySelection(0) == 0)
+        #expect(original.retainedKeySelection(nil) == nil)
+
+        let refreshed = CRMInventoryPresentation(customer: customer(keys: [key(30)]))
+        #expect(refreshed.retainedKeySelection(20) == 0)
+        #expect(refreshed.retainedKeySelection(30) == 30)
+        #expect(refreshed.filtering("no matching key").retainedKeySelection(30) == 0)
+        let empty = CRMInventoryPresentation(customer: customer(keys: []))
+        #expect(empty.retainedKeySelection(30) == 0)
+    }
+
+    @Test func desktopTableRetainsAll743RecordsAcross23KeysAndSearchesEveryKey() {
+        let keys = (1...23).map { id in
+            key(id, programs: (0..<(id == 23 ? 39 : 32)).map { index in
+                program(index + 1, programID: index, name: "Program \(index)", version: "4.10", release: id == 23 ? "special-release" : "0010")
+            })
+        }
+        let inventory = CRMInventoryPresentation(customer: customer(keys: keys))
+        #expect(inventory.rows().count == 743)
+        #expect(Set(inventory.rows().map(\.id)).count == 743)
+        #expect(inventory.rows(for: 23).count == 39)
+        let searched = inventory.filtering("special-release")
+        #expect(searched.keys.map(\.id) == [23])
+        #expect(searched.rows().count == 39)
+        #expect(searched.filtering("").rows().count == 743)
+    }
+
     @Test func ordersVersionsAndReleasesNumericallyAndRetainsHistory() {
         let records = [
             program(1, version: "4.9", release: "10"),

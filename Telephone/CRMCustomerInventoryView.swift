@@ -11,9 +11,10 @@ import SwiftUI
 struct CRMCustomerInventoryView: View {
     let customer: CRMKeyLookupCustomer
     var scrollsInternally = false
+    var usesBrowserLayout = false
 
     var body: some View {
-        CRMInventoryPreparationView(customer: customer, scrollsInternally: scrollsInternally)
+        CRMInventoryPreparationView(customer: customer, scrollsInternally: scrollsInternally, usesBrowserLayout: usesBrowserLayout)
             .equatable()
     }
 }
@@ -23,13 +24,18 @@ struct CRMCustomerInventoryView: View {
 private struct CRMInventoryPreparationView: View, Equatable {
     let customer: CRMKeyLookupCustomer
     let scrollsInternally: Bool
+    let usesBrowserLayout: Bool
 
     var body: some View {
-        CRMInventoryContentView(
-            customer: customer,
-            preparedInventory: CRMInventoryPresentation(customer: customer),
-            scrollsInternally: scrollsInternally
-        )
+        if usesBrowserLayout {
+            CRMInventoryBrowserView(customer: customer, preparedInventory: CRMInventoryPresentation(customer: customer))
+        } else {
+            CRMInventoryContentView(
+                customer: customer,
+                preparedInventory: CRMInventoryPresentation(customer: customer),
+                scrollsInternally: scrollsInternally
+            )
+        }
     }
 }
 
@@ -255,5 +261,166 @@ private struct CRMInventoryProgramGroupView: View {
     private func display(_ value: String?) -> String {
         let value = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return value.isEmpty ? "—" : value
+    }
+}
+
+/// Full-height desktop inventory, sharing the prepared records with live calls.
+private struct CRMInventoryBrowserView: View {
+    let customer: CRMKeyLookupCustomer
+    let preparedInventory: CRMInventoryPresentation
+    @State private var searchText = ""
+    // Zero means all keys; gateway key IDs are strictly positive.
+    @State private var selectedKey: Int? = 0
+    @State private var selectedRows: Set<CRMInventoryPresentation.Row.ID> = []
+    @FocusState private var searchFocused: Bool
+
+    var body: some View {
+        let inventory = preparedInventory.filtering(searchText)
+        let keyID = selectedKey == 0 ? nil : selectedKey
+        let rows = inventory.rows(for: keyID)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(customer.company.name).font(.headline).textSelection(.enabled)
+                    .lineLimit(2)
+                Spacer(minLength: 8)
+                Text(customer.company.formattedCode).foregroundStyle(.secondary).textSelection(.enabled)
+            }
+            if let phones = customer.company.phones, !phones.isEmpty {
+                Text(phones.joined(separator: ", "))
+                    .font(.caption).foregroundStyle(.secondary).lineLimit(2).textSelection(.enabled)
+            }
+            HStack {
+                TextField(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."), text: $searchText)
+                    .textFieldStyle(.roundedBorder).focused($searchFocused)
+                    .accessibilityIdentifier("crm.inventory.search")
+                Button { searchFocused = true } label: { Image(systemName: "magnifyingglass") }
+                    .keyboardShortcut("f", modifiers: .command)
+                    .help(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
+                    .accessibilityLabel(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
+                if !searchText.isEmpty {
+                    Button(NSLocalizedString("Clear search", comment: "Clear inventory search.")) { searchText = "" }
+                }
+                Text(String(format: NSLocalizedString("%ld keys · %ld programs · %ld records", comment: "Inventory counts."),
+                            inventory.visibleKeyCount, inventory.visibleProgramGroupCount, inventory.visibleRecordCount))
+                    .font(.caption).foregroundStyle(.secondary)
+                    .accessibilityIdentifier("crm.inventory.counts")
+            }
+            .controlSize(.small)
+            HSplitView {
+                List(selection: $selectedKey) {
+                    Text(NSLocalizedString("All keys", comment: "Show programs across every key."))
+                        .tag(0).accessibilityIdentifier("crm.inventory.allKeys")
+                    ForEach(inventory.keys) { item in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(String(item.id)).monospacedDigit()
+                            Text(item.key.name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                        .tag(item.id)
+                        .accessibilityIdentifier("crm.inventory.key.\(item.id)")
+                    }
+                }
+                .listStyle(.sidebar)
+                .frame(minWidth: 140, idealWidth: 190, maxWidth: 280)
+                VStack(alignment: .leading, spacing: 6) {
+                    if let key = inventory.keys.first(where: { $0.id == keyID }) {
+                        HStack {
+                            Text(key.key.name).font(.callout.weight(.semibold)).lineLimit(1)
+                            Spacer()
+                            Link(NSLocalizedString("Personal account", comment: "Open key portal."), destination: key.key.url)
+                        }.padding(.horizontal, 8)
+                    }
+                    GeometryReader { geometry in
+                        // Size from the detail pane, including sidebar resizing.
+                        // A native Table retains ideal column widths and clips its
+                        // trailing columns when squeezed. Reflow complete records
+                        // rather than hiding version/release or requiring scrolling.
+                        if geometry.size.width >= 620 {
+                            programTable(rows)
+                        } else {
+                            compactPrograms(rows)
+                        }
+                    }
+                    .copyable(rows.filter { selectedRows.contains($0.id) }.map { row in
+                        [String(row.key.id), row.program.name, display(row.program.version), display(row.program.release)].joined(separator: "\t")
+                    })
+                    .accessibilityIdentifier("crm.inventory.programs")
+                    .overlay {
+                        if rows.isEmpty {
+                            Text(NSLocalizedString(inventory.isFiltered ? "No matching keys or programs" : "No programs on this key.", comment: "Empty inventory table."))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Text(NSLocalizedString("Versions and releases: higher numbers first", comment: "Ordering, not license status."))
+                        .font(.caption2).foregroundStyle(.secondary).padding(.horizontal, 8)
+                }
+                .frame(minWidth: 300, maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .onChange(of: searchText) { selectedKey = 0; selectedRows = [] }
+        .onChange(of: customer.sourceKeyId) { searchText = ""; selectedKey = 0; selectedRows = [] }
+        .onChange(of: inventory.keys.map(\.id)) {
+            selectedKey = inventory.retainedKeySelection(selectedKey)
+        }
+        .onChange(of: rows.map(\.id)) {
+            selectedRows.formIntersection(rows.map(\.id))
+        }
+    }
+
+    private func programTable(_ rows: [CRMInventoryPresentation.Row]) -> some View {
+        Table(rows, selection: $selectedRows) {
+            TableColumn(NSLocalizedString("Key number", comment: "Inventory key column.")) { row in
+                Link(String(row.key.id), destination: row.key.url).monospacedDigit()
+            }.width(min: 65, ideal: 80)
+            TableColumn(NSLocalizedString("Program", comment: "Inventory program column.")) { row in
+                Link(row.program.name.isEmpty ? NSLocalizedString("Unnamed program", comment: "Unnamed program.") : row.program.name,
+                     destination: row.program.keyUrl)
+                    .help(row.program.name)
+            }.width(min: 140, ideal: 300)
+            TableColumn(NSLocalizedString("Version", comment: "Inventory version column.")) { row in
+                Text(display(row.program.version)).monospacedDigit().textSelection(.enabled)
+            }.width(min: 65, ideal: 85)
+            TableColumn(NSLocalizedString("Release", comment: "Inventory release column.")) { row in
+                Text(display(row.program.release)).monospacedDigit().textSelection(.enabled)
+            }.width(min: 65, ideal: 85)
+        }
+    }
+
+    private func compactPrograms(_ rows: [CRMInventoryPresentation.Row]) -> some View {
+        List(rows, selection: $selectedRows) { row in
+            VStack(alignment: .leading, spacing: 5) {
+                Link(row.program.name.isEmpty ? NSLocalizedString("Unnamed program", comment: "Unnamed program.") : row.program.name,
+                     destination: row.program.keyUrl)
+                    .lineLimit(2)
+                    .help(row.program.name)
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(NSLocalizedString("Key number", comment: "Inventory key column."))
+                            .foregroundStyle(.secondary)
+                        Link(String(row.key.id), destination: row.key.url).monospacedDigit()
+                    }
+                    compactValue(NSLocalizedString("Version", comment: "Inventory version column."), value: row.program.version)
+                    compactValue(NSLocalizedString("Release", comment: "Inventory release column."), value: row.program.release)
+                }
+                .font(.caption)
+            }
+            .padding(.vertical, 3)
+            .tag(row.id)
+        }
+        .listStyle(.inset)
+        .accessibilityIdentifier("crm.inventory.compactPrograms")
+    }
+
+    private func compactValue(_ title: String, value: String?) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).foregroundStyle(.secondary)
+            Text(display(value)).monospacedDigit().textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func display(_ value: String?) -> String {
+        let text = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return text.isEmpty ? "—" : text
     }
 }

@@ -41,6 +41,50 @@ final class URITests: XCTestCase {
         )
     }
 
+    func testStringValueEscapesDisplayNameQuotesAndBackslashes() {
+        let uri = URI(
+            user: "204",
+            host: "example.invalid",
+            displayName: #"ООО "Пример" \ support"#
+        )
+        XCTAssertEqual(
+            uri.stringValue,
+            #""ООО \"Пример\" \\ support" <sip:204@example.invalid>"#
+        )
+    }
+
+    func testSerializedDisplayNamesCanBePastedWithoutDoubleEscaping() throws {
+        let names = [
+            #"ООО "Пример""#,
+            #"Caller "Example" Team"#,
+            #"Support \ Server"#,
+            #"Support \"quoted\""#,
+            #"Backslash \n stays literal"#,
+            "Control \u{0001} and \u{007f}",
+            ""
+        ]
+        for name in names {
+            let original = URI(user: "204", host: "example.invalid", displayName: name)
+            let pasted = try XCTUnwrap(URI(original.stringValue))
+            XCTAssertEqual(pasted.displayName, name)
+            XCTAssertEqual(pasted.stringValue, original.stringValue)
+        }
+    }
+
+    func testUnquotedAndMalformedDisplayNamesAreNotDecoded() throws {
+        let names = [
+            #"Caller\Name"#,
+            #"Caller "Example""#,
+            #""Unclosed"#,
+            #""Dangling\""#,
+            #""Invalid \Ж escape""#
+        ]
+        for name in names {
+            let parsed = try XCTUnwrap(URI("\(name) <sip:204@example.invalid>"))
+            XCTAssertEqual(parsed.displayName, name)
+        }
+    }
+
     func testStringValueWhenDisplayNameAndPortAreNotSpecified() {
         XCTAssertEqual(
             URI(user: "john", host: "example.com", displayName: "").stringValue, "sip:john@example.com"

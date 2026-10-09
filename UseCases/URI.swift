@@ -32,7 +32,9 @@ public final class URI: NSObject, Sendable {
         if transport == .tcp || transport == .tls {
             a.append(";transport=\(transport.stringValue)")
         }
-        return displayName.isEmpty ? "sip:\(a)" : "\"\(displayName)\" <sip:\(a)>"
+        // A semantic display name must be escaped before it becomes a SIP quoted-string.
+        let quotedName = encodeSIPDisplayName(displayName)
+        return displayName.isEmpty ? "sip:\(a)" : "\"\(quotedName)\" <sip:\(a)>"
     }
 
     public override var description: String { return stringValue }
@@ -78,10 +80,10 @@ public extension URI {
                 self.init(
                     user: substring(for: match.range(at: 3), in: string),
                     host: host,
-                    displayName: substring(for: match.range(at: 1), in: string)
+                    displayName: decodeSIPDisplayName(substring(for: match.range(at: 1), in: string))
                 )
             } else {
-                self.init(user: host, host: "", displayName: substring(for: match.range(at: 1), in: string))
+                self.init(user: host, host: "", displayName: decodeSIPDisplayName(substring(for: match.range(at: 1), in: string)))
             }
         } else {
             return nil
@@ -116,7 +118,7 @@ private func substring(for range: NSRange, in string: String) -> String {
 private let pattern = #"""
 (?x)                     # Free-spacing mode.
 ^
-  "?(.*?)"?              # Optional full name with optional quotes.
+  ("?.*?"?)              # Full name, retaining any quote boundaries.
   \s?
   <?
     (?i)(sip|tel)(?-i):  # Case-insensitive scheme.

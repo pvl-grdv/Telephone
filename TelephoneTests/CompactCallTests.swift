@@ -130,6 +130,50 @@ struct CompactCallTests {
         }
     }
 
+    @Test func longCallerNamesGrowInHeightWithoutHidingCallControls() async throws {
+        _ = NSApplication.shared
+        let fixture = try await makeFixture()
+        let longName = """
+            Санкт-Петербургский государственный университет телекоммуникаций \
+            имени профессора М. А. Бонч-Бруевича
+            """
+        var activeLongHeight: CGFloat = 0
+
+        for incoming in [true, false] {
+            if incoming {
+                fixture.call.showIncomingState()
+            } else {
+                fixture.call.showActiveState()
+            }
+
+            fixture.call.displayedName = "Short name"
+            let shortSize = NSHostingView(
+                rootView: compact(fixture).frame(width: 420)
+            ).fittingSize
+
+            fixture.call.displayedName = longName
+            let longSize = NSHostingView(
+                rootView: compact(fixture).frame(width: 420)
+            ).fittingSize
+
+            #expect(longSize.height > shortSize.height + 8)
+            #expect(longSize.height < 260)
+            #expect(abs(longSize.width - 420) < 1)
+
+            if !incoming {
+                activeLongHeight = longSize.height
+            }
+        }
+
+        // DTMF input must still show the latest digits on a single line.
+        fixture.call.usesDTMFDisplay = true
+        fixture.call.displayedName = "1234567890123456789012345678901234567890"
+        let dtmf = NSHostingView(
+            rootView: compact(fixture).frame(width: 420)
+        ).fittingSize
+        #expect(dtmf.height < activeLongHeight - 8)
+    }
+
     @Test func capturesIncomingActiveAndResizableDetailsContent() async throws {
         guard let directory = ProcessInfo.processInfo.environment["TELEPHONE_UI_ARTIFACT_DIR"], !directory.isEmpty else { return }
         _ = NSApplication.shared

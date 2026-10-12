@@ -19,7 +19,7 @@ struct IncomingCallSection: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             CallIdentityView(
                 displayedName: model.displayedName,
                 identityDetail: model.identityDetail,
@@ -27,34 +27,36 @@ struct IncomingCallSection: View {
                 usesDTMFDisplay: false
             )
 
-            Spacer(minLength: 12)
+            HStack(spacing: 12) {
+                Spacer(minLength: 0)
 
-            Button(action: decline) {
-                Label(
-                    NSLocalizedString("Decline", comment: "Call decline button."),
-                    systemImage: "phone.down.fill"
-                )
-            }
-            .buttonStyle(.bordered)
-            .tint(.red)
-            .keyboardShortcut(.cancelAction)
-            .accessibilityIdentifier("call.decline")
-            .focused($focusedAction, equals: .decline)
-            .disabled(!model.incomingActionsEnabled)
+                Button(action: decline) {
+                    Label(
+                        NSLocalizedString("Decline", comment: "Call decline button."),
+                        systemImage: "phone.down.fill"
+                    )
+                }
+                .buttonStyle(.bordered)
+                .tint(.red)
+                .keyboardShortcut(.cancelAction)
+                .accessibilityIdentifier("call.decline")
+                .focused($focusedAction, equals: .decline)
+                .disabled(!model.incomingActionsEnabled)
 
-            Button(action: answer) {
-                Label(
-                    NSLocalizedString("Answer", comment: "Call answer button."),
-                    systemImage: "phone.fill"
-                )
+                Button(action: answer) {
+                    Label(
+                        NSLocalizedString("Answer", comment: "Call answer button."),
+                        systemImage: "phone.fill"
+                    )
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("call.answer")
+                .focused($focusedAction, equals: .answer)
+                .disabled(!model.incomingActionsEnabled)
             }
-            .buttonStyle(.borderedProminent)
-            .keyboardShortcut(.defaultAction)
-            .accessibilityIdentifier("call.answer")
-            .focused($focusedAction, equals: .answer)
-            .disabled(!model.incomingActionsEnabled)
         }
-        .frame(maxWidth: .infinity, minHeight: 54)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .defaultFocus($focusedAction, .answer)
         .onChange(of: model.answerFocusRequest) {
             focusedAction = .answer
@@ -71,17 +73,15 @@ struct ActiveCallSection: View {
     let showTransfer: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
+            CallIdentityView(
+                displayedName: model.displayedName,
+                identityDetail: model.identityDetail,
+                status: model.status,
+                usesDTMFDisplay: model.usesDTMFDisplay
+            )
+
             HStack(spacing: 8) {
-                CallIdentityView(
-                    displayedName: model.displayedName,
-                    identityDetail: model.identityDetail,
-                    status: model.status,
-                    usesDTMFDisplay: model.usesDTMFDisplay
-                )
-
-                Spacer(minLength: 8)
-
                 if model.showsProgress {
                     ProgressView()
                         .controlSize(.small)
@@ -99,10 +99,8 @@ struct ActiveCallSection: View {
                 .accessibilityLabel(
                     NSLocalizedString("End Call", comment: "End call button.")
                 )
-            }
 
-            HStack(spacing: 8) {
-                Spacer(minLength: 0)
+                Spacer(minLength: 8)
 
                 CallControlButton(
                     systemImage: model.muted ? "mic.slash.fill" : "mic.fill",
@@ -136,7 +134,7 @@ struct ActiveCallSection: View {
                 )
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 54)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -145,7 +143,7 @@ struct EndedCallSection: View {
     let redial: () -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             CallIdentityView(
                 displayedName: model.displayedName,
                 identityDetail: model.identityDetail,
@@ -153,18 +151,20 @@ struct EndedCallSection: View {
                 usesDTMFDisplay: false
             )
 
-            Spacer(minLength: 12)
+            HStack {
+                Spacer(minLength: 0)
 
-            Button(action: redial) {
-                Label(
-                    NSLocalizedString("Call Back", comment: "Call back button."),
-                    systemImage: "arrow.clockwise"
-                )
+                Button(action: redial) {
+                    Label(
+                        NSLocalizedString("Call Back", comment: "Call back button."),
+                        systemImage: "arrow.clockwise"
+                    )
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!model.redialEnabled)
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(!model.redialEnabled)
         }
-        .frame(maxWidth: .infinity, minHeight: 54)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -178,8 +178,10 @@ struct CallIdentityView: View {
         VStack(alignment: .leading, spacing: 3) {
             Text(displayedName)
                 .font(.headline)
-                .lineLimit(1)
+                .lineLimit(usesDTMFDisplay ? 1 : 2)
                 .truncationMode(usesDTMFDisplay ? .head : .tail)
+                .fixedSize(horizontal: false, vertical: true)
+                .help(displayedName)
 
             if !identityDetail.isEmpty {
                 Text(identityDetail)
@@ -187,6 +189,7 @@ struct CallIdentityView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
+                    .help(identityDetail)
             }
 
             Text(status)
@@ -195,6 +198,7 @@ struct CallIdentityView: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

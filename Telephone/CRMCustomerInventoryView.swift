@@ -358,7 +358,7 @@ private struct CRMInventoryBrowserView: View {
                         if geometry.size.width >= 460 {
                             programTable(rows)
                         } else {
-                            compactPrograms(rows)
+                            compactPrograms(rows, showsKeyNumber: keyID == nil)
                         }
                     }
                     .copyable(rows.filter { selectedRows.contains($0.id) }.map { row in
@@ -390,45 +390,67 @@ private struct CRMInventoryBrowserView: View {
     private func programTable(_ rows: [CRMInventoryPresentation.Row]) -> some View {
         Table(rows, selection: $selectedRows) {
             TableColumn(NSLocalizedString("Program", comment: "Inventory program column.")) { row in
-                Link(row.program.name.isEmpty ? NSLocalizedString("Unnamed program", comment: "Unnamed program.") : row.program.name,
-                     destination: row.program.keyUrl)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .help(row.program.name)
+                Link(destination: row.program.keyUrl) {
+                    Text(row.program.name.isEmpty ? NSLocalizedString("Unnamed program", comment: "Unnamed program.") : row.program.name)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .help(row.program.name)
             }.width(min: 150, ideal: 240)
-            TableColumn(NSLocalizedString("Key number", comment: "Inventory key column.")) { row in
-                Link(String(row.key.id), destination: row.key.url).monospacedDigit()
-            }.width(84)
             TableColumn(NSLocalizedString("Version", comment: "Inventory version column.")) { row in
                 Text(display(row.program.version)).monospacedDigit().textSelection(.enabled)
             }.width(92)
             TableColumn(NSLocalizedString("Release", comment: "Inventory release column.")) { row in
                 Text(display(row.program.release)).monospacedDigit().textSelection(.enabled)
             }.width(92)
+            TableColumn(NSLocalizedString("Key number", comment: "Inventory key column.")) { row in
+                Link(String(row.key.id), destination: row.key.url).monospacedDigit()
+            }.width(84)
         }
     }
 
-    private func compactPrograms(_ rows: [CRMInventoryPresentation.Row]) -> some View {
+    private func compactPrograms(
+        _ rows: [CRMInventoryPresentation.Row],
+        showsKeyNumber: Bool
+    ) -> some View {
         List(rows, selection: $selectedRows) { row in
-            VStack(alignment: .leading, spacing: 5) {
-                Link(row.program.name.isEmpty ? NSLocalizedString("Unnamed program", comment: "Unnamed program.") : row.program.name,
-                     destination: row.program.keyUrl)
-                    .lineLimit(2)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Link(destination: row.program.keyUrl) {
+                        Text(row.program.name.isEmpty ? NSLocalizedString("Unnamed program", comment: "Unnamed program.") : row.program.name)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     .help(row.program.name)
 
-                HStack(spacing: 12) {
-                    Label(String(row.key.id), systemImage: "key.horizontal")
+                    Text("v" + display(row.program.version))
+                        .monospacedDigit()
                         .foregroundStyle(.secondary)
-                        .help(NSLocalizedString("Key number", comment: "Inventory key column."))
-                    Text(display(row.program.version))
+                        .fixedSize(horizontal: true, vertical: false)
                         .accessibilityLabel("\(NSLocalizedString("Version", comment: "Inventory version column.")): \(display(row.program.version))")
-                    Text(display(row.program.release))
+                        .help("\(NSLocalizedString("Version", comment: "Inventory version column.")): \(display(row.program.version))")
+
+                    Text("r" + display(row.program.release))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: true, vertical: false)
                         .accessibilityLabel("\(NSLocalizedString("Release", comment: "Inventory release column.")): \(display(row.program.release))")
+                        .help("\(NSLocalizedString("Release", comment: "Inventory release column.")): \(display(row.program.release))")
                 }
-                .font(.callout.monospacedDigit())
+                .font(.callout)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if showsKeyNumber {
+                    Link(destination: row.key.url) {
+                        Label(String(row.key.id), systemImage: "key.horizontal")
+                    }
+                    .font(.caption)
+                    .accessibilityLabel("\(NSLocalizedString("Key number", comment: "Inventory key column.")): \(row.key.id)")
+                }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 3)
             .tag(row.id)
         }
         .listStyle(.inset)

@@ -39,13 +39,18 @@ struct CRMHistoryLookupView: View {
             progress
             localStatus
             if let snapshot = model.snapshot {
-                HStack {
-                    Text(String(format: NSLocalizedString(
-                        model.isChecking ? "Previous result: %@" : "Checked: %@", comment: "Result time, separate from current request."),
-                        snapshot.checkedAt.formatted(date: .abbreviated, time: .standard)))
-                    lookupIdentity(snapshot)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 16) {
+                        checkedTime(snapshot)
+                        lookupIdentity(snapshot)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        checkedTime(snapshot)
+                        lookupIdentity(snapshot)
+                    }
                 }
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 snapshotContent(snapshot)
                 phoneLinkContent
             } else if !model.isLoading && !model.isChecking && model.localError == nil {
@@ -184,18 +189,34 @@ struct CRMHistoryLookupView: View {
         return false
     }
 
+    private func checkedTime(_ snapshot: CRMHistorySnapshot) -> some View {
+        Label(
+            String(format: NSLocalizedString(
+                model.isChecking ? "Previous result: %@" : "Checked: %@",
+                comment: "Result time, separate from current request."
+            ), snapshot.checkedAt.formatted(date: .abbreviated, time: .standard)),
+            systemImage: "clock"
+        )
+    }
+
     @ViewBuilder
     private func lookupIdentity(_ snapshot: CRMHistorySnapshot) -> some View {
         switch snapshot.lookupIdentity {
         case .phone(let phone):
-            Text(String(format: NSLocalizedString("Lookup by phone: %@", comment: "CRM saved lookup provenance."), phone))
-                .font(.caption).foregroundStyle(.secondary)
+            Label(
+                String(format: NSLocalizedString("Lookup by phone: %@", comment: "CRM saved lookup provenance."), phone),
+                systemImage: "magnifyingglass"
+            )
         case .key(let number):
-            Text(String(format: NSLocalizedString("Lookup by key: %@", comment: "CRM saved lookup provenance."), String(number)))
-                .font(.caption).foregroundStyle(.secondary)
+            Label(
+                String(format: NSLocalizedString("Lookup by key: %@", comment: "CRM saved lookup provenance."), String(number)),
+                systemImage: "magnifyingglass"
+            )
         case .email(let email):
-            Text(String(format: NSLocalizedString("Lookup by email: %@", comment: "CRM saved lookup provenance."), email))
-                .font(.caption).foregroundStyle(.secondary)
+            Label(
+                String(format: NSLocalizedString("Lookup by email: %@", comment: "CRM saved lookup provenance."), email),
+                systemImage: "magnifyingglass"
+            )
         case nil: EmptyView()
         }
     }

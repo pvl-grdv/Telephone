@@ -278,32 +278,53 @@ private struct CRMInventoryBrowserView: View {
         let inventory = preparedInventory.filtering(searchText)
         let keyID = selectedKey == 0 ? nil : selectedKey
         let rows = inventory.rows(for: keyID)
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(customer.company.name).font(.headline).textSelection(.enabled)
-                    .lineLimit(2)
-                Spacer(minLength: 8)
-                Text(customer.company.formattedCode).foregroundStyle(.secondary).textSelection(.enabled)
-            }
-            if let phones = customer.company.phones, !phones.isEmpty {
-                Text(phones.joined(separator: ", "))
-                    .font(.caption).foregroundStyle(.secondary).lineLimit(2).textSelection(.enabled)
-            }
-            HStack {
-                TextField(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."), text: $searchText)
-                    .textFieldStyle(.roundedBorder).focused($searchFocused)
-                    .accessibilityIdentifier("crm.inventory.search")
-                Button { searchFocused = true } label: { Image(systemName: "magnifyingglass") }
-                    .keyboardShortcut("f", modifiers: .command)
-                    .help(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
-                    .accessibilityLabel(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
-                if !searchText.isEmpty {
-                    Button(NSLocalizedString("Clear search", comment: "Clear inventory search.")) { searchText = "" }
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(customer.company.name)
+                        .font(.title3.weight(.semibold))
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Text(customer.company.formattedCode)
+                        .font(.callout.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
+
+                if let phones = customer.company.phones, !phones.isEmpty {
+                    Text(phones.joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .textSelection(.enabled)
+                }
+
                 Text(String(format: NSLocalizedString("%ld keys · %ld programs · %ld records", comment: "Inventory counts."),
                             inventory.visibleKeyCount, inventory.visibleProgramGroupCount, inventory.visibleRecordCount))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     .accessibilityIdentifier("crm.inventory.counts")
+            }
+
+            HStack(spacing: 8) {
+                TextField(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."), text: $searchText)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($searchFocused)
+                    .accessibilityIdentifier("crm.inventory.search")
+                Button { searchFocused = true } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+                .keyboardShortcut("f", modifiers: .command)
+                .help(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
+                .accessibilityLabel(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
+                if !searchText.isEmpty {
+                    Button(NSLocalizedString("Clear search", comment: "Clear inventory search.")) {
+                        searchText = ""
+                    }
+                }
             }
             .controlSize(.small)
             HSplitView {
@@ -320,7 +341,7 @@ private struct CRMInventoryBrowserView: View {
                     }
                 }
                 .listStyle(.sidebar)
-                .frame(minWidth: 140, idealWidth: 190, maxWidth: 280)
+                .frame(minWidth: 150, idealWidth: 185, maxWidth: 220)
                 VStack(alignment: .leading, spacing: 6) {
                     if let key = inventory.keys.first(where: { $0.id == keyID }) {
                         HStack {
@@ -331,10 +352,10 @@ private struct CRMInventoryBrowserView: View {
                     }
                     GeometryReader { geometry in
                         // Size from the detail pane, including sidebar resizing.
-                        // A native Table retains ideal column widths and clips its
-                        // trailing columns when squeezed. Reflow complete records
-                        // rather than hiding version/release or requiring scrolling.
-                        if geometry.size.width >= 620 {
+                        // Prefer the native, column-headed table whenever
+                        // all four columns fit. Reserve cards for the smallest
+                        // detail panes instead of switching at ordinary widths.
+                        if geometry.size.width >= 460 {
                             programTable(rows)
                         } else {
                             compactPrograms(rows)
@@ -368,20 +389,23 @@ private struct CRMInventoryBrowserView: View {
 
     private func programTable(_ rows: [CRMInventoryPresentation.Row]) -> some View {
         Table(rows, selection: $selectedRows) {
-            TableColumn(NSLocalizedString("Key number", comment: "Inventory key column.")) { row in
-                Link(String(row.key.id), destination: row.key.url).monospacedDigit()
-            }.width(min: 65, ideal: 80)
             TableColumn(NSLocalizedString("Program", comment: "Inventory program column.")) { row in
                 Link(row.program.name.isEmpty ? NSLocalizedString("Unnamed program", comment: "Unnamed program.") : row.program.name,
                      destination: row.program.keyUrl)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .help(row.program.name)
-            }.width(min: 140, ideal: 300)
+            }.width(min: 150, ideal: 240)
+            TableColumn(NSLocalizedString("Key number", comment: "Inventory key column.")) { row in
+                Link(String(row.key.id), destination: row.key.url).monospacedDigit()
+            }.width(84)
             TableColumn(NSLocalizedString("Version", comment: "Inventory version column.")) { row in
                 Text(display(row.program.version)).monospacedDigit().textSelection(.enabled)
-            }.width(min: 65, ideal: 85)
+            }.width(92)
             TableColumn(NSLocalizedString("Release", comment: "Inventory release column.")) { row in
                 Text(display(row.program.release)).monospacedDigit().textSelection(.enabled)
-            }.width(min: 65, ideal: 85)
+            }.width(92)
         }
     }
 
@@ -392,31 +416,23 @@ private struct CRMInventoryBrowserView: View {
                      destination: row.program.keyUrl)
                     .lineLimit(2)
                     .help(row.program.name)
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(NSLocalizedString("Key number", comment: "Inventory key column."))
-                            .foregroundStyle(.secondary)
-                        Link(String(row.key.id), destination: row.key.url).monospacedDigit()
-                    }
-                    compactValue(NSLocalizedString("Version", comment: "Inventory version column."), value: row.program.version)
-                    compactValue(NSLocalizedString("Release", comment: "Inventory release column."), value: row.program.release)
+
+                HStack(spacing: 12) {
+                    Label(String(row.key.id), systemImage: "key.horizontal")
+                        .foregroundStyle(.secondary)
+                        .help(NSLocalizedString("Key number", comment: "Inventory key column."))
+                    Text(display(row.program.version))
+                        .accessibilityLabel("\(NSLocalizedString("Version", comment: "Inventory version column.")): \(display(row.program.version))")
+                    Text(display(row.program.release))
+                        .accessibilityLabel("\(NSLocalizedString("Release", comment: "Inventory release column.")): \(display(row.program.release))")
                 }
-                .font(.caption)
+                .font(.callout.monospacedDigit())
             }
-            .padding(.vertical, 3)
+            .padding(.vertical, 4)
             .tag(row.id)
         }
         .listStyle(.inset)
         .accessibilityIdentifier("crm.inventory.compactPrograms")
-    }
-
-    private func compactValue(_ title: String, value: String?) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).foregroundStyle(.secondary)
-            Text(display(value)).monospacedDigit().textSelection(.enabled)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func display(_ value: String?) -> String {

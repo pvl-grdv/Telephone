@@ -51,6 +51,32 @@ struct CRMInventoryViewRenderingTests {
         }
     }
 
+    @Test func capturesThreeKeyInventoryWithDenseProgramTable() throws {
+        guard let directory = ProcessInfo.processInfo.environment["TELEPHONE_UI_ARTIFACT_DIR"],
+              !directory.isEmpty else { return }
+        _ = NSApplication.shared
+        let output = URL(fileURLWithPath: directory, isDirectory: true)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+
+        let customer = threeKeyCustomer()
+        #expect(customer.keys.count == 3)
+        #expect(customer.keys.reduce(0) { $0 + $1.programs.count } == 79)
+
+        for width in [660, 820, 1100] {
+            for scheme in [ColorScheme.light, .dark] {
+                let bitmap = try #require(
+                    capture(width: width, scheme: scheme, browser: true, customer: customer)
+                )
+                try expectVisibleMetadataPixels(bitmap)
+                try write(
+                    bitmap,
+                    name: "crm-browser-three-keys-\(scheme == .dark ? "dark" : "light")-\(width)",
+                    to: output
+                )
+            }
+        }
+    }
+
     @Test func capturesCompleteHistoryWindowAndGatewaySettings() async throws {
         guard let directory = ProcessInfo.processInfo.environment["TELEPHONE_UI_ARTIFACT_DIR"], !directory.isEmpty else { return }
         let output = URL(fileURLWithPath: directory, isDirectory: true)
@@ -113,9 +139,15 @@ struct CRMInventoryViewRenderingTests {
         try png.write(to: directory.appendingPathComponent(name + ".png"), options: .atomic)
     }
 
-    private func capture(width: Int, scheme: ColorScheme, browser: Bool = false) -> NSBitmapImageRep? {
+    private func capture(
+        width: Int,
+        scheme: ColorScheme,
+        browser: Bool = false,
+        customer: CRMKeyLookupCustomer? = nil
+    ) -> NSBitmapImageRep? {
         let size = NSSize(width: CGFloat(width), height: 640)
-        let content = CRMCustomerInventoryView(customer: browser ? largeCustomer() : sampleCustomer(), usesBrowserLayout: browser)
+        let sample = customer ?? (browser ? largeCustomer() : sampleCustomer())
+        let content = CRMCustomerInventoryView(customer: sample, usesBrowserLayout: browser)
             .padding(18)
             .frame(width: size.width, height: size.height, alignment: .topLeading)
             .background(Color(nsColor: .windowBackgroundColor))
@@ -235,6 +267,37 @@ struct CRMInventoryViewRenderingTests {
                         CRMKeyLookupProgram(recordId: recordID, programId: max(1, recordID / 2), name: "Program \(recordID / 2) — environment analysis", version: "2026.\(1000 + recordID)", release: "0010", keyUrl: url)
                     })
             })
+    }
+
+    private func threeKeyCustomer() -> CRMKeyLookupCustomer {
+        CRMKeyLookupCustomer(
+            sourceKeyId: nil,
+            company: CRMKeyLookupCompany(
+                id: 9000,
+                name: "Example environmental research organization",
+                formattedCode: "00-00-9000",
+                phone: nil,
+                phones: ["+70005550101"]
+            ),
+            keys: (1...3).map { keyID in
+                let url = URL(string: "https://example.test/keys/\(keyID)")!
+                return CRMKeyLookupKey(
+                    id: keyID,
+                    name: "Engineering \(keyID)",
+                    url: url,
+                    programs: (1...(keyID == 3 ? 27 : 26)).map { recordID in
+                        CRMKeyLookupProgram(
+                            recordId: recordID,
+                            programId: recordID,
+                            name: "Environmental monitoring and engineering analysis \(recordID)",
+                            version: "2026.\(1000 + recordID)",
+                            release: "0010",
+                            keyUrl: url
+                        )
+                    }
+                )
+            }
+        )
     }
 
     private func sampleCustomer() -> CRMKeyLookupCustomer {

@@ -181,12 +181,8 @@ extension CallSession: @preconcurrency CallEventTarget {
 @MainActor
 @Observable
 final class CallWindowModel {
+    // Session owns call phase and controls; this model owns window presentation.
     let session: CallSession
-
-    var phase: CallSession.Phase {
-        get { session.phase }
-        set { session.phase = newValue }
-    }
 
     var displayedName = ""
     var identityDetail = ""
@@ -195,57 +191,12 @@ final class CallWindowModel {
     var windowTitle = NSLocalizedString("Call Window Title", comment: "Call window title.")
     var windowDismissEnabled = true
 
-    var showsProgress: Bool {
-        get { session.showsProgress }
-        set { session.showsProgress = newValue }
-    }
-
-    var incomingActionsEnabled: Bool {
-        get { session.incomingActionsEnabled }
-        set { session.incomingActionsEnabled = newValue }
-    }
-
     var answerFocusRequest = 0
     var callSurfaceFocusRequest = 0
-
-    var hangUpEnabled: Bool {
-        get { session.hangUpEnabled }
-        set { session.hangUpEnabled = newValue }
-    }
-
-    var muteEnabled: Bool {
-        get { session.muteEnabled }
-        set { session.muteEnabled = newValue }
-    }
-
-    var muted: Bool {
-        get { session.muted }
-        set { session.muted = newValue }
-    }
-
-    var holdEnabled: Bool {
-        get { session.holdEnabled }
-        set { session.holdEnabled = newValue }
-    }
-
-    var held: Bool {
-        get { session.held }
-        set { session.held = newValue }
-    }
-
-    var transferEnabled: Bool {
-        get { session.transferEnabled }
-        set { session.transferEnabled = newValue }
-    }
 
     var transferActionEnabled = false
     var transferCancelEnabled = true
     var transferPresentation: CallPresentationCoordinator?
-
-    var redialEnabled: Bool {
-        get { session.redialEnabled }
-        set { session.redialEnabled = newValue }
-    }
 
     var usesDTMFDisplay = false
 
@@ -297,15 +248,11 @@ final class CallWindowModel {
     }
 
     func requestCallSurfaceFocus() {
-        guard phase == .active || phase == .transferActive else {
+        guard session.phase == .active || session.phase == .transferActive else {
             return
         }
 
         callSurfaceFocusRequest &+= 1
-    }
-
-    var commandState: CallCommandState {
-        session.commandState
     }
 
     init(session: CallSession) {

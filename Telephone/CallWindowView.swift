@@ -53,7 +53,7 @@ struct CallWindowView: View {
         .windowDismissBehavior(
             model.windowDismissEnabled ? .enabled : .disabled
         )
-        .focusedSceneValue(\.callCommandState, model.commandState)
+        .focusedSceneValue(\.callCommandState, model.session.commandState)
         .sheet(item: $model.transferPresentation) { transfer in
             transfer.contentView
                 .interactiveDismissDisabled()
@@ -82,7 +82,7 @@ struct CallWindowView: View {
 
     @ViewBuilder
     private var transferContent: some View {
-        switch model.phase {
+        switch model.session.phase {
         case .transferDestination:
             if let transferDestinationComposer {
                 TransferDestinationView(

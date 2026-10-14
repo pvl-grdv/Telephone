@@ -41,7 +41,7 @@ struct IncomingCallSection: View {
                 .keyboardShortcut(.cancelAction)
                 .accessibilityIdentifier("call.decline")
                 .focused($focusedAction, equals: .decline)
-                .disabled(!model.incomingActionsEnabled)
+                .disabled(!model.session.incomingActionsEnabled)
 
                 Button(action: answer) {
                     Label(
@@ -53,7 +53,7 @@ struct IncomingCallSection: View {
                 .keyboardShortcut(.defaultAction)
                 .accessibilityIdentifier("call.answer")
                 .focused($focusedAction, equals: .answer)
-                .disabled(!model.incomingActionsEnabled)
+                .disabled(!model.session.incomingActionsEnabled)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -82,7 +82,7 @@ struct ActiveCallSection: View {
             )
 
             HStack(spacing: 8) {
-                if model.showsProgress {
+                if model.session.showsProgress {
                     ProgressView()
                         .controlSize(.small)
                 }
@@ -93,7 +93,7 @@ struct ActiveCallSection: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(.red)
-                .disabled(!model.hangUpEnabled)
+                .disabled(!model.session.hangUpEnabled)
                 .help(NSLocalizedString("End Call", comment: "End call button."))
                 .accessibilityIdentifier("call.end")
                 .accessibilityLabel(
@@ -103,21 +103,21 @@ struct ActiveCallSection: View {
                 Spacer(minLength: 8)
 
                 CallControlButton(
-                    systemImage: model.muted ? "mic.slash.fill" : "mic.fill",
-                    help: model.muted
+                    systemImage: model.session.muted ? "mic.slash.fill" : "mic.fill",
+                    help: model.session.muted
                         ? NSLocalizedString("Unmute", comment: "Unmute. Call menu item.")
                         : NSLocalizedString("Mute", comment: "Mute. Call menu item."),
-                    isEnabled: model.muteEnabled,
+                    isEnabled: model.session.muteEnabled,
                     accessibilityIdentifier: "call.mute",
                     action: toggleMute
                 )
 
                 CallControlButton(
-                    systemImage: model.held ? "play.fill" : "pause.fill",
-                    help: model.held
+                    systemImage: model.session.held ? "play.fill" : "pause.fill",
+                    help: model.session.held
                         ? NSLocalizedString("Resume", comment: "Resume. Call menu item.")
                         : NSLocalizedString("Hold", comment: "Hold. Call menu item."),
-                    isEnabled: model.holdEnabled,
+                    isEnabled: model.session.holdEnabled,
                     accessibilityIdentifier: "call.hold",
                     action: toggleHold
                 )
@@ -128,7 +128,7 @@ struct ActiveCallSection: View {
                         "Transfer",
                         comment: "Transfer. Call menu item."
                     ),
-                    isEnabled: model.transferEnabled,
+                    isEnabled: model.session.transferEnabled,
                     accessibilityIdentifier: "call.transfer",
                     action: showTransfer
                 )
@@ -161,7 +161,7 @@ struct EndedCallSection: View {
                     )
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(!model.redialEnabled)
+                .disabled(!model.session.redialEnabled)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -148,10 +148,10 @@ private struct UITestIncomingCallView: View {
             decline: close,
             hangUp: close,
             toggleMute: {
-                model.muted.toggle()
+                model.session.muted.toggle()
             },
             toggleHold: {
-                model.held.toggle()
+                model.session.held.toggle()
             },
             showTransfer: {},
             redial: {},
@@ -198,9 +198,9 @@ private struct UITestIncomingCallView: View {
         )
         model.status = "00:00"
         model.showActiveState()
-        model.muteEnabled = true
-        model.holdEnabled = true
-        model.transferEnabled = true
+        model.session.muteEnabled = true
+        model.session.holdEnabled = true
+        model.session.transferEnabled = true
         model.requestCallSurfaceFocus()
     }
 

@@ -53,7 +53,7 @@ struct CompactCallView: View {
 
     @ViewBuilder
     private var callStateContent: some View {
-        switch model.phase {
+        switch model.session.phase {
         case .incoming:
             IncomingCallSection(model: model, answer: answer, decline: decline)
         case .active:

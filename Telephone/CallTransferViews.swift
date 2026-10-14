@@ -24,7 +24,7 @@ struct TransferActiveSection: View {
 
                 Spacer(minLength: 8)
 
-                if model.showsProgress {
+                if model.session.showsProgress {
                     ProgressView()
                         .controlSize(.small)
                 }
@@ -79,7 +79,7 @@ struct TransferEndedSection: View {
                         systemImage: "arrow.clockwise"
                     )
                 }
-                .disabled(!model.redialEnabled)
+                .disabled(!model.session.redialEnabled)
             }
 
             HStack {

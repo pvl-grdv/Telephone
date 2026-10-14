@@ -254,23 +254,23 @@ final class CallPresentationCoordinator: Identifiable {
     }
 
     func setProgressVisible(_ visible: Bool) {
-        model.showsProgress = visible
+        session.showsProgress = visible
         updateCallControls()
     }
 
     func setHangUpEnabled(_ enabled: Bool) {
-        model.hangUpEnabled = enabled
+        session.hangUpEnabled = enabled
         if model.isTransfer {
             transferCoordinator.setCancelEnabled(enabled)
         }
     }
 
     func setIncomingActionsEnabled(_ enabled: Bool) {
-        model.incomingActionsEnabled = enabled
+        session.incomingActionsEnabled = enabled
     }
 
     func setRedialEnabled(_ enabled: Bool) {
-        model.redialEnabled = enabled
+        session.redialEnabled = enabled
     }
 
     func setTransferActionEnabled(_ enabled: Bool) {
@@ -343,7 +343,7 @@ final class CallPresentationCoordinator: Identifiable {
 
             guard let self, !Task.isCancelled else { return }
             redialEnableTask = nil
-            model.redialEnabled = true
+            session.redialEnabled = true
         }
     }
 
@@ -515,7 +515,7 @@ final class CallPresentationCoordinator: Identifiable {
 
     private func handleDTMF(_ text: String) {
         guard
-            model.phase == .active || model.phase == .transferActive,
+            session.phase == .active || session.phase == .transferActive,
             let callController,
             let call = callController.call
         else {

@@ -254,9 +254,9 @@ struct CompactCallTests {
         model.status = "calling"
         model.customerContextLoaded = true
         model.previousConversationCount = 4
-        model.muteEnabled = true
-        model.holdEnabled = true
-        model.transferEnabled = true
+        model.session.muteEnabled = true
+        model.session.holdEnabled = true
+        model.session.transferEnabled = true
         return Fixture(call: model, lookup: CRMKeyLookupModel(settings: settings, provider: provider), provider: provider)
     }
 

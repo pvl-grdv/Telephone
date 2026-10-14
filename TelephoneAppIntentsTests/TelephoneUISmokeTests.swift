@@ -230,10 +230,14 @@ final class TelephoneUISmokeTests: XCTestCase {
         key.typeKey(XCUIKeyboardKey.return, modifierFlags: [])
         XCTAssertTrue(answer.exists, "Return in CRM lookup must not answer the call.")
         XCTAssertFalse(element("call.end", in: app).exists)
-        let search = element("crm.inventory.search", in: app)
-        XCTAssertTrue(search.waitForExistence(timeout: 3))
-        search.click()
-        search.typeText("Air")
+        // Native .searchable is exposed as an AppKit search field, not the old
+        // custom TextField accessibility identifier.
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 3), app.debugDescription)
+        XCTAssertTrue(search.isHittable, "Inventory search must be usable in the CRM pane.")
+        app.typeKey("f", modifierFlags: .command)
+        app.typeText("Air")
+        XCTAssertEqual(search.value as? String, "Air", "⌘F must focus the native CRM search field.")
 
         localDetails.click()
         let company = app.textFields["Organization"]

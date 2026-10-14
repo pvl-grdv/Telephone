@@ -45,27 +45,27 @@ struct CallPresentationRegressionTests {
     func regularCallStateTransitionsKeepDTMFFocusScopedToActiveCall() {
         let model = CallWindowModel(isTransfer: false)
 
-        #expect(model.phase == .active)
+        #expect(model.session.phase == .active)
         #expect(model.callSurfaceFocusRequest == 0)
 
         model.showIncomingState()
-        #expect(model.phase == .incoming)
-        #expect(model.incomingActionsEnabled)
-        #expect(!model.showsProgress)
+        #expect(model.session.phase == .incoming)
+        #expect(model.session.incomingActionsEnabled)
+        #expect(!model.session.showsProgress)
 
         model.requestCallSurfaceFocus()
         #expect(model.callSurfaceFocusRequest == 0)
 
         model.showActiveState()
         model.requestCallSurfaceFocus()
-        #expect(model.phase == .active)
+        #expect(model.session.phase == .active)
         #expect(model.callSurfaceFocusRequest == 1)
 
-        model.showsProgress = true
+        model.session.showsProgress = true
         model.showEndedState()
         model.requestCallSurfaceFocus()
-        #expect(model.phase == .ended)
-        #expect(!model.showsProgress)
+        #expect(model.session.phase == .ended)
+        #expect(!model.session.showsProgress)
         #expect(model.callSurfaceFocusRequest == 1)
     }
 
@@ -73,23 +73,49 @@ struct CallPresentationRegressionTests {
     func transferStateTransitionsResetDestinationActionAndAllowDTMFWhenActive() {
         let model = CallWindowModel(isTransfer: true)
 
-        #expect(model.phase == .transferDestination)
+        #expect(model.session.phase == .transferDestination)
 
         model.transferActionEnabled = true
         model.showTransferDestinationState()
-        #expect(model.phase == .transferDestination)
+        #expect(model.session.phase == .transferDestination)
         #expect(!model.transferActionEnabled)
 
         model.showActiveState()
         model.requestCallSurfaceFocus()
-        #expect(model.phase == .transferActive)
+        #expect(model.session.phase == .transferActive)
         #expect(model.callSurfaceFocusRequest == 1)
 
         model.showEndedState()
-        #expect(model.phase == .transferEnded)
+        #expect(model.session.phase == .transferEnded)
 
         model.showIncomingState()
-        #expect(model.phase == .transferEnded)
+        #expect(model.session.phase == .transferEnded)
+    }
+
+    @Test
+    func commandStateObservesTheSessionWithoutWindowControlCopies() {
+        let model = CallWindowModel(isTransfer: false)
+        let session = model.session
+
+        model.showIncomingState()
+        session.incomingActionsEnabled = false
+        #expect(!CallCommandAvailability.answer(session.commandState))
+
+        model.showActiveState()
+        session.muteEnabled = true
+        session.muted = true
+        session.holdEnabled = true
+        session.transferEnabled = true
+        #expect(session.commandState.phase == .active)
+        #expect(session.commandState.muted)
+        #expect(CallCommandAvailability.mute(session.commandState))
+        #expect(CallCommandAvailability.hold(session.commandState))
+        #expect(CallCommandAvailability.transfer(session.commandState))
+
+        session.showsProgress = true
+        model.showEndedState()
+        #expect(session.commandState.phase == .ended)
+        #expect(!session.showsProgress)
     }
 
     @Test

@@ -44,105 +44,105 @@ private struct CRMInventoryBrowserView: View {
         let inventory = preparedInventory.filtering(searchText)
         let keyID = selectedKey == 0 ? nil : selectedKey
         let rows = inventory.rows(for: keyID)
-        VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(DisplayNameText.normalized(customer.company.name))
-                        .font(.title3.weight(.semibold))
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Text(customer.company.formattedCode)
-                        .font(.callout.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
+        // The navigation split view owns search and the detail's safe area.
+        // Keeping it at the root prevents clipped first rows in history windows.
+        NavigationSplitView {
+            List(selection: $selectedKey) {
+                Text(NSLocalizedString("All keys", comment: "Show programs across every key."))
+                    .tag(0).accessibilityIdentifier("crm.inventory.allKeys")
+                ForEach(inventory.keys) { item in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(String(item.id)).monospacedDigit()
+                        Text(DisplayNameText.normalized(item.key.name)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                    .tag(item.id)
+                    .accessibilityIdentifier("crm.inventory.key.\(item.id)")
                 }
+            }
+            .listStyle(.sidebar)
+            .navigationSplitViewColumnWidth(min: 150, ideal: 185, max: 220)
+        } detail: {
+            VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text(DisplayNameText.normalized(customer.company.name))
+                            .font(.title3.weight(.semibold))
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                if let phones = customer.company.phones, !phones.isEmpty {
-                    Text(phones.joined(separator: ", "))
+                        Text(customer.company.formattedCode)
+                            .font(.callout.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+
+                        // Keep the familiar ⌘F shortcut while SwiftUI owns the search field.
+                        Button {
+                            searchFocused = true
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                        }
+                        .buttonStyle(.borderless)
+                        .keyboardShortcut("f", modifiers: .command)
+                        .help(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
+                        .accessibilityLabel(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
+                    }
+
+                    if let phones = customer.company.phones, !phones.isEmpty {
+                        Text(phones.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .textSelection(.enabled)
+                    }
+
+                    Text(String(format: NSLocalizedString("%ld keys · %ld programs · %ld records", comment: "Inventory counts."),
+                                inventory.visibleKeyCount, inventory.visibleProgramGroupCount, inventory.visibleRecordCount))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .textSelection(.enabled)
+                        .accessibilityIdentifier("crm.inventory.counts")
                 }
-
-                Text(String(format: NSLocalizedString("%ld keys · %ld programs · %ld records", comment: "Inventory counts."),
-                            inventory.visibleKeyCount, inventory.visibleProgramGroupCount, inventory.visibleRecordCount))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("crm.inventory.counts")
+                if let key = inventory.keys.first(where: { $0.id == keyID }) {
+                    HStack {
+                        Text(DisplayNameText.normalized(key.key.name)).font(.callout.weight(.semibold)).lineLimit(1)
+                        Spacer()
+                        Link(NSLocalizedString("Personal account", comment: "Open key portal."), destination: key.key.url)
+                    }.padding(.horizontal, 8)
+                }
+                GeometryReader { geometry in
+                    // Size from the detail pane, including sidebar resizing.
+                    // Prefer the native, column-headed table whenever
+                    // all four columns fit. Reserve cards for the smallest
+                    // detail panes instead of switching at ordinary widths.
+                    if geometry.size.width >= 460 {
+                        programTable(rows)
+                    } else {
+                        compactPrograms(rows, showsKeyNumber: keyID == nil)
+                    }
+                }
+                .copyable(rows.filter { selectedRows.contains($0.id) }.map { row in
+                    [String(row.key.id), DisplayNameText.normalized(row.program.name), display(row.program.version), display(row.program.release)].joined(separator: "\t")
+                })
+                .accessibilityIdentifier("crm.inventory.programs")
+                .overlay {
+                    if rows.isEmpty {
+                        Text(NSLocalizedString(inventory.isFiltered ? "No matching keys or programs" : "No programs on this key.", comment: "Empty inventory table."))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Text(NSLocalizedString("Versions and releases: higher numbers first", comment: "Ordering, not license status."))
+                    .font(.caption2).foregroundStyle(.secondary).padding(.horizontal, 8)
             }
-
-            HStack(spacing: 8) {
-                TextField(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."), text: $searchText)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($searchFocused)
-                    .accessibilityIdentifier("crm.inventory.search")
-                Button { searchFocused = true } label: {
-                    Image(systemName: "magnifyingglass")
-                }
-                .keyboardShortcut("f", modifiers: .command)
-                .help(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
-                .accessibilityLabel(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
-                if !searchText.isEmpty {
-                    Button(NSLocalizedString("Clear search", comment: "Clear inventory search.")) {
-                        searchText = ""
-                    }
-                }
-            }
-            .controlSize(.small)
-            HSplitView {
-                List(selection: $selectedKey) {
-                    Text(NSLocalizedString("All keys", comment: "Show programs across every key."))
-                        .tag(0).accessibilityIdentifier("crm.inventory.allKeys")
-                    ForEach(inventory.keys) { item in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(String(item.id)).monospacedDigit()
-                            Text(DisplayNameText.normalized(item.key.name)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                        }
-                        .tag(item.id)
-                        .accessibilityIdentifier("crm.inventory.key.\(item.id)")
-                    }
-                }
-                .listStyle(.sidebar)
-                .frame(minWidth: 150, idealWidth: 185, maxWidth: 220)
-                VStack(alignment: .leading, spacing: 6) {
-                    if let key = inventory.keys.first(where: { $0.id == keyID }) {
-                        HStack {
-                            Text(DisplayNameText.normalized(key.key.name)).font(.callout.weight(.semibold)).lineLimit(1)
-                            Spacer()
-                            Link(NSLocalizedString("Personal account", comment: "Open key portal."), destination: key.key.url)
-                        }.padding(.horizontal, 8)
-                    }
-                    GeometryReader { geometry in
-                        // Size from the detail pane, including sidebar resizing.
-                        // Prefer the native, column-headed table whenever
-                        // all four columns fit. Reserve cards for the smallest
-                        // detail panes instead of switching at ordinary widths.
-                        if geometry.size.width >= 460 {
-                            programTable(rows)
-                        } else {
-                            compactPrograms(rows, showsKeyNumber: keyID == nil)
-                        }
-                    }
-                    .copyable(rows.filter { selectedRows.contains($0.id) }.map { row in
-                        [String(row.key.id), DisplayNameText.normalized(row.program.name), display(row.program.version), display(row.program.release)].joined(separator: "\t")
-                    })
-                    .accessibilityIdentifier("crm.inventory.programs")
-                    .overlay {
-                        if rows.isEmpty {
-                            Text(NSLocalizedString(inventory.isFiltered ? "No matching keys or programs" : "No programs on this key.", comment: "Empty inventory table."))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    Text(NSLocalizedString("Versions and releases: higher numbers first", comment: "Ordering, not license status."))
-                        .font(.caption2).foregroundStyle(.secondary).padding(.horizontal, 8)
-                }
-                .frame(minWidth: 300, maxWidth: .infinity, maxHeight: .infinity)
-            }
+            .frame(minWidth: 300, maxWidth: .infinity, maxHeight: .infinity)
         }
+        .navigationSplitViewStyle(.balanced)
+        .searchable(
+            text: $searchText,
+            placement: .sidebar,
+            prompt: Text(NSLocalizedString("Search keys, programs or versions", comment: "Global inventory search."))
+        )
+        .searchFocused($searchFocused)
         .onChange(of: searchText) { selectedKey = 0; selectedRows = [] }
         .onChange(of: customer.sourceKeyId) { searchText = ""; selectedKey = 0; selectedRows = [] }
         .onChange(of: inventory.keys.map(\.id)) {

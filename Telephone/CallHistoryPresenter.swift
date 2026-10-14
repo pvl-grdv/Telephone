@@ -25,10 +25,11 @@ final class CallHistoryPresenter: CallHistoryView {
         !model.allRecords.isEmpty
     }
 
-    private let model = CallHistoryViewModel()
+    private let model: CallHistoryViewModel
     private let clipboard: Clipboard
-    init(clipboard: Clipboard = MacClipboard.shared) {
+    init(clipboard: Clipboard = MacClipboard.shared, gatewaySettings: CRMGatewaySettings? = nil) {
         self.clipboard = clipboard
+        model = CallHistoryViewModel(gatewaySettings: gatewaySettings)
     }
 
     var contentView: some View {

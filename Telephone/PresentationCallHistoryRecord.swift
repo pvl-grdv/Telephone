@@ -20,6 +20,8 @@ struct PresentationCallHistoryRecord: Identifiable, Hashable {
     let duration: String
     let isIncoming: Bool
     let isMissed: Bool
+    var startedAt: Date? = nil
+    var callerNumber: String? = nil
 
     var id: String { identifier }
 

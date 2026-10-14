@@ -238,7 +238,9 @@ private func makePresentationCallHistoryRecord(contact: MatchedContact, record: 
         date: ShortRelativeDateTimeFormatter().string(from: record.date),
         duration: DurationFormatter().string(from: TimeInterval(record.duration))!,
         isIncoming: record.isIncoming,
-        isMissed: record.isMissed
+        isMissed: record.isMissed,
+        startedAt: record.date,
+        callerNumber: record.uri.user
     )
 }
 

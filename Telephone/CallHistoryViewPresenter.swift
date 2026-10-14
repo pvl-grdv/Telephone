@@ -47,7 +47,9 @@ nonisolated extension CallHistoryViewPresenter: ContactCallHistoryRecordGetAllUs
             date: dateFormatter.string(from: record.origin.date),
             duration: durationFormatter.string(from: TimeInterval(record.origin.duration)) ?? "",
             isIncoming: record.origin.isIncoming,
-            isMissed: record.origin.isMissed
+            isMissed: record.origin.isMissed,
+            startedAt: record.origin.date,
+            callerNumber: record.origin.uri.user
         )
     }
 }

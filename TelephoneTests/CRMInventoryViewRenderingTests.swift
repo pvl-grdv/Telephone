@@ -106,6 +106,53 @@ struct CRMInventoryViewRenderingTests {
         }
     }
 
+    @Test func capturesIncomingHistoryWithAnsweredUnansweredAndUnknownRows() async throws {
+        guard let directory = ProcessInfo.processInfo.environment["TELEPHONE_UI_ARTIFACT_DIR"], !directory.isEmpty else { return }
+        let output = URL(fileURLWithPath: directory, isDirectory: true)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        _ = NSApplication.shared
+        let defaults = try #require(UserDefaults(suiteName: "Telephone.HistoryPreview.\(UUID())"))
+        let settings = CRMGatewaySettings(defaults: defaults, tokenStore: PreviewTokenStore())
+        try await settings.save(enabled: true, origin: "https://gateway.example", newToken: "synthetic-token")
+        let timestamp = "2026-10-14T09:00:00.000Z"
+        let records = ["answered", "unanswered", "unknown"].enumerated().map { index, status in
+            PresentationCallHistoryRecord(identifier: status,
+                contact: PresentationContact(title: "Synthetic Caller \(index + 1)", tooltip: "", label: "", address: "+74951234567"),
+                date: "Today, 12:00", duration: "00:00", isIncoming: true, isMissed: true,
+                startedAt: Date(timeIntervalSince1970: 1_791_968_400), callerNumber: "+74951234567")
+        }
+        let answers: [[String: Any]] = records.map { record in
+            ["id": record.id, "phoneNumber": "+74951234567", "startedAt": timestamp, "status": record.id,
+             "reason": record.id == "unknown" ? "not-found" : NSNull(),
+             "answeredBy": record.id == "answered" ? ["displayName": "Synthetic Employee", "source": "ats"] : NSNull(),
+             "match": record.id == "unknown" ? NSNull() : ["method": "phone-and-time", "confidence": "correlated", "startedAt": timestamp]]
+        }
+        let data = try JSONSerialization.data(withJSONObject: ["data": answers,
+            "meta": ["requestId": "synthetic-history", "fetchedAt": timestamp, "complete": true, "fromCache": false]])
+        let model = CallHistoryViewModel(gatewaySettings: settings,
+            answerProvider: CRMGatewayClient(transport: GatewayTransportFake(data: data)))
+        model.show(records)
+        for record in records { model.setAnswerRecordVisible(record.id, visible: true) }
+        await model.refreshCallAnswers()
+        #expect(model.callAnswers.count == 3)
+        for width in [420, 660] {
+            for scheme in [ColorScheme.light, .dark] {
+                let content = CallHistoryScreen(model: model, call: { _ in }, copy: { _ in }, deleteRecord: { _ in }, deleteAll: {})
+                    .environment(\.colorScheme, scheme)
+                let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: CGFloat(width), height: 320),
+                    styleMask: [.titled, .closable], backing: .buffered, defer: false)
+                window.isReleasedWhenClosed = false
+                window.appearance = NSAppearance(named: scheme == .dark ? .darkAqua : .aqua)
+                window.contentView = NSHostingView(rootView: content)
+                window.orderFront(nil)
+                defer { window.close() }
+                let view = try #require(window.contentView)
+                let bitmap = try #require(capture(view: view))
+                try write(bitmap, name: "call-history-answers-\(scheme == .dark ? "dark" : "light")-\(width)", to: output)
+            }
+        }
+    }
+
     private func write(_ bitmap: NSBitmapImageRep, name: String, to directory: URL) throws {
         let png = try #require(bitmap.representation(using: .png, properties: [:]))
         #expect(!png.isEmpty)

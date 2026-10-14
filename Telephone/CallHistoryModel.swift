@@ -65,6 +65,75 @@ enum CallHistoryDeletion {
 @MainActor
 @Observable
 final class CallHistoryViewModel {
+    @ObservationIgnored private let gatewaySettings: CRMGatewaySettings?
+    @ObservationIgnored private let answerProvider: any CRMCallAnswerProvider
+    private var visibleAnswerRecords: Set<String> = []
+    private(set) var callAnswers: [String: CRMIncomingCallAnswer] = [:]
+    private(set) var answerLookupFailed = false
+    var answerRefreshRequest = 0
+    @ObservationIgnored private var answerGeneration = -1
+
+    init(gatewaySettings: CRMGatewaySettings? = nil, answerProvider: any CRMCallAnswerProvider = CRMGatewayClient()) {
+        self.gatewaySettings = gatewaySettings
+        self.answerProvider = answerProvider
+    }
+
+    struct AnswerContext: Hashable {
+        let generation: Int
+        let refresh: Int
+        let calls: [CRMIncomingCallRequest]
+    }
+    var answerContext: AnswerContext {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let calls = gatewaySettings?.enabled == true ? records.compactMap { record -> CRMIncomingCallRequest? in
+            guard record.isIncoming, record.isMissed, visibleAnswerRecords.contains(record.id),
+                  let date = record.startedAt, let raw = record.callerNumber, let phone = CRMPhoneNumber.normalize(raw) else { return nil }
+            return CRMIncomingCallRequest(id: record.id, phoneNumber: phone, startedAt: formatter.string(from: date))
+        } : []
+        return AnswerContext(generation: gatewaySettings?.generation ?? 0, refresh: answerRefreshRequest, calls: calls)
+    }
+    func setAnswerRecordVisible(_ id: String, visible: Bool) {
+        if visible { visibleAnswerRecords.insert(id) } else { visibleAnswerRecords.remove(id) }
+    }
+    func refreshCallAnswers() async {
+        let context = answerContext
+        if answerGeneration != context.generation {
+            callAnswers.removeAll()
+            answerGeneration = context.generation
+        }
+        guard let gatewaySettings, !context.calls.isEmpty else {
+            if gatewaySettings?.enabled != true { callAnswers.removeAll() }
+            return
+        }
+        do {
+            // Collect rows appearing in one scrolling/layout pass into bounded batches.
+            try await Task.sleep(for: .milliseconds(350))
+            let configuration = try await gatewaySettings.configuration()
+            guard context == answerContext else { return }
+            answerLookupFailed = false
+            // One UTC day spans at most two upstream calendar days. Keeping batches
+            // within it avoids a request per row and handles arbitrary history dates.
+            let groups = Dictionary(grouping: context.calls) { String($0.startedAt.prefix(10)) }
+            for day in groups.keys.sorted() {
+                let calls = groups[day] ?? []
+                for start in stride(from: 0, to: calls.count, by: 25) {
+                    let batch = Array(calls[start..<min(start + 25, calls.count)])
+                    let answers = try await answerProvider.incomingCallAnswers(calls: batch, configuration: configuration)
+                    try Task.checkCancellation()
+                    guard context == answerContext else { return }
+                    for answer in answers { callAnswers[answer.id] = answer }
+                }
+            }
+        } catch is CancellationError {
+            return
+        } catch {
+            guard !Task.isCancelled, context == answerContext else { return }
+            // A failed read never becomes "nobody answered" or a stale employee.
+            for call in context.calls { callAnswers.removeValue(forKey: call.id) }
+            answerLookupFailed = true
+        }
+    }
     var filter: CallHistoryFilter = .all {
         didSet {
             guard oldValue != filter else { return }
@@ -92,6 +161,10 @@ final class CallHistoryViewModel {
     }
 
     func show(_ records: [PresentationCallHistoryRecord]) {
+        let previous = Dictionary(uniqueKeysWithValues: allRecords.map { ($0.id, $0) })
+        let unchanged = Set(records.filter { previous[$0.id] == $0 }.map(\.id))
+        callAnswers = callAnswers.filter { unchanged.contains($0.key) }
+        visibleAnswerRecords.formIntersection(Set(records.map(\.id)))
         allRecords = records
         rebuildVisibleRecords()
     }
@@ -131,10 +204,14 @@ final class CallHistoryViewModel {
 
         switch pendingDeletion {
         case .record(let record):
+            callAnswers.removeValue(forKey: record.id)
+            visibleAnswerRecords.remove(record.id)
             allRecords.removeAll { $0.identifier == record.identifier }
             rebuildVisibleRecords()
             deleteRecord(record.identifier)
         case .all:
+            callAnswers.removeAll()
+            visibleAnswerRecords.removeAll()
             allRecords.removeAll()
             records.removeAll()
             selection = nil

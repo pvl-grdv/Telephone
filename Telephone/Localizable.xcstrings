@@ -7684,6 +7684,167 @@
           }
         }
       }
+    },
+    "Refresh Call Answers": {
+      "comment": "Incoming call answer history status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Call Answers"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновить ответы на звонки"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anrufannahmen aktualisieren"
+          }
+        }
+      }
+    },
+    "Answered Elsewhere": {
+      "comment": "Incoming call answer history status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answered Elsewhere"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Принят коллегой"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andernorts angenommen"
+          }
+        }
+      }
+    },
+    "No One Answered": {
+      "comment": "Incoming call answer history status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No One Answered"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Никто не ответил"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niemand hat angenommen"
+          }
+        }
+      }
+    },
+    "Not Answered Here": {
+      "comment": "Incoming call answer history status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Answered Here"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не принято здесь"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier nicht angenommen"
+          }
+        }
+      }
+    },
+    "Answered by: %@": {
+      "comment": "Incoming call answer history status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answered by: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Принял: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angenommen von: %@"
+          }
+        }
+      }
+    },
+    "Matched by caller number and call time.": {
+      "comment": "Incoming call answer history status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matched by caller number and call time."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сопоставлено по номеру и времени звонка."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anhand der Rufnummer und Anrufzeit zugeordnet."
+          }
+        }
+      }
+    },
+    "Call answers are unavailable. Refresh to try again.": {
+      "comment": "Incoming call answer history status.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call answers are unavailable. Refresh to try again."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Данные об ответивших недоступны. Нажмите обновить для повторной проверки."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informationen zur Anrufannahme sind nicht verfügbar. Zum erneuten Versuch aktualisieren."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

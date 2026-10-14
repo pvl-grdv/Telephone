@@ -65,6 +65,9 @@ struct CallHistoryScreen: View {
         .onChange(of: model.searchFocusRequest) {
             searchFocused = true
         }
+        .task(id: model.answerContext) {
+            await model.refreshCallAnswers()
+        }
     }
 
     private var controls: some View {
@@ -80,8 +83,21 @@ struct CallHistoryScreen: View {
             )
             .textFieldStyle(.roundedBorder)
             .focused($searchFocused)
-
-
+            if !model.answerContext.calls.isEmpty {
+                if model.answerLookupFailed {
+                    Image(systemName: "exclamationmark.circle")
+                        .foregroundStyle(.secondary)
+                        .help(NSLocalizedString("Call answers are unavailable. Refresh to try again.", comment: "Call answer lookup failed."))
+                        .accessibilityLabel(NSLocalizedString("Call answers are unavailable. Refresh to try again.", comment: "Call answer lookup failed."))
+                }
+                Button {
+                    model.answerRefreshRequest &+= 1
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .help(NSLocalizedString("Refresh Call Answers", comment: "Refresh answering employee in call history."))
+                .accessibilityLabel(NSLocalizedString("Refresh Call Answers", comment: "Refresh answering employee in call history."))
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -95,8 +111,10 @@ struct CallHistoryScreen: View {
         } else {
             List(selection: $model.selection) {
                 ForEach(model.records) { record in
-                    CallHistoryRow(record: record)
+                    CallHistoryRow(record: record, answer: model.callAnswers[record.id])
                         .tag(record.identifier)
+                        .onAppear { model.setAnswerRecordVisible(record.id, visible: true) }
+                        .onDisappear { model.setAnswerRecordVisible(record.id, visible: false) }
                         .contentShape(Rectangle())
                         .onTapGesture(count: 2) {
                             model.selectAndCall(record, action: call)
@@ -274,6 +292,10 @@ private struct CallHistoryFilterMenu: View {
 
 private struct CallHistoryRow: View {
     let record: PresentationCallHistoryRecord
+    let answer: CRMIncomingCallAnswer?
+
+    private var answeredElsewhere: Bool { record.isMissed && answer?.status == .answered }
+    private var showsMissed: Bool { record.isMissed && !answeredElsewhere }
 
     private var directionSymbol: String {
         record.isIncoming
@@ -282,10 +304,16 @@ private struct CallHistoryRow: View {
     }
 
     private var statusText: String {
-        record.isMissed
+        if answeredElsewhere {
+            return NSLocalizedString("Answered Elsewhere", comment: "Incoming call answered by another employee.")
+        }
+        if answer?.status == .unanswered {
+            return NSLocalizedString("No One Answered", comment: "ATS confirmed an unanswered incoming call.")
+        }
+        return record.isMissed
             ? NSLocalizedString(
-                "Missed",
-                comment: "Missed call history status."
+                "Not Answered Here",
+                comment: "Incoming call was not answered on this account; overall outcome may be unknown."
             )
             : record.duration
     }
@@ -295,7 +323,7 @@ private struct CallHistoryRow: View {
             Image(systemName: directionSymbol)
                 .font(.caption)
                 .foregroundStyle(
-                    record.isMissed ? Color.red : Color.secondary
+                    showsMissed ? Color.red : Color.secondary
                 )
                 .frame(width: 16, height: 16)
                 .accessibilityHidden(true)
@@ -304,7 +332,7 @@ private struct CallHistoryRow: View {
                 Text(record.contact.title)
                     .font(.body.weight(.medium))
                     .foregroundStyle(
-                        record.isMissed ? Color.red : Color.primary
+                        showsMissed ? Color.red : Color.primary
                     )
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -315,6 +343,13 @@ private struct CallHistoryRow: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .frame(height: 14, alignment: .leading)
+                if let employee = answer?.answeredBy, answeredElsewhere {
+                    Text(String(format: NSLocalizedString("Answered by: %@", comment: "Answering employee from the call service."), employee.displayName))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .help(employee.displayName + "\n" + NSLocalizedString("Matched by caller number and call time.", comment: "Call answer correlation provenance."))
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -327,7 +362,7 @@ private struct CallHistoryRow: View {
                 Text(statusText)
                     .font(.caption)
                     .foregroundStyle(
-                        record.isMissed ? Color.red : Color.secondary
+                        showsMissed ? Color.red : Color.secondary
                     )
                     .lineLimit(1)
                     .frame(height: 14, alignment: .trailing)

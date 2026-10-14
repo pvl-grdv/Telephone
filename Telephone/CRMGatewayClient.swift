@@ -145,6 +145,47 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
         return response.runtime
     }
 
+    func incomingCallAnswers(calls: [CRMIncomingCallRequest], configuration: CRMGatewayConfiguration) async throws -> [CRMIncomingCallAnswer] {
+        guard !calls.isEmpty, calls.count <= 25, Set(calls.map(\.id)).count == calls.count,
+              calls.allSatisfy({ CRMPhoneNumber.normalize($0.phoneNumber) == $0.phoneNumber }) else {
+            throw CRMGatewayError.invalidResponse
+        }
+        let result: CRMIncomingCallAnswersResponse = try await send(route: .incomingCallAnswers,
+            body: CRMIncomingCallAnswersRequest(calls: calls), configuration: configuration)
+        try Self.validateMetadata(result.meta)
+        guard !result.meta.fromCache, result.data.count == calls.count,
+              Set(result.data.map(\.id)) == Set(calls.map(\.id)) else { throw CRMGatewayError.invalidResponse }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let secondsFormatter = ISO8601DateFormatter()
+        secondsFormatter.formatOptions = [.withInternetDateTime]
+        for answer in result.data {
+            guard let request = calls.first(where: { $0.id == answer.id }),
+                  answer.phoneNumber == request.phoneNumber, answer.startedAt == request.startedAt else {
+                throw CRMGatewayError.invalidResponse
+            }
+            switch answer.status {
+            case .answered, .unanswered:
+                guard answer.reason == nil, let match = answer.match,
+                      match.method == "phone-and-time", match.confidence == "correlated",
+                      let actual = formatter.date(from: match.startedAt) ?? secondsFormatter.date(from: match.startedAt),
+                      let requested = formatter.date(from: request.startedAt),
+                      abs(actual.timeIntervalSince(requested)) <= 10 else { throw CRMGatewayError.invalidResponse }
+                if answer.status == .answered {
+                    guard let employee = answer.answeredBy, employee.source == "ats",
+                          !employee.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                          employee.displayName.count <= 256 else { throw CRMGatewayError.invalidResponse }
+                } else if answer.answeredBy != nil { throw CRMGatewayError.invalidResponse }
+            case .unknown:
+                guard answer.answeredBy == nil, answer.match == nil, let reason = answer.reason,
+                      ["not-found", "ambiguous", "transferred", "not-confirmed", "identity-unavailable"].contains(reason) else {
+                    throw CRMGatewayError.invalidResponse
+                }
+            }
+        }
+        return result.data
+    }
+
     func customer(
         forEmail email: String,
         companyID: Int?,
@@ -417,7 +458,32 @@ private enum GatewayRoute: String {
     case phoneLookup = "v1/customer-by-phone/filter"
     case emailLookup = "v1/customer-by-email/filter"
     case phoneAppend = "v1/customer-phone/append"
+    case incomingCallAnswers = "v1/incoming-call/answers"
 }
+
+struct CRMIncomingCallRequest: Codable, Equatable, Hashable, Sendable {
+    let id: String
+    let phoneNumber: String
+    let startedAt: String
+}
+struct CRMIncomingCallAnswer: Codable, Equatable, Sendable {
+    enum Status: String, Codable, Sendable { case answered, unanswered, unknown }
+    struct Employee: Codable, Equatable, Sendable { let displayName: String; let source: String }
+    struct Match: Codable, Equatable, Sendable { let method: String; let confidence: String; let startedAt: String }
+    let id: String
+    let phoneNumber: String
+    let startedAt: String
+    let status: Status
+    let reason: String?
+    let answeredBy: Employee?
+    let match: Match?
+}
+private struct CRMIncomingCallAnswersRequest: Encodable { let calls: [CRMIncomingCallRequest] }
+private struct CRMIncomingCallAnswersResponse: Decodable { let data: [CRMIncomingCallAnswer]; let meta: CRMKeyLookupMetadata }
+protocol CRMCallAnswerProvider: Sendable {
+    func incomingCallAnswers(calls: [CRMIncomingCallRequest], configuration: CRMGatewayConfiguration) async throws -> [CRMIncomingCallAnswer]
+}
+extension CRMGatewayClient: CRMCallAnswerProvider {}
 
 enum CRMKeyNumber {
     // JSON numbers are also consumed by JavaScript on the gateway.

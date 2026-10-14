@@ -50,7 +50,7 @@ final class AccountPresentationCoordinator {
         callDestinationComposer = CallDestinationComposer(
             accountController: accountController
         )
-        callHistoryPresenter = CallHistoryPresenter()
+        callHistoryPresenter = CallHistoryPresenter(gatewaySettings: accountController.crmGatewaySettings)
         self.callHistoryViewEventTargetFactory = callHistoryViewEventTargetFactory
         self.account = account
         authenticationFailureController = AuthenticationFailureController(

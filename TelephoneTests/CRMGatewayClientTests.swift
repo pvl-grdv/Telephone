@@ -305,6 +305,54 @@ actor GatewayTransportFake: CRMGatewayHTTPTransport {
     }
 }
 
+extension CRMGatewayClientTests {
+    private var incomingCall: CRMIncomingCallRequest {
+        CRMIncomingCallRequest(id: "local-call", phoneNumber: "+74951234567", startedAt: "2026-10-14T09:00:00.000Z")
+    }
+    private func incomingFixture(status: String = "answered") throws -> Data {
+        let answer: [String: Any] = ["id": incomingCall.id, "phoneNumber": incomingCall.phoneNumber,
+            "startedAt": incomingCall.startedAt, "status": status,
+            "reason": status == "unknown" ? "not-found" : NSNull(),
+            "answeredBy": status == "answered" ? ["displayName": "Synthetic Employee", "source": "ats"] : NSNull(),
+            "match": status == "unknown" ? NSNull() : ["method": "phone-and-time", "confidence": "correlated", "startedAt": incomingCall.startedAt]]
+        return try JSONSerialization.data(withJSONObject: ["data": [answer], "meta": ["requestId": "synthetic-request", "fetchedAt": incomingCall.startedAt, "complete": true, "fromCache": false]])
+    }
+    @Test func incomingHistoryUsesOnlyGenericBatchContractAndValidatesAllOutcomes() async throws {
+        for status in ["answered", "unanswered", "unknown"] {
+            let transport = GatewayTransportFake(data: try incomingFixture(status: status))
+            let result = try await CRMGatewayClient(transport: transport).incomingCallAnswers(calls: [incomingCall], configuration: configuration())
+            #expect(result.first?.status.rawValue == status)
+            #expect((result.first?.answeredBy != nil) == (status == "answered"))
+            let requests = await transport.requests
+            #expect(requests.first?.url?.path == "/v1/incoming-call/answers")
+            #expect(requests.first?.httpMethod == "POST")
+            let body = try #require(requests.first?.httpBody)
+            let root = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
+            #expect(Set(root.keys) == ["calls"])
+        }
+    }
+    @Test func incomingHistoryRejectsWrongAssociationFalseIdentityAndUnprovenExactMatch() async throws {
+        for field in ["id", "phoneNumber", "startedAt", "status", "answeredBy", "match"] {
+            var root = try #require(JSONSerialization.jsonObject(with: incomingFixture()) as? [String: Any])
+            var rows = try #require(root["data"] as? [[String: Any]])
+            switch field {
+            case "id": rows[0][field] = "other-call"
+            case "phoneNumber": rows[0][field] = "+74959999999"
+            case "startedAt": rows[0][field] = "2026-10-14T10:00:00.000Z"
+            case "status": rows[0][field] = "unknown"
+            case "answeredBy": rows[0][field] = ["displayName": " ", "source": "ats"]
+            default: rows[0][field] = ["method": "provider-call-id", "confidence": "exact", "startedAt": incomingCall.startedAt]
+            }
+            root["data"] = rows
+            let data = try JSONSerialization.data(withJSONObject: root)
+            let client = CRMGatewayClient(transport: GatewayTransportFake(data: data))
+            await #expect(throws: CRMGatewayError.invalidResponse) {
+                try await client.incomingCallAnswers(calls: [incomingCall], configuration: configuration())
+            }
+        }
+    }
+}
+
 enum GatewayFixture {
     static let portalURL = "https://integral.ru/personal/keys/01-20-0456/76543/"
     static let unsafePortalURLs = [

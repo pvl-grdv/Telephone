@@ -39,7 +39,7 @@ struct CRMInventoryViewRenderingTests {
         _ = NSApplication.shared
         for width in [660, 820, 1100] {
             for scheme in [ColorScheme.light, .dark] {
-                let bitmap = try #require(capture(width: width, scheme: scheme, browser: true))
+                let bitmap = try #require(capture(width: width, scheme: scheme, usesLargeDataset: true))
                 #expect(bitmap.pixelsWide >= width)
                 #expect(bitmap.pixelsHigh >= 640)
                 let png = try #require(bitmap.representation(using: .png, properties: [:]))
@@ -65,7 +65,7 @@ struct CRMInventoryViewRenderingTests {
         for width in [660, 820, 1100] {
             for scheme in [ColorScheme.light, .dark] {
                 let bitmap = try #require(
-                    capture(width: width, scheme: scheme, browser: true, customer: customer)
+                    capture(width: width, scheme: scheme, customer: customer)
                 )
                 try expectVisibleMetadataPixels(bitmap)
                 try write(
@@ -142,12 +142,12 @@ struct CRMInventoryViewRenderingTests {
     private func capture(
         width: Int,
         scheme: ColorScheme,
-        browser: Bool = false,
+        usesLargeDataset: Bool = false,
         customer: CRMKeyLookupCustomer? = nil
     ) -> NSBitmapImageRep? {
         let size = NSSize(width: CGFloat(width), height: 640)
-        let sample = customer ?? (browser ? largeCustomer() : sampleCustomer())
-        let content = CRMCustomerInventoryView(customer: sample, usesBrowserLayout: browser)
+        let sample = customer ?? (usesLargeDataset ? largeCustomer() : sampleCustomer())
+        let content = CRMCustomerInventoryView(customer: sample)
             .padding(18)
             .frame(width: size.width, height: size.height, alignment: .topLeading)
             .background(Color(nsColor: .windowBackgroundColor))

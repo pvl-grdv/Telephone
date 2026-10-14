@@ -7,7 +7,7 @@ import Foundation
 import SwiftUI
 
 struct IncomingCallSection: View {
-    @Bindable var model: CallWindowModel
+    let model: CallWindowModel
     @FocusState private var focusedAction: Action?
 
     let answer: () -> Void
@@ -65,7 +65,7 @@ struct IncomingCallSection: View {
 }
 
 struct ActiveCallSection: View {
-    @Bindable var model: CallWindowModel
+    let model: CallWindowModel
 
     let hangUp: () -> Void
     let toggleMute: () -> Void
@@ -139,7 +139,7 @@ struct ActiveCallSection: View {
 }
 
 struct EndedCallSection: View {
-    @Bindable var model: CallWindowModel
+    let model: CallWindowModel
     let redial: () -> Void
 
     var body: some View {

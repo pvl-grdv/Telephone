@@ -174,7 +174,7 @@ struct CRMKeyLookupView: View {
     }
 
     private func customerDetails(_ customer: CRMKeyLookupCustomer) -> some View {
-        CRMCustomerInventoryView(customer: customer, usesBrowserLayout: true)
+        CRMCustomerInventoryView(customer: customer)
             .id(customer.company.id)
     }
 }

@@ -5,6 +5,63 @@
 
 import Foundation
 
+/// Display-only decoding of upstream HTML quote entities, never addresses or
+/// write parameters. Deliberately keep &amp; encoded to avoid double-decoding.
+enum DisplayNameText {
+    private static let namedQuotes: [String: String] = [
+        "quot": "\"", "apos": "'", "laquo": "«", "raquo": "»",
+        "ldquo": "“", "rdquo": "”"
+    ]
+    private static let numericQuotes: [Int: String] = [
+        34: "\"", 39: "'", 171: "«", 187: "»", 8220: "“", 8221: "”"
+    ]
+
+    static func normalized(_ source: String) -> String {
+        let value = source.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pattern = #"&(?:quot|apos|laquo|raquo|ldquo|rdquo|#(?:x[0-9a-f]+|[0-9]+));"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return value
+        }
+        let matches = regex.matches(in: value, range: NSRange(value.startIndex..<value.endIndex, in: value))
+        guard !matches.isEmpty else { return value }
+        var output = ""
+        var cursor = value.startIndex
+        for match in matches {
+            guard let range = Range(match.range, in: value) else { continue }
+            output += value[cursor..<range.lowerBound]
+            let entity = String(value[range])
+            let token = entity.dropFirst().dropLast().lowercased()
+            let number: Int?
+            if token.hasPrefix("#x") {
+                number = Int(token.dropFirst(2), radix: 16)
+            } else if token.hasPrefix("#") {
+                number = Int(token.dropFirst())
+            } else {
+                number = nil
+            }
+            output += namedQuotes[token] ?? number.flatMap { numericQuotes[$0] } ?? entity
+            cursor = range.upperBound
+        }
+        output += value[cursor...]
+        return output
+    }
+
+    static func comparable(_ value: String) -> String {
+        normalized(value).split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    static func equivalent(_ lhs: String, _ rhs: String) -> Bool {
+        let left = comparable(lhs)
+        let right = comparable(rhs)
+        if left.caseInsensitiveCompare(right) == .orderedSame { return true }
+        if let phone = CRMPhoneNumber.normalize(left),
+           let other = CRMPhoneNumber.normalize(right) {
+            return phone == other
+        }
+        return false
+    }
+}
+
 final class CallerIdentityPresentation {
     let primary: String
     let detail: String
@@ -21,7 +78,7 @@ final class CallerIdentityPresentation {
         organization: String,
         label: String
     ) -> CallerIdentityPresentation {
-        let cleanSource = clean(callSource)
+        let cleanSource = callSource.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanSIPName = clean(sipDisplayName)
         let cleanContactName = clean(contactName)
         let cleanOrganization = clean(organization)
@@ -102,18 +159,7 @@ final class CallerIdentityPresentation {
         _ lhs: String,
         _ rhs: String
     ) -> Bool {
-        let left = clean(lhs)
-        let right = clean(rhs)
-
-        if left.caseInsensitiveCompare(right) == .orderedSame {
-            return true
-        }
-
-        let leftDigits = left.filter(\.isNumber)
-        let rightDigits = right.filter(\.isNumber)
-
-        return leftDigits.count >= 7
-            && leftDigits == rightDigits
+        DisplayNameText.equivalent(lhs, rhs)
     }
 
     private static func appendDistinct(
@@ -137,6 +183,6 @@ final class CallerIdentityPresentation {
     }
 
     private static func clean(_ value: String) -> String {
-        value.trimmingCharacters(in: .whitespacesAndNewlines)
+        DisplayNameText.normalized(value)
     }
 }

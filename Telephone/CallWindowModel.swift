@@ -268,20 +268,9 @@ final class CallWindowModel {
     var customerContextSaveSucceeded = false
 
     var hasCustomerContextData: Bool {
-        !customerCompany.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        ).isEmpty
-            || !customerKeys.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ).isEmpty
-            || !customerEmails.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ).isEmpty
-            || !customerNote.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ).isEmpty
-            || previousConversationCount > 0
-            || !recentCustomerNotes.isEmpty
+        [customerCompany, customerKeys, customerEmails, customerNote]
+            .contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            || previousConversationCount > 0 || !recentCustomerNotes.isEmpty
     }
 
     func showIncomingState() {

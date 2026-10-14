@@ -263,7 +263,7 @@ struct CRMHistoryLookupView: View {
         switch snapshot.status {
         case .matched:
             if let customer = snapshot.customer {
-                CRMCustomerInventoryView(customer: customer, usesBrowserLayout: true)
+                CRMCustomerInventoryView(customer: customer)
                     .id(customer.company.id)
             }
         case .notFound:

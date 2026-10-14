@@ -205,17 +205,18 @@ final class CallPresentationCoordinator: Identifiable {
     }
 
     func setDisplayedName(_ value: String) {
-        model.displayedName = value
+        model.displayedName = DisplayNameText.normalized(value)
     }
 
     func setIdentityDetail(_ value: String) {
-        model.identityDetail = value
+        model.identityDetail = DisplayNameText.normalized(value)
     }
 
     func setContactOrganization(_ value: String) {
-        model.contactOrganization = value
+        let cleaned = DisplayNameText.normalized(value)
+        model.contactOrganization = cleaned
         if model.customerContextLoaded && model.customerCompany.isEmpty {
-            model.customerCompany = value
+            model.customerCompany = cleaned
         }
     }
 

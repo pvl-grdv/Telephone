@@ -59,13 +59,9 @@ struct CRMKeyLookupView: View {
         // The call presentation owns lookup lifetime. Hiding this editor must
         // not cancel the automatic caller lookup or a dispatched phone append.
         .confirmationDialog(
-            NSLocalizedString("Link phone to organization", comment: "CRM phone linking confirmation title."),
-            isPresented: Binding(
-                get: { model.pendingPhoneLink != nil },
-                set: { if !$0 { model.pendingPhoneLink = nil } }
-            ),
-            titleVisibility: .visible,
-            presenting: model.pendingPhoneLink
+            Text(NSLocalizedString("Link phone to organization", comment: "CRM phone linking confirmation title.")),
+            item: $model.pendingPhoneLink,
+            titleVisibility: .visible
         ) { confirmation in
             Button(NSLocalizedString("Link phone", comment: "Confirm CRM phone association.")) {
                 model.confirmPhoneLink(confirmation)

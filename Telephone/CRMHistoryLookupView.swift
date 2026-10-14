@@ -69,13 +69,12 @@ struct CRMHistoryLookupView: View {
         .padding(12)
         .frame(minWidth: 660, maxWidth: .infinity, minHeight: 440, maxHeight: .infinity, alignment: .topLeading)
         .confirmationDialog(
-            NSLocalizedString("Link phone to organization", comment: "Confirm CRM history phone append."),
-            isPresented: Binding(
-                get: { model.pendingPhoneLink != nil },
-                set: { if !$0 { model.dismissPhoneLinkConfirmation() } }
+            Text(NSLocalizedString("Link phone to organization", comment: "Confirm CRM history phone append.")),
+            item: Binding(
+                get: { model.pendingPhoneLink },
+                set: { if $0 == nil { model.dismissPhoneLinkConfirmation() } }
             ),
-            titleVisibility: .visible,
-            presenting: model.pendingPhoneLink
+            titleVisibility: .visible
         ) { confirmation in
             Button(NSLocalizedString("Link phone", comment: "Confirm phone append for an existing call.")) {
                 model.confirmPhoneLink(confirmation)

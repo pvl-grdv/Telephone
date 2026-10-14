@@ -228,12 +228,9 @@ private extension SQLiteCallHistory {
         }
 
         if version < 3 {
-            try transaction {
-                try TelephoneDatabaseSchema.createCallCRMSnapshotTable(
-                    execute: execute
-                )
-                try execute("PRAGMA user_version = 3")
-            }
+            // Legacy schema milestone: retired snapshot storage is not
+            // created for fresh installs or v2 databases anymore.
+            try execute("PRAGMA user_version = 3")
             version = 3
         }
         if version < 4 {
@@ -241,6 +238,13 @@ private extension SQLiteCallHistory {
                 guard let connection else { throw SQLiteStoreError.databaseUnavailable }
                 try TelephoneDatabaseSchema.migrateCustomerContextTables(connection: connection)
                 try execute("PRAGMA user_version = 4")
+            }
+            version = 4
+        }
+        if version < 5 {
+            try transaction {
+                try TelephoneDatabaseSchema.removeUnusedTables(execute: execute)
+                try execute("PRAGMA user_version = 5")
             }
         }
     }

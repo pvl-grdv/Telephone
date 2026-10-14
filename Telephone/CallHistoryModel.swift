@@ -81,9 +81,6 @@ final class CallHistoryViewModel {
 
     var selection: String?
     var pendingDeletion: CallHistoryDeletion?
-    var pendingCRMRecord: PresentationCallHistoryRecord?
-    private(set) var crmCheckRequested = true
-    private(set) var crmPresentationRequest = 0
     var searchFocusRequest = 0
 
     private(set) var allRecords: [PresentationCallHistoryRecord] = []
@@ -105,14 +102,6 @@ final class CallHistoryViewModel {
     ) {
         selection = record.identifier
         action(record.identifier)
-    }
-
-    func selectForCRM(_ record: PresentationCallHistoryRecord, checkNow: Bool = true) {
-        guard allRecords.contains(where: { $0.identifier == record.identifier }) else { return }
-        selection = record.identifier
-        crmCheckRequested = checkNow
-        pendingCRMRecord = record
-        crmPresentationRequest &+= 1
     }
 
     func callSelected(action: (String) -> Void) -> Bool {
@@ -149,7 +138,6 @@ final class CallHistoryViewModel {
             allRecords.removeAll()
             records.removeAll()
             selection = nil
-            pendingCRMRecord = nil
             deleteAll()
         }
     }
@@ -176,10 +164,6 @@ final class CallHistoryViewModel {
     }
 
     private func normalizeSelection() {
-        if let pendingCRMRecord,
-           !allRecords.contains(where: { $0.identifier == pendingCRMRecord.identifier }) {
-            self.pendingCRMRecord = nil
-        }
         guard let selection else { return }
         guard records.contains(where: { $0.identifier == selection }) else {
             self.selection = nil

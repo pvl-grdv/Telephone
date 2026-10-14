@@ -345,59 +345,24 @@ cancelled. There is no automatic retry or upstream authentication on macOS.
 
 ## Architecture and privacy
 
-### Explicit CRM checks from call history
+### Retired history lookup and SQLite cleanup
 
-Select an existing history row and use the **CRM** toolbar action or
-**Check in CRM** context-menu action to check its phone now. The source number
-comes from the existing SQLite call's peer `user` field, not a Contacts name or
-the displayed history title. A first check uses phone lookup; later checks
-refresh the last saved phone, key or email query.
-History verification never places a call or edits CRM by itself. The separate,
-explicitly confirmed key-based phone append described above is the only write.
-The sheet also supports manual key and email searches, including calls whose
-stored peer is an internal extension. A found organization is associated with
-that selected call by saving its local verification result; it does not change
-the call's phone identity or append that number to CRM.
+Only live-call **Client details** initiate CRM key, phone and email lookup.
+The separate CRM verification window for old calls, manual history lookup,
+post-call phone association and local CRM result snapshots have been removed.
+Telephone does not run automatic CRM checks when calls end.
 
-**View saved CRM check** loads the saved local result without a network request.
-The sheet's **Check CRM now** performs another explicit read. A fresh toolbar or
-context-menu check also repeats the latest saved lookup identity; the first
-check uses the stored peer phone. Manual key/email fields are restored when a
-saved check is reopened. The sheet's **Find by phone** explicitly returns to
-the original peer number. An old saved result
-and its timestamp remain visible while the fresh request runs. Ambiguous matches
-require a choice, revalidated by the same phone or email lookup with the company
-ID. Refreshing a matched saved selection revalidates that chosen organization.
-
-The newest verification outcome is saved against that existing call and account
-in local SQLite: matched organization/inventory, no match, ambiguous candidates,
-or a safe typed failure code. `checkedAt` is the local time this verification
-finished; it does not assert what the CRM contained at the original call time.
-The lookup provenance records the normalized phone, numeric key or email that
-was actually checked; the original call phone remains separate. This makes a
-manual association visible and refreshable without claiming a phone match.
-The validated gateway request ID, fetched-at time, completeness and cache flag
-are retained as evidence. One latest outcome replaces the previous check; this
-is not an audit timeline of CRM changes.
-
-Only an approved, normalized snapshot is stored: canonical phones/emails, lookup
-provenance, company
-name/code/ID, all key/program records and checked portal links. Raw company
-phone text, credentials, origins, authorization/network headers and unfiltered
-response bodies are excluded. Saved snapshots are validated again before their
-links are displayed; invalid or oversized snapshots are rejected. The save and
-restore limit is the same 16 MiB.
-
-Closing the sheet, changing accounts/calls, or changing CRM settings cancels
-pending checks and invalidates late results. Snapshots cannot create a call row;
-if the original row was deleted, saving reports that it no longer exists.
-Database read/save failures are shown separately from CRM errors. This feature
-does not automatically backfill old calls or run CRM checks when a call ends.
+Database schema v5 drops `call_crm_snapshots`, `party_attributes`,
+`external_refs`, and `crm_sync_state` (none are used by the live call
+integration). The migration deletes **existing saved historical CRM checks**.
+It leaves the `calls` history and the active local customer context tables,
+including `party_notes`, untouched. Back up the SQLite database before
+upgrading if the old saved verification data must be archived.
 
 ### Shared gateway behavior
 
 - `CRMIntegrationRecords` contains the typed gateway results and provider
-  interface shared by lookup models, history snapshots and inventory views.
+  interface used by live lookup and CRM inventory views.
   `CRMGatewayClient` owns transport and response validation. Presentation does
   not parse upstream CRM responses or choose upstream endpoints.
 - `CompositionRoot` creates one provider/settings store and passes them through
@@ -407,10 +372,10 @@ does not automatically backfill old calls or run CRM checks when a call ends.
   Every redirect is refused.
 - Lookup state tracks request, call context and settings generations. Late
   responses are ignored. Phone confirmation carries the same scope and snapshot.
-- Live-call results are transient UI data. Explicit history checks are saved
-  locally with their verification time. Neither replaces SIP caller identity
-  nor automatically updates local customer notes. The only CRM change is the
-  explicitly confirmed phone append through the gateway.
+- Live-call results are transient UI data and are not persisted as CRM
+  snapshots. They do not replace SIP caller identity or automatically update
+  local customer notes. The only CRM change is the explicitly confirmed phone
+  append through the gateway.
 - Non-secret settings use local UserDefaults; gateway tokens use Keychain.
   Requests, tokens and customer responses are not logged by the client.
 - Production origins/tokens, upstream credentials, real customers and captured
@@ -419,8 +384,8 @@ does not automatically backfill old calls or run CRM checks when a call ends.
 CRM login/session recovery, upstream pagination, owner resolution, legacy and
 separate phone storage, duplicate detection and phone writes belong to the
 gateway. The Mac keeps caller input validation, token/origin security, safe link
-validation, explicit choices/confirmations and local history persistence. It
-does not receive CRM credentials or expose a general CRM request editor.
+validation and explicit choices/confirmations. Local call history remains
+separate; the app does not receive CRM credentials or expose a general editor.
 
 The legacy address-based `CRMProvider` remains compatible and disabled by
 default. Key, email and phone lookup use explicit typed gateway methods instead of
@@ -439,9 +404,7 @@ Tests cover route/body restrictions, HTTPS and redirects, decoding/completeness,
 safe links, old records and release strings, not-found/error distinctions,
 token origin scoping, phone normalization, ambiguous choices, confirmation,
 append permission/conflict handling and context/settings/cancellation races.
-History tests additionally cover normalized snapshot encoding, safe metadata,
-saved-result reopening without network, current-time checks, ambiguous choices,
-stale call/account/settings replies, deleted rows, visible local save errors,
-manual key/email provenance and restoring/refreshing their saved associations.
+SQLite migration tests verify obsolete tables are removed while calls, local
+customer details and manually saved notes remain intact.
 Localization smoke tests verify English, German and Russian UI strings.
 Real integration checks require a separately configured gateway and credentials.

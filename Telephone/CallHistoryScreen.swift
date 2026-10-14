@@ -8,31 +8,24 @@ import SwiftUI
 struct CallHistoryScreen: View {
     @Bindable var model: CallHistoryViewModel
     @FocusState private var searchFocused: Bool
-    @State private var crmWindow: CRMHistoryWindowController?
 
     let call: (String) -> Void
     let copy: (String) -> Void
     let deleteRecord: (String) -> Void
     let deleteAll: () -> Void
-    let crmLookupModel: CRMHistoryLookupModel?
-    let crmAccountUUID: String?
 
     init(
         model: CallHistoryViewModel,
         call: @escaping (String) -> Void,
         copy: @escaping (String) -> Void,
         deleteRecord: @escaping (String) -> Void,
-        deleteAll: @escaping () -> Void,
-        crmLookupModel: CRMHistoryLookupModel? = nil,
-        crmAccountUUID: String? = nil
+        deleteAll: @escaping () -> Void
     ) {
         self.model = model
         self.call = call
         self.copy = copy
         self.deleteRecord = deleteRecord
         self.deleteAll = deleteAll
-        self.crmLookupModel = crmLookupModel
-        self.crmAccountUUID = crmAccountUUID
     }
 
     var body: some View {
@@ -72,24 +65,6 @@ struct CallHistoryScreen: View {
         .onChange(of: model.searchFocusRequest) {
             searchFocused = true
         }
-        .onChange(of: model.crmPresentationRequest) {
-            guard let record = model.pendingCRMRecord, let crmLookupModel, let crmAccountUUID else {
-                crmWindow?.close()
-                crmWindow = nil
-                return
-            }
-            if crmWindow == nil {
-                crmWindow = CRMHistoryWindowController(model: crmLookupModel) { model.pendingCRMRecord = nil }
-            }
-            crmLookupModel.load(accountUUID: crmAccountUUID, callIdentifier: record.identifier,
-                                checkNow: model.crmCheckRequested)
-            crmWindow?.showWindow(nil)
-            crmWindow?.window?.makeKeyAndOrderFront(nil)
-        }
-        .onChange(of: model.pendingCRMRecord?.identifier) {
-            if model.pendingCRMRecord == nil { crmWindow?.close(); crmWindow = nil }
-        }
-        .onDisappear { crmWindow?.close(); crmWindow = nil; crmLookupModel?.close() }
     }
 
     private var controls: some View {
@@ -106,16 +81,7 @@ struct CallHistoryScreen: View {
             .textFieldStyle(.roundedBorder)
             .focused($searchFocused)
 
-            if crmLookupModel != nil, crmAccountUUID != nil {
-                Button {
-                    if let record = model.selectedRecord { model.selectForCRM(record) }
-                } label: {
-                    Label(NSLocalizedString("CRM", comment: "CRM history check button."), systemImage: "person.text.rectangle")
-                }
-                .disabled(model.selectedRecord == nil)
-                .help(NSLocalizedString("Check in CRM", comment: "Check selected call history phone in CRM."))
-                .accessibilityIdentifier("history.crm.check")
-            }
+
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -157,18 +123,6 @@ struct CallHistoryScreen: View {
                             }
 
                             Divider()
-
-                            if crmLookupModel != nil, crmAccountUUID != nil {
-                                Button(NSLocalizedString("Check in CRM", comment: "Check selected call history phone in CRM.")) {
-                                    model.selectForCRM(record)
-                                }
-
-                                Button(NSLocalizedString("View saved CRM check", comment: "Open a saved call-history CRM result without a network request.")) {
-                                    model.selectForCRM(record, checkNow: false)
-                                }
-
-                                Divider()
-                            }
 
                             Button(
                                 NSLocalizedString(

@@ -9,8 +9,6 @@ enum CRMPhoneLinkState: Equatable {
     case failed(CRMGatewayError)
 }
 
-typealias CRMHistoryPhoneLinkState = CRMPhoneLinkState
-
 /// An explicitly confirmed write has a lifetime separate from its presentation.
 /// Cancellation can stop waiting, but cannot prove that the gateway rejected it.
 @MainActor

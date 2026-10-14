@@ -77,7 +77,7 @@ struct CRMInventoryViewRenderingTests {
         }
     }
 
-    @Test func capturesCompleteHistoryWindowAndGatewaySettings() async throws {
+    @Test func capturesGatewaySettingsInLightAndDark() async throws {
         guard let directory = ProcessInfo.processInfo.environment["TELEPHONE_UI_ARTIFACT_DIR"], !directory.isEmpty else { return }
         let output = URL(fileURLWithPath: directory, isDirectory: true)
         try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
@@ -85,33 +85,6 @@ struct CRMInventoryViewRenderingTests {
         let defaults = try #require(UserDefaults(suiteName: "Telephone.CRMPreview.\(UUID())"))
         let settings = CRMGatewaySettings(defaults: defaults, tokenStore: PreviewTokenStore())
         try await settings.save(enabled: true, origin: "https://gateway.example", newToken: "synthetic-token")
-        let snapshot = try CRMHistorySnapshot.checkedKey(
-            response: CRMKeyLookupResponse(data: largeCustomer(gatewayLinks: true), meta: CRMKeyLookupMetadata(
-                requestId: "synthetic-window-preview", fetchedAt: "2026-10-08T08:00:00Z", complete: true, fromCache: false)),
-            keyNumber: 1, phone: "+70005550101", checkedAt: Date(timeIntervalSince1970: 1791446400)
-        )
-        let lookup = CRMHistoryLookupModel(storage: PreviewHistoryStorage(check: try snapshot.storedCheck()),
-            settings: settings, provider: CRMGatewayClient(transport: GatewayTransportFake(status: 404, data: Data())))
-        lookup.load(accountUUID: "synthetic-account", callIdentifier: "synthetic-call")
-        for _ in 0..<200 where lookup.isLoading { try await Task.sleep(for: .milliseconds(5)) }
-        #expect(lookup.snapshot?.customer?.keys.count == 23)
-        #expect(lookup.snapshot?.customer?.keys.reduce(0) { $0 + $1.programs.count } == 743)
-        let controller = CRMHistoryWindowController(model: lookup, didClose: {})
-        let window = try #require(controller.window)
-        defer { controller.close() }
-        for scheme in [ColorScheme.light, .dark] {
-            window.appearance = NSAppearance(named: scheme == .dark ? .darkAqua : .aqua)
-            for width in [660, 820, 1100] {
-                window.setContentSize(NSSize(width: width, height: 720))
-                controller.showWindow(nil)
-                let contentView = try #require(window.contentView)
-                let bitmap = try #require(capture(view: contentView))
-                try write(bitmap, name: "crm-window-content-\(scheme == .dark ? "dark" : "light")-\(width)", to: output)
-                try expectVisibleMetadataPixels(bitmap)
-                // CI does not grant screen-recording permission. These are
-                // content previews, not full WindowServer screenshots.
-            }
-        }
         let status = Data(("{\"runtime\":{\"build\":{\"version\":\"1.4.0\",\"commit\":\"" + String(repeating: "a", count: 40) + "\",\"builtAt\":\"2026-10-08T08:00:00Z\",\"integrity\":\"verified\"},\"startedAt\":\"2026-10-08T08:30:00Z\",\"processId\":123}}").utf8)
         let settingsModel = CRMGatewaySettingsModel(settings: settings,
             statusProvider: CRMGatewayClient(transport: GatewayTransportFake(data: status)))
@@ -321,13 +294,6 @@ struct CRMInventoryViewRenderingTests {
             ]
         )
     }
-}
-
-private struct PreviewHistoryStorage: CallHistoryCRMStorage {
-    let check: StoredCallCRMCheck
-    func phone(accountUUID: String, callIdentifier: String) async throws -> String? { "+70005550101" }
-    func load(accountUUID: String, callIdentifier: String) async throws -> StoredCallCRMCheck? { check }
-    func save(_ check: StoredCallCRMCheck, accountUUID: String, callIdentifier: String) async throws -> Bool { true }
 }
 
 private actor PreviewTokenStore: CRMGatewayTokenStoring {

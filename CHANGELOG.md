@@ -8,6 +8,9 @@
 - Moved the SIP runtime and PJSIP callback handling to Swift, leaving a narrow
   C boundary for the external PJSIP library.
 - Added SQLite-backed call history and local customer context.
+- Removed the unused post-call CRM verification UI and saved CRM snapshots.
+  SQLite schema v5 prunes obsolete tables without removing call history or
+  local customer notes; previous saved CRM check results are deleted.
 - Added App Intents and Shortcuts for calling, settings, and account status.
 - Hardened account credentials, Contacts integration, CoreAudio selection,
   SIP lifecycle handling, and database migration behavior.

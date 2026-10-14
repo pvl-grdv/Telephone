@@ -103,42 +103,25 @@ struct CallHistoryViewModelTests {
     }
 
     @Test
-    func crmSelectionUsesTheExistingRecordAndClosesWhenItIsRemoved() {
+    func deletingAllHistoryClearsRecordsAndSelection() {
         let first = record(id: "first", address: "111", incoming: true, missed: false)
-        let second = record(id: "second", address: "222", incoming: true, missed: true)
-        let missing = record(id: "missing", address: "333", incoming: false, missed: false)
+        let second = record(id: "second", address: "222", incoming: false, missed: false)
         let model = CallHistoryViewModel()
         model.show([first, second])
+        model.selection = first.identifier
+        #expect(model.requestDeleteAll())
 
-        model.selectForCRM(missing)
-        #expect(model.pendingCRMRecord == nil)
-        model.selectForCRM(first, checkNow: false)
-        #expect(model.selection == first.identifier)
-        #expect(model.pendingCRMRecord == first)
-        #expect(!model.crmCheckRequested)
-        let firstRequest = model.crmPresentationRequest
-        model.selectForCRM(first, checkNow: false)
-        #expect(model.crmPresentationRequest == firstRequest + 1)
-        model.show([second])
-        #expect(model.pendingCRMRecord == nil)
+        var deleteAllCount = 0
+        model.commitPendingDeletion(
+            deleteRecord: { _ in Issue.record("Expected delete all, not a single record") },
+            deleteAll: { deleteAllCount += 1 }
+        )
 
-        model.selectForCRM(second)
-        #expect(model.crmCheckRequested)
-        #expect(model.requestDeleteSelected())
-        model.commitPendingDeletion(deleteRecord: { _ in }, deleteAll: {})
-        #expect(model.pendingCRMRecord == nil)
-    }
-
-    @Test
-    func deletingAllHistoryClosesAnOpenCRMCheck() {
-        let existing = record(id: "call", address: "111", incoming: true, missed: false)
-        let model = CallHistoryViewModel()
-        model.show([existing])
-        model.selectForCRM(existing)
-        model.requestDeleteAll()
-        model.commitPendingDeletion(deleteRecord: { _ in }, deleteAll: {})
-        #expect(model.pendingCRMRecord == nil)
+        #expect(deleteAllCount == 1)
         #expect(model.allRecords.isEmpty)
+        #expect(model.records.isEmpty)
+        #expect(model.selection == nil)
+        #expect(model.pendingDeletion == nil)
     }
 
     private func record(

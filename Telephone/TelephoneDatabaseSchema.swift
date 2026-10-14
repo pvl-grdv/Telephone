@@ -7,27 +7,16 @@ import SQLite3
 import UseCases
 
 enum TelephoneDatabaseSchema {
-    static let currentVersion = 4
+    static let currentVersion = 5
 
-    static func createCallCRMSnapshotTable(
-        execute: (String) throws -> Void
-    ) throws {
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS call_crm_snapshots (
-                account_uuid TEXT NOT NULL,
-                call_identifier TEXT NOT NULL,
-                checked_at REAL NOT NULL,
-                status TEXT NOT NULL,
-                company_id INTEGER,
-                company_name TEXT,
-                snapshot_json TEXT NOT NULL,
-                PRIMARY KEY (account_uuid, call_identifier),
-                FOREIGN KEY (account_uuid, call_identifier)
-                    REFERENCES calls(account_uuid, identifier) ON DELETE CASCADE
-            )
-            """
-        )
+    // Version 5 retires unused CRM-history snapshots and old CRM sync
+    // scaffolding. Calls, local customer details and historical user notes
+    // remain intact. Run this inside the call-history migration transaction.
+    static func removeUnusedTables(execute: (String) throws -> Void) throws {
+        try execute("DROP TABLE IF EXISTS call_crm_snapshots")
+        try execute("DROP TABLE IF EXISTS external_refs")
+        try execute("DROP TABLE IF EXISTS party_attributes")
+        try execute("DROP TABLE IF EXISTS crm_sync_state")
     }
 
     static func createPartyTables(
@@ -57,38 +46,7 @@ enum TelephoneDatabaseSchema {
             )
             """
         )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS party_attributes (
-                party_id INTEGER NOT NULL,
-                key TEXT NOT NULL,
-                value TEXT NOT NULL,
-                PRIMARY KEY (party_id, key),
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE
-            )
-            """
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS external_refs (
-                party_id INTEGER NOT NULL,
-                provider TEXT NOT NULL,
-                external_id TEXT NOT NULL,
-                PRIMARY KEY (provider, external_id),
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE
-            )
-            """
-        )
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS crm_sync_state (
-                provider TEXT PRIMARY KEY,
-                cursor TEXT,
-                last_sync REAL,
-                last_error TEXT
-            )
-            """
-        )
+
     }
 
     static func createCustomerContextTables(

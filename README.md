@@ -169,19 +169,13 @@ settings invalidates pending results. Existing SIP/audio behavior is unchanged.
 
 See [the public gateway contract and setup guide](docs/CRM-gateway.md).
 
-Existing call-history rows can be checked with the **CRM** toolbar action or
-**Check in CRM** context menu. This performs a current, read-only lookup from
-the stored peer phone and saves the latest normalized result in local SQLite
-for that call/account, with its actual verification time. It does not claim
-historical CRM state at the call time. **View saved CRM check** opens the stored
-result without contacting the gateway. The history sheet also allows manual key
-or email lookup and saves the query provenance separately from the original
-phone. Later checks refresh the saved query and chosen organization; **Find by
-phone** returns to the original call phone. A key match can separately offer a
-confirmed phone association: Telephone refreshes the key and original call
-phone before confirmation, then sends one append request. Results from phone
-or email lookup cannot trigger that write. No automatic history backfill or call-end
-check is performed; failed local saves are shown explicitly.
+CRM is available only in **Client details** during a live call.
+The retired separate CRM verification window and its per-call saved snapshots
+are no longer created. On upgrading an existing database, schema version 5
+removes the obsolete `call_crm_snapshots` table and three unused CRM integration
+scaffolding tables. This **deletes old per-call CRM check results**, not call
+history, locally entered customer details or previous conversation notes.
+Back up your SQLite database first if those legacy checks are needed.
 
 For diagnosing a PBX integration, Telephone captures a small allowlist of
 identity and routing headers from the original incoming SIP INVITE, including

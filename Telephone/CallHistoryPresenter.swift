@@ -27,17 +27,8 @@ final class CallHistoryPresenter: CallHistoryView {
 
     private let model = CallHistoryViewModel()
     private let clipboard: Clipboard
-    private let crmLookupModel: CRMHistoryLookupModel?
-    private let accountUUID: String?
-
-    init(
-        clipboard: Clipboard = MacClipboard.shared,
-        crmLookupModel: CRMHistoryLookupModel? = nil,
-        accountUUID: String? = nil
-    ) {
+    init(clipboard: Clipboard = MacClipboard.shared) {
         self.clipboard = clipboard
-        self.crmLookupModel = crmLookupModel
-        self.accountUUID = accountUUID
     }
 
     var contentView: some View {
@@ -54,9 +45,7 @@ final class CallHistoryPresenter: CallHistoryView {
             },
             deleteAll: { [weak self] in
                 self?.target?.shouldRemoveAllRecords()
-            },
-            crmLookupModel: crmLookupModel,
-            crmAccountUUID: accountUUID
+            }
         )
     }
 
@@ -68,8 +57,4 @@ final class CallHistoryPresenter: CallHistoryView {
         model.requestSearchFocus()
     }
 
-    func closeCRM() {
-        model.pendingCRMRecord = nil
-        crmLookupModel?.close()
-    }
 }

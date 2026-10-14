@@ -30,7 +30,6 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/CallCustomerDetailsWindowController.swift",
             "Telephone/CRMGatewaySettingsView.swift",
             "Telephone/CRMKeyLookupView.swift",
-            "Telephone/CRMHistoryLookupView.swift",
             "Telephone/CRMCustomerInventoryView.swift",
             "Telephone/GeneralSettingsView.swift",
             "Telephone/NetworkSettingsView.swift",
@@ -134,40 +133,17 @@ struct LocalizationAndLayoutSmokeTests {
         )
     }
 
-    @Test @MainActor
-    func crmHistoryWindowResizesAndClosesItsLookupContext() async throws {
-        _ = NSApplication.shared
-        let defaults = try #require(UserDefaults(suiteName: "Telephone.CRMWindowTest.\(UUID())"))
-        let settings = CRMGatewaySettings(defaults: defaults)
-        let lookup = CRMHistoryLookupModel(
-            storage: LayoutHistoryStorage(), settings: settings,
-            provider: CRMGatewayClient(transport: GatewayTransportFake(status: 404, data: Data()))
+    @Test
+    func callHistoryHasNoPostCallCRMCommands() throws {
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/CallHistoryScreen.swift"
+            ), encoding: .utf8
         )
-        lookup.load(accountUUID: "synthetic-account", callIdentifier: "synthetic-call")
-        for _ in 0..<200 where lookup.isLoading { try await Task.sleep(for: .milliseconds(5)) }
-        #expect(lookup.callerPhone == "+70005550101")
-        var closeCount = 0
-        let controller = CRMHistoryWindowController(model: lookup) { closeCount += 1 }
-        let window = try #require(controller.window)
-        defer { if closeCount == 0 { controller.close() } }
-        #expect(window.styleMask.contains(.resizable))
-        #expect(window.styleMask.contains(.closable))
-        #expect(window.sheetParent == nil)
-        #expect(window.contentMinSize.width >= 660)
-        #expect(window.contentMinSize.height >= 440)
-        window.setContentSize(NSSize(width: 1100, height: 720))
-        let content = try #require(window.contentView)
-        content.layoutSubtreeIfNeeded()
-        #expect(content.bounds.width >= 1100)
-        #expect(content.bounds.height >= 720)
-        window.setContentSize(NSSize(width: 800, height: 600))
-        content.layoutSubtreeIfNeeded()
-        #expect(content.bounds.width >= 800 && content.bounds.width < 1100)
-        #expect(content.bounds.height >= 600 && content.bounds.height < 720)
-        controller.close()
-        #expect(closeCount == 1)
-        #expect(lookup.callerPhone == nil)
-        #expect(!lookup.isLoading && !lookup.isChecking)
+        #expect(!source.contains("CRMHistoryWindowController"))
+        #expect(!source.contains("selectForCRM("))
+        #expect(!source.contains("history.crm.check"))
+        #expect(!source.contains("View saved CRM check"))
     }
 
     @Test
@@ -336,8 +312,3 @@ struct LocalizationAndLayoutSmokeTests {
 
 }
 
-private struct LayoutHistoryStorage: CallHistoryCRMStorage {
-    func phone(accountUUID: String, callIdentifier: String) async throws -> String? { "+70005550101" }
-    func load(accountUUID: String, callIdentifier: String) async throws -> StoredCallCRMCheck? { nil }
-    func save(_ check: StoredCallCRMCheck, accountUUID: String, callIdentifier: String) async throws -> Bool { true }
-}

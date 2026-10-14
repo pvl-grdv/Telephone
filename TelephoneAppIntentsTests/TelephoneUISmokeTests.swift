@@ -285,6 +285,54 @@ final class TelephoneUISmokeTests: XCTestCase {
         XCTAssertTrue(closeDetails.waitForNonExistence(timeout: 3))
     }
 
+    func testHistoryLooksUpVisibleRowsAndKeepsUnknownSeparateFromUnanswered() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["TELEPHONE_UI_TEST_SCENARIO"] = "call-history"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        defer { app.terminate() }
+
+        let answered = element("call-history.row.answered", in: app)
+        let unanswered = element("call-history.row.unanswered", in: app)
+        let unknown = element("call-history.row.unknown", in: app)
+        XCTAssertTrue(answered.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(unanswered.waitForExistence(timeout: 3), app.debugDescription)
+        XCTAssertTrue(unknown.waitForExistence(timeout: 3), app.debugDescription)
+        waitForText("Answered by: Synthetic Employee", in: answered)
+        waitForText("No One Answered", in: unanswered)
+        XCTAssertFalse(accessibleText(of: unanswered).contains("Answered by:"))
+        XCTAssertTrue(accessibleText(of: unknown).contains("Not Answered Here"), app.debugDescription)
+        XCTAssertFalse(accessibleText(of: unknown).contains("Answered by:"))
+        XCTAssertFalse(accessibleText(of: unknown).contains("No One Answered"))
+
+        let search = app.textFields["Search Call History"]
+        XCTAssertTrue(search.waitForExistence(timeout: 3), app.debugDescription)
+        search.click()
+        search.typeText("Synthetic unanswered")
+        XCTAssertTrue(answered.waitForNonExistence(timeout: 3), app.debugDescription)
+        XCTAssertTrue(unknown.waitForNonExistence(timeout: 3), app.debugDescription)
+        XCTAssertTrue(unanswered.exists)
+        search.typeKey("a", modifierFlags: .command)
+        search.typeKey(XCUIKeyboardKey.delete, modifierFlags: [])
+        XCTAssertTrue(answered.waitForExistence(timeout: 3), app.debugDescription)
+        waitForText("Answered by: Synthetic Employee", in: answered)
+        let refresh = app.buttons["Refresh Call Answers"]
+        XCTAssertTrue(refresh.waitForExistence(timeout: 3), app.debugDescription)
+        refresh.click()
+        waitForText("Answered by: Synthetic Employee", in: answered)
+    }
+
+    private func accessibleText(of element: XCUIElement) -> String {
+        element.label + " " + (element.value as? String ?? "")
+    }
+
+    private func waitForText(_ text: String, in element: XCUIElement) {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", text, text), object: element)
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 5), .completed,
+            "Expected \(text) in \(element.debugDescription)")
+    }
+
     private func launch(
         scenario: String,
         locale: LocaleFixture

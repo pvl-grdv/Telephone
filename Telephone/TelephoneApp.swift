@@ -108,6 +108,8 @@ struct TelephoneApp: App {
         )
 
         UITestCallHostedScene()
+
+        UITestHistoryHostedScene()
 #endif
 
         Window(

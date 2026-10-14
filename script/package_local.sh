@@ -10,6 +10,11 @@ ENTITLEMENTS="$ROOT_DIR/Telephone/Telephone.local.entitlements"
 SIGN_IDENTITY="${TELEPHONE_CODE_SIGN_IDENTITY:--}"
 ARCHIVE="$DIST_DIR/Telephone-$VERSION-local.zip"
 
+if [[ ! "$VERSION" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+  echo "Invalid package version label." >&2
+  exit 1
+fi
+
 "$ROOT_DIR/script/build.sh" Release
 
 echo "Signing Telephone with identity: $SIGN_IDENTITY"
@@ -34,8 +39,8 @@ grep -q "com.apple.security.device.microphone" <<<"$SIGNED_ENTITLEMENTS"
 
 /usr/bin/codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 
-rm -rf "$DIST_DIR"
 mkdir -p "$DIST_DIR"
+rm -f "$ARCHIVE" "$ARCHIVE.sha256"
 
 /usr/bin/ditto   -c   -k   --sequesterRsrc   --keepParent   "$APP_BUNDLE"   "$ARCHIVE"
 

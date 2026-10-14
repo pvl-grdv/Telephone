@@ -103,7 +103,7 @@ struct CallHistoryScreen: View {
         .padding(.vertical, 8)
     }
 
-    @ViewBuilder
+    @ContentBuilder
     private var content: some View {
         if model.records.isEmpty {
             emptyState
@@ -112,6 +112,7 @@ struct CallHistoryScreen: View {
             List(selection: $model.selection) {
                 ForEach(model.records) { record in
                     CallHistoryRow(record: record, answer: model.callAnswers[record.id])
+                        .accessibilityIdentifier("call-history.row.\(record.id)")
                         .tag(record.identifier)
                         .onAppear { model.setAnswerRecordVisible(record.id, visible: true) }
                         .onDisappear { model.setAnswerRecordVisible(record.id, visible: false) }
@@ -178,7 +179,7 @@ struct CallHistoryScreen: View {
         }
     }
 
-    @ViewBuilder
+    @ContentBuilder
     private var emptyState: some View {
         let query = model.query.trimmingCharacters(
             in: .whitespacesAndNewlines
@@ -270,7 +271,8 @@ private struct CallHistoryFilterMenu: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .menuStyle(.borderlessButton)
+        .menuStyle(.button)
+        .buttonStyle(.borderless)
         .menuIndicator(.hidden)
         .frame(width: 112, alignment: .leading)
         .help(

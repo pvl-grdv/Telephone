@@ -78,11 +78,11 @@ jobs:
           TELEPHONE_BUILD_COMMIT: ${{ github.sha }}
         run: ./script/package_local.sh "${{ github.sha }}"
 
-      - name: Verify build metadata
-        run: |
-          APP_INFO="build/Release/Telephone.app/Contents/Info.plist"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_INFO")" = "${{ github.run_number }}"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :TelephoneBuildCommit' "$APP_INFO")" = "${{ github.sha }}"
+      - name: Verify and launch the packaged Release app
+        env:
+          TELEPHONE_BUILD_NUMBER: ${{ github.run_number }}
+          TELEPHONE_BUILD_COMMIT: ${{ github.sha }}
+        run: python3 ./script/verify_packaged_app.py dist/*.zip --launch
 
       - name: Detect App Intents development signing
         id: app-intents-signing
@@ -171,5 +171,6 @@ jobs:
           path: |
             dist/*.zip
             dist/*.sha256
+            dist/*.verification.json
           if-no-files-found: error
           retention-days: 7

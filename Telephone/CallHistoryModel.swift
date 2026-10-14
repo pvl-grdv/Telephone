@@ -110,6 +110,7 @@ final class CallHistoryViewModel {
             // Collect rows appearing in one scrolling/layout pass into bounded batches.
             try await Task.sleep(for: .milliseconds(350))
             let configuration = try await gatewaySettings.configuration()
+            try Task.checkCancellation()
             guard context == answerContext else { return }
             answerLookupFailed = false
             // One UTC day spans at most two upstream calendar days. Keeping batches

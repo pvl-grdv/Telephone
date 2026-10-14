@@ -50,6 +50,14 @@ clearly identifying itself as independently maintained in the README and About
 window. Product behavior and documentation in this repository should be treated
 as authoritative for this fork when they differ from upstream.
 
+The 2.0.1 update reviews the native presentation against
+[WWDC25 concurrency guidance](https://developer.apple.com/videos/play/wwdc2025/266/)
+and [WWDC26 SwiftUI guidance](https://developer.apple.com/videos/play/wwdc2026/269/).
+It retains the existing Observation models and native scenes, checks cancellation
+after asynchronous token reads, and adopts `ContentBuilder` and the current
+button menu style in call history. Its native tests cover actual row visibility,
+refreshing, and the separate answered, unanswered and unknown outcomes.
+
 This fork may continue to diverge from upstream as its maintenance needs evolve.
 
 ## Platform
@@ -58,6 +66,38 @@ The personal fork currently targets:
 
 - Apple silicon
 - macOS 26 or newer
+
+## Installing a local update
+
+Download the packaged ZIP for the exact tested commit, unpack it on your Mac,
+quit Telephone, and replace `Telephone.app` in Applications. Do not run the app
+from inside the download archive. Check the new version and build in About
+Telephone after launching it.
+
+Before replacing an existing installation, keep a copy of the old app and its
+data while Telephone is closed. In Finder, use Go → Go to Folder to locate
+`~/Library/Containers/com.tlphn.Telephone` and copy the complete folder to a
+private backup. If present, also copy
+`~/Library/Application Support/com.tlphn.Telephone` and
+`~/Library/Preferences/com.tlphn.Telephone.plist`. This retains the SQLite
+database together with its accompanying files. The schema-5 upgrade preserves
+call history and local notes, but removes retired CRM check snapshots; restoring
+those requires the data backup as well as the old app.
+
+The bundle identifier and settings/Keychain services stay the same. Existing
+SIP accounts and the saved gateway configuration are retained; the app does not
+create a new gateway token during installation. Because local packages are ad-hoc
+signed and are not notarized, macOS may ask you to confirm opening the app and
+approve Keychain, microphone or Contacts access again. Follow
+[Apple's app-opening instructions](https://support.apple.com/102445) for this
+particular app if needed.
+
+CI checks the checksum, bundle metadata, all embedded binary architectures,
+signature and sandbox entitlements of the actual ZIP, then launches its
+extracted Release app with SIP accounts and CRM disabled through launch
+arguments. The accompanying verification report records the exact source
+commit and package checksum. Native history UI tests use separate Debug-only
+synthetic data; the distributed app contains no test scenario or gateway token.
 
 ## Building
 

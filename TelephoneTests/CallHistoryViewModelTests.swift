@@ -189,7 +189,7 @@ struct CallHistoryAnswerTests {
         #expect(model.callAnswers.isEmpty)
         #expect(model.answerLookupFailed)
     }
-    @Test(arguments: ["delete", "disable", "replace"])
+    @Test(arguments: ["delete", "disable", "replace", "hide", "cancel"])
     func lateAnswerCannotAttachAfterRecordOrSettingsChange(change: String) async throws {
         let provider = HistoryAnswerProvider(held: true)
         let settings = try await settings()
@@ -202,12 +202,46 @@ struct CallHistoryAnswerTests {
         } else if change == "replace" {
             var replacement = record(); replacement.callerNumber = "+74951111111"
             model.show([replacement])
+        } else if change == "hide" {
+            model.setAnswerRecordVisible("local-call", visible: false)
+        } else if change == "cancel" {
+            task.cancel()
         } else {
             model.selection = "local-call"; _ = model.requestDeleteSelected()
             model.commitPendingDeletion(deleteRecord: { _ in }, deleteAll: {})
         }
         await provider.release(); await task.value
         #expect(model.callAnswers.isEmpty)
+    }
+
+    @Test func cancelledTokenReadDoesNotSendAnAnswerRequest() async throws {
+        let defaults = UserDefaults(suiteName: "CallHistoryAnswerCancellation.\(UUID().uuidString)")!
+        let tokenStore = HeldHistoryAnswerTokenStore()
+        let settings = CRMGatewaySettings(defaults: defaults, tokenStore: tokenStore)
+        try await settings.save(enabled: true, origin: "https://gateway.example.invalid", newToken: "synthetic-token")
+        let provider = HistoryAnswerProvider()
+        let model = CallHistoryViewModel(gatewaySettings: settings, answerProvider: provider)
+        model.show([record()]); model.setAnswerRecordVisible("local-call", visible: true)
+        let task = Task { await model.refreshCallAnswers() }
+        while !(await tokenStore.waiting) { await Task.yield() }
+        task.cancel()
+        await tokenStore.release()
+        await task.value
+        #expect(await provider.requestCount == 0)
+        #expect(model.callAnswers.isEmpty)
+        #expect(!model.answerLookupFailed)
+    }
+
+    @Test(arguments: [CRMIncomingCallAnswer.Status.unanswered, .unknown])
+    func unansweredOrUnknownCallsHaveNoAnsweringEmployee(status: CRMIncomingCallAnswer.Status) async throws {
+        let model = CallHistoryViewModel(gatewaySettings: try await settings(),
+            answerProvider: HistoryAnswerProvider(status: status))
+        model.show([record()]); model.setAnswerRecordVisible("local-call", visible: true)
+        await model.refreshCallAnswers()
+        #expect(model.callAnswers["local-call"]?.status == status)
+        #expect(model.callAnswers["local-call"]?.answeredBy == nil)
+        #expect(!model.answerLookupFailed)
+        #expect(model.allRecords.first?.isMissed == true)
     }
 }
 private actor HistoryAnswerTokenStore: CRMGatewayTokenStoring {
@@ -218,19 +252,37 @@ private actor HistoryAnswerTokenStore: CRMGatewayTokenStoring {
 private actor HistoryAnswerProvider: CRMCallAnswerProvider {
     private var shouldFail = false
     private let held: Bool
+    private let status: CRMIncomingCallAnswer.Status
     private var continuation: CheckedContinuation<Void, Never>?
+    private(set) var requestCount = 0
     var waiting: Bool { continuation != nil }
-    init(held: Bool = false) { self.held = held }
+    init(held: Bool = false, status: CRMIncomingCallAnswer.Status = .answered) {
+        self.held = held
+        self.status = status
+    }
     func fail() { shouldFail = true }
     func release() { continuation?.resume(); continuation = nil }
     func incomingCallAnswers(calls: [CRMIncomingCallRequest], configuration: CRMGatewayConfiguration) async throws -> [CRMIncomingCallAnswer] {
+        requestCount += 1
         if held { await withCheckedContinuation { continuation = $0 } }
         if shouldFail { throw CRMGatewayError.unavailable }
         return calls.map { call in
             CRMIncomingCallAnswer(id: call.id, phoneNumber: call.phoneNumber, startedAt: call.startedAt,
-                status: .answered, reason: nil,
-                answeredBy: .init(displayName: "Synthetic Employee", source: "ats"),
-                match: .init(method: "phone-and-time", confidence: "correlated", startedAt: call.startedAt))
+                status: status, reason: status == .unknown ? "not-found" : nil,
+                answeredBy: status == .answered ? .init(displayName: "Synthetic Employee", source: "ats") : nil,
+                match: status == .unknown ? nil : .init(method: "phone-and-time", confidence: "correlated", startedAt: call.startedAt))
         }
     }
+}
+
+private actor HeldHistoryAnswerTokenStore: CRMGatewayTokenStoring {
+    private var continuation: CheckedContinuation<Void, Never>?
+    var waiting: Bool { continuation != nil }
+    func token(for origin: String) async -> String {
+        await withCheckedContinuation { continuation = $0 }
+        return "synthetic-token"
+    }
+    func save(_ token: String, for origin: String) -> Bool { true }
+    func remove(for origin: String) -> Bool { true }
+    func release() { continuation?.resume(); continuation = nil }
 }

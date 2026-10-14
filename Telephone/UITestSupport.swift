@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Observation
 import SwiftUI
 
 @MainActor
@@ -27,6 +28,7 @@ enum TelephoneUITestSupport {
                 || scenario == "account-setup"
                 || scenario == "incoming-call"
                 || scenario == "incoming-call-details"
+                || scenario == "call-history"
         else {
             return false
         }
@@ -44,6 +46,8 @@ enum TelephoneUITestSupport {
                     UserDefaults.standard.set(true, forKey: UserDefaultsKeys.showCustomerContext)
                 }
                 await UITestCallSceneController.shared.show(includeCRM: scenario == "incoming-call-details")
+            case "call-history":
+                await UITestHistorySceneController.shared.show()
             default:
                 break
             }
@@ -78,6 +82,62 @@ enum TelephoneUITestSupport {
 }
 
 #if DEBUG
+
+@MainActor
+struct UITestHistoryHostedScene: Scene {
+    var body: some Scene {
+        Window("Call History", id: UITestHistorySceneController.sceneID) {
+            if let model = UITestHistorySceneController.shared.model {
+                CallHistoryScreen(model: model, call: { _ in }, copy: { _ in },
+                    deleteRecord: { _ in }, deleteAll: {})
+            }
+        }
+        .defaultLaunchBehavior(.suppressed)
+        .defaultSize(width: 660, height: 320)
+        .restorationBehavior(.disabled)
+        .commandsRemoved()
+    }
+}
+
+@MainActor
+@Observable
+private final class UITestHistorySceneController {
+    static let shared = UITestHistorySceneController()
+    static let sceneID = "telephone-ui-test-history"
+    private(set) var model: CallHistoryViewModel?
+
+    func show() async {
+        let defaults = UserDefaults(suiteName: "Telephone.UITestHistory.\(UUID())")!
+        let settings = CRMGatewaySettings(defaults: defaults, tokenStore: UITestCRMTokenStore())
+        do {
+            try await settings.save(enabled: true, origin: "https://gateway.example", newToken: "synthetic-token")
+            let history = CallHistoryViewModel(gatewaySettings: settings, answerProvider: UITestHistoryAnswerProvider())
+            history.show(["answered", "unanswered", "unknown"].enumerated().map { index, status in
+                PresentationCallHistoryRecord(identifier: status,
+                    contact: PresentationContact(title: "Synthetic \(status)", tooltip: "", label: "", address: "+1202555010\(index)"),
+                    date: "Today, 12:00", duration: "00:00", isIncoming: true, isMissed: true,
+                    startedAt: Date(timeIntervalSince1970: 1_791_968_400), callerNumber: "+1202555010\(index)")
+            })
+            // Visibility and answers are populated by the actual screen lifecycle.
+            model = history
+            SceneRouter.shared.openWindow(id: Self.sceneID)
+        } catch {
+            assertionFailure("Could not configure synthetic history fixture: \(error)")
+        }
+    }
+}
+
+private struct UITestHistoryAnswerProvider: CRMCallAnswerProvider {
+    func incomingCallAnswers(calls: [CRMIncomingCallRequest], configuration: CRMGatewayConfiguration) async throws -> [CRMIncomingCallAnswer] {
+        calls.map { call in
+            let status = CRMIncomingCallAnswer.Status(rawValue: call.id) ?? .unknown
+            return CRMIncomingCallAnswer(id: call.id, phoneNumber: call.phoneNumber, startedAt: call.startedAt,
+                status: status, reason: status == .unknown ? "not-found" : nil,
+                answeredBy: status == .answered ? .init(displayName: "Synthetic Employee", source: "ats") : nil,
+                match: status == .unknown ? nil : .init(method: "phone-and-time", confidence: "correlated", startedAt: call.startedAt))
+        }
+    }
+}
 
 @MainActor
 struct UITestCallHostedScene: Scene {

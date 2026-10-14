@@ -48,12 +48,14 @@ jobs:
       - name: Resolve version
         id: version
         shell: bash
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
         run: |
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
             label="${GITHUB_REF_NAME#v}"
             marketing_version="$label"
           else
-            label="${{ inputs.version }}"
+            label="$REQUESTED_VERSION"
             marketing_version=""
             if [[ "$label" != "dev" ]]; then
               marketing_version="$label"
@@ -72,7 +74,16 @@ jobs:
       - name: Build and package
         env:
           TELEPHONE_MARKETING_VERSION: ${{ steps.version.outputs.marketing }}
+          TELEPHONE_BUILD_NUMBER: ${{ github.run_number }}
+          TELEPHONE_BUILD_COMMIT: ${{ github.sha }}
         run: ./script/package_local.sh "${{ steps.version.outputs.value }}"
+
+      - name: Verify and launch the packaged Release app
+        env:
+          TELEPHONE_MARKETING_VERSION: ${{ steps.version.outputs.marketing }}
+          TELEPHONE_BUILD_NUMBER: ${{ github.run_number }}
+          TELEPHONE_BUILD_COMMIT: ${{ github.sha }}
+        run: python3 ./script/verify_packaged_app.py dist/*.zip --launch
 
       - name: Verify release version
         if: steps.version.outputs.marketing != ''
@@ -87,6 +98,7 @@ jobs:
           path: |
             dist/*.zip
             dist/*.sha256
+            dist/*.verification.json
           if-no-files-found: error
 
       - name: Create GitHub release for tag

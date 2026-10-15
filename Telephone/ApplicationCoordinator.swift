@@ -311,14 +311,12 @@ final class ApplicationCoordinator:
         terminationTask = Task { [weak self] in
             guard let self else { return }
 
-            await accountControllers.flushPendingCustomerContextChanges()
             await SIPCallEventSequence.shared.drain()
             guard !Task.isCancelled else { return }
 
             if userAgent.isStarted {
                 stopUserAgent()
             } else {
-                await compositionRoot.customerContextPendingWrites.drain()
                 MacApplication.replyToTermination(true)
             }
         }
@@ -383,11 +381,8 @@ final class ApplicationCoordinator:
         if terminating {
             terminationTask = Task { [weak self] in
                 guard let self else { return }
-                // Terminal SIP callbacks and the final local edits must finish
-                // before SQLite history completion can authorize process exit.
+                // Drain terminal SIP callbacks before allowing process exit.
                 await SIPCallEventSequence.shared.drain()
-                await accountControllers.flushPendingCustomerContextChanges()
-                await compositionRoot.customerContextPendingWrites.drain()
                 guard !Task.isCancelled else { return }
                 MacApplication.replyToTermination(true)
             }
@@ -828,7 +823,6 @@ final class ApplicationCoordinator:
             crmGatewaySettings: compositionRoot.crmGatewaySettings,
             crmKeyLookupProvider: compositionRoot.crmKeyLookupProvider,
             crmPhoneAppendRegistry: compositionRoot.crmPhoneAppendRegistry,
-            customerContextPendingWrites: compositionRoot.customerContextPendingWrites,
             callControllerDidClose: { [weak self] in
                 self?.updateDockTileBadgeLabel()
             }

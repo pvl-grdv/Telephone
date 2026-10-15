@@ -16,7 +16,6 @@ final class CallPresentationCoordinator: Identifiable {
     private let callEventSource: AKSIPCallEventSource
     private let model: CallWindowModel
     private let transferCoordinator: CallTransferCoordinator
-    private let customerContextCoordinator: CustomerContextCoordinator?
     private let crmKeyLookupModel: CRMKeyLookupModel?
     private var customerDetailsWindow: CallCustomerDetailsWindowController?
 
@@ -76,14 +75,6 @@ final class CallPresentationCoordinator: Identifiable {
             accountController: accountController,
             model: model
         )
-        customerContextCoordinator = isTransfer
-            ? nil
-            : CustomerContextCoordinator(
-                callController: callController,
-                model: model,
-                pendingWrites: accountController.customerContextPendingWrites
-            )
-
         CallPresentationRegistry.shared.register(self, key: id)
     }
 
@@ -112,16 +103,6 @@ final class CallPresentationCoordinator: Identifiable {
                 self?.transferCoordinator.complete()
             },
             showCustomerDetails: { [weak self] in self?.showCustomerDetails() },
-            customerContextVisibilityChanged: { [weak self] isVisible in
-                self?.customerContextCoordinator?
-                    .visibilityChanged(isVisible)
-                if isVisible {
-                    self?.updateCRMCallerPhone()
-                } else {
-                    self?.closeCustomerDetails()
-                    self?.crmKeyLookupModel?.deactivateContext()
-                }
-            },
             sendDTMF: { [weak self] text in
                 self?.handleDTMF(text)
             }
@@ -151,10 +132,6 @@ final class CallPresentationCoordinator: Identifiable {
         )
     }
 
-    func flushPendingCustomerContextChanges() async {
-        await customerContextCoordinator?.flushPendingChanges()
-    }
-
     func invalidate() {
         closeCustomerDetails()
         PerformanceStateReporting.removeCall(id: id)
@@ -163,7 +140,6 @@ final class CallPresentationCoordinator: Identifiable {
         cancelRedialEnable()
         cancelAutoClose()
         cancelIntermediateStatusRestore()
-        customerContextCoordinator?.invalidate()
         crmKeyLookupModel?.resetContext()
         CallPresentationRegistry.shared.unregister(key: id)
     }
@@ -191,7 +167,6 @@ final class CallPresentationCoordinator: Identifiable {
         stopCallTimer()
         cancelRedialEnable()
         cancelIntermediateStatusRestore()
-        customerContextCoordinator?.callDidChange()
         crmKeyLookupModel?.resetContext()
         transferCoordinator.discardSourceTransferSession()
         session.setCall(call)
@@ -200,7 +175,6 @@ final class CallPresentationCoordinator: Identifiable {
         model.usesDTMFDisplay = false
 
         if call != nil {
-            customerContextCoordinator?.loadIfNeeded()
         }
     }
 
@@ -213,11 +187,7 @@ final class CallPresentationCoordinator: Identifiable {
     }
 
     func setContactOrganization(_ value: String) {
-        let cleaned = DisplayNameText.normalized(value)
-        model.contactOrganization = cleaned
-        if model.customerContextLoaded && model.customerCompany.isEmpty {
-            model.customerCompany = cleaned
-        }
+        model.contactOrganization = DisplayNameText.normalized(value)
     }
 
     func setStatus(_ value: String) {
@@ -227,7 +197,6 @@ final class CallPresentationCoordinator: Identifiable {
     func showIncomingState() {
         model.showIncomingState()
         PerformanceStateReporting.showIncomingCall(id: id)
-        customerContextCoordinator?.loadIfNeeded()
         focusAnswer()
     }
 
@@ -235,7 +204,6 @@ final class CallPresentationCoordinator: Identifiable {
         model.showActiveState()
         beginActiveCallIntervalIfNeeded()
         updateCallControls()
-        customerContextCoordinator?.loadIfNeeded()
         model.requestCallSurfaceFocus()
     }
 
@@ -246,7 +214,6 @@ final class CallPresentationCoordinator: Identifiable {
         endActiveCallInterval()
         stopCallTimer()
         cancelIntermediateStatusRestore()
-        customerContextCoordinator?.loadIfNeeded()
     }
 
     func showTransferDestinationState() {
@@ -540,17 +507,12 @@ final class CallPresentationCoordinator: Identifiable {
     }
 
     private func showCustomerDetails() {
-        guard !model.isTransfer else { return }
+        guard !model.isTransfer, let crmKeyLookupModel, crmKeyLookupModel.settings.enabled else {
+            return
+        }
         if customerDetailsWindow == nil {
             customerDetailsWindow = CallCustomerDetailsWindowController(
-                model: model,
-                crmKeyLookupModel: crmKeyLookupModel,
-                changed: { [weak self] in self?.customerContextCoordinator?.scheduleSave() },
-                reload: { [weak self] in self?.customerContextCoordinator?.reload() },
-                save: { [weak self] in self?.customerContextCoordinator?.retrySave() },
-                saveOnClose: { [weak self] in
-                    self?.customerContextCoordinator?.saveNow(ignoringPreference: true)
-                }
+                model: model, crmKeyLookupModel: crmKeyLookupModel
             )
         }
         customerDetailsWindow?.present()
@@ -570,7 +532,6 @@ final class CallPresentationCoordinator: Identifiable {
         }
 
         closeCustomerDetails()
-        customerContextCoordinator?.saveNow(ignoringPreference: true)
         crmKeyLookupModel?.deactivateContext()
         callController?.callWindowDidClose()
     }
@@ -579,12 +540,8 @@ final class CallPresentationCoordinator: Identifiable {
         // Only the actual SIP peer user is eligible. Display names, headers and
         // arbitrary SIP usernames are never turned into CRM phone identities.
         let rawPhone = callController?.call?.remoteURI.user
-        let showsContext = UserDefaults.standard.object(
-            forKey: UserDefaultsKeys.showCustomerContext
-        ) as? Bool ?? true
         crmKeyLookupModel?.setCallerPhone(
-            rawPhone,
-            isActive: callController?.call != nil && showsContext
+            rawPhone, isActive: callController?.call != nil
         )
     }
 }

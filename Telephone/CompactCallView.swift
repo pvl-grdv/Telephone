@@ -10,7 +10,6 @@ import SwiftUI
 struct CompactCallView: View {
     let model: CallWindowModel
     let crmKeyLookupModel: CRMKeyLookupModel?
-    let showsCustomerContext: Bool
     let answer: () -> Void
     let decline: () -> Void
     let hangUp: () -> Void
@@ -29,7 +28,7 @@ struct CompactCallView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
 
-            if showsCustomerContext {
+            if let crmKeyLookupModel, crmKeyLookupModel.settings.enabled {
                 Divider()
                 CallCustomerSummaryView(model: model, crmKeyLookupModel: crmKeyLookupModel,
                                         showDetails: showCustomerDetails)

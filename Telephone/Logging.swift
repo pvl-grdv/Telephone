@@ -18,11 +18,6 @@ enum Log {
         category: "CallDestination"
     )
 
-    static let customerContext = Logger(
-        subsystem: subsystem,
-        category: "CustomerContext"
-    )
-
     static let callHistory = Logger(
         subsystem: subsystem,
         category: "CallHistory"

@@ -19,9 +19,6 @@ struct GeneralSettingsView: View {
     @AppStorage(UserDefaultsKeys.callWaiting)
     private var callWaiting = true
 
-    @AppStorage(UserDefaultsKeys.showCustomerContext)
-    private var showsCustomerContext = true
-
     var body: some View {
         Form {
             Section {
@@ -49,13 +46,6 @@ struct GeneralSettingsView: View {
                 Toggle(
                     NSLocalizedString("Call waiting", comment: "General settings toggle."),
                     isOn: $callWaiting
-                )
-                Toggle(
-                    NSLocalizedString(
-                        "Show customer context during calls",
-                        comment: "General settings toggle."
-                    ),
-                    isOn: $showsCustomerContext
                 )
             }
         }

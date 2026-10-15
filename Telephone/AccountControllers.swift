@@ -106,12 +106,6 @@ final class AccountControllers {
         }
     }
 
-    func flushPendingCustomerContextChanges() async {
-        for controller in controllers {
-            await controller.flushPendingCustomerContextChanges()
-        }
-    }
-
     func registerAllAccounts() {
         for controller in enabled {
             controller.registerAccount()

@@ -203,7 +203,7 @@ final class TelephoneUISmokeTests: XCTestCase {
         call.terminate()
     }
 
-    func testTypingInClientDetailsDoesNotAnswerOrDeclineTheCall() throws {
+    func testCRMOnlyClientDetailsDoesNotAnswerOrDeclineTheCall() throws {
         let app = XCUIApplication()
         app.launchEnvironment["TELEPHONE_UI_TEST_SCENARIO"] = "incoming-call-details"
         app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
@@ -215,74 +215,45 @@ final class TelephoneUISmokeTests: XCTestCase {
         let openDetails = element("call.customerDetails", in: app)
         XCTAssertTrue(openDetails.waitForExistence(timeout: 3), app.debugDescription)
         openDetails.click()
-        let selector = element("call.customerDetails.section", in: app)
-        XCTAssertTrue(selector.waitForExistence(timeout: 3), app.debugDescription)
-        let crm = selector.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "CRM")).firstMatch
-        let localDetails = selector.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Local details")).firstMatch
-        XCTAssertTrue(crm.isHittable, app.debugDescription)
-        XCTAssertTrue(localDetails.isHittable, app.debugDescription)
-        XCTAssertFalse(app.staticTexts["Local notes"].exists)
 
+        XCTAssertFalse(element("call.customerDetails.section", in: app).exists)
+        XCTAssertFalse(app.textFields["Organization"].exists)
+        XCTAssertFalse(app.textFields["Reference keys"].exists)
+        XCTAssertFalse(app.textFields["Email addresses"].exists)
+
+        let otherSearch = app.buttons["Search by key or email…"]
+        XCTAssertTrue(otherSearch.waitForExistence(timeout: 3), app.debugDescription)
+        otherSearch.click()
         let key = element("customer.crm.keyNumber", in: app)
-        XCTAssertTrue(key.waitForExistence(timeout: 3))
+        XCTAssertTrue(key.waitForExistence(timeout: 3), app.debugDescription)
         key.click()
         key.typeText("1")
         key.typeKey(XCUIKeyboardKey.return, modifierFlags: [])
         XCTAssertTrue(answer.exists, "Return in CRM lookup must not answer the call.")
         XCTAssertFalse(element("call.end", in: app).exists)
-        // Native .searchable is exposed as an AppKit search field, not the old
-        // custom TextField accessibility identifier.
-        let search = app.searchFields.firstMatch
-        XCTAssertTrue(search.waitForExistence(timeout: 3), app.debugDescription)
-        XCTAssertTrue(search.isHittable, "Inventory search must be usable in the CRM pane.")
+
+        let search = element("crm.inventory.search", in: app)
+        XCTAssertTrue(search.waitForExistence(timeout: 5), app.debugDescription)
+        search.click()
+        search.typeText("Air")
+        XCTAssertEqual(search.value as? String, "Air", "Inventory search is usable.")
         app.typeKey("f", modifierFlags: .command)
-        app.typeText("Air")
-        XCTAssertEqual(search.value as? String, "Air", "⌘F must focus the native CRM search field.")
+        XCTAssertTrue(search.isHittable)
+        XCTAssertTrue(element("crm.inventory.keyFilter", in: app).exists)
 
-        localDetails.click()
-        let company = app.textFields["Organization"]
-        XCTAssertTrue(company.waitForExistence(timeout: 3))
-        XCTAssertTrue(company.isHittable)
-        XCTAssertTrue(app.textFields["Reference keys"].isHittable)
-        XCTAssertTrue(app.textFields["Email addresses"].isHittable)
-        XCTAssertFalse(element("customer.local.note", in: app).exists)
-        XCTAssertFalse(app.staticTexts["Notes for this call"].exists)
-        XCTAssertFalse(app.textViews.firstMatch.exists)
-        XCTAssertFalse(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Saved synthetic")).firstMatch.exists)
-        company.click()
-        company.typeText("Synthetic organization")
-        company.typeKey(XCUIKeyboardKey.return, modifierFlags: [])
-        XCTAssertTrue(answer.exists, "Return in local details must leave the call ringing.")
-        XCTAssertFalse(element("call.end", in: app).exists)
-        XCTAssertFalse(search.exists, "Inactive CRM controls must leave the accessibility tree.")
-        crm.click()
-        XCTAssertTrue(search.waitForExistence(timeout: 3))
-        XCTAssertEqual(search.value as? String, "Air", "Inventory filter survives changing sections.")
-        XCTAssertFalse(company.exists, "Inactive local controls must leave the accessibility tree.")
-        localDetails.click()
-        XCTAssertTrue(company.waitForExistence(timeout: 3))
-        XCTAssertTrue((company.value as? String)?.contains("Synthetic organization") == true)
-
-        app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
-        let closeDetails = element("call.closeCustomerDetails", in: app)
-        XCTAssertTrue(closeDetails.waitForNonExistence(timeout: 3))
-        XCTAssertTrue(answer.exists, "Escape closes details without declining the incoming call.")
-
+        app.typeKey("w", modifierFlags: .command)
+        XCTAssertTrue(answer.exists, "Closing CRM must not decline a ringing call.")
         openDetails.click()
-        XCTAssertTrue(company.waitForExistence(timeout: 3))
-        XCTAssertTrue((company.value as? String)?.contains("Synthetic organization") == true)
-        XCTAssertFalse(element("customer.local.note", in: app).exists)
-        // The details window can cover the call controls. Use macOS's normal
-        // Next Window shortcut, leaving details open, before clicking Answer.
+        XCTAssertTrue(search.waitForExistence(timeout: 4))
+        XCTAssertEqual(search.value as? String, "Air", "Search persists while a live call is active.")
+
+        // Return focus to the call window without closing CRM.
         app.typeKey("`", modifierFlags: .command)
         answer.click()
         let endCall = element("call.end", in: app)
         XCTAssertTrue(endCall.waitForExistence(timeout: 3))
-        XCTAssertTrue(closeDetails.exists, "Answering preserves the open details window.")
-        XCTAssertTrue((company.value as? String)?.contains("Synthetic organization") == true)
         endCall.click()
         XCTAssertTrue(endCall.waitForNonExistence(timeout: 3))
-        XCTAssertTrue(closeDetails.waitForNonExistence(timeout: 3))
     }
 
     func testHistoryLooksUpVisibleRowsAndKeepsUnknownSeparateFromUnanswered() throws {

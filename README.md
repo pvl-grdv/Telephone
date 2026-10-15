@@ -39,7 +39,7 @@ Telephone 2 now includes:
   history;
 - a Swift SIP runtime and Swift PJSIP callbacks, with one narrow C callback
   header at the library boundary;
-- SQLite-backed call history and local customer context;
+- SQLite-backed call history (no duplicate local customer database);
 - App Intents and Shortcuts for calling, settings, and account status;
 - hardened CoreAudio selection, account credentials, and SIP network
   validation;
@@ -88,9 +88,11 @@ data while Telephone is closed. In Finder, use Go → Go to Folder to locate
 private backup. If present, also copy
 `~/Library/Application Support/com.tlphn.Telephone` and
 `~/Library/Preferences/com.tlphn.Telephone.plist`. This retains the SQLite
-database together with its accompanying files. The schema-5 upgrade preserves
-call history and local notes, but removes retired CRM check snapshots; restoring
-those requires the data backup as well as the old app.
+database together with its accompanying files. Schema v6 preserves the call log and prior legacy-history import markers but
+**deletes Telephone-only customer profiles, keys, email addresses, and notes**.
+Back up the database together with its WAL/SHM files before starting the new
+version if any of those local records are valuable. Only live CRM data remains
+available in the client; CRM credentials and tokens are unaffected.
 
 The bundle identifier and settings/Keychain services stay the same. Existing
 SIP accounts and the saved gateway configuration are retained; the app does not
@@ -183,9 +185,9 @@ without delaying ringing:
 4. a configured CRM provider can promote the company name and return reference
    keys, programs associated with those keys, and email addresses.
 
-The CRM interface is present, but this repository does not ship an Avantel CRM
-adapter or credentials. With no CRM provider configured, the provider is
-disabled and local customer context remains local to Telephone.
+The CRM interface uses the separately deployed gateway. If CRM is disabled,
+Telephone still makes and receives calls and records history; it does not show
+a separate local client-card editor.
 
 ### Optional CRM lookup through a gateway
 
@@ -193,7 +195,6 @@ Settings → CRM enables automatic lookup by the actual caller's phone number,
 with a **numeric key number or email address** as a manual fallback in the call
 window's client details section. One exact match shows its organization; multiple matches
 require an explicit choice. Arbitrary SIP usernames are not treated as phones.
-CRM results are never copied into local notes automatically.
 The result shows the owning organization, its code, all keys and all program
 records, including older versions. Key and program links open the key's
 personal account page.
@@ -217,13 +218,15 @@ settings invalidates pending results. Existing SIP/audio behavior is unchanged.
 
 See [the public gateway contract and setup guide](docs/CRM-gateway.md).
 
-CRM is available only in **Client details** during a live call.
-The retired separate CRM verification window and its per-call saved snapshots
-are no longer created. On upgrading an existing database, schema version 5
-removes the obsolete `call_crm_snapshots` table and three unused CRM integration
-scaffolding tables. This **deletes old per-call CRM check results**, not call
-history, locally entered customer details or previous conversation notes.
-Back up your SQLite database first if those legacy checks are needed.
+**Client details** is now a CRM-only, single-pane macOS browser using a native
+`Table`, a key filter, and a single searchable toolbar. Manual lookup by key
+or email lives in a compact popover. Search projection runs off the main actor
+and is cancelled when superseded; it does not contact CRM again.
+
+The old post-call CRM window and all local customer details/notes were
+removed. SQLite schema v6 retains calls and the legacy import marker while
+deleting obsolete customer/CRM tables. An archive requires a data backup made
+before launching the upgraded app.
 
 For diagnosing a PBX integration, Telephone captures a small allowlist of
 identity and routing headers from the original incoming SIP INVITE, including

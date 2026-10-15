@@ -37,7 +37,7 @@ These rules are authoritative for automated coding agents working on this reposi
 
 - Keep CRM authentication, storage rules, organization lookup, key ownership and write routing on the private gateway. The macOS app calls only its generic `/v1` contract; never add private upstream API routes, credentials, hosts or customer fixtures here.
 - Treat gateway result records as data shared by transport, saved snapshots and presentation. Build portal URLs on the gateway; the client validates navigation safety instead of reproducing CRM ID formatting.
-- Presentation may group/filter/sort received programs but must preserve every record. A high version number does not prove an active license. The CRM inventory is used only during live calls. Do not restore the retired CRM-history verification UI or reintroduce obsolete SQLite snapshot storage. The version-5 migration removes unused tables while retaining call history, local customer details and notes.
+- Presentation may group/filter/sort received programs but must preserve every record. A high version number does not prove an active license. The CRM inventory is used only during live calls. Do not restore the retired CRM-history verification UI or reintroduce obsolete SQLite snapshot storage. The version-6 migration removes unused customer cards, local notes and obsolete SQLite tables, while retaining normal call history. Keep the live CRM browser single-pane without a sidebar or duplicated local editor.
 
 ## Build and validation
 

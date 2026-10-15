@@ -40,19 +40,14 @@ struct CallCustomerSummaryView: View {
            case .loaded(let response) = crmKeyLookupModel.state, let customer = response.data {
             company = customer.company.name
         } else {
-            company = model.customerCompany
+            company = ""
         }
         return CallCustomerSummaryIdentity.distinctCompany(
             company, displayedName: model.displayedName, identityDetail: model.identityDetail
-        ) ?? (crmKeyLookupModel?.settings.enabled == true
-              ? NSLocalizedString("CRM", comment: "Compact customer summary without repeated identity.")
-              : NSLocalizedString("Client details", comment: "Compact local details summary."))
+        ) ?? NSLocalizedString("CRM", comment: "Compact customer summary without repeated identity.")
     }
 
     private var detail: String {
-        if model.customerContextSaveConflict || model.customerContextSaveFailed {
-            return NSLocalizedString("Couldn’t save client details", comment: "Local details need attention.")
-        }
         if let crmKeyLookupModel, crmKeyLookupModel.settings.enabled {
             switch crmKeyLookupModel.state {
             case .loading:
@@ -72,14 +67,6 @@ struct CallCustomerSummaryView: View {
                 break
             }
         }
-        if model.customerContextLoadFailed {
-            return NSLocalizedString("Couldn’t load client details", comment: "Local details load failed.")
-        }
-        if !model.customerContextLoaded {
-            return NSLocalizedString("Loading client details…", comment: "Local details loading.")
-        }
-        return model.previousConversationCount > 0
-            ? String(format: NSLocalizedString("%ld previous conversations", comment: "Compact client history count."), model.previousConversationCount)
-            : NSLocalizedString("No previous conversations", comment: "No local client history.")
+        return NSLocalizedString("CRM", comment: "Compact customer summary without repeated identity.")
     }
 }

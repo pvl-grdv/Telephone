@@ -204,26 +204,6 @@ final class CallWindowModel {
     var showsAccountInfo = false
     var isTransfer: Bool { session.isTransfer }
 
-    var customerCompany = ""
-    var customerKeys = ""
-    var customerEmails = ""
-    var customerNote = ""
-    var previousConversationCount = 0
-    var lastCallDate: Date?
-    var recentCustomerNotes: [CustomerContextNote] = []
-    var customerContextLoaded = false
-    var customerContextLoadFailed = false
-    var customerContextSaving = false
-    var customerContextSaveFailed = false
-    var customerContextSaveConflict = false
-    var customerContextSaveSucceeded = false
-
-    var hasCustomerContextData: Bool {
-        [customerCompany, customerKeys, customerEmails, customerNote]
-            .contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            || previousConversationCount > 0 || !recentCustomerNotes.isEmpty
-    }
-
     func showIncomingState() {
         session.showIncomingState()
     }

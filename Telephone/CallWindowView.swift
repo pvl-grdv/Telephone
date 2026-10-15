@@ -9,9 +9,6 @@ import SwiftUI
 struct CallWindowView: View {
     @Bindable var model: CallWindowModel
 
-    @AppStorage(UserDefaultsKeys.showCustomerContext)
-    private var showsCustomerContext = true
-
     let transferDestinationComposer: CallDestinationComposer?
     var crmKeyLookupModel: CRMKeyLookupModel? = nil
 
@@ -27,7 +24,6 @@ struct CallWindowView: View {
     let cancelTransfer: () -> Void
     let completeTransfer: () -> Void
     let showCustomerDetails: () -> Void
-    let customerContextVisibilityChanged: (Bool) -> Void
     let sendDTMF: (String) -> Void
 
     var body: some View {
@@ -58,16 +54,12 @@ struct CallWindowView: View {
             transfer.contentView
                 .interactiveDismissDisabled()
         }
-        .onChange(of: showsCustomerContext) { _, isVisible in
-            customerContextVisibilityChanged(isVisible)
-        }
     }
 
     private var regularContent: some View {
         CompactCallView(
             model: model,
             crmKeyLookupModel: crmKeyLookupModel,
-            showsCustomerContext: showsCustomerContext,
             answer: answer,
             decline: decline,
             hangUp: hangUp,

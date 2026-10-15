@@ -39,7 +39,6 @@ final class CompositionRoot {
     let crmGatewaySettings: CRMGatewaySettings
     let crmKeyLookupProvider: any CRMKeyLookupProvider
     let crmPhoneAppendRegistry: CRMPhoneAppendRegistry
-    let customerContextPendingWrites: CustomerContextPendingWrites
     private let defaults: UserDefaults
 
     private let userAgentEventSource: AKSIPUserAgentEventSource
@@ -57,7 +56,6 @@ final class CompositionRoot {
         crmGatewaySettings = CRMGatewaySettings(defaults: defaults)
         crmKeyLookupProvider = CRMGatewayClient()
         crmPhoneAppendRegistry = CRMPhoneAppendRegistry()
-        customerContextPendingWrites = CustomerContextPendingWrites()
 
         let systemAudioDevicesFactory = CoreAudioSystemAudioDevicesFactory(objectIDs: CoreAudioDevicesAudioObjectIDs())
 

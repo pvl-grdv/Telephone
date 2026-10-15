@@ -205,46 +205,46 @@ extension SQLiteCallHistory: CallHistory {
 
 private extension SQLiteCallHistory {
     func migrateSchema() throws {
-        var version = try userVersion()
+        let version = try userVersion()
         guard version <= TelephoneDatabaseSchema.currentVersion else {
             throw SQLiteStoreError.unsupportedSchema(version)
         }
-
         if version == 0 {
             try transaction {
-                try createSchemaVersion1()
-                try execute("PRAGMA user_version = 1")
+                try createHistoryTable(named: "calls")
+                try createHistoryIndexes()
+                try execute(
+                    """
+                    CREATE TABLE legacy_call_history_migrations (
+                        account_uuid TEXT PRIMARY KEY,
+                        source_path TEXT NOT NULL,
+                        imported_at REAL NOT NULL
+                    )
+                    """
+                )
+                try execute("PRAGMA user_version = 6")
             }
-            version = 1
-        }
-
-        if version < 2 {
+        } else if version < 6 {
+            // An atomic rebuild removes the obsolete party_id foreign key
+            // while preserving all history rows and legacy import markers.
             try transaction {
-                try createSchemaVersion2()
-                try backfillCallParties()
-                try execute("PRAGMA user_version = 2")
-            }
-            version = 2
-        }
-
-        if version < 3 {
-            // Legacy schema milestone: retired snapshot storage is not
-            // created for fresh installs or v2 databases anymore.
-            try execute("PRAGMA user_version = 3")
-            version = 3
-        }
-        if version < 4 {
-            try transaction {
-                guard let connection else { throw SQLiteStoreError.databaseUnavailable }
-                try TelephoneDatabaseSchema.migrateCustomerContextTables(connection: connection)
-                try execute("PRAGMA user_version = 4")
-            }
-            version = 4
-        }
-        if version < 5 {
-            try transaction {
-                try TelephoneDatabaseSchema.removeUnusedTables(execute: execute)
-                try execute("PRAGMA user_version = 5")
+                try createHistoryTable(named: "calls_v6")
+                try execute(
+                    """
+                    INSERT INTO calls_v6 (
+                        identifier, account_uuid, user, host, display_name,
+                        date, duration, incoming, missed
+                    )
+                    SELECT identifier, account_uuid, user, host, display_name,
+                           date, duration, incoming, missed
+                    FROM calls
+                    """
+                )
+                try execute("DROP TABLE calls")
+                try execute("ALTER TABLE calls_v6 RENAME TO calls")
+                try createHistoryIndexes()
+                try TelephoneDatabaseSchema.removeRetiredTables(execute: execute)
+                try execute("PRAGMA user_version = 6")
             }
         }
     }
@@ -257,10 +257,10 @@ private extension SQLiteCallHistory {
         return Int(statement.int(at: 0))
     }
 
-    func createSchemaVersion1() throws {
+    private func createHistoryTable(named name: String) throws {
         try execute(
             """
-            CREATE TABLE IF NOT EXISTS calls (
+            CREATE TABLE \(name) (
                 identifier TEXT NOT NULL,
                 account_uuid TEXT NOT NULL,
                 user TEXT NOT NULL,
@@ -270,144 +270,18 @@ private extension SQLiteCallHistory {
                 duration INTEGER NOT NULL,
                 incoming INTEGER NOT NULL,
                 missed INTEGER NOT NULL,
-                party_id INTEGER,
-                PRIMARY KEY (account_uuid, identifier),
-                FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE SET NULL
-            )
-            """
-        )
-        try execute("CREATE INDEX IF NOT EXISTS calls_account_date ON calls(account_uuid, date DESC)")
-        try execute("CREATE INDEX IF NOT EXISTS calls_account_user ON calls(account_uuid, user)")
-
-        try TelephoneDatabaseSchema.createPartyTables(execute: execute)
-        try execute(
-            """
-            CREATE TABLE IF NOT EXISTS legacy_call_history_migrations (
-                account_uuid TEXT PRIMARY KEY,
-                source_path TEXT NOT NULL,
-                imported_at REAL NOT NULL
+                PRIMARY KEY (account_uuid, identifier)
             )
             """
         )
     }
 
-    func createSchemaVersion2() throws {
-        try TelephoneDatabaseSchema.createCustomerContextTables(
-            execute: execute
-        )
-    }
-
-    func backfillCallParties() throws {
-        let statement = try prepare(
-            """
-            SELECT rowid, user, host, display_name
-            FROM calls
-            WHERE party_id IS NULL
-            """
-        )
-
-        var pending: [(rowID: Int64, partyID: Int64)] = []
-        while statement.step() == SQLITE_ROW {
-            let rowID = statement.int64(at: 0)
-            let user = string(at: 1, from: statement)
-            let host = string(at: 2, from: statement)
-            let displayName = string(at: 3, from: statement)
-            let partyID = try ensureParty(
-                user: user,
-                host: host,
-                displayName: displayName
-            )
-            pending.append((rowID, partyID))
-        }
-
-        for item in pending {
-            let update = try prepare(
-                "UPDATE calls SET party_id = ? WHERE rowid = ?"
-            )
-            sqlite3_bind_int64(update.handle, 1, item.partyID)
-            sqlite3_bind_int64(update.handle, 2, item.rowID)
-            try stepDone(update)
-        }
-    }
-
-    func ensureParty(
-        user: String,
-        host: String,
-        displayName: String
-    ) throws -> Int64 {
-        let address = CustomerPartyAddress(user: user, host: host)
-
-        let lookup = try prepare(
-            """
-            SELECT party_id
-            FROM party_addresses
-            WHERE kind = ? AND normalized_value = ?
-            LIMIT 1
-            """
-        )
-        try bind(address.kind, at: 1, to: lookup)
-        try bind(address.normalizedValue, at: 2, to: lookup)
-
-        if lookup.step() == SQLITE_ROW {
-            let partyID = lookup.int64(at: 0)
-            if !displayName.isEmpty {
-                let update = try prepare(
-                    """
-                    UPDATE parties
-                    SET display_name = CASE
-                        WHEN display_name = '' THEN ?
-                        ELSE display_name
-                    END,
-                    updated_at = ?
-                    WHERE id = ?
-                    """
-                )
-                try bind(displayName, at: 1, to: update)
-                sqlite3_bind_double(update.handle, 2, Date().timeIntervalSinceReferenceDate)
-                sqlite3_bind_int64(update.handle, 3, partyID)
-                try stepDone(update)
-            }
-            return partyID
-        }
-
-        let createParty = try prepare(
-            "INSERT INTO parties (display_name, updated_at) VALUES (?, ?)"
-        )
-        try bind(displayName, at: 1, to: createParty)
-        sqlite3_bind_double(
-            createParty.handle,
-            2,
-            Date().timeIntervalSinceReferenceDate
-        )
-        try stepDone(createParty)
-
-        guard let connection else {
-            throw SQLiteStoreError.databaseUnavailable
-        }
-        let partyID = connection.lastInsertRowID
-
-        let createAddress = try prepare(
-            """
-            INSERT INTO party_addresses
-                (party_id, kind, value, normalized_value, label)
-            VALUES (?, ?, ?, ?, '')
-            """
-        )
-        sqlite3_bind_int64(createAddress.handle, 1, partyID)
-        try bind(address.kind, at: 2, to: createAddress)
-        try bind(address.value, at: 3, to: createAddress)
-        try bind(address.normalizedValue, at: 4, to: createAddress)
-        try stepDone(createAddress)
-
-        return partyID
+    private func createHistoryIndexes() throws {
+        try execute("CREATE INDEX calls_account_date ON calls(account_uuid, date DESC)")
+        try execute("CREATE INDEX calls_account_user ON calls(account_uuid, user)")
     }
 
     func insert(_ record: CallHistoryRecord) throws {
-        let partyID = try ensureParty(
-            user: record.uri.user,
-            host: record.uri.host,
-            displayName: record.uri.displayName
-        )
         let statement = try prepare(
             """
             INSERT OR IGNORE INTO calls
@@ -420,10 +294,9 @@ private extension SQLiteCallHistory {
                     date,
                     duration,
                     incoming,
-                    missed,
-                    party_id
+                    missed
                 )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
         )
 
@@ -436,7 +309,6 @@ private extension SQLiteCallHistory {
         sqlite3_bind_int64(statement.handle, 7, sqlite3_int64(record.duration))
         sqlite3_bind_int(statement.handle, 8, record.isIncoming ? 1 : 0)
         sqlite3_bind_int(statement.handle, 9, record.isMissed ? 1 : 0)
-        sqlite3_bind_int64(statement.handle, 10, partyID)
 
         try stepDone(statement)
     }

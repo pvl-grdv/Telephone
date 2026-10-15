@@ -107,10 +107,6 @@ class CallController: AKSIPCallDelegate {
         call?.isMissed ?? false
     }
 
-    var customerContextAccountUUID: String? {
-        accountController?.account.uuid ?? call?.sipAccount.uuid
-    }
-
     let userAgent: AKSIPUserAgent
     let defaults: UserDefaults
     private(set) var presentation: CallPresentationCoordinator!
@@ -164,10 +160,6 @@ class CallController: AKSIPCallDelegate {
     func close() {
         presentation.closeWindow()
         callWindowDidClose()
-    }
-
-    func flushPendingCustomerContextChanges() async {
-        await presentation.flushPendingCustomerContextChanges()
     }
 
     func callWindowDidClose() {

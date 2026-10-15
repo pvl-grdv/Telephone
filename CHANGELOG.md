@@ -7,10 +7,12 @@
   SwiftUI while retaining focused AppKit integration where macOS requires it.
 - Moved the SIP runtime and PJSIP callback handling to Swift, leaving a narrow
   C boundary for the external PJSIP library.
-- Added SQLite-backed call history and local customer context.
+- Added SQLite-backed call history; retired local customer context.
 - Removed the unused post-call CRM verification UI and saved CRM snapshots.
-  SQLite schema v5 prunes obsolete tables without removing call history or
-  local customer notes; previous saved CRM check results are deleted.
+  SQLite schema v5 pruned obsolete snapshots. Schema v6 removes the remaining
+  Telephone-only customer profiles, keys, emails and notes while preserving
+  the normal call history. The native CRM browser is now one table with
+  a toolbar search and key picker; filtering is asynchronous.
 - Added App Intents and Shortcuts for calling, settings, and account status.
 - Hardened account credentials, Contacts integration, CoreAudio selection,
   SIP lifecycle handling, and database migration behavior.

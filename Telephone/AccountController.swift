@@ -30,7 +30,6 @@ final class AccountController:
     let crmGatewaySettings: CRMGatewaySettings
     let crmKeyLookupProvider: any CRMKeyLookupProvider
     let crmPhoneAppendRegistry: CRMPhoneAppendRegistry
-    let customerContextPendingWrites: CustomerContextPendingWrites
 
     var enabled = false
 
@@ -101,7 +100,6 @@ final class AccountController:
         crmGatewaySettings: CRMGatewaySettings = CRMGatewaySettings(),
         crmKeyLookupProvider: any CRMKeyLookupProvider = CRMGatewayClient(),
         crmPhoneAppendRegistry: CRMPhoneAppendRegistry = CRMPhoneAppendRegistry(),
-        customerContextPendingWrites: CustomerContextPendingWrites = CustomerContextPendingWrites(),
         callControllerDidClose: @escaping @MainActor () -> Void = {}
     ) {
         self.account = account
@@ -109,7 +107,6 @@ final class AccountController:
         self.crmGatewaySettings = crmGatewaySettings
         self.crmKeyLookupProvider = crmKeyLookupProvider
         self.crmPhoneAppendRegistry = crmPhoneAppendRegistry
-        self.customerContextPendingWrites = customerContextPendingWrites
         self.userAgent = userAgent
         self.ringtonePlayback = ringtonePlayback
         self.sleepStatus = sleepStatus
@@ -446,12 +443,6 @@ final class AccountController:
         }
 
         presentIncoming(call)
-    }
-
-    func flushPendingCustomerContextChanges() async {
-        for controller in callControllers {
-            await controller.flushPendingCustomerContextChanges()
-        }
     }
 
     // MARK: - CallControllerDelegate

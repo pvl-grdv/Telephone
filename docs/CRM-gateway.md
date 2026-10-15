@@ -213,8 +213,7 @@ organization ID. Its navigation allowlist accepts only canonical HTTPS URLs on
 no port, credentials, query, fragment or encoded path. The organization segment
 is opaque to the Mac and must match across all keys in an inventory; the numeric
 key segment must match its record. Program links must equal their containing
-key's URL. The same checks run when saved history is restored, preserving the
-validated URL unchanged. The gateway is responsible for the semantic link
+key's URL. Gateway URLs are validated before presentation. The gateway is responsible for the semantic link
 between the organization ID and that URL segment. Browser portal sessions are
 independent; gateway tokens are never added to portal URLs.
 
@@ -226,7 +225,7 @@ ID order. This transport order does not identify the latest version. Each
 versions; the response does not establish which record is active or licensed.
 
 `CRMInventoryPresentation` prepares a display-only view of that complete
-inventory, shared by live calls and saved history checks:
+inventory for live-call CRM only:
 
 - The manually searched key appears first; other keys use ascending key number.
 - Programs are grouped by `programId`. Records without that ID use their
@@ -238,6 +237,11 @@ inventory, shared by live calls and saved history checks:
 - Search matches key number/name or program name/version/release. A matching
   program keeps its complete version history visible. Clearing search restores
   the full inventory. Filtering sends no additional gateway request.
+
+The SwiftUI browser uses one native `Table` with a key `Picker`; the
+`.searchable` field lives in the window toolbar. Expensive filtering runs
+off the main actor after a short debounce. There is no sidebar or alternate
+compact rendering path; no records are removed to simplify the view.
 
 Displayed totals distinguish keys, program groups and individual records. The
 gateway response and persisted history data retain the original records and
@@ -296,30 +300,6 @@ Append is never retried automatically. Call/input/settings changes invalidate
 the confirmation and UI result. A request accepted by the gateway can still
 finish on the server after the window closes.
 
-### From an existing call in history
-
-History can also offer **Link number to organization** after a matched manual
-key lookup and only when the existing call's stored peer `user` contains a full
-phone number. A saved result does not authorize a write on its own. Telephone
-re-reads the phone from that call and performs a fresh key lookup before showing
-the confirmation; it verifies the same source key and owner. The gateway's
-current raw `company.phone` is held only in memory as `expectedPhone` for this
-one confirmation and is never saved in the SQLite snapshot. The dialog shows
-the exact phone and organization; dismissing it sends no append request.
-
-On confirmation, Telephone checks that the same call still exists, its phone
-still matches, and the call, settings and lookup generations are current. It
-then sends one append request. A second activation of the same confirmation
-cannot send a second request. Email and phone lookup results, invalid internal
-extensions, changed key ownership, or a deleted call cannot start this write.
-After a confirmed success, the normalized organization inventory and updated
-canonical phones replace that call's local snapshot. The raw CRM phone field is
-removed. A local SQLite save error is reported separately from the completed
-CRM write. If the append response cannot establish the write outcome, the UI
-shows an unconfirmed result; the user must perform another fresh key lookup
-before trying again. Closing the sheet after the request was sent cannot
-guarantee that the server did not complete it.
-
 ## Errors and completeness
 
 | Condition | Telephone behavior |
@@ -352,12 +332,12 @@ The separate CRM verification window for old calls, manual history lookup,
 post-call phone association and local CRM result snapshots have been removed.
 Telephone does not run automatic CRM checks when calls end.
 
-Database schema v5 drops `call_crm_snapshots`, `party_attributes`,
-`external_refs`, and `crm_sync_state` (none are used by the live call
-integration). The migration deletes **existing saved historical CRM checks**.
-It leaves the `calls` history and the active local customer context tables,
-including `party_notes`, untouched. Back up the SQLite database before
-upgrading if the old saved verification data must be archived.
+Schema v6 removes the old CRM snapshots and Telephone-only customer profiles,
+key references, email addresses, and notes. It rebuilds `calls` without the
+obsolete `party_id` foreign key, while preserving call history and import
+markers. Old local details are permanently discarded on upgrade; archive
+`Telephone.sqlite3` (including WAL/SHM) before launching if needed.
+The Mac no longer persists any CRM inventory or local client-card data.
 
 ### Shared gateway behavior
 
@@ -373,9 +353,8 @@ upgrading if the old saved verification data must be archived.
 - Lookup state tracks request, call context and settings generations. Late
   responses are ignored. Phone confirmation carries the same scope and snapshot.
 - Live-call results are transient UI data and are not persisted as CRM
-  snapshots. They do not replace SIP caller identity or automatically update
-  local customer notes. The only CRM change is the explicitly confirmed phone
-  append through the gateway.
+  snapshots. They do not replace SIP caller identity. The only CRM change
+  is the explicitly confirmed phone append through the gateway.
 - Non-secret settings use local UserDefaults; gateway tokens use Keychain.
   Requests, tokens and customer responses are not logged by the client.
 - Production origins/tokens, upstream credentials, real customers and captured

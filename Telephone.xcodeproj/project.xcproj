@@ -82,7 +82,6 @@
             { "path": "CallTransferCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallWindowScene.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "WeakObjectRegistry.swift", "target-membership": [ "Telephone/compile-sources", "TelephonePresentationTests/compile-sources" ] },
-            { "path": "CustomerContextCoordinator.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CRMGatewayClient.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "CRMIntegrationRecords.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "CRMInventoryPresentation.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
@@ -112,7 +111,6 @@
             { "path": "DTMFInputSurface.swift", "target-membership": [ "Telephone/compile-sources", "TelephonePresentationTests/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "CallControlViews.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "CallTransferViews.swift", "target-membership": [ "Telephone/compile-sources" ] },
-            { "path": "CustomerContextView.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
           ],
         }, {
           "kind": "group",
@@ -165,17 +163,6 @@
               ],
             },
             { "path": "NotifyingCallHistoryFactory.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-            {
-              "path": "CustomerPartyAddress.swift",
-              "encoding": "utf8",
-              "target-membership": [
-                "Telephone/compile-sources",
-                "TelephoneTests/compile-sources",
-              ],
-            },
-            { "path": "CustomerContextStore.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
-            { "path": "CustomerContextStorage.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
-            { "path": "<PROJECT>/TelephoneTests/CustomerContextStoreTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "TelephoneDatabaseSchema.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "SQLiteSupport.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "SQLiteCallHistory.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },

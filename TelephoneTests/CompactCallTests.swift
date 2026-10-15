@@ -20,21 +20,16 @@ struct CompactCallTests {
             displayedName: "Other 1234567", identityDetail: "+70005550101") == "Company 1234567")
     }
 
-    @Test func closingAndReopeningDetailsKeepsPendingLookupAndDraft() async throws {
+    @Test func closingAndReopeningDetailsKeepsPendingLookup() async throws {
         _ = NSApplication.shared
         let fixture = try await makeFixture(delayed: true)
         fixture.lookup.setCallerPhone("+70005550101", isActive: true)
         await waitForRequest(fixture.provider)
-        var saves = 0
-        let details = controller(fixture) { saves += 1 }
+        let details = controller(fixture)
         details.present()
         await settleWindow()
-        fixture.call.customerNote = "Unfinished synthetic note"
         details.close()
-        await settleWindow()
-        #expect(saves == 1)
         #expect(fixture.lookup.state == .loading)
-        #expect(fixture.call.customerNote == "Unfinished synthetic note")
         await fixture.provider.finishPhoneLookup()
         await waitUntilLoaded(fixture.lookup)
         let result = fixture.lookup.state
@@ -47,12 +42,11 @@ struct CompactCallTests {
         fixture.call.showEndedState()
         #expect(details.window?.isVisible == true)
         details.close()
-        #expect(saves == 2)
         fixture.lookup.deactivateContext()
         #expect(fixture.lookup.state == .idle)
     }
 
-    @Test func separateCallsKeepSeparateWindowsDraftsAndLookupState() async throws {
+    @Test func separateCallsKeepIndependentCRMWindowsAndLookupState() async throws {
         _ = NSApplication.shared
         let first = try await makeFixture()
         let second = try await makeFixture()
@@ -66,10 +60,8 @@ struct CompactCallTests {
         secondWindow.present()
         defer { firstWindow.close(); secondWindow.close() }
         #expect(firstWindow.window !== secondWindow.window)
-        first.call.customerNote = "Only the first call"
         firstWindow.close()
         #expect(secondWindow.window?.isVisible == true)
-        #expect(second.call.customerNote.isEmpty)
         #expect(second.lookup.callerPhone == "+70005550102")
         first.lookup.resetContext()
         #expect(first.lookup.callerPhone == nil)
@@ -220,27 +212,17 @@ struct CompactCallTests {
                 try capture(view, to: output.appendingPathComponent("live-client-details-\(appearance)-\(width).png"))
             }
             details.close()
-            let local = CallCustomerDetailsWindowController(model: fixture.call, crmKeyLookupModel: nil,
-                changed: {}, reload: {}, save: {}, saveOnClose: {})
-            let localWindow = try #require(local.window)
-            localWindow.appearance = NSAppearance(named: scheme == .dark ? .darkAqua : .aqua)
-            local.present()
-            localWindow.setContentSize(NSSize(width: 660, height: 500))
-            try capture(try #require(localWindow.contentView),
-                        to: output.appendingPathComponent("live-client-local-details-\(appearance)-660.png"))
-            local.close()
         }
     }
 
     private func compact(_ fixture: Fixture) -> some View {
-        CompactCallView(model: fixture.call, crmKeyLookupModel: fixture.lookup, showsCustomerContext: true,
+        CompactCallView(model: fixture.call, crmKeyLookupModel: fixture.lookup,
             answer: {}, decline: {}, hangUp: {}, toggleMute: {}, toggleHold: {}, showTransfer: {},
             redial: {}, showCustomerDetails: {}, sendDTMF: { _ in })
     }
 
-    private func controller(_ fixture: Fixture, save: @escaping () -> Void = {}) -> CallCustomerDetailsWindowController {
-        CallCustomerDetailsWindowController(model: fixture.call, crmKeyLookupModel: fixture.lookup,
-            changed: {}, reload: {}, save: {}, saveOnClose: save)
+    private func controller(_ fixture: Fixture) -> CallCustomerDetailsWindowController {
+        CallCustomerDetailsWindowController(model: fixture.call, crmKeyLookupModel: fixture.lookup)
     }
 
     private func makeFixture(delayed: Bool = false) async throws -> Fixture {
@@ -252,8 +234,6 @@ struct CompactCallTests {
         model.displayedName = "Example Organization"
         model.identityDetail = "+7 (000) 555-01-01"
         model.status = "calling"
-        model.customerContextLoaded = true
-        model.previousConversationCount = 4
         model.session.muteEnabled = true
         model.session.holdEnabled = true
         model.session.transferEnabled = true

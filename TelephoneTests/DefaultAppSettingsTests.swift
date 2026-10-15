@@ -49,7 +49,6 @@ struct DefaultAppSettingsTests {
 
         sut.register()
 
-        #expect(settings.registeredDefaults[UserDefaultsKeys.showCustomerContext] as! Bool)
     }
 
     @Test func formatTelephoneNumbersIsFalseForGermanLocalization() {

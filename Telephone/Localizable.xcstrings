@@ -1,52 +1,6 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "%ld previous · %@": {
-      "comment": "Previous conversations count and most recent date.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%ld previous · %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%ld vorherige · %@"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ранее: %ld · %@"
-          }
-        }
-      }
-    },
-    "%ld previous conversations": {
-      "comment": "Previous conversations count.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%ld previous conversations"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%ld frühere Gespräche"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Предыдущих разговоров: %ld"
-          }
-        }
-      }
-    },
     "About Telephone": {
       "comment": "Fork identity, validation, and modern call-history UI.",
       "localizations": {
@@ -225,28 +179,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Добавить аккаунт"
-          }
-        }
-      }
-    },
-    "Add client details": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add client details"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kundendetails hinzufügen"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Добавить данные клиента"
           }
         }
       }
@@ -1440,52 +1372,6 @@
         }
       }
     },
-    "Couldn’t load client details": {
-      "comment": "Customer context load failure.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn’t load client details"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kundendetails konnten nicht geladen werden"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не удалось загрузить данные клиента"
-          }
-        }
-      }
-    },
-    "Couldn’t save client details": {
-      "comment": "Customer context save failure.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn’t save client details"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kundendetails konnten nicht gespeichert werden"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не удалось сохранить данные клиента"
-          }
-        }
-      }
-    },
     "CRM keys": {
       "comment": "Local customer CRM keys field placeholder.",
       "localizations": {
@@ -1801,29 +1687,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Добавить"
-          }
-        }
-      }
-    },
-    "Email addresses": {
-      "comment": "Local customer email field placeholder.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email addresses"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "E-Mail-Adressen"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Электронная почта"
           }
         }
       }
@@ -2351,28 +2214,6 @@
         }
       }
     },
-    "Loading client details…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Loading client details…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kundendetails werden geladen…"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Загрузка данных клиента…"
-          }
-        }
-      }
-    },
     "Local SIP Port": {
       "comment": "Network settings label.",
       "localizations": {
@@ -2671,29 +2512,6 @@
         }
       }
     },
-    "No previous conversations": {
-      "comment": "Customer has no previous conversations in Telephone.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No previous conversations"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine früheren Gespräche"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ранее не общались"
-          }
-        }
-      }
-    },
     "No Results": {
       "comment": "Call history search has no matches title.",
       "localizations": {
@@ -2713,29 +2531,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ничего не найдено"
-          }
-        }
-      }
-    },
-    "Notes for this call": {
-      "comment": "Call note editor placeholder.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notes for this call"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notizen zu diesem Gespräch"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Заметки по этому разговору"
           }
         }
       }
@@ -3029,29 +2824,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Открывает настройки Telephone."
-          }
-        }
-      }
-    },
-    "Organization": {
-      "comment": "Local customer organization field placeholder.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisation"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Организация"
           }
         }
       }
@@ -3420,28 +3192,6 @@
         }
       }
     },
-    "Reference keys": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reference keys"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Referenzschlüssel"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ключи клиента"
-          }
-        }
-      }
-    },
     "Registry Server": {
       "comment": "Account settings label.",
       "localizations": {
@@ -3764,52 +3514,6 @@
         }
       }
     },
-    "Saved client details": {
-      "comment": "Customer context saved status.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saved client details"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kundendetails gespeichert"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Данные клиента сохранены"
-          }
-        }
-      }
-    },
-    "Saving client details…": {
-      "comment": "Customer context saving status.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saving client details…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kundendetails werden gespeichert…"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сохранение данных клиента…"
-          }
-        }
-      }
-    },
     "Search Call History": {
       "comment": "Call history search field placeholder.",
       "localizations": {
@@ -4023,29 +3727,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показать еще %d…"
-          }
-        }
-      }
-    },
-    "Show customer context during calls": {
-      "comment": "General settings toggle.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show customer context during calls"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kundenkontext während Anrufen anzeigen"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Показывать данные клиента во время звонков"
           }
         }
       }
@@ -7179,98 +6860,6 @@
         }
       }
     },
-    "Reload saved details and discard this draft?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reload saved details and discard this draft?"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Загрузить сохранённые данные и отменить этот черновик?"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gespeicherte Angaben laden und diesen Entwurf verwerfen?"
-          }
-        }
-      }
-    },
-    "Reload saved details": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reload saved details"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Загрузить сохранённые данные"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gespeicherte Angaben laden"
-          }
-        }
-      }
-    },
-    "Client details changed in another call": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Client details changed in another call"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Данные клиента изменены в другом звонке"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kundendaten wurden in einem anderen Anruf geändert"
-          }
-        }
-      }
-    },
-    "Your draft is kept. Reload saved details to start again.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your draft is kept. Reload saved details to start again."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ваш черновик сохранён в окне. Загрузите сохранённые данные, чтобы начать заново."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ihr Entwurf bleibt erhalten. Laden Sie die gespeicherten Angaben, um neu zu beginnen."
-          }
-        }
-      }
-    },
     "All keys": {
       "extractionState": "manual",
       "localizations": {
@@ -7639,52 +7228,6 @@
         }
       }
     },
-    "Local details": {
-      "comment": "Telephone-only organization, reference keys, and email tab.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Local details"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokale Angaben"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Локальные данные"
-          }
-        }
-      }
-    },
-    "These details are saved in Telephone and do not change CRM.": {
-      "comment": "Local fields are independent of gateway CRM data.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "These details are saved in Telephone and do not change CRM."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese Angaben werden in Telephone gespeichert und ändern keine CRM-Daten."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Эти сведения сохраняются в Telephone и не изменяют данные CRM."
-          }
-        }
-      }
-    },
     "Refresh Call Answers": {
       "comment": "Incoming call answer history status.",
       "localizations": {
@@ -8026,6 +7569,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "АТС: время звонка не совпадает"
+          }
+        }
+      }
+    },
+    "Filter by key": {
+      "comment": "CRM inventory filter and manual lookup navigation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by key"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Schlüssel filtern"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фильтр по ключу"
+          }
+        }
+      }
+    },
+    "Search by key or email…": {
+      "comment": "CRM inventory filter and manual lookup navigation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search by key or email…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Schlüssel oder E-Mail suchen…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти по ключу или email…"
           }
         }
       }

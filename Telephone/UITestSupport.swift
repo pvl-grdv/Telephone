@@ -42,9 +42,6 @@ enum TelephoneUITestSupport {
             case "account-setup":
                 coordinator.showAccountSetupForUITesting()
             case "incoming-call", "incoming-call-details":
-                if scenario != "incoming-call" {
-                    UserDefaults.standard.set(true, forKey: UserDefaultsKeys.showCustomerContext)
-                }
                 await UITestCallSceneController.shared.show(includeCRM: scenario == "incoming-call-details")
             case "call-history":
                 await UITestHistorySceneController.shared.show()
@@ -72,10 +69,6 @@ enum TelephoneUITestSupport {
         defaults.set(
             SettingsSection.general.rawValue,
             forKey: UserDefaultsKeys.settingsSection
-        )
-        defaults.set(
-            false,
-            forKey: UserDefaultsKeys.showCustomerContext
         )
     }
 #endif
@@ -220,7 +213,6 @@ private struct UITestIncomingCallView: View {
             cancelTransfer: {},
             completeTransfer: {},
             showCustomerDetails: showCustomerDetails,
-            customerContextVisibilityChanged: { _ in },
             sendDTMF: { _ in }
         )
         .onAppear {
@@ -232,11 +224,6 @@ private struct UITestIncomingCallView: View {
         guard !configured else { return }
         configured = true
 
-        model.customerContextLoaded = true
-        model.customerNote = "Saved synthetic call note"
-        model.recentCustomerNotes = [
-            CustomerContextNote(id: 1, body: "Saved synthetic previous note", updatedAt: .distantPast)
-        ]
         model.displayedName = "Ada Lovelace"
         model.identityDetail = "+1 202 555 0100"
         model.status = NSLocalizedString(
@@ -265,9 +252,10 @@ private struct UITestIncomingCallView: View {
     }
 
     private func showCustomerDetails() {
+        guard let crmKeyLookupModel else { return }
         if customerDetailsWindow == nil {
             customerDetailsWindow = CallCustomerDetailsWindowController(
-                model: model, crmKeyLookupModel: crmKeyLookupModel, changed: {}, reload: {}, save: {}, saveOnClose: {}
+                model: model, crmKeyLookupModel: crmKeyLookupModel
             )
         }
         customerDetailsWindow?.present()

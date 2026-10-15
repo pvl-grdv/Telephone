@@ -6,7 +6,7 @@ import UseCases
 @CallHistoryActor
 struct SQLiteCallIdentityTests {
     @Test func persistedIdentityRoundTripsAndRemovesExactCall() throws {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".sqlite3")
+        let url = temporaryDatabase()
         let history = SQLiteCallHistory(databaseURL: url, accountUUID: "account-a")
         let sameAddress = URI(user: "+70005550101", host: "", displayName: "Example")
         let first = CallHistoryRecord(uri: sameAddress, date: Date(timeIntervalSinceReferenceDate: 42),
@@ -16,104 +16,127 @@ struct SQLiteCallIdentityTests {
         history.add(first)
         history.add(second)
         let reopened = SQLiteCallHistory(databaseURL: url, accountUUID: "account-a")
-        #expect(reopened.allRecords.map { $0.identifier } == ["first-uuid", "second-uuid"])
+        #expect(reopened.allRecords.map(\.identifier) == ["first-uuid", "second-uuid"])
         reopened.remove(reopened.allRecords[0])
-        #expect(reopened.allRecords.map { $0.identifier } == ["second-uuid"])
+        #expect(reopened.allRecords.map(\.identifier) == ["second-uuid"])
         let other = SQLiteCallHistory(databaseURL: url, accountUUID: "account-b")
         other.add(first)
-        #expect(other.allRecords.map { $0.identifier } == ["first-uuid"])
-        #expect(reopened.allRecords.map { $0.identifier } == ["second-uuid"])
+        #expect(other.allRecords.map(\.identifier) == ["first-uuid"])
+        #expect(reopened.allRecords.map(\.identifier) == ["second-uuid"])
     }
 
-    @Test func retiredCRMStorageIsPrunedWithoutDeletingCallsOrNotes() throws {
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString + ".sqlite3")
-        let history = SQLiteCallHistory(databaseURL: url, accountUUID: "synthetic-account")
-        history.add(CallHistoryRecord(
-            uri: URI(user: "+70005550101", host: "", displayName: "Example"),
-            date: Date(timeIntervalSinceReferenceDate: 42),
-            duration: 12, isIncoming: true, isMissed: false,
-            identifier: "synthetic-call"
-        ))
-
+    @Test func upgradingV5RetiresAllLocalDetailsButPreservesEveryCallAndImportMarker() throws {
+        let url = temporaryDatabase()
         let db = try SQLiteConnectionPool.shared.connection(at: url)
-        // Finalize all prepared statements before reopening/migrating the
-        // SQLite database. An active SELECT cursor blocks DROP TABLE on the
-        // pooled connection even when the table being dropped is unrelated.
-        do {
-            let party = try db.prepare(
-                "SELECT party_id FROM calls WHERE account_uuid = 'synthetic-account'"
+
+        // Synthetic v5 database. No real customer data or credentials.
+        try db.execute("""
+            CREATE TABLE parties(id INTEGER PRIMARY KEY, display_name TEXT)
+            """)
+        try db.execute("""
+            CREATE TABLE calls (
+                identifier TEXT NOT NULL, account_uuid TEXT NOT NULL,
+                user TEXT NOT NULL, host TEXT NOT NULL, display_name TEXT NOT NULL DEFAULT '',
+                date REAL NOT NULL, duration INTEGER NOT NULL, incoming INTEGER NOT NULL,
+                missed INTEGER NOT NULL, party_id INTEGER,
+                PRIMARY KEY(account_uuid, identifier),
+                FOREIGN KEY(party_id) REFERENCES parties(id) ON DELETE SET NULL
             )
-            #expect(party.step() == SQLITE_ROW)
-            let partyID = party.int64(at: 0)
-            let note = try db.prepare(
-                """
-                INSERT INTO party_notes (
-                    party_id, account_uuid, call_identifier,
-                    body, created_at, updated_at
-                ) VALUES (?, 'synthetic-account', 'synthetic-call', 'User note', 1, 1)
-                """
+            """)
+        try db.execute("""
+            CREATE TABLE legacy_call_history_migrations (
+                account_uuid TEXT PRIMARY KEY, source_path TEXT NOT NULL,
+                imported_at REAL NOT NULL
             )
-            sqlite3_bind_int64(note.handle, 1, partyID)
-            try note.stepDone()
+            """)
+        try db.execute("INSERT INTO parties VALUES (1, 'Local draft')")
+        try db.execute("""
+            INSERT INTO calls VALUES
+                ('shared', 'account-a', '+70005550101', '', 'Example', 42, 12, 1, 0, 1),
+                ('shared', 'account-b', '+70005550102', '', 'Other', 43, 0, 1, 1, 1)
+            """)
+        try db.execute("""
+            INSERT INTO legacy_call_history_migrations VALUES ('account-a', 'old-history.plist', 5)
+            """)
+        try db.execute("""
+            CREATE TABLE party_notes (
+                id INTEGER PRIMARY KEY, party_id INTEGER NOT NULL,
+                body TEXT, FOREIGN KEY(party_id) REFERENCES parties(id) ON DELETE CASCADE
+            )
+            """)
+        try db.execute("INSERT INTO party_notes VALUES (1, 1, 'Discard this note')")
+        try db.execute("""
+            CREATE TABLE party_keys (
+                id INTEGER PRIMARY KEY, party_id INTEGER NOT NULL,
+                FOREIGN KEY(party_id) REFERENCES parties(id) ON DELETE CASCADE
+            )
+            """)
+        try db.execute("""
+            CREATE TABLE party_addresses (
+                id INTEGER PRIMARY KEY, party_id INTEGER NOT NULL,
+                FOREIGN KEY(party_id) REFERENCES parties(id) ON DELETE CASCADE
+            )
+            """)
+        for table in ["call_crm_snapshots", "party_attributes", "external_refs", "crm_sync_state"] {
+            try db.execute("CREATE TABLE \(table) (value TEXT)")
         }
+        try db.execute("PRAGMA user_version = 5")
 
-        // Simulate a database last opened by the previous version (v4).
-        try db.execute(
-            "CREATE TABLE call_crm_snapshots (account_uuid TEXT, snapshot_json TEXT)"
-        )
-        try db.execute(
-            "INSERT INTO call_crm_snapshots VALUES ('synthetic-account', '{\"legacy\":true}')"
-        )
-        try db.execute("CREATE TABLE party_attributes (key TEXT)")
-        try db.execute("CREATE TABLE external_refs (provider TEXT)")
-        try db.execute("CREATE TABLE crm_sync_state (provider TEXT)")
-        try db.execute("PRAGMA user_version = 4")
+        let history = SQLiteCallHistory(databaseURL: url, accountUUID: "account-a")
+        let recordsA = history.allRecords
+        #expect(recordsA.count == 1)
+        #expect(recordsA.first?.identifier == "shared")
+        #expect(recordsA.first?.uri.user == "+70005550101")
+        #expect(recordsA.first?.duration == 12)
+        let recordsB = SQLiteCallHistory(databaseURL: url, accountUUID: "account-b").allRecords
+        #expect(recordsB.count == 1)
+        #expect(recordsB.first?.isMissed == true)
 
-        let reopened = SQLiteCallHistory(databaseURL: url, accountUUID: "synthetic-account")
-        #expect(reopened.allRecords.map(\.identifier) == ["synthetic-call"])
         let version = try db.prepare("PRAGMA user_version")
         #expect(version.step() == SQLITE_ROW)
         #expect(version.int(at: 0) == TelephoneDatabaseSchema.currentVersion)
 
-        for retired in [
-            "call_crm_snapshots", "party_attributes",
-            "external_refs", "crm_sync_state"
-        ] {
-            let table = try db.prepare(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?"
-            )
-            try table.bind(retired, at: 1)
-            #expect(table.step() != SQLITE_ROW, "Retired table still exists: \(retired)")
-        }
-        let notes = try db.prepare("SELECT body FROM party_notes LIMIT 1")
-        #expect(notes.step() == SQLITE_ROW)
-        #expect(notes.string(at: 0) == "User note")
+        let migration = try db.prepare(
+            "SELECT source_path FROM legacy_call_history_migrations WHERE account_uuid='account-a'"
+        )
+        #expect(migration.step() == SQLITE_ROW)
+        #expect(migration.string(at: 0) == "old-history.plist")
+
+        assertOnlyHistoryTablesRemain(db)
     }
 
-    @Test func aFreshDatabaseDoesNotCreateRetiredTables() throws {
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString + ".sqlite3")
-        _ = SQLiteCallHistory(databaseURL: url, accountUUID: "synthetic-account")
+    @Test func newDatabaseContainsNoLocalCustomerStorageOrPartyColumn() throws {
+        let url = temporaryDatabase()
+        let history = SQLiteCallHistory(databaseURL: url, accountUUID: "account")
+        history.add(CallHistoryRecord(
+            uri: URI(user: "101", host: "account.invalid", displayName: ""),
+            date: Date(timeIntervalSinceReferenceDate: 15), duration: 0,
+            isIncoming: true, isMissed: true
+        ))
         let db = try SQLiteConnectionPool.shared.connection(at: url)
-        for retired in [
-            "call_crm_snapshots", "party_attributes",
-            "external_refs", "crm_sync_state"
-        ] {
-            let table = try db.prepare(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?"
+        assertOnlyHistoryTablesRemain(db)
+        let columns = try db.prepare("PRAGMA table_info(calls)")
+        var names: [String] = []
+        while columns.step() == SQLITE_ROW { names.append(columns.string(at: 1)) }
+        #expect(!names.contains("party_id"))
+        #expect(history.allRecords.count == 1)
+    }
+
+    private func assertOnlyHistoryTablesRemain(_ db: SQLiteConnection) {
+        do {
+            let statement = try db.prepare(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
             )
-            try table.bind(retired, at: 1)
-            #expect(table.step() != SQLITE_ROW, "New database created obsolete table: \(retired)")
+            var names: [String] = []
+            while statement.step() == SQLITE_ROW { names.append(statement.string(at: 0)) }
+            #expect(names == ["calls", "legacy_call_history_migrations"])
+        } catch {
+            Issue.record("Could not inspect SQLite schema")
         }
     }
 
-    @Test func legacyDerivedIdentityRemainsUnchangedWhenRead() {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".sqlite3")
-        let history = SQLiteCallHistory(databaseURL: url, accountUUID: "legacy")
-        let legacy = CallHistoryRecord(uri: URI(user: "101", host: "account.invalid", displayName: ""),
-            date: Date(timeIntervalSinceReferenceDate: 15), duration: 0, isIncoming: true, isMissed: true)
-        history.add(legacy)
-        #expect(history.allRecords.first?.identifier == legacy.identifier)
+    private func temporaryDatabase() -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString + ".sqlite3")
     }
 }

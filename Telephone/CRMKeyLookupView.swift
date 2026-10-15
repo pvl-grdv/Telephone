@@ -7,57 +7,39 @@ import SwiftUI
 
 struct CRMKeyLookupView: View {
     @Bindable var model: CRMKeyLookupModel
+    @State private var showsManualSearch = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(NSLocalizedString("CRM", comment: "CRM lookup section title."))
-                    .font(.caption.weight(.semibold))
+            HStack(spacing: 8) {
                 if let phone = model.callerPhone {
                     Text(phone)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
-                    Spacer()
                     Button(NSLocalizedString("Find by phone", comment: "Retry caller phone CRM lookup.")) {
                         model.searchCallerPhone()
                     }
                     .controlSize(.small)
                     .disabled(model.state == .loading || model.phoneLinkState == .saving)
                 }
-            }
-            HStack {
-                TextField(
-                    NSLocalizedString("Key number", comment: "CRM numeric key input."),
-                    text: $model.keyNumber
-                )
-                .textFieldStyle(.roundedBorder)
-                .accessibilityIdentifier("customer.crm.keyNumber")
-                .disabled(model.phoneLinkState == .saving)
-                .onSubmit { if model.canSearch { model.search() } }
-                Button(NSLocalizedString("Find by key", comment: "CRM key search button.")) { model.search() }
-                    .disabled(!model.canSearch)
-                    .accessibilityIdentifier("customer.crm.search")
-            }
-            .controlSize(.small)
 
-            HStack {
-                TextField(NSLocalizedString("Email address", comment: "Manual CRM email input."), text: $model.email)
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityIdentifier("customer.crm.email")
-                    .disabled(model.phoneLinkState == .saving)
-                    .onSubmit { if model.canSearchEmail { model.searchEmail() } }
-                Button(NSLocalizedString("Find by email", comment: "Manual CRM email search.")) { model.searchEmail() }
-                    .disabled(!model.canSearchEmail)
-                    .accessibilityIdentifier("customer.crm.searchEmail")
+                Spacer(minLength: 8)
+                Button(NSLocalizedString("Search by key or email…", comment: "Manual CRM lookup actions.")) {
+                    showsManualSearch = true
+                }
+                .controlSize(.small)
+                .popover(isPresented: $showsManualSearch, arrowEdge: .bottom) {
+                    manualSearch
+                }
             }
-            .controlSize(.small)
 
             lookupContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             phoneLinkContent
         }
-        // The call presentation owns lookup lifetime. Hiding this editor must
-        // not cancel the automatic caller lookup or a dispatched phone append.
+        // Closing the browser must not cancel the automatic caller lookup or
+        // a dispatched phone append. Only explicit Cancel can dismiss these.
         .confirmationDialog(
             Text(NSLocalizedString("Link phone to organization", comment: "CRM phone linking confirmation title.")),
             item: $model.pendingPhoneLink,
@@ -78,6 +60,55 @@ struct CRMKeyLookupView: View {
                 confirmation.phone, confirmation.companyName
             ))
         }
+    }
+
+    private var manualSearch: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                TextField(
+                    NSLocalizedString("Key number", comment: "CRM numeric key input."),
+                    text: $model.keyNumber
+                )
+                .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("customer.crm.keyNumber")
+                .disabled(model.phoneLinkState == .saving)
+                .onSubmit {
+                    guard model.canSearch else { return }
+                    model.search()
+                    showsManualSearch = false
+                }
+                Button(NSLocalizedString("Find by key", comment: "CRM key search button.")) {
+                    model.search()
+                    showsManualSearch = false
+                }
+                .disabled(!model.canSearch)
+                .accessibilityIdentifier("customer.crm.search")
+            }
+
+            HStack(spacing: 8) {
+                TextField(
+                    NSLocalizedString("Email address", comment: "Manual CRM email input."),
+                    text: $model.email
+                )
+                .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("customer.crm.email")
+                .disabled(model.phoneLinkState == .saving)
+                .onSubmit {
+                    guard model.canSearchEmail else { return }
+                    model.searchEmail()
+                    showsManualSearch = false
+                }
+                Button(NSLocalizedString("Find by email", comment: "Manual CRM email search.")) {
+                    model.searchEmail()
+                    showsManualSearch = false
+                }
+                .disabled(!model.canSearchEmail)
+                .accessibilityIdentifier("customer.crm.searchEmail")
+            }
+        }
+        .controlSize(.small)
+        .padding(14)
+        .frame(width: 420)
     }
 
     @ViewBuilder
@@ -122,6 +153,7 @@ struct CRMKeyLookupView: View {
         case .loaded(let response):
             if let customer = response.data {
                 customerDetails(customer)
+                    .id(response.meta.requestId)
             }
         }
     }
@@ -171,6 +203,5 @@ struct CRMKeyLookupView: View {
 
     private func customerDetails(_ customer: CRMKeyLookupCustomer) -> some View {
         CRMCustomerInventoryView(customer: customer)
-            .id(customer.company.id)
     }
 }

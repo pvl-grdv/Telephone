@@ -14,6 +14,7 @@ These rules are authoritative for automated coding agents working on this reposi
 
 - `master` is the permanent integration branch.
 - For non-trivial changes, create a short-lived branch named `work/<short-topic>` from the current `master`.
+- Development builds are distributed only through macOS CI Actions artifacts. Do not create release tags or publish GitHub Releases unless the user explicitly requests a release.
 - Keep the change focused. Do not create `v2`, `final`, `codex`, `personal`, `feature`, or `techdebt` variants for the same task.
 - Push the work branch and use repository CI as the validation source.
 - CI must pass both unit tests and the local app build before integrating.

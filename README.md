@@ -77,6 +77,14 @@ The personal fork currently targets:
 
 ## Installing a local update
 
+This fork is still in development. GitHub Releases are paused; use test builds
+from [macOS CI in Actions](https://github.com/pvl-grdv/Telephone/actions/workflows/ci.yml).
+Open a successful run for `master`, check its source commit, and download the
+`Telephone-<run number>-<commit>` artifact at the bottom of the run page. Sign
+in to GitHub to download artifacts. The artifact contains the app ZIP, its
+SHA-256 checksum and the package verification report. Artifacts expire after
+7 days; run macOS CI manually to rebuild the selected commit when needed.
+
 Download the packaged ZIP for the exact tested commit, unpack it on your Mac,
 quit Telephone, and replace `Telephone.app` in Applications. Do not run the app
 from inside the download archive. Check the new version and build in About

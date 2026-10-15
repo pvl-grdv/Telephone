@@ -154,11 +154,13 @@ jobs:
       - name: Run UI smoke tests
         run: ./script/test_ui.sh
 
-      - name: Explain signing
+      - name: Explain test-build distribution
         run: |
           {
-            echo "### Telephone.app"
+            echo "### Telephone development test build"
             echo ""
+            echo "This is a development test build, not a published release."
+            echo "Download the Telephone artifact from this run; artifacts expire after 7 days."
             echo "The CI artifact is ad-hoc signed for local use and is not notarized."
             echo "No paid Apple Developer account or signing secrets are used."
           } >> "$GITHUB_STEP_SUMMARY"

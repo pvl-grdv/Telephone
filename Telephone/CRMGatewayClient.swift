@@ -21,6 +21,7 @@ enum CRMGatewayError: String, Error, Equatable, Sendable, Codable {
     case redirectDenied
     case invalidResponse
     case statusUnsupported
+    case callAnswersUnsupported
     case keychain
 }
 
@@ -178,7 +179,7 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
                 } else if answer.answeredBy != nil { throw CRMGatewayError.invalidResponse }
             case .unknown:
                 guard answer.answeredBy == nil, answer.match == nil, let reason = answer.reason,
-                      ["not-found", "ambiguous", "transferred", "not-confirmed", "identity-unavailable"].contains(reason) else {
+                      ["not-found", "time-mismatch", "ambiguous", "transferred", "not-confirmed", "identity-unavailable"].contains(reason) else {
                     throw CRMGatewayError.invalidResponse
                 }
             }
@@ -351,6 +352,7 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
         case 403: throw route == .phoneAppend ? CRMGatewayError.forbidden : .unauthorized
         case 409: throw route == .phoneAppend ? CRMGatewayError.conflict : .invalidResponse
         case 404 where route == .status: throw CRMGatewayError.statusUnsupported
+        case 404 where route == .incomingCallAnswers: throw CRMGatewayError.callAnswersUnsupported
         case 429: throw CRMGatewayError.rateLimited
         case 500...599:
             if route == .phoneAppend, Self.errorCode(in: data) == "PHONE_WRITE_UNCONFIRMED" {

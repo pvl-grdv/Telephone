@@ -49,7 +49,8 @@ nonisolated extension CallHistoryViewPresenter: ContactCallHistoryRecordGetAllUs
             isIncoming: record.origin.isIncoming,
             isMissed: record.origin.isMissed,
             startedAt: record.origin.date,
-            callerNumber: record.origin.uri.user
+            callerNumber: record.origin.uri.user,
+            durationSeconds: record.origin.duration
         )
     }
 }

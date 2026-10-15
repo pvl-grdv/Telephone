@@ -58,6 +58,14 @@ after asynchronous token reads, and adopts `ContentBuilder` and the current
 button menu style in call history. Its native tests cover actual row visibility,
 refreshing, and the separate answered, unanswered and unknown outcomes.
 
+ATS answering-employee lookup is read-only and covers visible incoming
+calls, including those declined locally with zero connected seconds. A
+confirmed ATS outcome may show who accepted the call; an unverified result
+shows why it cannot be attributed (missing caller match, time mismatch,
+ambiguity or unconfirmed event). An older or unauthorized gateway displays
+an explicit error rather than silently showing a local missed status as the
+global outcome. Telephone does not persist ATS call or employee records.
+
 This fork may continue to diverge from upstream as its maintenance needs evolve.
 
 ## Platform

@@ -22,6 +22,8 @@ struct PresentationCallHistoryRecord: Identifiable, Hashable {
     let isMissed: Bool
     var startedAt: Date? = nil
     var callerNumber: String? = nil
+    // Connected duration from SIP, independent of localized UI text.
+    var durationSeconds: Int? = nil
 
     var id: String { identifier }
 

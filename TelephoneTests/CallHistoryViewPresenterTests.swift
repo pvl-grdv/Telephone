@@ -240,7 +240,8 @@ private func makePresentationCallHistoryRecord(contact: MatchedContact, record: 
         isIncoming: record.isIncoming,
         isMissed: record.isMissed,
         startedAt: record.date,
-        callerNumber: record.uri.user
+        callerNumber: record.uri.user,
+        durationSeconds: record.duration
     )
 }
 

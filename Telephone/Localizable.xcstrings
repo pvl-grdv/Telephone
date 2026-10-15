@@ -7845,6 +7845,190 @@
           }
         }
       }
+    },
+    "ATS: no matching call": {
+      "comment": "No correlated PBX entry for this call.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS: no matching call"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonanlage: kein passender Anruf"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "АТС: совпадений не найдено"
+          }
+        }
+      }
+    },
+    "ATS: multiple possible calls": {
+      "comment": "Ambiguous PBX calls by caller and start time.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS: multiple possible calls"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonanlage: mehrere mögliche Anrufe"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "АТС: несколько возможных звонков"
+          }
+        }
+      }
+    },
+    "ATS: transferred call": {
+      "comment": "Transfer prevents verified answering employee.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS: transferred call"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonanlage: Anruf weitergeleitet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "АТС: звонок переведён"
+          }
+        }
+      }
+    },
+    "ATS: answer not confirmed": {
+      "comment": "No confirmed answered state in PBX.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS: answer not confirmed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonanlage: Annahme nicht bestätigt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "АТС: ответ не подтверждён"
+          }
+        }
+      }
+    },
+    "ATS: employee not identified": {
+      "comment": "PBX cannot identify the answering employee.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS: employee not identified"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonanlage: Mitarbeiter nicht ermittelt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "АТС: сотрудник не определён"
+          }
+        }
+      }
+    },
+    "Update CRM Gateway to see call answers.": {
+      "comment": "Call answer API is not installed on the gateway.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update CRM Gateway to see call answers."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM Gateway aktualisieren, um Anrufannahmen zu sehen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновите CRM Gateway, чтобы видеть, кто принял звонок."
+          }
+        }
+      }
+    },
+    "CRM Gateway access is unavailable. Check CRM settings.": {
+      "comment": "Cannot use current device authorization to query call answers.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM Gateway access is unavailable. Check CRM settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Zugriff auf CRM Gateway. CRM-Einstellungen prüfen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет доступа к CRM Gateway. Проверьте настройки CRM."
+          }
+        }
+      }
+    },
+    "ATS: call time does not match": {
+      "comment": "PBX call record shares the caller number but not the stored SIP start timestamp.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATS: call time does not match"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonanlage: Anrufzeit stimmt nicht überein"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "АТС: время звонка не совпадает"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

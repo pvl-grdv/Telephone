@@ -277,6 +277,8 @@ extension CRMGatewayError {
             NSLocalizedString("The gateway returned an incomplete or invalid response.", comment: "CRM contract failure.")
         case .statusUnsupported:
             NSLocalizedString("Gateway version unknown: this gateway does not support status checks.", comment: "Older gateway status route returns 404.")
+        case .callAnswersUnsupported:
+            NSLocalizedString("Update CRM Gateway to see call answers.", comment: "Older gateway cannot look up answering employees.")
         case .keychain:
             NSLocalizedString("Couldn’t save or remove the gateway token in Keychain.", comment: "CRM Keychain failure.")
         }

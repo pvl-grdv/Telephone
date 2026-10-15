@@ -69,7 +69,8 @@ final class CallHistoryViewModel {
     @ObservationIgnored private let answerProvider: any CRMCallAnswerProvider
     private var visibleAnswerRecords: Set<String> = []
     private(set) var callAnswers: [String: CRMIncomingCallAnswer] = [:]
-    private(set) var answerLookupFailed = false
+    private(set) var answerLookupError: CRMGatewayError?
+    var answerLookupFailed: Bool { answerLookupError != nil }
     var answerRefreshRequest = 0
     @ObservationIgnored private var answerGeneration = -1
 
@@ -87,7 +88,9 @@ final class CallHistoryViewModel {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let calls = gatewaySettings?.enabled == true ? records.compactMap { record -> CRMIncomingCallRequest? in
-            guard record.isIncoming, record.isMissed, visibleAnswerRecords.contains(record.id),
+            // A declined call can have zero duration without the missed flag.
+            // Only ATS evidence can establish whether someone else answered.
+            guard record.isIncoming, visibleAnswerRecords.contains(record.id),
                   let date = record.startedAt, let raw = record.callerNumber, let phone = CRMPhoneNumber.normalize(raw) else { return nil }
             return CRMIncomingCallRequest(id: record.id, phoneNumber: phone, startedAt: formatter.string(from: date))
         } : []
@@ -100,10 +103,14 @@ final class CallHistoryViewModel {
         let context = answerContext
         if answerGeneration != context.generation {
             callAnswers.removeAll()
+            answerLookupError = nil
             answerGeneration = context.generation
         }
         guard let gatewaySettings, !context.calls.isEmpty else {
-            if gatewaySettings?.enabled != true { callAnswers.removeAll() }
+            if gatewaySettings?.enabled != true {
+                callAnswers.removeAll()
+                answerLookupError = nil
+            }
             return
         }
         do {
@@ -112,7 +119,7 @@ final class CallHistoryViewModel {
             let configuration = try await gatewaySettings.configuration()
             try Task.checkCancellation()
             guard context == answerContext else { return }
-            answerLookupFailed = false
+            answerLookupError = nil
             // One UTC day spans at most two upstream calendar days. Keeping batches
             // within it avoids a request per row and handles arbitrary history dates.
             let groups = Dictionary(grouping: context.calls) { String($0.startedAt.prefix(10)) }
@@ -132,7 +139,7 @@ final class CallHistoryViewModel {
             guard !Task.isCancelled, context == answerContext else { return }
             // A failed read never becomes "nobody answered" or a stale employee.
             for call in context.calls { callAnswers.removeValue(forKey: call.id) }
-            answerLookupFailed = true
+            answerLookupError = (error as? CRMGatewayError) ?? .unavailable
         }
     }
     var filter: CallHistoryFilter = .all {

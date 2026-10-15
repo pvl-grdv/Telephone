@@ -70,33 +70,46 @@ struct CallHistoryScreen: View {
         }
     }
 
-    private var controls: some View {
-        HStack(spacing: 8) {
-            CallHistoryFilterMenu(selection: $model.filter)
+    private func answerLookupMessage(for error: CRMGatewayError) -> String {
+        switch error {
+        case .callAnswersUnsupported:
+            NSLocalizedString("Update CRM Gateway to see call answers.", comment: "Older gateway cannot look up answering employees.")
+        case .unauthorized, .missingToken:
+            NSLocalizedString("CRM Gateway access is unavailable. Check CRM settings.", comment: "Gateway device authorization failed.")
+        default:
+            NSLocalizedString("Call answers are unavailable. Refresh to try again.", comment: "Call answer lookup failed.")
+        }
+    }
 
-            TextField(
-                NSLocalizedString(
-                    "Search Call History",
-                    comment: "Call history search field placeholder."
-                ),
-                text: $model.query
-            )
-            .textFieldStyle(.roundedBorder)
-            .focused($searchFocused)
-            if !model.answerContext.calls.isEmpty {
-                if model.answerLookupFailed {
-                    Image(systemName: "exclamationmark.circle")
-                        .foregroundStyle(.secondary)
-                        .help(NSLocalizedString("Call answers are unavailable. Refresh to try again.", comment: "Call answer lookup failed."))
-                        .accessibilityLabel(NSLocalizedString("Call answers are unavailable. Refresh to try again.", comment: "Call answer lookup failed."))
+    private var controls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                CallHistoryFilterMenu(selection: $model.filter)
+
+                TextField(
+                    NSLocalizedString(
+                        "Search Call History",
+                        comment: "Call history search field placeholder."
+                    ),
+                    text: $model.query
+                )
+                .textFieldStyle(.roundedBorder)
+                .focused($searchFocused)
+
+                if !model.answerContext.calls.isEmpty {
+                    Button {
+                        model.answerRefreshRequest &+= 1
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .help(NSLocalizedString("Refresh Call Answers", comment: "Refresh answering employee in call history."))
+                    .accessibilityLabel(NSLocalizedString("Refresh Call Answers", comment: "Refresh answering employee in call history."))
                 }
-                Button {
-                    model.answerRefreshRequest &+= 1
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .help(NSLocalizedString("Refresh Call Answers", comment: "Refresh answering employee in call history."))
-                .accessibilityLabel(NSLocalizedString("Refresh Call Answers", comment: "Refresh answering employee in call history."))
+            }
+            if let error = model.answerLookupError, !model.answerContext.calls.isEmpty {
+                Label(answerLookupMessage(for: error), systemImage: "exclamationmark.circle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.horizontal, 12)
@@ -296,8 +309,45 @@ private struct CallHistoryRow: View {
     let record: PresentationCallHistoryRecord
     let answer: CRMIncomingCallAnswer?
 
-    private var answeredElsewhere: Bool { record.isMissed && answer?.status == .answered }
-    private var showsMissed: Bool { record.isMissed && !answeredElsewhere }
+    private var notAnsweredLocally: Bool {
+        record.isIncoming && (record.isMissed || record.durationSeconds == 0)
+    }
+    private var answeredElsewhere: Bool {
+        notAnsweredLocally && answer?.status == .answered
+    }
+    private var globallyUnanswered: Bool {
+        notAnsweredLocally && answer?.status == .unanswered
+    }
+    private var showsMissed: Bool {
+        (record.isMissed && !answeredElsewhere) || globallyUnanswered
+    }
+
+    private var answerDetail: String? {
+        guard let answer else { return nil }
+        if answer.status == .answered, let employee = answer.answeredBy {
+            return String(
+                format: NSLocalizedString("Answered by: %@", comment: "Answering employee from the call service."),
+                employee.displayName
+            )
+        }
+        guard answer.status == .unknown else { return nil }
+        switch answer.reason {
+        case "not-found":
+            return NSLocalizedString("ATS: no matching call", comment: "Call answer lookup found no matching PBX record.")
+        case "time-mismatch":
+            return NSLocalizedString("ATS: call time does not match", comment: "Caller exists in PBX but no record matches the SIP start time.")
+        case "ambiguous":
+            return NSLocalizedString("ATS: multiple possible calls", comment: "More than one PBX call could match.")
+        case "transferred":
+            return NSLocalizedString("ATS: transferred call", comment: "Transfer prevents reliable answering employee attribution.")
+        case "not-confirmed":
+            return NSLocalizedString("ATS: answer not confirmed", comment: "PBX did not confirm a completed answered call.")
+        case "identity-unavailable":
+            return NSLocalizedString("ATS: employee not identified", comment: "PBX outcome does not identify who answered.")
+        default:
+            return nil
+        }
+    }
 
     private var directionSymbol: String {
         record.isIncoming
@@ -309,7 +359,7 @@ private struct CallHistoryRow: View {
         if answeredElsewhere {
             return NSLocalizedString("Answered Elsewhere", comment: "Incoming call answered by another employee.")
         }
-        if answer?.status == .unanswered {
+        if globallyUnanswered {
             return NSLocalizedString("No One Answered", comment: "ATS confirmed an unanswered incoming call.")
         }
         return record.isMissed
@@ -345,12 +395,14 @@ private struct CallHistoryRow: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .frame(height: 14, alignment: .leading)
-                if let employee = answer?.answeredBy, answeredElsewhere {
-                    Text(String(format: NSLocalizedString("Answered by: %@", comment: "Answering employee from the call service."), employee.displayName))
+                if let detail = answerDetail {
+                    Text(detail)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
-                        .help(employee.displayName + "\n" + NSLocalizedString("Matched by caller number and call time.", comment: "Call answer correlation provenance."))
+                        .help(answer?.status == .answered
+                            ? NSLocalizedString("Matched by caller number and call time.", comment: "Call answer correlation provenance.")
+                            : detail)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -331,6 +331,28 @@ extension CRMGatewayClientTests {
             #expect(Set(root.keys) == ["calls"])
         }
     }
+    @Test func unknownTimeMismatchNeverIncludesAnAnsweringEmployee() async throws {
+        var root = try #require(JSONSerialization.jsonObject(with: incomingFixture(status: "unknown")) as? [String: Any])
+        var rows = try #require(root["data"] as? [[String: Any]])
+        rows[0]["reason"] = "time-mismatch"
+        root["data"] = rows
+        let client = CRMGatewayClient(transport: GatewayTransportFake(
+            data: try JSONSerialization.data(withJSONObject: root)))
+        let answer = try #require(try await client.incomingCallAnswers(
+            calls: [incomingCall], configuration: configuration()).first)
+        #expect(answer.status == .unknown)
+        #expect(answer.reason == "time-mismatch")
+        #expect(answer.answeredBy == nil)
+        #expect(answer.match == nil)
+    }
+
+    @Test func missingGatewayAnswerRouteReportsUnsupportedFeature() async throws {
+        let client = CRMGatewayClient(transport: GatewayTransportFake(status: 404, data: Data()))
+        await #expect(throws: CRMGatewayError.callAnswersUnsupported) {
+            try await client.incomingCallAnswers(calls: [incomingCall], configuration: configuration())
+        }
+    }
+
     @Test func incomingHistoryRejectsWrongAssociationFalseIdentityAndUnprovenExactMatch() async throws {
         for field in ["id", "phoneNumber", "startedAt", "status", "answeredBy", "match"] {
             var root = try #require(JSONSerialization.jsonObject(with: incomingFixture()) as? [String: Any])

@@ -156,19 +156,24 @@ struct CallHistoryAnswerTests {
         try await settings.save(enabled: true, origin: "https://gateway.example.invalid", newToken: "synthetic-token")
         return settings
     }
-    private func record(id: String = "local-call", incoming: Bool = true, missed: Bool = true) -> PresentationCallHistoryRecord {
+    private func record(
+        id: String = "local-call", incoming: Bool = true,
+        missed: Bool = true, durationSeconds: Int = 0
+    ) -> PresentationCallHistoryRecord {
         PresentationCallHistoryRecord(identifier: id,
             contact: PresentationContact(title: "Synthetic Contact", tooltip: "", label: "", address: "+74959999999"),
             date: "Today", duration: "00:00", isIncoming: incoming, isMissed: missed,
-            startedAt: Date(timeIntervalSince1970: 1_791_968_400), callerNumber: "84951234567")
+            startedAt: Date(timeIntervalSince1970: 1_791_968_400), callerNumber: "84951234567",
+            durationSeconds: durationSeconds)
     }
-    @Test func visibleLocallyMissedIncomingCallsUseRawCallerAndKeepLocalMissedFlag() async throws {
+    @Test func allVisibleIncomingCallsUseRawCallerAndKeepLocalMissedFlag() async throws {
         let provider = HistoryAnswerProvider()
         let model = CallHistoryViewModel(gatewaySettings: try await settings(), answerProvider: provider)
         let call = record()
-        model.show([call, record(id: "outgoing", incoming: false), record(id: "accepted", missed: false)])
+        model.show([call, record(id: "outgoing", incoming: false),
+                    record(id: "accepted", missed: false, durationSeconds: 25)])
         for id in ["local-call", "outgoing", "accepted"] { model.setAnswerRecordVisible(id, visible: true) }
-        #expect(model.answerContext.calls.count == 1)
+        #expect(Set(model.answerContext.calls.map(\.id)) == ["local-call", "accepted"])
         #expect(model.answerContext.calls.first?.phoneNumber == "+74951234567")
         await model.refreshCallAnswers()
         #expect(model.callAnswers[call.id]?.answeredBy?.displayName == "Synthetic Employee")
@@ -178,6 +183,22 @@ struct CallHistoryAnswerTests {
         model.setAnswerRecordVisible(call.id, visible: false)
         #expect(model.answerContext.calls.isEmpty)
     }
+    @Test func aDeclinedZeroSecondCallWithoutMissedFlagCanShowWhoAnsweredElsewhere() async throws {
+        let model = CallHistoryViewModel(gatewaySettings: try await settings(),
+            answerProvider: HistoryAnswerProvider())
+        let declined = record(id: "declined-by-me", incoming: true, missed: false, durationSeconds: 0)
+        model.show([declined])
+        model.setAnswerRecordVisible(declined.id, visible: true)
+
+        #expect(model.answerContext.calls.map(\.id) == ["declined-by-me"])
+        await model.refreshCallAnswers()
+        #expect(model.callAnswers[declined.id]?.status == .answered)
+        #expect(model.callAnswers[declined.id]?.answeredBy?.displayName == "Synthetic Employee")
+        // ATS never overwrites locally observed SIP duration or missed status.
+        #expect(model.allRecords.first?.durationSeconds == 0)
+        #expect(model.allRecords.first?.isMissed == false)
+    }
+
     @Test func failedReadRemovesPreviouslyDisplayedEmployeeInsteadOfClaimingNoAnswer() async throws {
         let provider = HistoryAnswerProvider()
         let model = CallHistoryViewModel(gatewaySettings: try await settings(), answerProvider: provider)
@@ -189,6 +210,16 @@ struct CallHistoryAnswerTests {
         #expect(model.callAnswers.isEmpty)
         #expect(model.answerLookupFailed)
     }
+    @Test func unsupportedGatewayIsDistinguishedFromANoMatchOutcome() async throws {
+        let provider = HistoryAnswerProvider()
+        await provider.fail(with: .callAnswersUnsupported)
+        let model = CallHistoryViewModel(gatewaySettings: try await settings(), answerProvider: provider)
+        model.show([record()]); model.setAnswerRecordVisible("local-call", visible: true)
+        await model.refreshCallAnswers()
+        #expect(model.answerLookupError == .callAnswersUnsupported)
+        #expect(model.callAnswers.isEmpty)
+    }
+
     @Test(arguments: ["delete", "disable", "replace", "hide", "cancel"])
     func lateAnswerCannotAttachAfterRecordOrSettingsChange(change: String) async throws {
         let provider = HistoryAnswerProvider(held: true)
@@ -250,7 +281,7 @@ private actor HistoryAnswerTokenStore: CRMGatewayTokenStoring {
     func remove(for origin: String) -> Bool { true }
 }
 private actor HistoryAnswerProvider: CRMCallAnswerProvider {
-    private var shouldFail = false
+    private var failure: CRMGatewayError?
     private let held: Bool
     private let status: CRMIncomingCallAnswer.Status
     private var continuation: CheckedContinuation<Void, Never>?
@@ -260,12 +291,12 @@ private actor HistoryAnswerProvider: CRMCallAnswerProvider {
         self.held = held
         self.status = status
     }
-    func fail() { shouldFail = true }
+    func fail(with error: CRMGatewayError = .unavailable) { failure = error }
     func release() { continuation?.resume(); continuation = nil }
     func incomingCallAnswers(calls: [CRMIncomingCallRequest], configuration: CRMGatewayConfiguration) async throws -> [CRMIncomingCallAnswer] {
         requestCount += 1
         if held { await withCheckedContinuation { continuation = $0 } }
-        if shouldFail { throw CRMGatewayError.unavailable }
+        if let failure { throw failure }
         return calls.map { call in
             CRMIncomingCallAnswer(id: call.id, phoneNumber: call.phoneNumber, startedAt: call.startedAt,
                 status: status, reason: status == .unknown ? "not-found" : nil,

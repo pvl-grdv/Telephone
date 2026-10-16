@@ -305,6 +305,8 @@
             { "path": "NetworkSettingsModel.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "NetworkSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CRMGatewaySettingsView.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+            { "path": "CRMGatewayStatusView.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+            { "path": "CRMGatewayError+Message.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "SIPPortValidation.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "PreferencesController.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "PerformanceSignposts.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },

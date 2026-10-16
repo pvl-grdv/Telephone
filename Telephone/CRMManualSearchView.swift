@@ -7,38 +7,38 @@
 
 import SwiftUI
 
-    enum CRMManualSearchKind: Hashable, CaseIterable {
-        case key
-        case email
-        case organizationCode
+enum CRMManualSearchKind: Hashable, CaseIterable {
+    case key
+    case email
+    case organizationCode
 
-        var title: String {
-            switch self {
-            case .key:
-                NSLocalizedString("Key number", comment: "CRM numeric key input.")
-            case .email:
-                NSLocalizedString("Email address", comment: "Manual CRM email input.")
-            case .organizationCode:
-                NSLocalizedString("Registration number", comment: "CRM organization registration number input.")
-            }
-        }
-
-        var fieldIdentifier: String {
-            switch self {
-            case .key: "customer.crm.keyNumber"
-            case .email: "customer.crm.email"
-            case .organizationCode: "customer.crm.organizationCode"
-            }
-        }
-
-        var actionIdentifier: String {
-            switch self {
-            case .key: "customer.crm.search"
-            case .email: "customer.crm.searchEmail"
-            case .organizationCode: "customer.crm.searchOrganizationCode"
-            }
+    var title: String {
+        switch self {
+        case .key:
+            NSLocalizedString("Key number", comment: "CRM numeric key input.")
+        case .email:
+            NSLocalizedString("Email address", comment: "Manual CRM email input.")
+        case .organizationCode:
+            NSLocalizedString("Registration number", comment: "CRM organization registration number input.")
         }
     }
+
+    var fieldIdentifier: String {
+        switch self {
+        case .key: "customer.crm.keyNumber"
+        case .email: "customer.crm.email"
+        case .organizationCode: "customer.crm.organizationCode"
+        }
+    }
+
+    var actionIdentifier: String {
+        switch self {
+        case .key: "customer.crm.search"
+        case .email: "customer.crm.searchEmail"
+        case .organizationCode: "customer.crm.searchOrganizationCode"
+        }
+    }
+}
 
 struct CRMManualSearchView: View {
     @Bindable var model: CRMKeyLookupModel

@@ -105,7 +105,7 @@ struct CRMKeyLookupView: View {
                 .foregroundStyle(.secondary)
         case .loaded(let response):
             if let customer = response.data {
-                customerDetails(customer)
+                CRMCustomerInventoryView(customer: customer)
                     .id(response.meta.requestId)
             }
         }
@@ -154,7 +154,4 @@ struct CRMKeyLookupView: View {
         }
     }
 
-    private func customerDetails(_ customer: CRMKeyLookupCustomer) -> some View {
-        CRMCustomerInventoryView(customer: customer)
-    }
 }

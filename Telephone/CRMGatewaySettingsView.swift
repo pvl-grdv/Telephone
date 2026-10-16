@@ -101,7 +101,7 @@ struct CRMGatewaySettingsView: View {
             }
 
             Section {
-                gatewayStatus
+                CRMGatewayStatusView(model: model)
             }
 
             Section {
@@ -189,102 +189,5 @@ struct CRMGatewaySettingsView: View {
         }
     }
 
-    private var gatewayStatus: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(NSLocalizedString("Running gateway", comment: "Runtime gateway identity heading."))
-                Spacer()
-                if model.isCheckingGateway { ProgressView().controlSize(.small) }
-                Button(NSLocalizedString("Check connection", comment: "Authenticated gateway-only status request.")) {
-                    Task { await model.checkConnection() }
-                }
-                .disabled(!model.canCheckConnection)
-                .accessibilityIdentifier("settings.crm.checkConnection")
-            }
-            if model.hasChanges {
-                Text(NSLocalizedString("Apply settings before checking the connection.", comment: "Status always checks saved configuration."))
-                    .foregroundStyle(.secondary)
-            } else if model.isCheckingGateway {
-                Text(NSLocalizedString("Checking gateway…", comment: "Gateway status request in progress."))
-                    .foregroundStyle(.secondary)
-            } else if model.hasCurrentGatewayStatus {
-                if let runtime = model.gatewayRuntime {
-                    Label(NSLocalizedString("Gateway connected", comment: "Device token and gateway reachability confirmed."), systemImage: "checkmark.circle")
-                    if let version = runtime.build.version {
-                        LabeledContent(NSLocalizedString("Gateway version", comment: "Running version."), value: version)
-                        if let commit = runtime.build.commit {
-                            LabeledContent("Commit", value: commit).textSelection(.enabled)
-                        }
-                        if let value = runtime.build.builtAt, let date = CRMGatewayRuntime.date(value) {
-                            LabeledContent(NSLocalizedString("Built", comment: "Build stamp packaging time."), value: date.formatted())
-                        }
-                    } else {
-                        Text(NSLocalizedString("Gateway version unknown", comment: "Runtime reports unknown integrity."))
-                    }
-                    if let date = CRMGatewayRuntime.date(runtime.startedAt) {
-                        LabeledContent(NSLocalizedString("Started", comment: "Running gateway process start time."), value: date.formatted())
-                    }
-                } else if let error = model.gatewayStatusError {
-                    Label(error.crmMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.secondary)
-                }
-                if let date = model.gatewayCheckedAt {
-                    Text(String(format: NSLocalizedString("Checked: %@", comment: "Gateway status check time."), date.formatted()))
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                Text(NSLocalizedString("Gateway version unknown", comment: "No runtime status yet."))
-                    .foregroundStyle(.secondary)
-            }
-            Text(NSLocalizedString("Checks the gateway and device token without contacting CRM.", comment: "Status request scope, no CRM session claim."))
-                .foregroundStyle(.secondary)
-        }
-        .font(.caption)
-        .accessibilityIdentifier("settings.crm.gatewayStatus")
-    }
 
-}
-
-extension CRMGatewayError {
-    var crmMessage: String {
-        switch self {
-        case .disabled:
-            NSLocalizedString("CRM lookup is disabled in Settings.", comment: "CRM disabled error.")
-        case .invalidOrigin:
-            NSLocalizedString("Enter an HTTPS gateway address, or enable HTTP over Tailscale for a 100.64.0.0/10 IPv4 address with an explicit port.", comment: "CRM gateway origin error.")
-        case .missingToken:
-            NSLocalizedString("Save a gateway token for this address in CRM Settings.", comment: "CRM missing token error.")
-        case .invalidKeyNumber:
-            NSLocalizedString("Enter a positive numeric key number.", comment: "CRM key number validation.")
-        case .invalidPhoneNumber:
-            NSLocalizedString("The caller does not have a valid phone number for CRM lookup.", comment: "CRM phone validation failure.")
-        case .invalidEmail:
-            NSLocalizedString("Enter one valid email address.", comment: "CRM invalid email address.")
-        case .invalidOrganizationCode:
-            NSLocalizedString("Enter an organization number like 12-34-5678.", comment: "CRM registration number validation.")
-        case .organizationCodeUnsupported:
-            NSLocalizedString("Update CRM Gateway to search by registration number.", comment: "Gateway registration number lookup is unavailable.")
-        case .forbidden:
-            NSLocalizedString("This gateway token cannot link phone numbers. Ask the gateway operator to enable this permission.", comment: "CRM phone append permission failure.")
-        case .conflict:
-            NSLocalizedString("The organization’s phones changed. Refresh its details before linking the number.", comment: "CRM optimistic concurrency conflict.")
-        case .phoneWriteUnconfirmed:
-            NSLocalizedString("Couldn’t confirm the phone association. Refresh the organization before trying again.", comment: "CRM unknown phone write outcome.")
-        case .unauthorized:
-            NSLocalizedString("The gateway rejected the token. Update it in CRM Settings.", comment: "CRM authorization error.")
-        case .unavailable:
-            NSLocalizedString("The gateway or CRM is unavailable. Check the connection and try again.", comment: "CRM unavailable error.")
-        case .rateLimited:
-            NSLocalizedString("Too many requests. Try again shortly.", comment: "CRM rate limit error.")
-        case .redirectDenied:
-            NSLocalizedString("The gateway redirected the request. Check its address in CRM Settings.", comment: "CRM redirect refusal.")
-        case .invalidResponse:
-            NSLocalizedString("The gateway returned an incomplete or invalid response.", comment: "CRM contract failure.")
-        case .statusUnsupported:
-            NSLocalizedString("Gateway version unknown: this gateway does not support status checks.", comment: "Older gateway status route returns 404.")
-        case .callAnswersUnsupported:
-            NSLocalizedString("Update CRM Gateway to see call answers.", comment: "Older gateway cannot look up answering employees.")
-        case .keychain:
-            NSLocalizedString("Couldn’t save or remove the gateway token in Keychain.", comment: "CRM Keychain failure.")
-        }
-    }
 }

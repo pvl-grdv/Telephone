@@ -7,7 +7,6 @@ import SwiftUI
 
 struct CallHistoryScreen: View {
     @Bindable var model: CallHistoryViewModel
-    @FocusState private var searchFocused: Bool
 
     let call: (String) -> Void
     let copy: (String) -> Void
@@ -30,9 +29,9 @@ struct CallHistoryScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            controls
+            CallHistoryControls(model: model)
             Divider()
-            content
+            CallHistoryResults(model: model, call: call, copy: copy)
         }
         .alert(
             model.pendingDeletion?.title ?? "",
@@ -62,26 +61,26 @@ struct CallHistoryScreen: View {
                 )
             )
         }
-        .onChange(of: model.searchFocusRequest) {
-            searchFocused = true
-        }
-        .task(id: model.answerContext) {
-            await model.refreshCallAnswers()
-        }
     }
 
-    private func answerLookupMessage(for error: CRMGatewayError) -> String {
-        switch error {
-        case .callAnswersUnsupported:
-            NSLocalizedString("Update CRM Gateway to see call answers.", comment: "Older gateway cannot look up answering employees.")
-        case .unauthorized, .missingToken:
-            NSLocalizedString("CRM Gateway access is unavailable. Check CRM settings.", comment: "Gateway device authorization failed.")
-        default:
-            NSLocalizedString("Call answers are unavailable. Refresh to try again.", comment: "Call answer lookup failed.")
-        }
+    private var deletionIsPresented: Binding<Bool> {
+        Binding(
+            get: { model.pendingDeletion != nil },
+            set: { isPresented in
+                if !isPresented {
+                    model.pendingDeletion = nil
+                }
+            }
+        )
     }
+}
 
-    private var controls: some View {
+private struct CallHistoryControls: View {
+    @Bindable var model: CallHistoryViewModel
+    @FocusState private var searchFocused: Bool
+
+    var body: some View {
+        let canRefreshAnswers = !model.answerContext.calls.isEmpty
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 CallHistoryFilterMenu(selection: $model.filter)
@@ -96,7 +95,7 @@ struct CallHistoryScreen: View {
                 .textFieldStyle(.roundedBorder)
                 .focused($searchFocused)
 
-                if !model.answerContext.calls.isEmpty {
+                if canRefreshAnswers {
                     Button {
                         model.answerRefreshRequest &+= 1
                     } label: {
@@ -110,7 +109,7 @@ struct CallHistoryScreen: View {
                     .accessibilityIdentifier("history.answers.refresh")
                 }
             }
-            if let error = model.answerLookupError, !model.answerContext.calls.isEmpty {
+            if let error = model.answerLookupError, canRefreshAnswers {
                 Label(answerLookupMessage(for: error), systemImage: "exclamationmark.circle")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -118,6 +117,34 @@ struct CallHistoryScreen: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
+        .onChange(of: model.searchFocusRequest) {
+            searchFocused = true
+        }
+    }
+
+    private func answerLookupMessage(for error: CRMGatewayError) -> String {
+        switch error {
+        case .callAnswersUnsupported:
+            NSLocalizedString("Update CRM Gateway to see call answers.", comment: "Older gateway cannot look up answering employees.")
+        case .unauthorized, .missingToken:
+            NSLocalizedString("CRM Gateway access is unavailable. Check CRM settings.", comment: "Gateway device authorization failed.")
+        default:
+            NSLocalizedString("Call answers are unavailable. Refresh to try again.", comment: "Call answer lookup failed.")
+        }
+    }
+
+}
+
+private struct CallHistoryResults: View {
+    @Bindable var model: CallHistoryViewModel
+    let call: (String) -> Void
+    let copy: (String) -> Void
+
+    var body: some View {
+        content
+            .task(id: model.answerContext) {
+                await model.refreshCallAnswers()
+            }
     }
 
     @ContentBuilder
@@ -247,16 +274,6 @@ struct CallHistoryScreen: View {
         model.selectedRecord.map { [$0.contact.address] } ?? []
     }
 
-    private var deletionIsPresented: Binding<Bool> {
-        Binding(
-            get: { model.pendingDeletion != nil },
-            set: { isPresented in
-                if !isPresented {
-                    model.pendingDeletion = nil
-                }
-            }
-        )
-    }
 }
 
 private struct CallHistoryFilterMenu: View {

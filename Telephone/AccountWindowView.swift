@@ -92,7 +92,7 @@ struct AccountWindowRootView: View {
     @Bindable var model: AccountWindowModel
     @State private var pendingAuthenticationFailureSubmission:
         AuthenticationFailureModel?
-    @State private var showsAccountStateTitle = true
+    @State private var showsAccountStateTitle = false
 
     let callDestinationComposer: CallDestinationComposer
     let callHistoryPresenter: CallHistoryPresenter
@@ -113,9 +113,9 @@ struct AccountWindowRootView: View {
         }
         .frame(
             minWidth: 340,
-            idealWidth: 380,
+            idealWidth: 460,
             minHeight: 220,
-            idealHeight: 300
+            idealHeight: 420
         )
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -172,7 +172,7 @@ struct AccountWindowRootView: View {
 }
 
 enum AccountToolbarLayout {
-    static let expandedStateMinimumWidth: CGFloat = 370
+    static let expandedStateMinimumWidth: CGFloat = 500
 
     static func showsStateTitle(for width: CGFloat) -> Bool {
         width >= expandedStateMinimumWidth

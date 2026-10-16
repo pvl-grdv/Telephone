@@ -803,7 +803,7 @@ private struct CallDestinationInputView: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
         .defaultFocus($inputFocused, true)
         .onDisappear {
             model.setFocused(false)
@@ -880,18 +880,25 @@ private struct CallDestinationInputView: View {
             }
 
             if showsCallButton {
-                Button(action: call) {
-                    Image(systemName: "phone.fill")
+                if model.canCall {
+                    callButton.buttonStyle(.borderedProminent)
+                } else {
+                    callButton.buttonStyle(.bordered)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .disabled(!model.canCall)
-                .help(NSLocalizedString("Call", comment: "Call button."))
-                .accessibilityLabel(
-                    NSLocalizedString("Call", comment: "Call button.")
-                )
             }
         }
+    }
+
+    private var callButton: some View {
+        Button(action: call) {
+            Image(systemName: "phone.fill")
+        }
+        .controlSize(.small)
+        .disabled(!model.canCall)
+        .help(NSLocalizedString("Call", comment: "Call button."))
+        .accessibilityLabel(
+            NSLocalizedString("Call", comment: "Call button.")
+        )
     }
 }
 

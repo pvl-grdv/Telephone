@@ -102,8 +102,12 @@ struct CallHistoryScreen: View {
                     } label: {
                         Image(systemName: "arrow.clockwise")
                     }
+                    .buttonStyle(.borderless)
+                    .controlSize(.small)
+                    .frame(width: 28, height: 26)
                     .help(NSLocalizedString("Refresh Call Answers", comment: "Refresh answering employee in call history."))
                     .accessibilityLabel(NSLocalizedString("Refresh Call Answers", comment: "Refresh answering employee in call history."))
+                    .accessibilityIdentifier("history.answers.refresh")
                 }
             }
             if let error = model.answerLookupError, !model.answerContext.calls.isEmpty {
@@ -113,7 +117,7 @@ struct CallHistoryScreen: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
     }
 
     @ContentBuilder
@@ -287,7 +291,8 @@ private struct CallHistoryFilterMenu: View {
         .menuStyle(.button)
         .buttonStyle(.borderless)
         .menuIndicator(.hidden)
-        .frame(width: 112, alignment: .leading)
+        .controlSize(.small)
+        .fixedSize(horizontal: true, vertical: false)
         .help(
             NSLocalizedString(
                 "Filter Call History",
@@ -305,7 +310,7 @@ private struct CallHistoryFilterMenu: View {
     }
 }
 
-private struct CallHistoryRow: View {
+struct CallHistoryRow: View {
     let record: PresentationCallHistoryRecord
     let answer: CRMIncomingCallAnswer?
 
@@ -371,33 +376,57 @@ private struct CallHistoryRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: directionSymbol)
                 .font(.caption)
                 .foregroundStyle(
                     showsMissed ? Color.red : Color.secondary
                 )
                 .frame(width: 16, height: 16)
+                .padding(.top, 3)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(record.contact.title)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(
-                        showsMissed ? Color.red : Color.primary
-                    )
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(record.contact.title)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(
+                            showsMissed ? Color.red : Color.primary
+                        )
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .help(record.contact.title)
 
-                Text(record.contact.detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(height: 14, alignment: .leading)
+                    Text(record.date)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(record.contact.detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .help(record.contact.address)
+
+                    Text(statusText)
+                        .font(.caption)
+                        .foregroundStyle(
+                            showsMissed ? Color.red : Color.secondary
+                        )
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .help(statusText)
+                }
+
                 if let detail = answerDetail {
                     Text(detail)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .help(answer?.status == .answered
@@ -406,25 +435,8 @@ private struct CallHistoryRow: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(record.date)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                Text(statusText)
-                    .font(.caption)
-                    .foregroundStyle(
-                        showsMissed ? Color.red : Color.secondary
-                    )
-                    .lineLimit(1)
-                    .frame(height: 14, alignment: .trailing)
-            }
-            .frame(width: 120, alignment: .trailing)
         }
-        .padding(.vertical, 4)
-        .help(record.contact.address)
+        .padding(.vertical, 3)
         .accessibilityElement(children: .combine)
     }
 }

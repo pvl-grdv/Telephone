@@ -5,6 +5,7 @@
 
 import Foundation
 import AppKit
+import SwiftUI
 import Testing
 
 struct LocalizationAndLayoutSmokeTests {
@@ -145,6 +146,51 @@ struct LocalizationAndLayoutSmokeTests {
         #expect(!source.contains("View saved CRM check"))
     }
 
+    @Test @MainActor
+    func callHistoryRowsFitSmallWindowsAndShowAnswerContext() {
+        _ = NSApplication.shared
+        let record = PresentationCallHistoryRecord(
+            identifier: "synthetic-call",
+            contact: PresentationContact(
+                title: "Выданцева Екатерина",
+                tooltip: "+79531145087",
+                label: "",
+                address: "+79531145087"
+            ),
+            date: "Yesterday, 16:28",
+            duration: "0 secs",
+            isIncoming: true,
+            isMissed: true,
+            durationSeconds: 0
+        )
+        let answer = CRMIncomingCallAnswer(
+            id: "synthetic-call",
+            phoneNumber: "+79531145087",
+            startedAt: "2026-10-15T12:28:00Z",
+            status: .answered,
+            reason: nil,
+            answeredBy: .init(displayName: "Андрей Алексеев", source: "ats"),
+            match: nil
+        )
+
+        for width: CGFloat in [300, 420] {
+            let plain = NSHostingView(
+                rootView: CallHistoryRow(record: record, answer: nil)
+                    .frame(width: width)
+            ).fittingSize
+            let withAnswer = NSHostingView(
+                rootView: CallHistoryRow(record: record, answer: answer)
+                    .frame(width: width)
+            ).fittingSize
+
+            #expect(abs(plain.width - width) < 1)
+            #expect(abs(withAnswer.width - width) < 1)
+            #expect(plain.height < 65)
+            #expect(withAnswer.height > plain.height)
+            #expect(withAnswer.height < 95)
+        }
+    }
+
     @Test
     func systemMediaPauseDoesNotReadNowPlayingState() throws {
         let source = try String(
@@ -191,7 +237,7 @@ struct LocalizationAndLayoutSmokeTests {
             encoding: .utf8
         )
 
-        #expect(source.contains("expandedStateMinimumWidth: CGFloat = 370"))
+        #expect(source.contains("expandedStateMinimumWidth: CGFloat = 500"))
         #expect(source.contains("AccountStateIndicator(state: state)"))
         #expect(source.contains("if showsTitle"))
     }

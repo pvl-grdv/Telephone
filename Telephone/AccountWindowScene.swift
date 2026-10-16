@@ -29,7 +29,7 @@ struct AccountWindowsScene: Scene {
         }
         .defaultLaunchBehavior(.suppressed)
         .restorationBehavior(.disabled)
-        .defaultSize(width: 380, height: 300)
+        .defaultSize(width: 460, height: 420)
         .windowResizability(.contentMinSize)
         .windowIdealSize(.fitToContent)
     }

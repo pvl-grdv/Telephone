@@ -10,49 +10,6 @@ import UseCases
 private let accountSetupDidAddNotification = Notification.Name("AKAccountSetupControllerDidAddAccount")
 private let maximumAccountCount = 32
 
-struct AccountSettingsSummary: Identifiable, Hashable {
-    let id: String
-    let title: String
-    let isEnabled: Bool
-}
-
-enum AccountIPUpdateMode: Int, CaseIterable, Hashable {
-    case off
-    case partial
-    case all
-
-    var title: String {
-        switch self {
-        case .off:
-            NSLocalizedString("Off", comment: "Account IP address update mode.")
-        case .partial:
-            NSLocalizedString("Partial", comment: "Account IP address update mode.")
-        case .all:
-            NSLocalizedString("All", comment: "Account IP address update mode.")
-        }
-    }
-}
-
-struct AccountSettingsDraft: Equatable {
-    var isEnabled = false
-    var descriptionText = ""
-    var fullName = ""
-    var domain = ""
-    var username = ""
-    var password = ""
-    var sipAddress = ""
-    var registrar = ""
-    var reregistrationTime = ""
-    var substitutesPlusCharacter = false
-    var plusCharacterSubstitution = "00"
-    var usesProxy = false
-    var proxyHost = ""
-    var proxyPort = ""
-    var transport = AKSIPAccountKeys.transportUDP
-    var ipVersion = AKSIPAccountKeys.ipVersion4
-    var ipUpdateMode: AccountIPUpdateMode = .all
-}
-
 @MainActor
 @Observable
 final class AccountSettingsModel {
@@ -134,10 +91,9 @@ final class AccountSettingsModel {
 
         accountAddedObservation = NotificationObservation(
             name: accountSetupDidAddNotification
-        ) { [weak self] notification in
-            let notification = AccountSettingsSendableNotification(notification)
+        ) { [weak self] _ in
             MainActor.assumeIsolated {
-                self?.accountDidAdd(notification.value)
+                self?.accountDidAdd()
             }
         }
         reload()
@@ -353,7 +309,7 @@ final class AccountSettingsModel {
         showsCredentialsError = false
     }
 
-    private func accountDidAdd(_ notification: Notification) {
+    private func accountDidAdd() {
         let stored = storedAccounts()
         accounts = summaries(from: stored)
         select(accounts.last?.id, reloadIfUnchanged: true)
@@ -426,7 +382,7 @@ final class AccountSettingsModel {
             }
 
             var account = stored[index]
-            applyDraft(to: &account)
+            draft.write(to: &account)
             stored[index] = account
             defaults.set(stored, forKey: UserDefaultsKeys.accounts)
             accounts = summaries(from: stored)
@@ -496,7 +452,7 @@ final class AccountSettingsModel {
         }
 
         var account = stored[index]
-        applyDraft(to: &account)
+        draft.write(to: &account)
 
         let service = credentialService(
             registrar: draft.registrar,
@@ -507,12 +463,11 @@ final class AccountSettingsModel {
         let previousService = loadedPasswordService
         let previousAccount = loadedPasswordAccount
 
-        let needsCredentialSave =
-            loadedPasswordService != service
-            || loadedPasswordAccount != username
-            || loadedPassword != password
-
-        guard needsCredentialSave else {
+        guard !credentialsMatchLoaded(
+            service: service,
+            account: username,
+            password: password
+        ) else {
             commitEnabledAccount(
                 account,
                 selection: selection,
@@ -628,60 +583,11 @@ final class AccountSettingsModel {
             return
         }
 
-        let registrar = stringValue(account[AKSIPAccountKeys.registrar])
-        let domain = stringValue(account[AKSIPAccountKeys.domain])
-        let username = stringValue(account[AKSIPAccountKeys.username])
-
-        let updateContact = boolValue(account[AKSIPAccountKeys.updateContactHeader])
-        let updateVia = boolValue(account[AKSIPAccountKeys.updateViaHeader])
-        let updateSDP = boolValue(account[AKSIPAccountKeys.updateSDP])
-        let updateMode: AccountIPUpdateMode
-        if updateContact && updateVia && updateSDP {
-            updateMode = .all
-        } else if updateContact || updateVia || updateSDP {
-            updateMode = .partial
-        } else {
-            updateMode = .off
-        }
-
-        applyDraft(
-            AccountSettingsDraft(
-                isEnabled: boolValue(account[UserDefaultsKeys.accountEnabled]),
-                descriptionText: stringValue(account[AKSIPAccountKeys.desc]),
-                fullName: stringValue(account[AKSIPAccountKeys.fullName]),
-                domain: domain,
-                username: username,
-                password: "",
-                sipAddress: stringValue(account[AKSIPAccountKeys.sipAddress]),
-                registrar: registrar,
-                reregistrationTime: positiveIntegerString(
-                    account[AKSIPAccountKeys.reregistrationTime]
-                ),
-                substitutesPlusCharacter: boolValue(
-                    account[UserDefaultsKeys.substitutePlusCharacter]
-                ),
-                plusCharacterSubstitution: stringValue(
-                    account[UserDefaultsKeys.plusCharacterSubstitutionString],
-                    defaultValue: "00"
-                ),
-                usesProxy: boolValue(account[AKSIPAccountKeys.useProxy]),
-                proxyHost: stringValue(account[AKSIPAccountKeys.proxyHost]),
-                proxyPort: positiveIntegerString(account[AKSIPAccountKeys.proxyPort]),
-                transport: stringValue(
-                    account[AKSIPAccountKeys.transport],
-                    defaultValue: AKSIPAccountKeys.transportUDP
-                ),
-                ipVersion: stringValue(
-                    account[AKSIPAccountKeys.ipVersion],
-                    defaultValue: AKSIPAccountKeys.ipVersion4
-                ),
-                ipUpdateMode: updateMode
-            )
-        )
-
+        let loaded = AccountSettingsDraft(storedAccount: account)
+        applyDraft(loaded)
         loadPassword(
-            service: credentialService(registrar: registrar, domain: domain),
-            account: username,
+            service: credentialService(registrar: loaded.registrar, domain: loaded.domain),
+            account: loaded.username,
             selection: selection
         )
     }
@@ -737,11 +643,11 @@ final class AccountSettingsModel {
         password: String,
         selection: String
     ) {
-        let unchanged =
-            loadedPasswordService == service
-            && loadedPasswordAccount == account
-            && loadedPassword == password
-        guard !unchanged else {
+        guard !credentialsMatchLoaded(
+            service: service,
+            account: account,
+            password: password
+        ) else {
             credentialsAreDirty = false
             return
         }
@@ -783,6 +689,16 @@ final class AccountSettingsModel {
             loadedPasswordAccount = account
             credentialsAreDirty = false
         }
+    }
+
+    private func credentialsMatchLoaded(
+        service: String,
+        account: String,
+        password: String
+    ) -> Bool {
+        loadedPasswordService == service
+            && loadedPasswordAccount == account
+            && loadedPassword == password
     }
 
     private func credentialValuesChanged(
@@ -838,43 +754,6 @@ final class AccountSettingsModel {
         )
     }
 
-    private func applyDraft(to account: inout [String: Any]) {
-        account[AKSIPAccountKeys.desc] = trimmed(draft.descriptionText)
-        account[AKSIPAccountKeys.fullName] = trimmed(draft.fullName)
-        account[AKSIPAccountKeys.domain] = trimmed(draft.domain)
-        account[AKSIPAccountKeys.username] = trimmed(draft.username)
-        account[AKSIPAccountKeys.reregistrationTime] =
-            integerValue(draft.reregistrationTime)
-        account[UserDefaultsKeys.substitutePlusCharacter] =
-            draft.substitutesPlusCharacter
-        account[UserDefaultsKeys.plusCharacterSubstitutionString] =
-            draft.plusCharacterSubstitution
-        account[AKSIPAccountKeys.useProxy] = draft.usesProxy
-        account[AKSIPAccountKeys.proxyHost] = trimmed(draft.proxyHost)
-        if let proxyPort = SIPPortValidation.value(draft.proxyPort) {
-            account[AKSIPAccountKeys.proxyPort] = proxyPort
-        }
-        account[AKSIPAccountKeys.sipAddress] = trimmed(draft.sipAddress)
-        account[AKSIPAccountKeys.registrar] = trimmed(draft.registrar)
-        account[AKSIPAccountKeys.transport] = draft.transport
-        account[AKSIPAccountKeys.ipVersion] = draft.ipVersion
-
-        switch draft.ipUpdateMode {
-        case .all:
-            account[AKSIPAccountKeys.updateContactHeader] = true
-            account[AKSIPAccountKeys.updateViaHeader] = true
-            account[AKSIPAccountKeys.updateSDP] = true
-        case .partial:
-            account[AKSIPAccountKeys.updateContactHeader] = true
-            account[AKSIPAccountKeys.updateViaHeader] = true
-            account[AKSIPAccountKeys.updateSDP] = false
-        case .off:
-            account[AKSIPAccountKeys.updateContactHeader] = false
-            account[AKSIPAccountKeys.updateViaHeader] = false
-            account[AKSIPAccountKeys.updateSDP] = false
-        }
-    }
-
     private func credentialService(
         registrar: String,
         domain: String
@@ -919,15 +798,6 @@ final class AccountSettingsModel {
         value.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func integerValue(_ value: String) -> Int {
-        Int(value.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
-    }
-
-    private func positiveIntegerString(_ value: Any?) -> String {
-        let integer = (value as? NSNumber)?.intValue ?? 0
-        return integer > 0 ? String(integer) : ""
-    }
-
     private func boolValue(_ value: Any?) -> Bool {
         (value as? NSNumber)?.boolValue ?? false
     }
@@ -942,10 +812,3 @@ final class AccountSettingsModel {
 
 
 
-private struct AccountSettingsSendableNotification: @unchecked Sendable {
-    let value: Notification
-
-    init(_ value: Notification) {
-        self.value = value
-    }
-}

@@ -46,11 +46,6 @@ struct CallDestinationOption: Identifiable {
     let isSelected: Bool
 }
 
-private struct CallDestinationSuggestionMatch: Sendable {
-    let contact: CallDestinationContactRecord
-    let destination: CallDestinationContactAddress
-}
-
 @MainActor
 @Observable
 final class CallDestinationInputModel {
@@ -269,7 +264,7 @@ final class CallDestinationInputModel {
         }
 
         let task = Task.detached(priority: .userInitiated) {
-            Self.suggestionMatches(
+            CallDestinationContactMatching.suggestions(
                 contacts: contactsCache,
                 query: query,
                 limit: 5
@@ -351,58 +346,6 @@ final class CallDestinationInputModel {
 
         suggestions = values
         highlightedSuggestionID = values.first?.id
-    }
-
-    nonisolated private static func suggestionMatches(
-        contacts: [CallDestinationContactRecord],
-        query: String,
-        limit: Int
-    ) -> [CallDestinationSuggestionMatch] {
-        var matches: [CallDestinationSuggestionMatch] = []
-        var seen = Set<String>()
-
-        for contact in contacts {
-            guard !Task.isCancelled else { return [] }
-
-            let nameMatches = contactMatchesName(
-                contact,
-                query: query
-            )
-
-            for destination in contact.destinations {
-                let addressMatches: Bool
-                switch destination.kind {
-                case .phone:
-                    addressMatches = phoneMatchesPrefix(
-                        destination.value,
-                        query: query
-                    )
-                case .sip:
-                    addressMatches = hasCaseInsensitivePrefix(
-                        destination.value,
-                        query
-                    )
-                }
-
-                guard nameMatches || addressMatches else { continue }
-
-                let key =
-                    "\(contact.id)|\(destination.kind)|\(destination.value)"
-                guard seen.insert(key).inserted else { continue }
-
-                matches.append(
-                    CallDestinationSuggestionMatch(
-                        contact: contact,
-                        destination: destination
-                    )
-                )
-                if matches.count == limit {
-                    return matches
-                }
-            }
-        }
-
-        return matches
     }
 
     private func requestContactsAccessIfNeeded() {
@@ -546,10 +489,10 @@ final class CallDestinationInputModel {
         matching uri: AKSIPURI
     ) -> Int {
         if uri.host.isEmpty {
-            let targetPhone = Self.normalizedPhoneNumber(uri.user)
+            let targetPhone = CallDestinationContactMatching.normalizedPhoneNumber(uri.user)
             if let match = destinations.firstIndex(where: {
                 $0.uri.host.isEmpty
-                    && Self.normalizedPhoneNumber($0.uri.user) == targetPhone
+                    && CallDestinationContactMatching.normalizedPhoneNumber($0.uri.user) == targetPhone
             }) {
                 return match
             }
@@ -620,48 +563,6 @@ final class CallDestinationInputModel {
         return formatter.string(for: value) ?? value
     }
 
-    nonisolated private static func normalizedPhoneNumber(
-        _ value: String
-    ) -> String {
-        value.filter { $0.isNumber || $0 == "+" }
-    }
-
-    nonisolated private static func hasCaseInsensitivePrefix(
-        _ value: String,
-        _ prefix: String
-    ) -> Bool {
-        guard !value.isEmpty, !prefix.isEmpty else { return false }
-        return value.range(
-            of: prefix,
-            options: [.caseInsensitive, .anchored]
-        ) != nil
-    }
-
-    nonisolated private static func contactMatchesName(
-        _ contact: CallDestinationContactRecord,
-        query: String
-    ) -> Bool {
-        let givenFamily = "\(contact.givenName) \(contact.familyName)"
-        let familyGiven = "\(contact.familyName) \(contact.givenName)"
-
-        return hasCaseInsensitivePrefix(contact.displayName, query)
-            || hasCaseInsensitivePrefix(contact.givenName, query)
-            || hasCaseInsensitivePrefix(contact.familyName, query)
-            || hasCaseInsensitivePrefix(givenFamily, query)
-            || hasCaseInsensitivePrefix(familyGiven, query)
-            || hasCaseInsensitivePrefix(contact.organizationName, query)
-    }
-
-    nonisolated private static func phoneMatchesPrefix(
-        _ phoneNumber: String,
-        query: String
-    ) -> Bool {
-        let normalizedPhone = normalizedPhoneNumber(phoneNumber)
-        let normalizedQuery = normalizedPhoneNumber(query)
-        return !normalizedQuery.isEmpty
-            && normalizedPhone.hasPrefix(normalizedQuery)
-    }
-
     private func contactNameEquals(
         _ contact: CallDestinationContactRecord,
         name: String
@@ -683,11 +584,11 @@ final class CallDestinationInputModel {
             let addressMatches: Bool
 
             if uri.host.isEmpty {
-                let target = Self.normalizedPhoneNumber(uri.user)
+                let target = CallDestinationContactMatching.normalizedPhoneNumber(uri.user)
                 addressMatches = contact.destinations.contains {
                     $0.kind == .phone
                         && !target.isEmpty
-                        && Self.normalizedPhoneNumber($0.value) == target
+                        && CallDestinationContactMatching.normalizedPhoneNumber($0.value) == target
                 }
             } else {
                 let target = uri.sipAddress

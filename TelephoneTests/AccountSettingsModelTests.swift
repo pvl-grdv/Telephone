@@ -392,3 +392,45 @@ private actor CredentialsStoreFake: CredentialsStoring {
         deletions
     }
 }
+
+@MainActor
+struct AccountSettingsDraftStorageTests {
+    @Test func partialIPUpdateFlagsRoundTripWithoutDiscardingAccountIdentity() {
+        let stored: [String: Any] = [
+            UserDefaultsKeys.accountEnabled: false,
+            AKSIPAccountKeys.uuid: "account-id",
+            AKSIPAccountKeys.desc: "  Sales  ",
+            AKSIPAccountKeys.domain: " example.com ",
+            AKSIPAccountKeys.username: " alice ",
+            AKSIPAccountKeys.updateContactHeader: true,
+            AKSIPAccountKeys.updateViaHeader: true,
+            AKSIPAccountKeys.updateSDP: false,
+            AKSIPAccountKeys.proxyPort: 5061
+        ]
+        var draft = AccountSettingsDraft(storedAccount: stored)
+        #expect(draft.ipUpdateMode == .partial)
+        #expect(draft.proxyPort == "5061")
+        draft.descriptionText = " Updated "
+        var saved = stored
+        draft.write(to: &saved)
+        #expect(saved[AKSIPAccountKeys.uuid] as? String == "account-id")
+        #expect(saved[AKSIPAccountKeys.desc] as? String == "Updated")
+        #expect(saved[AKSIPAccountKeys.domain] as? String == "example.com")
+        #expect(saved[AKSIPAccountKeys.updateSDP] as? Bool == false)
+    }
+
+    @Test func missingStoredDefaultsAndEachIPModeRoundTrip() {
+        let stored: [String: Any] = [AKSIPAccountKeys.domain: "example.com"]
+        let draft = AccountSettingsDraft(storedAccount: stored)
+        #expect(draft.ipUpdateMode == .off)
+        #expect(draft.transport == AKSIPAccountKeys.transportUDP)
+        #expect(draft.plusCharacterSubstitution == "00")
+        for mode in AccountIPUpdateMode.allCases {
+            var editing = draft
+            editing.ipUpdateMode = mode
+            var result = stored
+            editing.write(to: &result)
+            #expect(AccountSettingsDraft(storedAccount: result).ipUpdateMode == mode)
+        }
+    }
+}

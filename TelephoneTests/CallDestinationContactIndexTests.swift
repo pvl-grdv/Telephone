@@ -179,3 +179,57 @@ private actor SuspendedContactLoader {
         for continuation in pendingStarts { continuation.resume() }
     }
 }
+
+@MainActor
+struct CallDestinationContactMatchingTests {
+    @Test func matchesNameOrderAndOrganizationWithoutCaseSensitivity() {
+        let alice = CallDestinationContactRecord(
+            id: "alice", displayName: "Alice Smith", organizationName: "Example Office",
+            givenName: "Alice", familyName: "Smith",
+            destinations: [.init(value: "+1 (202) 555-0100", label: "Mobile", kind: .phone)]
+        )
+        for query in ["alice", "SMITH Alice", "example"] {
+            #expect(CallDestinationContactMatching.suggestions(
+                contacts: [alice], query: query, limit: 5
+            ).map(\.contact.id) == ["alice"])
+        }
+    }
+
+    @Test func phoneAndSIPPrefixesNormalizeFormattingAndCase() {
+        let contact = CallDestinationContactRecord(
+            id: "1", displayName: "Someone", organizationName: "",
+            givenName: "", familyName: "",
+            destinations: [
+                .init(value: "+1 (202) 555-0100", label: "Home", kind: .phone),
+                .init(value: "sip:alice@example.com", label: "SIP", kind: .sip)
+            ]
+        )
+        #expect(CallDestinationContactMatching.suggestions(
+            contacts: [contact], query: "+1 202 555", limit: 5
+        ).map(\.destination.kind) == [.phone])
+        #expect(CallDestinationContactMatching.suggestions(
+            contacts: [contact], query: "SIP:ALICE", limit: 5
+        ).map(\.destination.kind) == [.sip])
+    }
+
+    @Test func removesDuplicateDestinationsAndRespectsLimit() {
+        let contact = CallDestinationContactRecord(
+            id: "1", displayName: "Person", organizationName: "",
+            givenName: "", familyName: "",
+            destinations: [
+                .init(value: "+12025550100", label: "Mobile", kind: .phone),
+                .init(value: "+12025550100", label: "Home", kind: .phone),
+                .init(value: "+12025550101", label: "Work", kind: .phone)
+            ]
+        )
+        #expect(CallDestinationContactMatching.suggestions(
+            contacts: [contact], query: "Person", limit: 5
+        ).map(\.destination.value) == ["+12025550100", "+12025550101"])
+        #expect(CallDestinationContactMatching.suggestions(
+            contacts: [contact], query: "Person", limit: 1
+        ).count == 1)
+        #expect(CallDestinationContactMatching.suggestions(
+            contacts: [contact], query: "", limit: 5
+        ).isEmpty)
+    }
+}

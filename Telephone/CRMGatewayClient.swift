@@ -199,22 +199,10 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
         let result: CRMPhoneLookupResponse = try await send(
             route: .emailLookup, body: EmailRequest(email: email, companyId: companyID), configuration: configuration
         )
-        try Self.validateMetadata(result.meta)
-        guard Set(result.matches.map(\.id)).count == result.matches.count,
-              result.matches.allSatisfy({ CRMKeyNumber.isValid($0.id)
-                  && !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
-            throw CRMGatewayError.invalidResponse
-        }
-        if let customer = result.data {
-            guard customer.sourceKeyId == nil,
-                  result.matches.contains(where: { $0.id == customer.company.id }),
-                  customer.company.emails?.contains(email) == true,
-                  companyID.map({ $0 == customer.company.id }) ?? (result.matches.count == 1) else {
-                throw CRMGatewayError.invalidResponse
-            }
-            try Self.validateCustomer(customer)
-        } else if result.matches.count == 1 || companyID != nil {
-            throw CRMGatewayError.invalidResponse
+        try Self.validateLookupResponse(
+            result, selectedCompanyID: companyID
+        ) { customer in
+            customer.company.emails?.contains(email) == true
         }
         return result
     }
@@ -282,25 +270,10 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
             body: PhoneNumberRequest(phoneNumber: phone, companyId: companyID),
             configuration: configuration
         )
-        try Self.validateMetadata(result.meta)
-        guard Set(result.matches.map(\.id)).count == result.matches.count,
-              result.matches.allSatisfy({
-                  CRMKeyNumber.isValid($0.id)
-                      && !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-              }) else {
-            throw CRMGatewayError.invalidResponse
-        }
-        if let customer = result.data {
-            guard customer.sourceKeyId == nil,
-                  result.matches.contains(where: { $0.id == customer.company.id }),
-                  customer.company.phones.map({ $0.contains(phone) }) ?? true,
-                  companyID.map({ $0 == customer.company.id }) ?? (result.matches.count == 1) else {
-                throw CRMGatewayError.invalidResponse
-            }
-            try Self.validateCustomer(customer)
-        } else if result.matches.count == 1 || companyID != nil {
-            // Exactly one match/explicit selection must include its complete inventory.
-            throw CRMGatewayError.invalidResponse
+        try Self.validateLookupResponse(
+            result, selectedCompanyID: companyID
+        ) { customer in
+            customer.company.phones.map { $0.contains(phone) } ?? true
         }
         return result
     }
@@ -413,6 +386,37 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
         guard meta.complete,
               !meta.requestId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               validDate || formatter.date(from: meta.fetchedAt) != nil else {
+            throw CRMGatewayError.invalidResponse
+        }
+    }
+
+    /// Shared inventory/choice rules for both email and caller-phone lookups.
+    /// The route-specific ownership check stays with each caller.
+    private static func validateLookupResponse(
+        _ result: CRMPhoneLookupResponse,
+        selectedCompanyID: Int?,
+        customerMatchesQuery: (CRMKeyLookupCustomer) -> Bool
+    ) throws {
+        try validateMetadata(result.meta)
+        guard Set(result.matches.map(\.id)).count == result.matches.count,
+              result.matches.allSatisfy({
+                  CRMKeyNumber.isValid($0.id)
+                      && !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+              }) else {
+            throw CRMGatewayError.invalidResponse
+        }
+
+        if let customer = result.data {
+            guard customer.sourceKeyId == nil,
+                  result.matches.contains(where: { $0.id == customer.company.id }),
+                  customerMatchesQuery(customer),
+                  selectedCompanyID.map({ $0 == customer.company.id })
+                      ?? (result.matches.count == 1) else {
+                throw CRMGatewayError.invalidResponse
+            }
+            try validateCustomer(customer)
+        } else if result.matches.count == 1 || selectedCompanyID != nil {
+            // A unique match or explicit selection requires its complete inventory.
             throw CRMGatewayError.invalidResponse
         }
     }

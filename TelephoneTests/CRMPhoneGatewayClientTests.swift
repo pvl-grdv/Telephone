@@ -51,6 +51,29 @@ struct CRMPhoneGatewayClientTests {
         }
     }
 
+    @Test func phoneLookupRejectsDuplicateAndBlankCompanyChoices() async throws {
+        var root = try #require(
+            JSONSerialization.jsonObject(with: PhoneGatewayFixture.ambiguous())
+                as? [String: Any]
+        )
+        let matches = try #require(root["matches"] as? [[String: Any]])
+        var blank = matches[0]
+        blank["name"] = "   "
+
+        for invalidMatches in [[matches[0], matches[0]], [blank, matches[1]]] {
+            root["matches"] = invalidMatches
+            let data = try JSONSerialization.data(withJSONObject: root)
+            let client = CRMGatewayClient(transport: GatewayTransportFake(data: data))
+            await expectError(.invalidResponse) {
+                _ = try await client.customer(
+                    forPhoneNumber: "+70005550101",
+                    companyID: nil,
+                    configuration: configuration()
+                )
+            }
+        }
+    }
+
     @Test func appendSendsOnlyOneNarrowOperationAndExactPhoneSnapshot() async throws {
         let transport = GatewayTransportFake(data: try PhoneGatewayFixture.appended())
         let client = CRMGatewayClient(transport: transport)

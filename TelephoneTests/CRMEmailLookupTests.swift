@@ -59,6 +59,29 @@ struct CRMEmailLookupTests {
         #expect(Set(json.keys) == ["email", "companyId"])
     }
 
+    @Test func emailLookupRejectsDuplicateAndBlankCompanyChoices() async throws {
+        var root = try #require(
+            JSONSerialization.jsonObject(with: EmailGatewayFixture.ambiguous())
+                as? [String: Any]
+        )
+        let matches = try #require(root["matches"] as? [[String: Any]])
+        var blank = matches[0]
+        blank["name"] = "   "
+
+        for invalidMatches in [[matches[0], matches[0]], [blank, matches[1]]] {
+            root["matches"] = invalidMatches
+            let data = try JSONSerialization.data(withJSONObject: root)
+            let client = CRMGatewayClient(transport: GatewayTransportFake(data: data))
+            await expectError(.invalidResponse) {
+                try await client.customer(
+                    forEmail: "person@example.test",
+                    companyID: nil,
+                    configuration: configuration()
+                )
+            }
+        }
+    }
+
     private func configuration() throws -> CRMGatewayConfiguration {
         try CRMGatewayConfiguration(origin: "https://gateway.example", token: "fictional-email-token")
     }

@@ -252,27 +252,15 @@ final class CallHistoryViewModel {
     }
 
     private func rebuildVisibleRecords() {
-        let filteredByKind = allRecords.filter(filter.matches)
         let trimmedQuery = query.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
-
-        if trimmedQuery.isEmpty {
-            records = filteredByKind
-        } else {
-            records = filteredByKind.filter {
-                $0.matchesSearch(trimmedQuery)
-            }
+        records = allRecords.filter {
+            filter.matches($0)
+                && (trimmedQuery.isEmpty || $0.matchesSearch(trimmedQuery))
         }
-
-        normalizeSelection()
-    }
-
-    private func normalizeSelection() {
-        guard let selection else { return }
-        guard records.contains(where: { $0.identifier == selection }) else {
+        if let selection, !records.contains(where: { $0.identifier == selection }) {
             self.selection = nil
-            return
         }
     }
 }

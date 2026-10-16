@@ -42,18 +42,22 @@ private struct CRMInventoryBrowserView: View {
         let text: String
     }
 
+    private struct SearchResult {
+        let query: String
+        let inventory: CRMInventoryPresentation
+    }
+
     @State private var searchText = ""
-    @State private var appliedQuery = ""
-    @State private var filteredInventory: CRMInventoryPresentation?
+    @State private var searchResult: SearchResult?
     @State private var selectedKey = 0
     @State private var selectedRows: Set<CRMInventoryPresentation.Row.ID> = []
     @FocusState private var searchFocused: Bool
 
     var body: some View {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let isFiltering = !query.isEmpty && appliedQuery != searchText
+        let isFiltering = !query.isEmpty && searchResult?.query != searchText
         let inventory = query.isEmpty ? preparedInventory :
-            (appliedQuery == searchText ? (filteredInventory ?? preparedInventory) : preparedInventory)
+            (searchResult?.query == searchText ? (searchResult?.inventory ?? preparedInventory) : preparedInventory)
         let rows = inventory.rows(for: selectedKey == 0 ? nil : selectedKey)
 
         NavigationStack {
@@ -134,8 +138,7 @@ private struct CRMInventoryBrowserView: View {
         .task(id: SearchRequest(customer: customer, text: searchText)) {
             let input = searchText
             guard !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                appliedQuery = ""
-                filteredInventory = nil
+                searchResult = nil
                 return
             }
             // Keep expensive matching/group projection off the UI thread, and
@@ -146,8 +149,7 @@ private struct CRMInventoryBrowserView: View {
                 prepared.filtering(input)
             }.value
             guard !Task.isCancelled else { return }
-            filteredInventory = filtered
-            appliedQuery = input
+            searchResult = SearchResult(query: input, inventory: filtered)
         }
         .onChange(of: searchText) {
             selectedRows.removeAll()

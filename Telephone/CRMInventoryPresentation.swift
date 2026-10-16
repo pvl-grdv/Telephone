@@ -26,7 +26,6 @@ struct CRMInventoryPresentation: Equatable, Sendable {
         let id: ID
         let name: String
         let records: [CRMKeyLookupProgram]
-        var recordCount: Int { records.count }
     }
 
     struct Row: Identifiable, Equatable, Sendable {

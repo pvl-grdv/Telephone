@@ -9,14 +9,11 @@ struct CallHistoryRow: View {
     let record: PresentationCallHistoryRecord
     let answer: CRMIncomingCallAnswer?
 
-    private var notAnsweredLocally: Bool {
-        record.wasNotAnsweredHere
-    }
     private var answeredElsewhere: Bool {
-        notAnsweredLocally && answer?.status == .answered
+        record.wasNotAnsweredHere && answer?.status == .answered
     }
     private var globallyUnanswered: Bool {
-        notAnsweredLocally && answer?.status == .unanswered
+        record.wasNotAnsweredHere && answer?.status == .unanswered
     }
     private var showsMissed: Bool {
         (record.isMissed && !answeredElsewhere) || globallyUnanswered
@@ -24,7 +21,7 @@ struct CallHistoryRow: View {
 
     private var answerDetail: String? {
         // Even a stale ATS response must not override a locally answered call.
-        guard notAnsweredLocally, let answer else { return nil }
+        guard record.wasNotAnsweredHere, let answer else { return nil }
         if answer.status == .answered, let employee = answer.answeredBy {
             return String(
                 format: NSLocalizedString("Answered by: %@", comment: "Answering employee from the call service."),

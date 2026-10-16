@@ -72,6 +72,35 @@ struct CallHistoryViewModelTests {
     }
 
     @Test
+    func combinesCallKindAndTextSearchWithoutLosingRecordOrder() {
+        let missedMatch = record(
+            id: "missed-match", title: "Alpha", address: "111",
+            incoming: true, missed: true
+        )
+        let outgoingMatch = record(
+            id: "outgoing-match", title: "Alpha", address: "222",
+            incoming: false, missed: false
+        )
+        let missedOther = record(
+            id: "missed-other", title: "Beta", address: "333",
+            incoming: true, missed: true
+        )
+        let model = CallHistoryViewModel()
+        model.show([missedMatch, outgoingMatch, missedOther])
+        model.selection = outgoingMatch.id
+
+        model.filter = .missed
+        model.query = " ALPHA "
+        #expect(model.records.map(\.id) == ["missed-match"])
+        #expect(model.selection == nil)
+
+        model.query = "  "
+        #expect(model.records.map(\.id) == ["missed-match", "missed-other"])
+        model.filter = .all
+        #expect(model.records.map(\.id) == ["missed-match", "outgoing-match", "missed-other"])
+    }
+
+    @Test
     func deletingVisibleRecordUpdatesSourceAndVisibleCaches() {
         let first = record(
             id: "first",

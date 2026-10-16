@@ -246,9 +246,6 @@ final class CallDestinationInputModel {
     }
 
     private func refreshSuggestions() {
-        suggestionTask?.cancel()
-        suggestionTask = nil
-
         guard isFocused else {
             dismissSuggestions()
             return
@@ -263,6 +260,7 @@ final class CallDestinationInputModel {
             return
         }
 
+        suggestionTask?.cancel()
         let task = Task.detached(priority: .userInitiated) {
             CallDestinationContactMatching.suggestions(
                 contacts: contactsCache,

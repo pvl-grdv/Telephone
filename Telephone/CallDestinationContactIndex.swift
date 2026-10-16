@@ -40,6 +40,7 @@ enum CallDestinationContactMatching {
     ) -> [CallDestinationSuggestionMatch] {
         var matches: [CallDestinationSuggestionMatch] = []
         var seen = Set<String>()
+        let normalizedQuery = normalizedPhoneNumber(query)
 
         for contact in contacts {
             guard !Task.isCancelled else { return [] }
@@ -53,10 +54,9 @@ enum CallDestinationContactMatching {
                 let addressMatches: Bool
                 switch destination.kind {
                 case .phone:
-                    addressMatches = phoneMatchesPrefix(
-                        destination.value,
-                        query: query
-                    )
+                    addressMatches = !normalizedQuery.isEmpty
+                        && normalizedPhoneNumber(destination.value)
+                            .hasPrefix(normalizedQuery)
                 case .sip:
                     addressMatches = hasCaseInsensitivePrefix(
                         destination.value,
@@ -115,16 +115,6 @@ enum CallDestinationContactMatching {
             || hasCaseInsensitivePrefix(givenFamily, query)
             || hasCaseInsensitivePrefix(familyGiven, query)
             || hasCaseInsensitivePrefix(contact.organizationName, query)
-    }
-
-    nonisolated private static func phoneMatchesPrefix(
-        _ phoneNumber: String,
-        query: String
-    ) -> Bool {
-        let normalizedPhone = normalizedPhoneNumber(phoneNumber)
-        let normalizedQuery = normalizedPhoneNumber(query)
-        return !normalizedQuery.isEmpty
-            && normalizedPhone.hasPrefix(normalizedQuery)
     }
 
 }

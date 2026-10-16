@@ -108,14 +108,15 @@ final class CallDestinationInputModel {
         }
     }
 
-    var callDestinationURI: AKSIPURI? {
+    private var currentDestination: CallDestination? {
         if selectedGroup == nil {
             normalizeCurrentDestination()
         }
-        guard
-            let source = selectedGroup?.selectedDestination?.uri,
-            !source.user.isEmpty
-        else {
+        return selectedGroup?.selectedDestination
+    }
+
+    var callDestinationURI: AKSIPURI? {
+        guard let source = currentDestination?.uri, !source.user.isEmpty else {
             return nil
         }
 
@@ -128,10 +129,7 @@ final class CallDestinationInputModel {
     }
 
     var callDestinationPhoneLabel: String {
-        if selectedGroup == nil {
-            normalizeCurrentDestination()
-        }
-        return selectedGroup?.selectedDestination?.phoneLabel ?? ""
+        currentDestination?.phoneLabel ?? ""
     }
 
     func setFocused(_ focused: Bool) {
@@ -316,7 +314,6 @@ final class CallDestinationInputModel {
             )
             let selected = destinations[selectedIndex]
             let uri = selected.uri
-            let address = uri.host.isEmpty ? uri.user : uri.sipAddress
             let value = uri.host.isEmpty
                 ? formattedPhoneNumber(uri.user)
                 : uri.sipAddress
@@ -327,9 +324,7 @@ final class CallDestinationInputModel {
                 destinations: destinations,
                 selectedIndex: selectedIndex
             )
-            let editingText = displayName.isEmpty
-                ? address
-                : "\(displayName) <\(address)>"
+            let editingText = editingString(for: group)
 
             values.append(
                 CallDestinationSuggestion(

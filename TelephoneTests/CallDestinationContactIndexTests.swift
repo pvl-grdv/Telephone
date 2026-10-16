@@ -212,6 +212,31 @@ struct CallDestinationContactMatchingTests {
         ).map(\.destination.kind) == [.sip])
     }
 
+    @Test func formattedPhonePrefixMatchesMultipleContactsWithoutMatchingPlainText() {
+        let contacts = [
+            CallDestinationContactRecord(
+                id: "first", displayName: "One", organizationName: "",
+                givenName: "", familyName: "",
+                destinations: [
+                    .init(value: "+1 (202) 555-0100", label: "", kind: .phone)
+                ]
+            ),
+            CallDestinationContactRecord(
+                id: "second", displayName: "Two", organizationName: "",
+                givenName: "", familyName: "",
+                destinations: [
+                    .init(value: "+1-202-555-0199", label: "", kind: .phone)
+                ]
+            ),
+        ]
+        #expect(CallDestinationContactMatching.suggestions(
+            contacts: contacts, query: "+1 202 555", limit: 5
+        ).map(\.contact.id) == ["first", "second"])
+        #expect(CallDestinationContactMatching.suggestions(
+            contacts: contacts, query: "not-a-number", limit: 5
+        ).isEmpty)
+    }
+
     @Test func removesDuplicateDestinationsAndRespectsLimit() {
         let contact = CallDestinationContactRecord(
             id: "1", displayName: "Person", organizationName: "",

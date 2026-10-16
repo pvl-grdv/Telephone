@@ -37,27 +37,6 @@ final class SoundPreferencesViewEventTarget {
     }
 
     func reloadSoundIO(in view: SoundPreferencesView) {
-        loadSettingsSoundIOInViewOrLogError(view: view)
-    }
-
-    func didChangeSoundIO(_ soundIO: PresentationSoundIO) {
-        updateSettings(withSoundIO: soundIO)
-        userAgentSoundIOSelection.execute()
-        updateRingtoneOutputOrLogError()
-    }
-
-    func didChangeRingtoneName(_ name: String) {
-        updateSettings(withRingtoneSoundName: name)
-        playRingtoneSoundOrLogError()
-    }
-
-    func stopRingtonePreview() {
-        ringtoneSoundPlayback.stop()
-    }
-}
-
-private extension SoundPreferencesViewEventTarget {
-    func loadSettingsSoundIOInViewOrLogError(view: SoundPreferencesView) {
         do {
             try useCaseFactory.makeSettingsSoundIOLoadUseCase(
                 output: SoundIOPresenter(output: view)
@@ -75,10 +54,25 @@ private extension SoundPreferencesViewEventTarget {
         }
     }
 
-    func updateSettings(withSoundIO soundIO: PresentationSoundIO) {
-        useCaseFactory.makeSettingsSoundIOSaveUseCase(soundIO: SystemDefaultingSoundIO(soundIO)).execute()
+    func didChangeSoundIO(_ soundIO: PresentationSoundIO) {
+        useCaseFactory.makeSettingsSoundIOSaveUseCase(
+            soundIO: SystemDefaultingSoundIO(soundIO)
+        ).execute()
+        userAgentSoundIOSelection.execute()
+        updateRingtoneOutputOrLogError()
     }
 
+    func didChangeRingtoneName(_ name: String) {
+        useCaseFactory.makeSettingsRingtoneSoundNameSaveUseCase(name: name).execute()
+        playRingtoneSoundOrLogError()
+    }
+
+    func stopRingtonePreview() {
+        ringtoneSoundPlayback.stop()
+    }
+}
+
+private extension SoundPreferencesViewEventTarget {
     func updateRingtoneOutputOrLogError() {
         do {
             try ringtoneOutputUpdate.execute()
@@ -93,10 +87,6 @@ private extension SoundPreferencesViewEventTarget {
                 """
             )
         }
-    }
-
-    func updateSettings(withRingtoneSoundName name: String) {
-        useCaseFactory.makeSettingsRingtoneSoundNameSaveUseCase(name: name).execute()
     }
 
     func playRingtoneSoundOrLogError() {

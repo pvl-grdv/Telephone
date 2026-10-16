@@ -6,12 +6,12 @@
 import SwiftUI
 
 extension FocusedValues {
-    @Entry var callHistoryPresenter: CallHistoryPresenter?
+    @Entry var callHistoryModel: CallHistoryViewModel?
 }
 
 struct CallHistoryCommands: Commands {
-    @FocusedValue(\.callHistoryPresenter)
-    private var presenter
+    @FocusedValue(\.callHistoryModel)
+    private var model
 
     var body: some Commands {
         CommandGroup(after: .pasteboard) {
@@ -21,10 +21,10 @@ struct CallHistoryCommands: Commands {
                     comment: "Focus call history search menu item."
                 )
             ) {
-                presenter?.focusSearch()
+                model?.requestSearchFocus()
             }
             .keyboardShortcut("f", modifiers: .command)
-            .disabled(presenter == nil)
+            .disabled(model == nil)
         }
     }
 }

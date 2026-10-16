@@ -95,7 +95,7 @@ struct AccountWindowRootView: View {
     @State private var showsAccountStateTitle = false
 
     let callDestinationComposer: CallDestinationComposer
-    let callHistoryPresenter: CallHistoryPresenter
+    let callHistory: CallHistoryScreen
     let changeState: (AccountAvailabilityState) -> Void
     let submitAuthenticationFailure: (AuthenticationFailureModel) -> Void
 
@@ -108,7 +108,7 @@ struct AccountWindowRootView: View {
                 Divider()
             }
 
-            callHistoryPresenter.contentView
+            callHistory
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(

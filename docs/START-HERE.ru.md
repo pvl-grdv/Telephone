@@ -31,8 +31,9 @@
    `View`, список, строка записи, поиск, кнопки и подтверждение удаления.
 4. **`CallHistoryModel.swift`** — состояние истории (`@Observable`),
    фильтрация записей, выбор, удаление и получение ответов АТС.
-5. **`AccountPresentationCoordinator.swift`** — соединяет окно и
-   сценарии действий. Это инфраструктура жизненного цикла, не сама View.
+5. **`AccountPresentationCoordinator.swift`** — владеет моделью истории,
+   соединяет окно и сценарии действий. Это инфраструктура жизненного цикла,
+   не сама View.
 6. **`CallHistoryViewEventTargetFactory.swift` и `CallHistoryViewPresenter.swift`** —
    место стыковки старых UseCases с моделью истории. Пока эти мосты
    нужны, чтобы сохранять поведение при изменениях UI.
@@ -65,12 +66,13 @@ SQLiteCallHistory (хранение)
   → CallHistoryRecordGetAllUseCase (получить записи)
   → ContactCallHistoryRecordGetAllUseCase (найти контакты)
   → CallHistoryViewPresenter (подготовить данные для интерфейса)
-  → CallHistoryPresenter / CallHistoryViewModel
+  → CallHistoryViewModel
   → CallHistoryScreen
 ```
 
-Этот второй путь — хороший кандидат для **постепенного** упрощения,
-но нельзя ломать уведомления об изменении истории или потокобезопасность.
+Теперь запись попадает непосредственно в модель, без лишнего класса-посредника.
+Оставшиеся мосты стоит упрощать постепенно, не ломая уведомления
+об изменении истории и потокобезопасность.
 
 ## Какие границы сохранять
 

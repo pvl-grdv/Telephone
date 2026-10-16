@@ -25,7 +25,7 @@ final class AccountPresentationCoordinator {
     private let accountDescription: String
     private let windowKey: String
     private let callDestinationComposer: CallDestinationComposer
-    private let callHistoryPresenter: CallHistoryPresenter
+    private let callHistoryModel: CallHistoryViewModel
     private let callHistoryViewEventTargetFactory: CallHistoryViewEventTargetFactory
     private let account: any CallMakingAccount
     private let authenticationFailureController: AuthenticationFailureController
@@ -51,7 +51,7 @@ final class AccountPresentationCoordinator {
         callDestinationComposer = CallDestinationComposer(
             accountController: accountController
         )
-        callHistoryPresenter = CallHistoryPresenter(gatewaySettings: accountController.crmGatewaySettings)
+        callHistoryModel = CallHistoryViewModel(gatewaySettings: accountController.crmGatewaySettings)
         self.callHistoryViewEventTargetFactory = callHistoryViewEventTargetFactory
         self.account = account
         authenticationFailureController = AuthenticationFailureController(
@@ -70,7 +70,21 @@ final class AccountPresentationCoordinator {
         AccountWindowRootView(
             model: model,
             callDestinationComposer: callDestinationComposer,
-            callHistoryPresenter: callHistoryPresenter,
+            callHistory: CallHistoryScreen(
+                model: callHistoryModel,
+                call: { [weak self] identifier in
+                    self?.callHistoryViewEventTarget?.didPickRecord(withIdentifier: identifier)
+                },
+                copy: { address in
+                    MacClipboard.shared.copy(address)
+                },
+                deleteRecord: { [weak self] identifier in
+                    self?.callHistoryViewEventTarget?.shouldRemoveRecord(withIdentifier: identifier)
+                },
+                deleteAll: { [weak self] in
+                    self?.callHistoryViewEventTarget?.shouldRemoveAllRecords()
+                }
+            ),
             changeState: { [weak self] state in
                 guard let self else { return }
                 self.accountDelegate?.accountPresentationCoordinator(
@@ -84,7 +98,7 @@ final class AccountPresentationCoordinator {
             }
         )
         .navigationTitle(accountDescription)
-        .focusedSceneValue(\.callHistoryPresenter, callHistoryPresenter)
+        .focusedSceneValue(\.callHistoryModel, callHistoryModel)
         .onAppear { [weak self] in
             self?.configureCallHistoryIfNeeded()
         }
@@ -136,7 +150,6 @@ final class AccountPresentationCoordinator {
         callHistorySetupTask?.cancel()
         callHistorySetupTask = nil
         dismissAuthenticationFailure()
-        callHistoryPresenter.target = nil
         callHistoryViewEventTarget = nil
         AccountPresentationRegistry.shared.unregister(key: windowKey)
     }
@@ -147,14 +160,14 @@ final class AccountPresentationCoordinator {
 
         let factory = callHistoryViewEventTargetFactory
         let account = account
-        let presenter = callHistoryPresenter
-        callHistorySetupTask = Task { [weak self, weak presenter] in
-            let target = await factory.make(account: account) { [weak presenter] records in
-                presenter?.show(records)
+        let historyModel = callHistoryModel
+        callHistorySetupTask = Task { [weak self, weak historyModel] in
+            let target = await factory.make(account: account) { [weak historyModel] records in
+                historyModel?.show(records)
             }
             guard !Task.isCancelled, let self else { return }
             self.callHistoryViewEventTarget = target
-            self.callHistoryPresenter.target = target
+            target.shouldReloadData()
             self.callHistorySetupTask = nil
         }
     }

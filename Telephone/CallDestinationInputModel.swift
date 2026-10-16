@@ -53,7 +53,7 @@ final class CallDestinationInputModel {
 
     var text = "" {
         didSet {
-            guard !isApplyingSelection else { return }
+            guard oldValue != text, !isApplyingSelection else { return }
             selectedGroup = nil
             refreshSuggestions()
         }
@@ -79,7 +79,7 @@ final class CallDestinationInputModel {
     @ObservationIgnored
     private var isApplyingSelection = false
 
-    @ObservationIgnored
+    // The destination menu reads this value directly; it must be observed.
     private var selectedGroup: CallDestinationGroup?
 
     var canCall: Bool {

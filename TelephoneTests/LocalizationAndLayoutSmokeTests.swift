@@ -268,6 +268,19 @@ struct LocalizationAndLayoutSmokeTests {
     }
 
     @Test
+    func dialerMenuObservesSelectedGroupAndKeepsSelectionOnIdenticalInput() throws {
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/CallDestinationInputModel.swift"
+            ),
+            encoding: .utf8
+        )
+        #expect(source.contains("guard oldValue != text, !isApplyingSelection else { return }"))
+        #expect(source.contains("private var selectedGroup: CallDestinationGroup?"))
+        #expect(!source.contains("@ObservationIgnored\n    private var selectedGroup"))
+    }
+
+    @Test
     func accountToolbarKeepsCompactStatusFallback() throws {
         let source = try String(
             contentsOf: repositoryRoot.appendingPathComponent(

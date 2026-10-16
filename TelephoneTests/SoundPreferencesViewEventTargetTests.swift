@@ -31,7 +31,6 @@ struct SoundPreferencesViewEventTargetTests {
     init() {
         sut = SoundPreferencesViewEventTarget(
             useCaseFactory: factory,
-            presenterFactory: PresenterFactory(),
             userAgentSoundIOSelection: userAgentSoundIOSelection,
             ringtoneOutputUpdate: ringtoneOutputUpdate,
             ringtoneSoundPlayback: soundPlayback

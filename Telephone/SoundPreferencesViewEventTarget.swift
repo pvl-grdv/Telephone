@@ -22,18 +22,15 @@ import UseCases
 @MainActor
 final class SoundPreferencesViewEventTarget {
     private let useCaseFactory: UseCaseFactory
-    private let presenterFactory: PresenterFactory
     private let userAgentSoundIOSelection: UseCase
     private let ringtoneOutputUpdate: ThrowingUseCase
     private let ringtoneSoundPlayback: SoundPlaybackUseCase
 
     init(useCaseFactory: UseCaseFactory,
-         presenterFactory: PresenterFactory,
          userAgentSoundIOSelection: UseCase,
          ringtoneOutputUpdate: ThrowingUseCase,
          ringtoneSoundPlayback: SoundPlaybackUseCase) {
         self.useCaseFactory = useCaseFactory
-        self.presenterFactory = presenterFactory
         self.userAgentSoundIOSelection = userAgentSoundIOSelection
         self.ringtoneOutputUpdate = ringtoneOutputUpdate
         self.ringtoneSoundPlayback = ringtoneSoundPlayback
@@ -122,7 +119,7 @@ private extension SoundPreferencesViewEventTarget {
 
     func makeSettingsSoundIOLoadUseCase(view: SoundPreferencesView) -> ThrowingUseCase {
         return useCaseFactory.makeSettingsSoundIOLoadUseCase(
-            output: presenterFactory.makeSoundIOPresenter(output: view)
+            output: SoundIOPresenter(output: view)
         )
     }
 }

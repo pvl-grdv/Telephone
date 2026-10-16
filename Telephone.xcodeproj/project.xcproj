@@ -563,13 +563,6 @@
         { "path": "NSUserDefaults+KeyValueSettings.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "OrphanLogFileRemoval.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
-          "path": "PresenterFactory.swift",
-          "encoding": "utf8",
-          "target-membership": [
-            "Telephone/compile-sources",
-            "TelephoneTests/compile-sources",
-          ],
-        }, {
           "path": "RestoredSelectionIndex.swift",
           "encoding": "utf8",
           "target-membership": [

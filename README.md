@@ -26,6 +26,9 @@ In particular, this fork aims to:
 - keep third-party dependencies pinned and reproducible;
 - prefer small, reviewable migrations over a big-bang rewrite.
 
+If you are learning Swift, start with the [Russian-language code tour](docs/START-HERE.ru.md).
+It explains the main files, useful boundaries, and the KISS approach to maintenance.
+
 PJSIP, Opus, and LibreSSL remain external C dependencies. Telephone does not
 rewrite those libraries; it keeps their unsafe/C details at the lowest practical
 boundary of the application.

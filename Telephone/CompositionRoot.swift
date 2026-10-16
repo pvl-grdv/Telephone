@@ -101,7 +101,6 @@ final class CompositionRoot {
             userAgent: userAgent,
             soundPreferencesViewEventTarget: SoundPreferencesViewEventTarget(
                 useCaseFactory: useCaseFactory,
-                presenterFactory: PresenterFactory(),
                 userAgentSoundIOSelection: userAgentSoundIOSelection,
                 ringtoneOutputUpdate: RingtoneOutputUpdateUseCase(playback: ringtonePlayback),
                 ringtoneSoundPlayback: DefaultSoundPlaybackUseCase(factory: soundFactory)

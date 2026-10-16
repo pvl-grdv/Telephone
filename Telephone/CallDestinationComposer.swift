@@ -202,8 +202,9 @@ private struct DestinationSuggestionsView: View {
     let hover: (String) -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(suggestions) { suggestion in
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(suggestions) { suggestion in
                 Button {
                     choose(suggestion)
                 } label: {
@@ -227,34 +228,45 @@ private struct DestinationSuggestionsView: View {
                         Spacer(minLength: 0)
                     }
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
                     .background {
                         if highlightedID == suggestion.id {
-                            Color.accentColor.opacity(0.12)
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.accentColor.opacity(0.16))
                         }
                     }
                 }
-                .buttonStyle(.plain)
-                .onHover { hovering in
-                    if hovering {
-                        hover(suggestion.id)
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 4)
+                    .onHover { hovering in
+                        if hovering {
+                            hover(suggestion.id)
+                        }
                     }
-                }
 
-                if suggestion.id != suggestions.last?.id {
-                    Divider()
-                        .padding(.leading, 38)
+                    if suggestion.id != suggestions.last?.id {
+                        Divider()
+                            .padding(.leading, 38)
+                            .padding(.trailing, 6)
+                    }
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial, in: .rect(cornerRadius: 7))
+        // A capped scroll region must not dictate the width of the transfer sheet.
+        .frame(height: min(CGFloat(suggestions.count) * 52, 240))
+        .frame(maxWidth: .infinity)
+        .background(
+            Color(nsColor: .controlBackgroundColor),
+            in: RoundedRectangle(cornerRadius: 8)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay {
-            RoundedRectangle(cornerRadius: 7)
-                .stroke(.separator.opacity(0.6), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(.separator.opacity(0.55), lineWidth: 0.5)
         }
-        .shadow(radius: 5, y: 2)
+        .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
     }
 }
 
@@ -297,6 +309,8 @@ struct TransferDestinationView: View {
             }
         }
         .padding(20)
-        .frame(minWidth: 320, idealWidth: 360, minHeight: 118)
+        // Keep the native transfer sheet compact even for long contact names.
+        .frame(width: 400)
+        .frame(minHeight: 118)
     }
 }

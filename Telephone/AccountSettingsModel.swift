@@ -83,13 +83,15 @@ final class AccountSettingsModel {
     init(
         preferencesController: AnyObject?,
         defaults: UserDefaults = .standard,
-        credentials: any CredentialsStoring
+        credentials: any CredentialsStoring,
+        notificationCenter: NotificationCenter = .default
     ) {
         self.preferencesController = preferencesController
         self.defaults = defaults
         self.credentials = credentials
 
         accountAddedObservation = NotificationObservation(
+            center: notificationCenter,
             name: accountSetupDidAddNotification
         ) { [weak self] _ in
             MainActor.assumeIsolated {

@@ -137,10 +137,7 @@ struct PreferencesHostedScene: Scene {
 
     var body: some Scene {
         Settings {
-            SettingsRootView(
-                model: model,
-                selectionChanged: { _ in }
-            )
+            SettingsRootView(model: model)
         }
         .defaultSize(width: 600, height: 330)
         .windowResizability(.contentSize)
@@ -161,10 +158,7 @@ struct PreferencesUITestHostedScene: Scene {
             ),
             id: PreferencesUITestScene.id
         ) {
-            SettingsRootView(
-                model: model,
-                selectionChanged: { _ in }
-            )
+            SettingsRootView(model: model)
         }
         .defaultLaunchBehavior(.suppressed)
         .defaultSize(width: 600, height: 330)

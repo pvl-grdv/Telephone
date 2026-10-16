@@ -7,7 +7,6 @@ import SwiftUI
 
 struct SettingsRootView: View {
     @Bindable var model: SettingsViewModel
-    let selectionChanged: (SettingsSection) -> Void
 
     var body: some View {
         TabView(selection: $model.selection.animation(.smooth(duration: 0.22))) {
@@ -91,7 +90,6 @@ struct SettingsRootView: View {
                 "\(selection.rawValue)"
             )
             PerformanceStateReporting.showSettingsSection(selection)
-            selectionChanged(selection)
         }
         .onAppear {
             PerformanceSignposts.settings.emitEvent("SettingsVisible")
@@ -101,6 +99,5 @@ struct SettingsRootView: View {
             PerformanceStateReporting.hideSettings()
             model.prepareToClose()
         }
-
-}
+    }
 }

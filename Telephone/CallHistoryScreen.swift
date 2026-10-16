@@ -13,20 +13,6 @@ struct CallHistoryScreen: View {
     let deleteRecord: (String) -> Void
     let deleteAll: () -> Void
 
-    init(
-        model: CallHistoryViewModel,
-        call: @escaping (String) -> Void,
-        copy: @escaping (String) -> Void,
-        deleteRecord: @escaping (String) -> Void,
-        deleteAll: @escaping () -> Void
-    ) {
-        self.model = model
-        self.call = call
-        self.copy = copy
-        self.deleteRecord = deleteRecord
-        self.deleteAll = deleteAll
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             CallHistoryControls(model: model)

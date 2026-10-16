@@ -16,7 +16,8 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(
             preferencesController: nil,
             defaults: fixture.defaults,
-            credentials: fixture.credentials
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
         )
         await waitForPasswordLoad(model)
 
@@ -43,7 +44,8 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(
             preferencesController: nil,
             defaults: fixture.defaults,
-            credentials: fixture.credentials
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
         )
 
         #expect(model.accountListInteractionDisabled)
@@ -70,7 +72,8 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(
             preferencesController: nil,
             defaults: fixture.defaults,
-            credentials: fixture.credentials
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
         )
         await waitForPasswordLoad(model)
 
@@ -105,7 +108,8 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(
             preferencesController: nil,
             defaults: fixture.defaults,
-            credentials: fixture.credentials
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
         )
         await waitForPasswordLoad(model)
 
@@ -131,7 +135,8 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(
             preferencesController: nil,
             defaults: fixture.defaults,
-            credentials: fixture.credentials
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
         )
         await waitForPasswordLoad(model)
 
@@ -163,7 +168,8 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(
             preferencesController: nil,
             defaults: fixture.defaults,
-            credentials: fixture.credentials
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
         )
         await waitForPasswordLoad(model)
 
@@ -204,7 +210,8 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(
             preferencesController: nil,
             defaults: fixture.defaults,
-            credentials: fixture.credentials
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
         )
         await waitForPasswordLoad(model)
 
@@ -223,6 +230,36 @@ struct AccountSettingsModelTests {
     }
 
     @Test
+    func addingAccountNotificationReloadsTheListAndSelectsTheNewAccount() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
+        )
+        await waitForPasswordLoad(model)
+
+        var stored = storedAccounts(in: fixture.defaults)
+        stored.append([
+            AKSIPAccountKeys.uuid: "new-account-id",
+            AKSIPAccountKeys.desc: "New account",
+            AKSIPAccountKeys.domain: "new.example.com",
+            AKSIPAccountKeys.username: "bob"
+        ])
+        fixture.defaults.set(stored, forKey: UserDefaultsKeys.accounts)
+        fixture.notificationCenter.post(
+            name: Notification.Name("AKAccountSetupControllerDidAddAccount"),
+            object: nil
+        )
+
+        #expect(model.accounts.map(\.id) == ["account-id", "new-account-id"])
+        #expect(model.selection == "new-account-id")
+        await waitForPasswordLoad(model)
+    }
+
+    @Test
     func invalidProxyPortDoesNotEnableAccount() async {
         let fixture = makeFixture()
         defer { fixture.cleanup() }
@@ -230,7 +267,8 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(
             preferencesController: nil,
             defaults: fixture.defaults,
-            credentials: fixture.credentials
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
         )
         await waitForPasswordLoad(model)
 
@@ -253,7 +291,8 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(
             preferencesController: nil,
             defaults: fixture.defaults,
-            credentials: fixture.credentials
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
         )
         await waitForPasswordLoad(model)
 
@@ -348,6 +387,7 @@ private struct AccountSettingsFixture {
     let suiteName: String
     let defaults: UserDefaults
     let credentials: CredentialsStoreFake
+    let notificationCenter = NotificationCenter()
 
     func cleanup() {
         defaults.removePersistentDomain(forName: suiteName)

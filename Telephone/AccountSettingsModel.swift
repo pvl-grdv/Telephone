@@ -168,7 +168,7 @@ final class AccountSettingsModel {
             nextSelection = accounts.first?.id
         }
 
-        select(nextSelection, reloadIfUnchanged: true)
+        select(nextSelection)
     }
 
     func reloadAccount(at index: Int) {
@@ -180,7 +180,7 @@ final class AccountSettingsModel {
 
         let identifier = stringValue(stored[index][AKSIPAccountKeys.uuid])
         accounts = summaries(from: stored)
-        select(identifier, reloadIfUnchanged: true)
+        select(identifier)
     }
 
     func flushPendingChanges() {
@@ -255,7 +255,7 @@ final class AccountSettingsModel {
         let nextSelection = stored.isEmpty
             ? nil
             : accounts[min(index, accounts.count - 1)].id
-        select(nextSelection, reloadIfUnchanged: true)
+        select(nextSelection)
     }
 
     func setEnabled(_ enabled: Bool) {
@@ -307,21 +307,16 @@ final class AccountSettingsModel {
     private func accountDidAdd() {
         let stored = storedAccounts()
         accounts = summaries(from: stored)
-        select(accounts.last?.id, reloadIfUnchanged: true)
+        select(accounts.last?.id)
     }
 
-    private func select(
-        _ identifier: String?,
-        reloadIfUnchanged: Bool
-    ) {
-        if selection == identifier {
-            if reloadIfUnchanged {
-                persistSelectedDraftNow()
-                loadSelectedDraft()
-            }
-        } else {
+    private func select(_ identifier: String?) {
+        guard selection == identifier else {
             selection = identifier
+            return
         }
+        persistSelectedDraftNow()
+        loadSelectedDraft()
     }
 
     private func draftDidChange(from oldValue: AccountSettingsDraft) {
@@ -409,14 +404,13 @@ final class AccountSettingsModel {
         }
 
         stored[index][UserDefaultsKeys.accountEnabled] = false
-        defaults.set(stored, forKey: UserDefaultsKeys.accounts)
+        saveAccounts(stored)
 
         var updatedDraft = draft
         updatedDraft.isEnabled = false
         applyDraft(updatedDraft)
         hasUnsavedDraft = false
         credentialsAreDirty = false
-        accounts = summaries(from: stored)
 
         postEnabledChange(index: index)
     }
@@ -549,14 +543,12 @@ final class AccountSettingsModel {
         }
 
         let stored = storedAccounts()
-        guard let account = stored.first(where: {
-            stringValue($0[AKSIPAccountKeys.uuid]) == selection
-        }) else {
+        guard let index = storedAccountIndex(for: selection, in: stored) else {
             applyDraft(AccountSettingsDraft())
             return
         }
 
-        let loaded = AccountSettingsDraft(storedAccount: account)
+        let loaded = AccountSettingsDraft(storedAccount: stored[index])
         applyDraft(loaded)
         loadPassword(
             service: credentialService(registrar: loaded.registrar, domain: loaded.domain),

@@ -39,7 +39,6 @@ final class ApplicationCoordinator:
 
     private var shouldRegisterAllAccounts = false
     private var shouldRestartUserAgentASAP = false
-    private var terminating = false
     private var terminationConfirmed = false
     private var shouldPresentUserAgentLaunchError = false
     private var finishedLaunching = false
@@ -71,6 +70,10 @@ final class ApplicationCoordinator:
 
     private var nameServers: NameServers {
         compositionRoot.nameServers
+    }
+
+    private var canHandleNetworkChange: Bool {
+        networkReachability.isReachable && finishedLaunching && userSessionActive
     }
 
     init() {
@@ -314,7 +317,6 @@ final class ApplicationCoordinator:
             return .terminateLater
         }
 
-        terminating = true
         terminationTask = Task { [weak self] in
             guard let self else { return }
 
@@ -385,7 +387,7 @@ final class ApplicationCoordinator:
     func sipUserAgentDidFinishStopping(
         _ notification: Notification
     ) {
-        if terminating {
+        if terminationTask != nil {
             terminationTask = Task { [weak self] in
                 guard let self else { return }
                 // Drain terminal SIP callbacks before allowing process exit.
@@ -1077,13 +1079,7 @@ final class ApplicationCoordinator:
     ) {
         networkPathTask?.cancel()
 
-        guard
-            networkReachability.isReachable,
-            finishedLaunching,
-            userSessionActive
-        else {
-            return
-        }
+        guard canHandleNetworkChange else { return }
 
         networkPathTask = Task { [weak self] in
             do {
@@ -1098,13 +1094,7 @@ final class ApplicationCoordinator:
     }
 
     private func handleNetworkPathChange() {
-        guard
-            networkReachability.isReachable,
-            finishedLaunching,
-            userSessionActive
-        else {
-            return
-        }
+        guard canHandleNetworkChange else { return }
 
         if userAgent.isStarted {
             userAgent.handleIPAddressChange()

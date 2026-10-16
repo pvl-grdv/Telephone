@@ -37,6 +37,62 @@ struct AccountSettingsModelTests {
     }
 
     @Test
+    func reloadingTheSelectedAccountPreservesPendingEditsAndRefreshesNewValues() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
+        )
+        await waitForPasswordLoad(model)
+
+        model.draft.descriptionText = "Local edit"
+        model.reloadAccount(at: 0)
+        #expect(model.selection == "account-id")
+        #expect(model.draft.descriptionText == "Local edit")
+        #expect(storedAccounts(in: fixture.defaults).first?[
+            AKSIPAccountKeys.desc
+        ] as? String == "Local edit")
+        await waitForPasswordLoad(model)
+
+        var stored = storedAccounts(in: fixture.defaults)
+        stored[0][AKSIPAccountKeys.desc] = "Updated elsewhere"
+        fixture.defaults.set(stored, forKey: UserDefaultsKeys.accounts)
+        model.reloadAccount(at: 0)
+        #expect(model.selection == "account-id")
+        #expect(model.draft.descriptionText == "Updated elsewhere")
+        await waitForPasswordLoad(model)
+    }
+
+    @Test
+    func disablingAnAccountSynchronizesTheDraftAndListWithoutKeychainWrites() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
+        )
+        await waitForPasswordLoad(model)
+
+        model.setEnabled(true)
+        #expect(model.draft.isEnabled)
+        model.setEnabled(false)
+
+        #expect(!model.draft.isEnabled)
+        #expect(model.accounts.first?.isEnabled == false)
+        #expect(model.selection == "account-id")
+        #expect((storedAccounts(in: fixture.defaults).first?[
+            UserDefaultsKeys.accountEnabled
+        ] as? NSNumber)?.boolValue == false)
+        #expect(await fixture.credentials.saveCount() == 0)
+        #expect(await fixture.credentials.deletedCredentials().isEmpty)
+    }
+
+    @Test
     func accountListIsLockedDuringCredentialWork() async {
         let fixture = makeFixture()
         defer { fixture.cleanup() }

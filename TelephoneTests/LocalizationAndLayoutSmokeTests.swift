@@ -33,6 +33,7 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/CallCustomerDetailsWindowController.swift",
             "Telephone/CRMGatewaySettingsView.swift",
             "Telephone/CRMKeyLookupView.swift",
+            "Telephone/CRMManualSearchView.swift",
             "Telephone/CRMCustomerInventoryView.swift",
             "Telephone/GeneralSettingsView.swift",
             "Telephone/NetworkSettingsView.swift",

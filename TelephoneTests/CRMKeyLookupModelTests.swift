@@ -227,6 +227,33 @@ struct CRMKeyLookupModelTests {
         #expect(fixture.model.state == .idle)
     }
 
+    @Test func manualSearchReadinessUsesOneSharedContextGuard() async throws {
+        let fixture = try await makeFixture()
+        let model = fixture.model
+        model.keyNumber = "76543"
+        model.email = "alice@example.com"
+        model.organizationCode = "98765432"
+
+        #expect(model.canSearch)
+        #expect(model.canSearchEmail)
+        #expect(model.canSearchOrganizationCode)
+
+        model.deactivateContext()
+        #expect(!model.canSearch)
+        #expect(!model.canSearchEmail)
+        #expect(!model.canSearchOrganizationCode)
+
+        model.activateContext()
+        #expect(model.canSearch)
+        #expect(model.canSearchEmail)
+        #expect(model.canSearchOrganizationCode)
+
+        model.email = "not-an-email"
+        #expect(!model.canSearchEmail)
+        #expect(model.canSearch)
+        #expect(model.canSearchOrganizationCode)
+    }
+
     @Test func organizationNumberLookupLoadsInventoryAndNeverAllowsPhoneAppend() async throws {
         let settings = CRMGatewaySettings(defaults: freshDefaults(), tokenStore: GatewayTokenStoreFake())
         try await settings.save(

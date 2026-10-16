@@ -97,6 +97,7 @@
             { "path": "CRMPhoneAppendOperation.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "<PROJECT>/TelephoneTests/CRMPhoneAppendOperationTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "CRMKeyLookupView.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+            { "path": "CRMManualSearchView.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "<PROJECT>/TelephoneTests/CRMGatewayClientTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "<PROJECT>/TelephoneTests/CRMKeyLookupModelTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "<PROJECT>/TelephoneTests/CRMPhoneNumberTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },

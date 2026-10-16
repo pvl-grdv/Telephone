@@ -284,6 +284,38 @@ struct AccountSettingsModelTests {
     }
 
     @Test
+    func enablingWithChangedCredentialIdentitySavesNewBeforeDeletingOld() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
+        )
+        await waitForPasswordLoad(model)
+
+        model.draft.registrar = "new.example.com"
+        model.draft.username = "bob"
+        model.draft.password = "replacement"
+        model.setEnabled(true)
+
+        await waitForCredentialSave(fixture.credentials)
+        await waitUntil { model.draft.isEnabled }
+        let saves = await fixture.credentials.savedCredentials()
+        let deletions = await fixture.credentials.deletedCredentials()
+        #expect(saves.last?.service == "SIP: new.example.com")
+        #expect(saves.last?.account == "bob")
+        #expect(saves.last?.password == "replacement")
+        #expect(deletions.contains(
+            .init(service: "SIP: old.example.com", account: "alice")
+        ))
+        #expect((storedAccounts(in: fixture.defaults).first?[
+            UserDefaultsKeys.accountEnabled
+        ] as? NSNumber)?.boolValue == true)
+    }
+
+    @Test
     func failedCredentialSaveDoesNotEnableAccount() async {
         let fixture = makeFixture(saveSucceeds: false)
         defer { fixture.cleanup() }

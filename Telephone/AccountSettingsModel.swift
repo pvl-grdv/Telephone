@@ -473,26 +473,14 @@ final class AccountSettingsModel {
         Task { [weak self] in
             guard let self else { return }
 
-            let success = await credentials.savePassword(
-                password,
+            guard await saveChangedCredentials(
+                password: password,
                 service: service,
-                account: username
-            )
-
-            guard generation == credentialSaveGeneration else { return }
-            credentialsAreSaving = false
-
-            guard success else {
-                showsCredentialsError = true
-                return
-            }
-
-            await deletePreviousCredentialsIfNeeded(
+                account: username,
                 previousService: previousService,
                 previousAccount: previousAccount,
-                newService: service,
-                newAccount: username
-            )
+                generation: generation
+            ) else { return }
 
             commitEnabledAccount(
                 account,
@@ -649,26 +637,14 @@ final class AccountSettingsModel {
         Task { [weak self] in
             guard let self else { return }
 
-            let success = await credentials.savePassword(
-                password,
+            guard await saveChangedCredentials(
+                password: password,
                 service: service,
-                account: account
-            )
-
-            guard generation == credentialSaveGeneration else { return }
-            credentialsAreSaving = false
-
-            guard success else {
-                showsCredentialsError = true
-                return
-            }
-
-            await deletePreviousCredentialsIfNeeded(
+                account: account,
                 previousService: previousService,
                 previousAccount: previousAccount,
-                newService: service,
-                newAccount: account
-            )
+                generation: generation
+            ) else { return }
 
             guard self.selection == selection else { return }
             loadedCredentials = LoadedAccountCredentials(
@@ -678,6 +654,38 @@ final class AccountSettingsModel {
             )
             credentialsAreDirty = false
         }
+    }
+
+    /// Save the new Keychain entry before retiring the previous identity.
+    /// Both account-enable and disabled-account autosave share this exact order.
+    private func saveChangedCredentials(
+        password: String,
+        service: String,
+        account: String,
+        previousService: String,
+        previousAccount: String,
+        generation: Int
+    ) async -> Bool {
+        let success = await credentials.savePassword(
+            password,
+            service: service,
+            account: account
+        )
+        guard generation == credentialSaveGeneration else { return false }
+        credentialsAreSaving = false
+
+        guard success else {
+            showsCredentialsError = true
+            return false
+        }
+
+        await deletePreviousCredentialsIfNeeded(
+            previousService: previousService,
+            previousAccount: previousAccount,
+            newService: service,
+            newAccount: account
+        )
+        return true
     }
 
     private func credentialsMatchLoaded(

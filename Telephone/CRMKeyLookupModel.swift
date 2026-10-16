@@ -74,20 +74,21 @@ final class CRMKeyLookupModel {
         observeSettings()
     }
 
-    var canSearch: Bool {
-        settings.enabled && isContextActive && CRMKeyNumber.parse(keyNumber) != nil
+    private var canStartManualSearch: Bool {
+        settings.enabled && isContextActive
             && state != .loading && phoneLinkState != .saving
+    }
+
+    var canSearch: Bool {
+        canStartManualSearch && CRMKeyNumber.parse(keyNumber) != nil
     }
 
     var canSearchEmail: Bool {
-        settings.enabled && isContextActive && CRMEmailAddress.normalize(email) != nil
-            && state != .loading && phoneLinkState != .saving
+        canStartManualSearch && CRMEmailAddress.normalize(email) != nil
     }
 
     var canSearchOrganizationCode: Bool {
-        settings.enabled && isContextActive
-            && CRMOrganizationCode.normalize(organizationCode) != nil
-            && state != .loading && phoneLinkState != .saving
+        canStartManualSearch && CRMOrganizationCode.normalize(organizationCode) != nil
     }
 
     var canLinkPhone: Bool {

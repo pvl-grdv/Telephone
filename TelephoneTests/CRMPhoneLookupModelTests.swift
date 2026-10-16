@@ -60,6 +60,21 @@ struct CRMPhoneLookupModelTests {
         #expect(response.data?.company.phone == "+12025550100, legacy text, +70005550101")
     }
 
+    @Test func changingSearchSourceCannotInheritKeyPhoneAppendPermission() async throws {
+        let fixture = try await manualKeyFixture()
+        #expect(fixture.model.canLinkPhone)
+
+        fixture.model.searchCallerPhone()
+        #expect(!fixture.model.canLinkPhone)
+        await waitUntilFinished(fixture.model)
+        #expect(!fixture.model.canLinkPhone)
+
+        fixture.model.search()
+        await waitUntilFinished(fixture.model)
+        #expect(fixture.model.canLinkPhone)
+        #expect(await fixture.provider.appendCalls.isEmpty)
+    }
+
     @Test func aChangedCallInvalidatesAnOpenPhoneLinkConfirmation() async throws {
         let fixture = try await manualKeyFixture()
         fixture.model.preparePhoneLink()

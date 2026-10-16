@@ -43,13 +43,6 @@ struct CRMInventoryPresentation: Equatable, Sendable {
         }
     }
 
-    /// Preserve a desktop sidebar selection while it exists. Zero is the
-    /// "All keys" row; a removed key must not leave an empty, stale detail pane.
-    func retainedKeySelection(_ selection: Int?) -> Int? {
-        guard let selection, selection != 0 else { return selection }
-        return keys.contains { $0.id == selection } ? selection : 0
-    }
-
     let keys: [Key]
     let totalKeyCount: Int
     let totalProgramGroupCount: Int

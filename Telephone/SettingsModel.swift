@@ -114,18 +114,14 @@ final class SettingsViewModel {
             return storedAccountModel
         }
 
-        let interval = PerformanceSignposts.settings.beginInterval(
-            "CreateAccountsSettingsModel"
-        )
-        let model = accountModelFactory()
-        model.presentAddAccount = { [weak self] in
-            self?.showsAccountSetup = true
+        let model = measuredModelCreation("CreateAccountsSettingsModel") {
+            let model = accountModelFactory()
+            model.presentAddAccount = { [weak self] in
+                self?.showsAccountSetup = true
+            }
+            return model
         }
         storedAccountModel = model
-        PerformanceSignposts.settings.endInterval(
-            "CreateAccountsSettingsModel",
-            interval
-        )
         return model
     }
 
@@ -134,15 +130,11 @@ final class SettingsViewModel {
             return storedSoundModel
         }
 
-        let interval = PerformanceSignposts.settings.beginInterval(
-            "CreateSoundSettingsModel"
-        )
-        let model = soundModelFactory()
-        storedSoundModel = model
-        PerformanceSignposts.settings.endInterval(
+        let model = measuredModelCreation(
             "CreateSoundSettingsModel",
-            interval
+            create: soundModelFactory
         )
+        storedSoundModel = model
         return model
     }
 
@@ -151,15 +143,11 @@ final class SettingsViewModel {
             return storedNetworkModel
         }
 
-        let interval = PerformanceSignposts.settings.beginInterval(
-            "CreateNetworkSettingsModel"
-        )
-        let model = networkModelFactory()
-        storedNetworkModel = model
-        PerformanceSignposts.settings.endInterval(
+        let model = measuredModelCreation(
             "CreateNetworkSettingsModel",
-            interval
+            create: networkModelFactory
         )
+        storedNetworkModel = model
         return model
     }
 
@@ -183,6 +171,15 @@ final class SettingsViewModel {
         storedSoundModel?.stopPreview()
         storedNetworkModel?.discard()
         storedCRMModel?.discard()
+    }
+
+    private func measuredModelCreation<Model>(
+        _ name: StaticString,
+        create: () -> Model
+    ) -> Model {
+        let interval = PerformanceSignposts.settings.beginInterval(name)
+        defer { PerformanceSignposts.settings.endInterval(name, interval) }
+        return create()
     }
 }
 

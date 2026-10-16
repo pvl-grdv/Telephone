@@ -60,7 +60,6 @@ final class CRMKeyLookupModel {
     @ObservationIgnored private var presentedSettingsGeneration: Int
     @ObservationIgnored private var isContextActive = true
     @ObservationIgnored private var automaticLookupAttempted = false
-    @ObservationIgnored private var loadedFromKey = false
     @ObservationIgnored private var lookupIdentity: LiveCRMQuery?
 
     init(
@@ -94,7 +93,8 @@ final class CRMKeyLookupModel {
     var canLinkPhone: Bool {
         if case .saved = phoneLinkState { return false }
         if case .failed = phoneLinkState { return false }
-        guard !appendOperation.hasPendingRequest, settings.enabled, isContextActive, loadedFromKey,
+        guard !appendOperation.hasPendingRequest, settings.enabled, isContextActive,
+              case .key = lookupIdentity,
               presentedSettingsGeneration == settings.generation,
               let phone = callerPhone, case .loaded(let response) = state,
               let customer = response.data, customer.sourceKeyId != nil,
@@ -143,7 +143,6 @@ final class CRMKeyLookupModel {
             return result.data == nil ? .notFound : .loaded(result)
         }
         lookupIdentity = .key(number)
-        loadedFromKey = true
     }
 
     func searchOrganizationCode() {
@@ -152,7 +151,6 @@ final class CRMKeyLookupModel {
             state = .failed(.invalidOrganizationCode)
             return
         }
-        loadedFromKey = false
         lookupIdentity = .organizationCode(code)
         beginLookup { provider, configuration in
             let result = try await provider.customer(
@@ -170,7 +168,6 @@ final class CRMKeyLookupModel {
             state = .failed(.invalidEmail)
             return
         }
-        loadedFromKey = false
         lookupIdentity = .email(email)
         beginLookup { provider, configuration in
             let result = try await provider.customer(forEmail: email, companyID: companyID, configuration: configuration)
@@ -183,7 +180,6 @@ final class CRMKeyLookupModel {
         guard settings.enabled, isContextActive, phoneLinkState != .saving,
               let phone = callerPhone else { return }
         automaticLookupAttempted = true
-        loadedFromKey = false
         lookupIdentity = .phone(phone)
         beginLookup { provider, configuration in
             let result = try await provider.customer(
@@ -289,7 +285,6 @@ final class CRMKeyLookupModel {
         appendOperation.cancelPresentation(for: appendAttemptID)
         appendAttemptID = nil
         state = .idle
-        loadedFromKey = false
         lookupIdentity = nil
     }
 

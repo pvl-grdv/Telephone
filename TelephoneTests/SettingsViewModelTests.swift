@@ -41,6 +41,28 @@ struct SettingsViewModelTests {
         #expect(crmCreates == 0)
     }
 
+    @Test func crmModelIsCreatedOnlyWhenVisitedAndReused() {
+        let defaults = makeDefaults()
+        var count = 0
+        let sut = SettingsViewModel(
+            defaults: defaults,
+            accountModelFactory: { fatalError("Unexpected account model") },
+            soundModelFactory: { fatalError("Unexpected sound model") },
+            networkModelFactory: { fatalError("Unexpected network model") },
+            crmModelFactory: {
+                count += 1
+                return CRMGatewaySettingsModel()
+            }
+        )
+
+        #expect(count == 0)
+        let first = sut.crmModel
+        #expect(count == 1)
+        sut.selection = .network
+        #expect(sut.crmModel === first)
+        #expect(count == 1)
+    }
+
     @Test func restoresLastSelectedSection() {
         let defaults = makeDefaults()
         defaults.set(

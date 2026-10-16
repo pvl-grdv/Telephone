@@ -141,8 +141,6 @@ final class CallDestinationInputModel {
             requestContactsAccessIfNeeded()
             refreshSuggestions()
         } else {
-            suggestionTask?.cancel()
-            suggestionTask = nil
             dismissSuggestions()
         }
     }
@@ -152,9 +150,7 @@ final class CallDestinationInputModel {
     }
 
     func setDestination(_ destination: String) {
-        isApplyingSelection = true
-        text = destination
-        isApplyingSelection = false
+        updateTextWithoutRefreshing(destination)
         normalizeCurrentDestination()
     }
 
@@ -227,10 +223,15 @@ final class CallDestinationInputModel {
         editingText: String
     ) {
         selectedGroup = group
-        isApplyingSelection = true
-        text = editingText
-        isApplyingSelection = false
+        updateTextWithoutRefreshing(editingText)
         dismissSuggestions()
+    }
+
+    /// Programmatic changes must not be mistaken for new user input.
+    private func updateTextWithoutRefreshing(_ value: String) {
+        isApplyingSelection = true
+        text = value
+        isApplyingSelection = false
     }
 
     private func normalizeCurrentDestination() {
@@ -238,11 +239,10 @@ final class CallDestinationInputModel {
             selectedGroup = nil
             return
         }
-        selectedGroup = represented
-        isApplyingSelection = true
-        text = editingString(for: represented)
-        isApplyingSelection = false
-        dismissSuggestions()
+        applySelection(
+            group: represented,
+            editingText: editingString(for: represented)
+        )
     }
 
     private func refreshSuggestions() {

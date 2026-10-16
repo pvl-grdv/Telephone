@@ -2,20 +2,6 @@ import Foundation
 import Testing
 
 struct CRMInventoryPresentationTests {
-    @Test func desktopSelectionSurvivesRefreshOnlyWhileItsKeyExists() {
-        let original = CRMInventoryPresentation(customer: customer(keys: [key(20), key(30)]))
-        #expect(original.retainedKeySelection(20) == 20)
-        #expect(original.retainedKeySelection(0) == 0)
-        #expect(original.retainedKeySelection(nil) == nil)
-
-        let refreshed = CRMInventoryPresentation(customer: customer(keys: [key(30)]))
-        #expect(refreshed.retainedKeySelection(20) == 0)
-        #expect(refreshed.retainedKeySelection(30) == 30)
-        #expect(refreshed.filtering("no matching key").retainedKeySelection(30) == 0)
-        let empty = CRMInventoryPresentation(customer: customer(keys: []))
-        #expect(empty.retainedKeySelection(30) == 0)
-    }
-
     @Test func desktopTableRetainsAll743RecordsAcross23KeysAndSearchesEveryKey() {
         let keys = (1...23).map { id in
             key(id, programs: (0..<(id == 23 ? 39 : 32)).map { index in

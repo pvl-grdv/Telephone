@@ -295,37 +295,17 @@ final class CallPresentationCoordinator: Identifiable {
 
     func scheduleRedialEnable(after delay: TimeInterval) {
         cancelRedialEnable()
-
-        let clock = clock
-        let duration = sleepDuration(for: delay)
-        redialEnableTask = Task { @MainActor [weak self] in
-            do {
-                try await clock.sleep(for: duration)
-            } catch {
-                return
-            }
-
-            guard let self, !Task.isCancelled else { return }
-            redialEnableTask = nil
-            session.redialEnabled = true
+        redialEnableTask = delayedAction(after: delay) { owner in
+            owner.redialEnableTask = nil
+            owner.session.redialEnabled = true
         }
     }
 
     func scheduleAutoClose(after delay: TimeInterval) {
         cancelAutoClose()
-
-        let clock = clock
-        let duration = sleepDuration(for: delay)
-        autoCloseTask = Task { @MainActor [weak self] in
-            do {
-                try await clock.sleep(for: duration)
-            } catch {
-                return
-            }
-
-            guard let self, !Task.isCancelled else { return }
-            autoCloseTask = nil
-            callController?.close()
+        autoCloseTask = delayedAction(after: delay) { owner in
+            owner.autoCloseTask = nil
+            owner.callController?.close()
         }
     }
 
@@ -339,18 +319,9 @@ final class CallPresentationCoordinator: Identifiable {
         stopCallTimer()
         callController?.status = value
 
-        let clock = clock
-        let duration = sleepDuration(for: 3)
-        intermediateStatusTask = Task { @MainActor [weak self] in
-            do {
-                try await clock.sleep(for: duration)
-            } catch {
-                return
-            }
-
-            guard let self, !Task.isCancelled else { return }
-            intermediateStatusTask = nil
-            restoreStatusAfterIntermediateMessage()
+        intermediateStatusTask = delayedAction(after: 3) { owner in
+            owner.intermediateStatusTask = nil
+            owner.restoreStatusAfterIntermediateMessage()
         }
     }
 
@@ -394,6 +365,25 @@ final class CallPresentationCoordinator: Identifiable {
     private func cancelIntermediateStatusRestore() {
         intermediateStatusTask?.cancel()
         intermediateStatusTask = nil
+    }
+
+    // Keep independent task handles; only the delay/cancellation path is shared.
+    private func delayedAction(
+        after delay: TimeInterval,
+        _ perform: @escaping @MainActor @Sendable (CallPresentationCoordinator) -> Void
+    ) -> Task<Void, Never> {
+        let clock = clock
+        let duration = sleepDuration(for: delay)
+        return Task { @MainActor [weak self] in
+            do {
+                try await clock.sleep(for: duration)
+            } catch {
+                return
+            }
+
+            guard let self, !Task.isCancelled else { return }
+            perform(self)
+        }
     }
 
     private func sleepDuration(for interval: TimeInterval) -> Duration {

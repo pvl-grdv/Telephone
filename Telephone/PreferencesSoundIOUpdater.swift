@@ -25,13 +25,10 @@ final class PreferencesSoundIOUpdater {
         self.preferences = preferences
     }
 
-    func updateSoundIO() {
-        preferences.updateSoundIO()
-    }
 }
 
 extension PreferencesSoundIOUpdater: SystemAudioDevicesChangeEventTarget {
     func systemAudioDevicesDidUpdate() {
-        updateSoundIO()
+        preferences.updateSoundIO()
     }
 }

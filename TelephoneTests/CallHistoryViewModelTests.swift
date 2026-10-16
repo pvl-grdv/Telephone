@@ -175,6 +175,7 @@ struct CallHistoryAnswerTests {
         for id in ["local-call", "outgoing", "accepted"] { model.setAnswerRecordVisible(id, visible: true) }
         #expect(Set(model.answerContext.calls.map(\.id)) == ["local-call", "accepted"])
         #expect(model.answerContext.calls.first?.phoneNumber == "+74951234567")
+        #expect(model.answerContext.calls.first?.startedAt == "2026-10-14T09:00:00.000Z")
         await model.refreshCallAnswers()
         #expect(model.callAnswers[call.id]?.answeredBy?.displayName == "Synthetic Employee")
         #expect(model.allRecords.first?.isMissed == true)

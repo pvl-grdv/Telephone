@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct SoundSettingsView: View {
-    @Bindable var model: SoundSettingsModel
+    let model: SoundSettingsModel
 
     var body: some View {
         Form {

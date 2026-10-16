@@ -40,6 +40,7 @@
             { "path": "CallDestinationContactIndex.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "<PROJECT>/TelephoneTests/CallDestinationContactIndexTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "CallDestinationComposer.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallDestinationInputModel.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
           "kind": "group",

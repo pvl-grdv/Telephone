@@ -114,3 +114,16 @@ SQLiteCallHistory (хранение)
   а остановка предпрослушивания не принимает неиспользуемую View.
 
 В каждом случае осталась необходимая работа — убрана только обвязка.
+
+## Набор номера: экран отдельно от поиска контактов
+
+В `CallDestinationComposer.swift` находятся кнопки и SwiftUI-представление.
+`CallDestinationInputModel.swift` хранит текст, варианты номеров и
+асинхронные результаты поиска в Contacts. Для звонка начни чтение с
+`CallDestinationComposer.makeCall()`, для подсказок — с
+`CallDestinationInputModel.refreshSuggestions()`.
+
+В корневом `CallHistoryScreen` и `SoundSettingsView` используется
+`let model`, так как этим View не нужен `$model`. Дочерние поля ввода
+по-прежнему используют `@Bindable` там, где он действительно необходим.
+Для ответов АТС один ISO 8601-форматтер переиспользуется моделью истории.

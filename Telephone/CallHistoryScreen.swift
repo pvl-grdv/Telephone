@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct CallHistoryScreen: View {
-    @Bindable var model: CallHistoryViewModel
+    let model: CallHistoryViewModel
 
     let call: (String) -> Void
     let copy: (String) -> Void

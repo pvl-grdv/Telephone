@@ -74,6 +74,13 @@ final class CallHistoryViewModel {
     var answerRefreshRequest = 0
     @ObservationIgnored private var answerGeneration = -1
 
+    // Shared on the main actor; creating a formatter for every view update is unnecessary.
+    private static let answerDateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
     init(gatewaySettings: CRMGatewaySettings? = nil, answerProvider: any CRMCallAnswerProvider = CRMGatewayClient()) {
         self.gatewaySettings = gatewaySettings
         self.answerProvider = answerProvider
@@ -85,16 +92,27 @@ final class CallHistoryViewModel {
         let calls: [CRMIncomingCallRequest]
     }
     var answerContext: AnswerContext {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let calls = gatewaySettings?.enabled == true ? records.compactMap { record -> CRMIncomingCallRequest? in
-            // A declined call can have zero duration without the missed flag.
-            // Only ATS evidence can establish whether someone else answered.
-            guard record.isIncoming, visibleAnswerRecords.contains(record.id),
-                  let date = record.startedAt, let raw = record.callerNumber, let phone = CRMPhoneNumber.normalize(raw) else { return nil }
-            return CRMIncomingCallRequest(id: record.id, phoneNumber: phone, startedAt: formatter.string(from: date))
-        } : []
-        return AnswerContext(generation: gatewaySettings?.generation ?? 0, refresh: answerRefreshRequest, calls: calls)
+        var calls: [CRMIncomingCallRequest] = []
+        if gatewaySettings?.enabled == true {
+            calls = records.compactMap { record in
+                // ATS can establish who answered even if this Mac declined.
+                guard record.isIncoming,
+                      visibleAnswerRecords.contains(record.id),
+                      let date = record.startedAt,
+                      let raw = record.callerNumber,
+                      let phone = CRMPhoneNumber.normalize(raw) else { return nil }
+                return CRMIncomingCallRequest(
+                    id: record.id,
+                    phoneNumber: phone,
+                    startedAt: Self.answerDateFormatter.string(from: date)
+                )
+            }
+        }
+        return AnswerContext(
+            generation: gatewaySettings?.generation ?? 0,
+            refresh: answerRefreshRequest,
+            calls: calls
+        )
     }
     func setAnswerRecordVisible(_ id: String, visible: Bool) {
         if visible { visibleAnswerRecords.insert(id) } else { visibleAnswerRecords.remove(id) }

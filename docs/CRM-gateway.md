@@ -277,10 +277,20 @@ order; presentation sorting does not discard or rewrite them.
 
 ## Explicit phone association
 
-Only a manual key result offers this operation. The actual caller phone must
-be valid; the result must have a positive source key ID and a current raw phone
-field. The confirmation shows the number and company. Preparing/dismissing it
-sends nothing; accepting it sends one request:
+A manual key lookup or a confirmed incoming-phone lookup may offer this
+operation. For a phone result, no manual key entry is needed: Telephone takes
+a key already included in the organization's complete inventory. The gateway
+still verifies the chosen key belongs to that company. If the organization has
+no keys, the existing protected append route is unavailable.
+
+The gateway additionally returns `company.atsPhones`, containing only the
+separate ATS numbers. This is distinct from the merged `company.phones` list,
+which also includes legacy numbers. A number found in the legacy field but
+absent from `atsPhones` can be explicitly copied into ATS. Older gateways
+without `atsPhones` cannot offer the phone-lookup shortcut. The actual caller
+phone must be valid and the raw phone snapshot current. The confirmation
+shows the number and company. Preparing or dismissing it sends nothing;
+accepting it sends one request:
 
 ```http
 POST /v1/customer-phone/append
@@ -313,7 +323,7 @@ POST /v1/customer-phone/append
 ```
 
 The gateway checks permission, key ownership, the current compatibility snapshot
-against `expectedPhone` and existing phone associations. It adds the canonical
+against `expectedPhone` and existing ATS phone associations. It adds the canonical
 number to its configured phone storage, avoids equivalent duplicates and verifies
 the result. Separate phone storage can leave `phone` unchanged while extending
 `phones`; Telephone does not require the legacy text to change. `added:false`
@@ -355,7 +365,9 @@ cancelled. There is no automatic retry or upstream authentication on macOS.
 
 ### Retired history lookup and SQLite cleanup
 
-Only live-call **Client details** initiate CRM key, phone and email lookup.
+Live-call **Client details** and the separate CRM window initiate CRM lookup.
+The standalone window supports key, email and registration-number searches
+without an active call. Neither path stores CRM customer data locally.
 The separate CRM verification window for old calls, manual history lookup,
 post-call phone association and local CRM result snapshots have been removed.
 Telephone does not run automatic CRM checks when calls end.

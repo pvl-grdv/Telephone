@@ -30,6 +30,19 @@ struct DefaultAppSettingsTests {
         #expect(!settings.registeredDefaults.isEmpty)
     }
 
+    @Test func keepCallWindowOnTopIsDisabledByDefault() {
+        let settings = SettingsFake()
+        let sut = DefaultAppSettings(settings: settings, localization: "any")
+
+        sut.register()
+
+        #expect(
+            settings.registeredDefaults[
+                UserDefaultsKeys.keepCallWindowOnTop
+            ] as? Bool == false
+        )
+    }
+
     @Test func automaticCallWindowClosingIsEnabledByDefault() {
         let settings = SettingsFake()
         let sut = DefaultAppSettings(settings: settings, localization: "any")

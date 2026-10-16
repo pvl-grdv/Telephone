@@ -29,6 +29,7 @@ enum TelephoneUITestSupport {
                 || scenario == "incoming-call"
                 || scenario == "incoming-call-details"
                 || scenario == "call-history"
+                || scenario == "crm-workspace"
         else {
             return false
         }
@@ -45,6 +46,8 @@ enum TelephoneUITestSupport {
                 await UITestCallSceneController.shared.show(includeCRM: scenario == "incoming-call-details")
             case "call-history":
                 await UITestHistorySceneController.shared.show()
+            case "crm-workspace":
+                await UITestCRMSceneController.shared.show()
             default:
                 break
             }
@@ -265,6 +268,43 @@ private struct UITestIncomingCallView: View {
         customerDetailsWindow?.close()
         customerDetailsWindow = nil
         dismissWindow(id: UITestCallSceneController.sceneID)
+    }
+}
+
+@MainActor
+struct UITestCRMHostedScene: Scene {
+    var body: some Scene {
+        Window("CRM", id: UITestCRMSceneController.sceneID) {
+            if let model = UITestCRMSceneController.shared.model {
+                CRMWorkspaceView(model: model)
+            }
+        }
+        .defaultLaunchBehavior(.suppressed)
+        .defaultSize(width: 980, height: 650)
+        .restorationBehavior(.disabled)
+        .commandsRemoved()
+    }
+}
+
+@MainActor
+@Observable
+private final class UITestCRMSceneController {
+    static let shared = UITestCRMSceneController()
+    static let sceneID = "telephone-ui-test-crm"
+    private(set) var model: CRMKeyLookupModel?
+
+    func show() async {
+        let defaults = UserDefaults(suiteName: "Telephone.UITestCRMWorkspace.\(UUID())")!
+        let settings = CRMGatewaySettings(defaults: defaults, tokenStore: UITestCRMTokenStore())
+        do {
+            try await settings.save(
+                enabled: true, origin: "https://gateway.example", newToken: "synthetic-token"
+            )
+            model = CRMKeyLookupModel(settings: settings, provider: UITestCRMProvider())
+            SceneRouter.shared.openWindow(id: Self.sceneID)
+        } catch {
+            assertionFailure("Could not configure synthetic CRM workspace: \(error)")
+        }
     }
 }
 

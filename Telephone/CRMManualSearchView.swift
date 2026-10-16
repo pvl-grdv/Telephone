@@ -43,7 +43,7 @@ enum CRMManualSearchKind: Hashable, CaseIterable {
 struct CRMManualSearchView: View {
     @Bindable var model: CRMKeyLookupModel
     @Binding var searchKind: CRMManualSearchKind
-    let dismiss: () -> Void
+    var dismiss: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -102,6 +102,6 @@ struct CRMManualSearchView: View {
         case .email: model.searchEmail()
         case .organizationCode: model.searchOrganizationCode()
         }
-        dismiss()
+        dismiss?()
     }
 }

@@ -59,7 +59,7 @@ private func makeDefaults(for localization: String) -> [String: Any] {
         UserDefaultsKeys.callWaiting: true,
         UserDefaultsKeys.consoleLogLevel: 0,
         UserDefaultsKeys.formatTelephoneNumbers: true,
-        UserDefaultsKeys.keepCallWindowOnTop: true,
+        UserDefaultsKeys.keepCallWindowOnTop: false,
         UserDefaultsKeys.lockCodec: false,
         UserDefaultsKeys.logLevel: 3,
         UserDefaultsKeys.outboundProxyHost: "",

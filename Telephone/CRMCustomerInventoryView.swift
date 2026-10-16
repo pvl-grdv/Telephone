@@ -37,6 +37,11 @@ private struct CRMInventoryBrowserView: View {
     let customer: CRMKeyLookupCustomer
     let preparedInventory: CRMInventoryPresentation
 
+    private struct SearchRequest: Equatable {
+        let customer: CRMKeyLookupCustomer
+        let text: String
+    }
+
     @State private var searchText = ""
     @State private var appliedQuery = ""
     @State private var filteredInventory: CRMInventoryPresentation?
@@ -126,7 +131,7 @@ private struct CRMInventoryBrowserView: View {
                 .keyboardShortcut("f", modifiers: .command)
                 .hidden()
         }
-        .task(id: searchText) {
+        .task(id: SearchRequest(customer: customer, text: searchText)) {
             let input = searchText
             guard !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 appliedQuery = ""
@@ -145,7 +150,6 @@ private struct CRMInventoryBrowserView: View {
             appliedQuery = input
         }
         .onChange(of: searchText) {
-            selectedKey = 0
             selectedRows.removeAll()
         }
         .onChange(of: selectedKey) {

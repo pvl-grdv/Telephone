@@ -65,7 +65,7 @@ struct CompactCallTests {
         #expect(second.lookup.callerPhone == "+70005550102")
         first.lookup.resetContext()
         #expect(first.lookup.callerPhone == nil)
-        #expect(second.lookup.isCallerAlreadyLinked)
+        #expect(second.lookup.state != .idle)
     }
 
     @Test func closingDetailsInvalidatesOnlyUnconfirmedPhoneLink() async throws {

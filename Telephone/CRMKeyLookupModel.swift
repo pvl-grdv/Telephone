@@ -90,24 +90,48 @@ final class CRMKeyLookupModel {
         canStartManualSearch && CRMOrganizationCode.normalize(organizationCode) != nil
     }
 
+    private var phoneAppendSourceKeyID: Int? {
+        guard case .loaded(let response) = state, let customer = response.data else {
+            return nil
+        }
+        switch lookupIdentity {
+        case .key:
+            return customer.sourceKeyId
+        case .phone(let phone) where phone == callerPhone:
+            // A verified phone response includes this company's keys.
+            // The gateway checks ownership again before the ATS write.
+            guard customer.company.atsPhones != nil else { return nil }
+            return customer.keys.first?.id
+        default:
+            return nil
+        }
+    }
+
     var canLinkPhone: Bool {
         if case .saved = phoneLinkState { return false }
         if case .failed = phoneLinkState { return false }
         guard !appendOperation.hasPendingRequest, settings.enabled, isContextActive,
-              case .key = lookupIdentity,
               presentedSettingsGeneration == settings.generation,
+              phoneAppendSourceKeyID != nil,
               let phone = callerPhone, case .loaded(let response) = state,
-              let customer = response.data, customer.sourceKeyId != nil,
-              customer.company.phone != nil else { return false }
-        return phoneLinkState != .saving
-            && !customer.company.containsPhone(phone)
+              let customer = response.data, customer.company.phone != nil else { return false }
+        if let atsPhones = customer.company.atsPhones {
+            return phoneLinkState != .saving && !atsPhones.contains(phone)
+        }
+        // Without an ATS-only list, a phone lookup cannot distinguish the
+        // old and new storage. Keep only the existing manual-key path.
+        guard case .key = lookupIdentity else { return false }
+        return phoneLinkState != .saving && !customer.company.containsPhone(phone)
     }
 
     var isCallerAlreadyLinked: Bool {
         guard let phone = callerPhone, case .loaded(let response) = state,
               let customer = response.data else { return false }
         if case .saved = phoneLinkState { return true }
-        if case .phone = lookupIdentity { return true }
+        if let atsPhones = customer.company.atsPhones {
+            return atsPhones.contains(phone)
+        }
+        if case .phone = lookupIdentity { return false }
         return customer.company.containsPhone(phone)
     }
 
@@ -205,7 +229,7 @@ final class CRMKeyLookupModel {
     func preparePhoneLink() {
         guard canLinkPhone, let phone = callerPhone,
               case .loaded(let response) = state, let customer = response.data,
-              let keyID = customer.sourceKeyId,
+              let keyID = phoneAppendSourceKeyID,
               let expectedPhone = customer.company.phone else { return }
         pendingPhoneLink = CRMPhoneLinkConfirmation(
             phone: phone, companyID: customer.company.id, companyName: customer.company.name,
@@ -256,7 +280,10 @@ final class CRMKeyLookupModel {
                 self.state = .loaded(CRMKeyLookupResponse(
                     data: CRMKeyLookupCustomer(
                         sourceKeyId: customer.sourceKeyId,
-                        company: customer.company.replacingPhone(result.data.phone, phones: result.data.phones), keys: customer.keys
+                        company: customer.company.replacingPhone(
+                            result.data.phone, phones: result.data.phones,
+                            addedATSPhone: confirmation.phone
+                        ), keys: customer.keys
                     ),
                     meta: result.meta
                 ))

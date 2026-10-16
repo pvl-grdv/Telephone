@@ -9,30 +9,35 @@ struct CRMKeyLookupView: View {
     @Bindable var model: CRMKeyLookupModel
     @State private var showsManualSearch = false
     @State private var searchKind: CRMManualSearchKind = .key
+    var showsInlineSearch = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                if let phone = model.callerPhone {
+            if showsInlineSearch {
+                CRMManualSearchView(model: model, searchKind: $searchKind)
+            } else {
+                HStack(spacing: 8) {
+                    if let phone = model.callerPhone {
                     Button(NSLocalizedString("Find by phone", comment: "Retry caller phone CRM lookup.")) {
                         model.searchCallerPhone()
                     }
                     .controlSize(.small)
                     .disabled(model.state == .loading || model.phoneLinkState == .saving)
                     .help(phone)
-                }
+                    }
 
-                Spacer(minLength: 8)
-                Button(NSLocalizedString("Search organization…", comment: "Open manual CRM organization lookup.")) {
-                    showsManualSearch = true
-                }
-                .controlSize(.small)
-                .popover(isPresented: $showsManualSearch, arrowEdge: .bottom) {
-                    CRMManualSearchView(
-                        model: model,
-                        searchKind: $searchKind,
-                        dismiss: { showsManualSearch = false }
-                    )
+                    Spacer(minLength: 8)
+                    Button(NSLocalizedString("Search organization…", comment: "Open manual CRM organization lookup.")) {
+                        showsManualSearch = true
+                    }
+                    .controlSize(.small)
+                    .popover(isPresented: $showsManualSearch, arrowEdge: .bottom) {
+                        CRMManualSearchView(
+                            model: model,
+                            searchKind: $searchKind,
+                            dismiss: { showsManualSearch = false }
+                        )
+                    }
                 }
             }
 
@@ -106,7 +111,7 @@ struct CRMKeyLookupView: View {
         case .loaded(let response):
             if let customer = response.data {
                 CRMCustomerInventoryView(customer: customer)
-                    .id(response.meta.requestId)
+                    .id(customer.company.id)
             }
         }
     }

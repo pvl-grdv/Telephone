@@ -44,6 +44,18 @@ struct TelephoneApp: App {
 
             CallHistoryCommands()
 
+            CommandMenu("CRM") {
+                Button(
+                    NSLocalizedString(
+                        "Search organization…",
+                        comment: "Open manual CRM organization lookup."
+                    )
+                ) {
+                    SceneRouter.shared.openWindow(id: CRMWorkspaceScene.id)
+                }
+                .keyboardShortcut("k", modifiers: [.command, .shift])
+            }
+
             CommandGroup(after: .help) {
                 Divider()
 
@@ -91,6 +103,10 @@ struct TelephoneApp: App {
 
         CallWindowsScene()
 
+        CRMWorkspaceScene(makeModel: {
+            appController.coordinator.makeCRMWorkspaceModel()
+        })
+
         AccountSetupHostedScene()
 
         ApplicationDialogScene(
@@ -110,6 +126,8 @@ struct TelephoneApp: App {
         UITestCallHostedScene()
 
         UITestHistoryHostedScene()
+
+        UITestCRMHostedScene()
 #endif
 
         Window(

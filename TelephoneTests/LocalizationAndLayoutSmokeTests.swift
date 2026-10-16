@@ -35,6 +35,7 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/CRMGatewayStatusView.swift",
             "Telephone/CRMGatewayError+Message.swift",
             "Telephone/CRMKeyLookupView.swift",
+            "Telephone/CRMWorkspaceScene.swift",
             "Telephone/CRMManualSearchView.swift",
             "Telephone/CRMCustomerInventoryView.swift",
             "Telephone/GeneralSettingsView.swift",
@@ -137,6 +138,31 @@ struct LocalizationAndLayoutSmokeTests {
         #expect(
             controllerSource.components(separatedBy: sentinel).count - 1 == 2
         )
+    }
+
+    @Test
+    func crmKeyFilterSurvivesSearchAndCallWindowFloatingIsOptional() throws {
+        let inventorySource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/CRMCustomerInventoryView.swift"
+            ), encoding: .utf8
+        )
+        let callSceneSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/CallWindowScene.swift"
+            ), encoding: .utf8
+        )
+        #expect(!inventorySource.contains(
+            ".onChange(of: searchText) {\n            selectedKey = 0"
+        ))
+        #expect(inventorySource.contains("rows(for: selectedKey == 0 ? nil : selectedKey)"))
+        #expect(callSceneSource.contains(".windowLevel(keepOnTop ? .floating : .normal)"))
+        let commandsSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/CallCommands.swift"
+            ), encoding: .utf8
+        )
+        #expect(commandsSource.contains("Keep on Top"))
     }
 
     @Test

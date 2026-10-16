@@ -10,8 +10,8 @@ struct CRMPhoneLookupModelTests {
         fixture.model.setCallerPhone("8 (000) 555-01-01", isActive: true)
         await waitUntilFinished(fixture.model)
         #expect(await fixture.provider.phoneCalls == ["+70005550101"])
-        #expect(fixture.model.isCallerAlreadyLinked)
-        #expect(!fixture.model.canLinkPhone)
+        #expect(!fixture.model.isCallerAlreadyLinked)
+        #expect(fixture.model.canLinkPhone)
         #expect(await fixture.provider.appendCalls.isEmpty)
         fixture.model.activateContext()
         #expect(await fixture.provider.phoneCalls.count == 1)
@@ -30,8 +30,46 @@ struct CRMPhoneLookupModelTests {
         fixture.model.chooseCompany(matches[0])
         await waitUntilFinished(fixture.model)
         #expect(await fixture.provider.companyChoices == [nil, 1200456])
+        #expect(!fixture.model.isCallerAlreadyLinked)
+        #expect(fixture.model.canLinkPhone)
+    }
+
+    @Test func legacyCallerCanBeLinkedWithoutSearchingForAKey() async throws {
+        let fixture = try await makeFixture(phoneData: PhoneGatewayFixture.oneMatch())
+        fixture.model.setCallerPhone("70005550101", isActive: true)
+        await waitUntilFinished(fixture.model)
+        guard case .loaded(let response) = fixture.model.state else {
+            Issue.record("Expected legacy phone lookup to load a company")
+            return
+        }
+        #expect(response.data?.sourceKeyId == nil)
+        #expect(fixture.model.canLinkPhone)
+
+        fixture.model.preparePhoneLink()
+        let confirmation = try #require(fixture.model.pendingPhoneLink)
+        #expect(confirmation.companyID == 1200456)
+        #expect(confirmation.sourceKeyID == 76543)
+        #expect(confirmation.phone == "+70005550101")
+        #expect(confirmation.expectedPhone == "+70005550101")
+        #expect(await fixture.provider.appendCalls.isEmpty)
+
+        fixture.model.confirmPhoneLink(confirmation)
+        await waitForWrite(fixture.model)
+        #expect(await fixture.provider.appendCalls.count == 1)
+        #expect(fixture.model.phoneLinkState == .saved(added: true))
         #expect(fixture.model.isCallerAlreadyLinked)
         #expect(!fixture.model.canLinkPhone)
+    }
+
+    @Test func callerAlreadyInATSDoesNotOfferPhoneAssociation() async throws {
+        let fixture = try await makeFixture(phoneData: PhoneGatewayFixture.oneMatch(
+            atsPhones: ["+70005550101"]
+        ))
+        fixture.model.setCallerPhone("70005550101", isActive: true)
+        await waitUntilFinished(fixture.model)
+        #expect(fixture.model.isCallerAlreadyLinked)
+        #expect(!fixture.model.canLinkPhone)
+        #expect(await fixture.provider.appendCalls.isEmpty)
     }
 
     @Test func manualKeyLookupOnlyAppendsAfterExplicitMatchingConfirmation() async throws {

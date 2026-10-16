@@ -161,18 +161,20 @@ enum PhoneGatewayFixture {
         var company = customer["company"] as! [String: Any]
         company["phone"] = "+12025550100, legacy text"
         company["phones"] = ["+12025550100"]
+        company["atsPhones"] = []
         customer["company"] = company
         root["data"] = customer
         return try JSONSerialization.data(withJSONObject: root)
     }
 
-    static func oneMatch() throws -> Data {
+    static func oneMatch(atsPhones: [String] = []) throws -> Data {
         var root = try rootObject()
         var customer = root["data"] as! [String: Any]
         customer["sourceKeyId"] = NSNull()
         var company = customer["company"] as! [String: Any]
         company["phone"] = "+70005550101"
         company["phones"] = ["+70005550101"]
+        company["atsPhones"] = atsPhones
         customer["company"] = company
         root["data"] = customer
         root["matches"] = [match(1200456, name: "Example Company")]

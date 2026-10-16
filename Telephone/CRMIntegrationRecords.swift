@@ -16,18 +16,33 @@ struct CRMKeyLookupCompany: Codable, Equatable, Sendable {
     let phone: String?
     let phones: [String]?
     let emails: [String]?
+    // Dedicated ATS phone list; absent on older gateways.
+    let atsPhones: [String]?
 
-    init(id: Int, name: String, formattedCode: String, phone: String?, phones: [String]?, emails: [String]? = nil) {
+    init(
+        id: Int, name: String, formattedCode: String,
+        phone: String?, phones: [String]?,
+        emails: [String]? = nil, atsPhones: [String]? = nil
+    ) {
         self.id = id
         self.name = name
         self.formattedCode = formattedCode
         self.phone = phone
         self.phones = phones
         self.emails = emails
+        self.atsPhones = atsPhones
     }
 
-    func replacingPhone(_ value: String, phones: [String]?) -> Self {
-        Self(id: id, name: name, formattedCode: formattedCode, phone: value, phones: phones, emails: emails)
+    func replacingPhone(_ value: String, phones: [String]?, addedATSPhone: String) -> Self {
+        var updatedATSPhones = atsPhones
+        if var numbers = updatedATSPhones, !numbers.contains(addedATSPhone) {
+            numbers.append(addedATSPhone)
+            updatedATSPhones = numbers
+        }
+        return Self(
+            id: id, name: name, formattedCode: formattedCode,
+            phone: value, phones: phones, emails: emails, atsPhones: updatedATSPhones
+        )
     }
 
     func containsPhone(_ value: String) -> Bool {

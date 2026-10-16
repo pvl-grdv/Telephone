@@ -419,6 +419,11 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
 
     private static func validateCustomer(_ customer: CRMKeyLookupCustomer) throws {
         try validatePhones(customer.company.phones)
+        try validatePhones(customer.company.atsPhones)
+        if let atsPhones = customer.company.atsPhones, let phones = customer.company.phones,
+           !Set(atsPhones).isSubset(of: Set(phones)) {
+            throw CRMGatewayError.invalidResponse
+        }
         if let emails = customer.company.emails {
             guard Set(emails).count == emails.count,
                   emails.allSatisfy({ CRMEmailAddress.normalize($0) == $0 }) else {

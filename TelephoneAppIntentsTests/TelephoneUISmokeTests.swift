@@ -203,6 +203,33 @@ final class TelephoneUISmokeTests: XCTestCase {
         call.terminate()
     }
 
+    func testCRMWorkspaceSearchesByEmailWithoutAnActiveCall() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["TELEPHONE_UI_TEST_SCENARIO"] = "crm-workspace"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        defer { app.terminate() }
+
+        let lookupKind = element("customer.crm.lookupKind", in: app)
+        XCTAssertTrue(lookupKind.waitForExistence(timeout: 5), app.debugDescription)
+        lookupKind.click()
+        let emailKind = app.menuItems["Email address"]
+        XCTAssertTrue(emailKind.waitForExistence(timeout: 3), app.debugDescription)
+        emailKind.click()
+
+        let email = element("customer.crm.email", in: app)
+        XCTAssertTrue(email.waitForExistence(timeout: 3), app.debugDescription)
+        email.click()
+        email.typeText("example@example.test")
+
+        let find = element("customer.crm.searchEmail", in: app)
+        XCTAssertTrue(find.isEnabled)
+        find.click()
+        XCTAssertTrue(element("crm.inventory.programs", in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(element("crm.inventory.keyFilter", in: app).exists)
+        XCTAssertFalse(element("call.end", in: app).exists)
+    }
+
     func testCRMOnlyClientDetailsDoesNotAnswerOrDeclineTheCall() throws {
         let app = XCUIApplication()
         app.launchEnvironment["TELEPHONE_UI_TEST_SCENARIO"] = "incoming-call-details"

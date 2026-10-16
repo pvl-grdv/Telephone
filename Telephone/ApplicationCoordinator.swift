@@ -136,6 +136,13 @@ final class ApplicationCoordinator:
         applicationDialogController
     }
 
+    func makeCRMWorkspaceModel() -> CRMKeyLookupModel {
+        CRMKeyLookupModel(
+            settings: compositionRoot.crmGatewaySettings,
+            provider: compositionRoot.crmKeyLookupProvider
+        )
+    }
+
     func showSettings() {
         preferencesController.showSettings()
     }

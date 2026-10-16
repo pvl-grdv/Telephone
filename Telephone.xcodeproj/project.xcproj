@@ -40,6 +40,7 @@
             { "path": "CallDestinationContactIndex.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "<PROJECT>/TelephoneTests/CallDestinationContactIndexTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
             { "path": "CallDestinationComposer.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "CallDestinationInputView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallDestinationInputModel.swift", "target-membership": [ "Telephone/compile-sources" ] },
           ],
         }, {
@@ -119,6 +120,7 @@
           "children": [
             { "path": "CallHistoryModel.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "CallHistoryScreen.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+            { "path": "CallHistoryRow.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "CallerIdentityPresentation.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "CallHistoryCommands.swift", "target-membership": [ "Telephone/compile-sources" ] },
             {
@@ -295,6 +297,7 @@
             { "path": "AccountSettingsModel.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "AccountSettingsDraft.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "AccountSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
+            { "path": "AccountSettingsEditor.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "GeneralSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SoundSettingsModel.swift", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "SoundSettingsView.swift", "target-membership": [ "Telephone/compile-sources" ] },

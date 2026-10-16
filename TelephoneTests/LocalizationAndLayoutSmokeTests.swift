@@ -15,8 +15,10 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/AboutTelephone.swift",
             "Telephone/AccountSettingsModel.swift",
             "Telephone/AccountSettingsView.swift",
+            "Telephone/AccountSettingsEditor.swift",
             "Telephone/AccountSetupView.swift",
             "Telephone/AccountWindowView.swift",
+            "Telephone/CallDestinationInputView.swift",
             "Telephone/ApplicationDialogController.swift",
             "Telephone/CallController.swift",
             "Telephone/CallControlViews.swift",
@@ -24,6 +26,7 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/CallWindowModel.swift",
             "Telephone/CallHistoryModel.swift",
             "Telephone/CallHistoryScreen.swift",
+            "Telephone/CallHistoryRow.swift",
             "Telephone/CallTransferViews.swift",
             "Telephone/CallCustomerSummaryView.swift",
             "Telephone/CallCustomerDetailsView.swift",
@@ -140,10 +143,17 @@ struct LocalizationAndLayoutSmokeTests {
                 "Telephone/CallHistoryScreen.swift"
             ), encoding: .utf8
         )
-        #expect(!source.contains("CRMHistoryWindowController"))
-        #expect(!source.contains("selectForCRM("))
-        #expect(!source.contains("history.crm.check"))
-        #expect(!source.contains("View saved CRM check"))
+        let rowSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Telephone/CallHistoryRow.swift"
+            ), encoding: .utf8
+        )
+        for text in [source, rowSource] {
+            #expect(!text.contains("CRMHistoryWindowController"))
+            #expect(!text.contains("selectForCRM("))
+            #expect(!text.contains("history.crm.check"))
+            #expect(!text.contains("View saved CRM check"))
+        }
     }
 
     @Test @MainActor

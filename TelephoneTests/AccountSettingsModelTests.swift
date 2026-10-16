@@ -508,3 +508,26 @@ struct AccountSettingsDraftStorageTests {
         }
     }
 }
+
+@MainActor
+struct AccountSettingsSummaryTests {
+    @Test func summaryPrefersDescriptionThenSIPThenUsernameAndDomain() {
+        var stored: [String: Any] = [
+            AKSIPAccountKeys.uuid: "account-uuid",
+            AKSIPAccountKeys.username: "alice",
+            AKSIPAccountKeys.domain: "example.com",
+            UserDefaultsKeys.accountEnabled: true
+        ]
+
+        let initial = AccountSettingsSummary(storedAccount: stored)
+        #expect(initial.id == "account-uuid")
+        #expect(initial.isEnabled)
+        #expect(initial.title == "alice@example.com")
+
+        stored[AKSIPAccountKeys.sipAddress] = "sip-alias@company.test"
+        #expect(AccountSettingsSummary(storedAccount: stored).title == "sip-alias@company.test")
+
+        stored[AKSIPAccountKeys.desc] = "Support"
+        #expect(AccountSettingsSummary(storedAccount: stored).title == "Support")
+    }
+}

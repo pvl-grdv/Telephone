@@ -12,6 +12,7 @@
 //
 
 import Foundation
+import UseCases
 
 struct PresentationCallHistoryRecord: Identifiable, Hashable {
     let identifier: String
@@ -55,5 +56,26 @@ struct PresentationCallHistoryRecord: Identifiable, Hashable {
         guard !queryDigits.isEmpty else { return false }
 
         return contact.address.filter(\.isNumber).contains(queryDigits)
+    }
+}
+
+extension PresentationCallHistoryRecord {
+    init(
+        record: ContactCallHistoryRecord,
+        dateFormatter: DateFormatter,
+        durationFormatter: DateComponentsFormatter
+    ) {
+        let call = record.origin
+        self.init(
+            identifier: call.identifier,
+            contact: PresentationContact(contact: record.contact),
+            date: dateFormatter.string(from: call.date),
+            duration: durationFormatter.string(from: TimeInterval(call.duration)) ?? "",
+            isIncoming: call.isIncoming,
+            isMissed: call.isMissed,
+            startedAt: call.date,
+            callerNumber: call.uri.user,
+            durationSeconds: call.duration
+        )
     }
 }

@@ -37,24 +37,15 @@ final class CallHistoryViewPresenter {
 }
 
 nonisolated extension CallHistoryViewPresenter: ContactCallHistoryRecordGetAllUseCaseOutput {
-    func update(records: [ContactCallHistoryRecord]) {
-        let result = records.map(makeRecord)
-        Task { @MainActor in
-            showRecords(result)
+    func update(records: [ContactCallHistoryRecord]) async {
+        let result = records.map {
+            PresentationCallHistoryRecord(
+                record: $0,
+                dateFormatter: dateFormatter,
+                durationFormatter: durationFormatter
+            )
         }
-    }
-
-    private func makeRecord(from record: ContactCallHistoryRecord) -> PresentationCallHistoryRecord {
-        return PresentationCallHistoryRecord(
-            identifier: record.origin.identifier,
-            contact: PresentationContact(contact: record.contact),
-            date: dateFormatter.string(from: record.origin.date),
-            duration: durationFormatter.string(from: TimeInterval(record.origin.duration)) ?? "",
-            isIncoming: record.origin.isIncoming,
-            isMissed: record.origin.isMissed,
-            startedAt: record.origin.date,
-            callerNumber: record.origin.uri.user,
-            durationSeconds: record.origin.duration
-        )
+        // Complete delivery before returning to the use case.
+        await showRecords(result)
     }
 }

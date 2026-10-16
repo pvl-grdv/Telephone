@@ -10,6 +10,13 @@ import UseCases
 private let accountSetupDidAddNotification = Notification.Name("AKAccountSetupControllerDidAddAccount")
 private let maximumAccountCount = 32
 
+// The identity and password describe the same Keychain item.
+private struct LoadedAccountCredentials: Equatable {
+    var service = ""
+    var account = ""
+    var password = ""
+}
+
 @MainActor
 @Observable
 final class AccountSettingsModel {
@@ -69,13 +76,7 @@ final class AccountSettingsModel {
     private var credentialsAreDirty = false
 
     @ObservationIgnored
-    private var loadedPassword = ""
-
-    @ObservationIgnored
-    private var loadedPasswordService = ""
-
-    @ObservationIgnored
-    private var loadedPasswordAccount = ""
+    private var loadedCredentials = LoadedAccountCredentials()
 
     @ObservationIgnored
     private var accountAddedObservation: NotificationObservation?
@@ -287,8 +288,7 @@ final class AccountSettingsModel {
         let insertionIndex = source < destination ? destination - 1 : destination
         stored.insert(moving, at: insertionIndex)
 
-        defaults.set(stored, forKey: UserDefaultsKeys.accounts)
-        accounts = summaries(from: stored)
+        saveAccounts(stored)
 
         NotificationCenter.default.post(
             name: .AKPreferencesControllerDidSwapAccounts,
@@ -377,8 +377,7 @@ final class AccountSettingsModel {
             var account = stored[index]
             draft.write(to: &account)
             stored[index] = account
-            defaults.set(stored, forKey: UserDefaultsKeys.accounts)
-            accounts = summaries(from: stored)
+            saveAccounts(stored)
             hasUnsavedDraft = false
         }
 
@@ -412,9 +411,9 @@ final class AccountSettingsModel {
         stored[index][UserDefaultsKeys.accountEnabled] = false
         defaults.set(stored, forKey: UserDefaultsKeys.accounts)
 
-        isApplyingDraft = true
-        draft.isEnabled = false
-        isApplyingDraft = false
+        var updatedDraft = draft
+        updatedDraft.isEnabled = false
+        applyDraft(updatedDraft)
         hasUnsavedDraft = false
         credentialsAreDirty = false
         accounts = summaries(from: stored)
@@ -449,8 +448,8 @@ final class AccountSettingsModel {
         )
         let username = trimmed(draft.username)
         let password = draft.password
-        let previousService = loadedPasswordService
-        let previousAccount = loadedPasswordAccount
+        let previousService = loadedCredentials.service
+        let previousAccount = loadedCredentials.account
 
         guard !credentialsMatchLoaded(
             service: service,
@@ -521,19 +520,20 @@ final class AccountSettingsModel {
         var account = accountValue
         account[UserDefaultsKeys.accountEnabled] = true
         stored[index] = account
-        defaults.set(stored, forKey: UserDefaultsKeys.accounts)
-        accounts = summaries(from: stored)
+        saveAccounts(stored)
 
         if self.selection == selection {
-            loadedPassword = password
-            loadedPasswordService = service
-            loadedPasswordAccount = username
+            loadedCredentials = LoadedAccountCredentials(
+                service: service,
+                account: username,
+                password: password
+            )
             hasUnsavedDraft = false
             credentialsAreDirty = false
 
-            isApplyingDraft = true
-            draft.isEnabled = true
-            isApplyingDraft = false
+            var updatedDraft = draft
+            updatedDraft.isEnabled = true
+            applyDraft(updatedDraft)
         }
 
         postEnabledChange(index: index)
@@ -551,9 +551,7 @@ final class AccountSettingsModel {
         passwordLoadTask?.cancel()
         passwordLoadTask = nil
         passwordIsLoading = false
-        loadedPassword = ""
-        loadedPasswordService = ""
-        loadedPasswordAccount = ""
+        loadedCredentials = LoadedAccountCredentials()
         hasUnsavedDraft = false
         credentialsAreDirty = false
 
@@ -608,14 +606,16 @@ final class AccountSettingsModel {
             }
 
             passwordIsLoading = false
-            loadedPassword = password
-            loadedPasswordService = service
-            loadedPasswordAccount = account
+            loadedCredentials = LoadedAccountCredentials(
+                service: service,
+                account: account,
+                password: password
+            )
 
             if draft.password.isEmpty {
-                isApplyingDraft = true
-                draft.password = password
-                isApplyingDraft = false
+                var updatedDraft = draft
+                updatedDraft.password = password
+                applyDraft(updatedDraft)
             }
 
             if hasUnsavedDraft {
@@ -639,8 +639,8 @@ final class AccountSettingsModel {
             return
         }
 
-        let previousService = loadedPasswordService
-        let previousAccount = loadedPasswordAccount
+        let previousService = loadedCredentials.service
+        let previousAccount = loadedCredentials.account
 
         credentialsAreSaving = true
         credentialSaveGeneration &+= 1
@@ -671,9 +671,11 @@ final class AccountSettingsModel {
             )
 
             guard self.selection == selection else { return }
-            loadedPassword = password
-            loadedPasswordService = service
-            loadedPasswordAccount = account
+            loadedCredentials = LoadedAccountCredentials(
+                service: service,
+                account: account,
+                password: password
+            )
             credentialsAreDirty = false
         }
     }
@@ -683,9 +685,11 @@ final class AccountSettingsModel {
         account: String,
         password: String
     ) -> Bool {
-        loadedPasswordService == service
-            && loadedPasswordAccount == account
-            && loadedPassword == password
+        loadedCredentials == LoadedAccountCredentials(
+            service: service,
+            account: account,
+            password: password
+        )
     }
 
     private func credentialValuesChanged(
@@ -753,26 +757,12 @@ final class AccountSettingsModel {
     private func summaries(
         from stored: [[String: Any]]
     ) -> [AccountSettingsSummary] {
-        stored.map { account in
-            let identifier = stringValue(account[AKSIPAccountKeys.uuid])
-            let description = stringValue(account[AKSIPAccountKeys.desc])
-            let explicitAddress = stringValue(account[AKSIPAccountKeys.sipAddress])
-            let username = stringValue(account[AKSIPAccountKeys.username])
-            let domain = stringValue(account[AKSIPAccountKeys.domain])
-            let fallbackAddress = SIPAddress(
-                user: username,
-                host: domain
-            ).stringValue
-            let title = description.isEmpty
-                ? (explicitAddress.isEmpty ? fallbackAddress : explicitAddress)
-                : description
+        stored.map { AccountSettingsSummary(storedAccount: $0) }
+    }
 
-            return AccountSettingsSummary(
-                id: identifier,
-                title: title,
-                isEnabled: boolValue(account[UserDefaultsKeys.accountEnabled])
-            )
-        }
+    private func saveAccounts(_ stored: [[String: Any]]) {
+        defaults.set(stored, forKey: UserDefaultsKeys.accounts)
+        accounts = summaries(from: stored)
     }
 
     private func storedAccountIndex(
@@ -792,10 +782,6 @@ final class AccountSettingsModel {
 
     private func trimmed(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private func boolValue(_ value: Any?) -> Bool {
-        (value as? NSNumber)?.boolValue ?? false
     }
 
     private func stringValue(

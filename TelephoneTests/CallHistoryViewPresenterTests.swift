@@ -28,12 +28,10 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         let record2 = factory.makeRecord(number: 2)
         let contact1 = makeContact(number: 1)
         let contact2 = makeContact(number: 2)
-        let didCallShow = expectation(description: "Did call show on view")
         var invokedRecords: [PresentationCallHistoryRecord]?
         let sut = CallHistoryViewPresenter(
             showRecords: { records in
                 invokedRecords = records
-                didCallShow.fulfill()
             },
             dateFormatter: ShortRelativeDateTimeFormatter(),
             durationFormatter: DurationFormatter()
@@ -48,7 +46,6 @@ final class CallHistoryViewPresenterTests: XCTestCase {
             ]
         )
 
-        await fulfillment(of: [didCallShow], timeout: 1)
         XCTAssertEqual(invokedRecords, [expected1, expected2])
     }
 
@@ -61,12 +58,10 @@ final class CallHistoryViewPresenterTests: XCTestCase {
             isMissed: true
         )
         let contact = makeContact(number: 1)
-        let didCallShow = expectation(description: "Did call show on view")
         var invokedRecords: [PresentationCallHistoryRecord]?
         let sut = CallHistoryViewPresenter(
             showRecords: { records in
                 invokedRecords = records
-                didCallShow.fulfill()
             },
             dateFormatter: ShortRelativeDateTimeFormatter(),
             durationFormatter: DurationFormatter()
@@ -74,8 +69,7 @@ final class CallHistoryViewPresenterTests: XCTestCase {
 
         await sut.update(records: [ContactCallHistoryRecord(origin: record, contact: contact)])
 
-        await fulfillment(of: [didCallShow], timeout: 1)
-        XCTAssertTrue(invokedRecords!.first!.isMissed)
+        XCTAssertEqual(invokedRecords?.first?.isMissed, true)
     }
 
     func testTitleIsEmailAddressOrPhoneNumberAndTooltipIsEmptyWhenNameIsEmpty() async {
@@ -86,12 +80,10 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         let number = "any-number"
         let contact1 = MatchedContact(name: "", address: .email(address: address, label: "any-label-1"))
         let contact2 = MatchedContact(name: "", address: .phone(number: number, label: "any-label-2"))
-        let didCallShow = expectation(description: "Did call show on view")
         var invokedRecords: [PresentationCallHistoryRecord]?
         let sut = CallHistoryViewPresenter(
             showRecords: { records in
                 invokedRecords = records
-                didCallShow.fulfill()
             },
             dateFormatter: ShortRelativeDateTimeFormatter(),
             durationFormatter: DurationFormatter()
@@ -104,7 +96,6 @@ final class CallHistoryViewPresenterTests: XCTestCase {
             ]
         )
 
-        await fulfillment(of: [didCallShow], timeout: 1)
         XCTAssertEqual(invokedRecords![0].contact.title, address)
         XCTAssertTrue(invokedRecords![0].contact.tooltip.isEmpty)
         XCTAssertEqual(invokedRecords![1].contact.title, number)

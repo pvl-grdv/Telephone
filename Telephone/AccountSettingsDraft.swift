@@ -164,3 +164,19 @@ extension AccountSettingsDraft {
         value as? String ?? defaultValue
     }
 }
+
+extension AccountSettingsSummary {
+    init(storedAccount account: [String: Any]) {
+        let draft = AccountSettingsDraft(storedAccount: account)
+        let fallbackAddress = SIPAddress(user: draft.username, host: draft.domain).stringValue
+        let title = draft.descriptionText.isEmpty
+            ? (draft.sipAddress.isEmpty ? fallbackAddress : draft.sipAddress)
+            : draft.descriptionText
+
+        self.init(
+            id: account[AKSIPAccountKeys.uuid] as? String ?? "",
+            title: title,
+            isEnabled: draft.isEnabled
+        )
+    }
+}

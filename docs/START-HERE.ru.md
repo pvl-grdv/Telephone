@@ -34,9 +34,10 @@
 5. **`AccountPresentationCoordinator.swift`** — владеет моделью истории,
    соединяет окно и сценарии действий. Это инфраструктура жизненного цикла,
    не сама View.
-6. **`CallHistoryViewEventTargetFactory.swift` и `CallHistoryViewPresenter.swift`** —
-   место стыковки старых UseCases с моделью истории. Пока эти мосты
-   нужны, чтобы сохранять поведение при изменениях UI.
+6. **`CallHistoryViewEventTargetFactory.swift`** создаёт сценарии истории.
+   **`PresentationCallHistoryRecord.swift`** преобразует запись для экрана,
+   а **`CallHistoryViewPresenter.swift`** доставляет её на MainActor.
+   Этот мост между акторами нужен и не является пустой обёрткой.
 7. **`CompositionRoot.swift`** — где создаются зависимости. Читай его
    *после* знакомства с несколькими зависимостями, а не первым.
 
@@ -65,7 +66,8 @@ AccountWindowRootView
 SQLiteCallHistory (хранение)
   → CallHistoryRecordGetAllUseCase (получить записи)
   → ContactCallHistoryRecordGetAllUseCase (найти контакты)
-  → CallHistoryViewPresenter (подготовить данные для интерфейса)
+  → PresentationCallHistoryRecord (подготовить данные для экрана)
+  → CallHistoryViewPresenter (ожидаемая доставка на MainActor)
   → CallHistoryViewModel
   → CallHistoryScreen
 ```
@@ -139,5 +141,6 @@ AccountSettingsView.swift — окно, список и подтверждени
 
 Редактор остаётся SwiftUI View без отдельной архитектуры. Пароли по-прежнему
 обрабатываются через Keychain, а сохранение во время редактирования
-контролируется моделью.
+контролируется моделью. Загруженные учётные данные хранятся как одно значение,
+а название аккаунта формируется в `AccountSettingsSummary`.
 

@@ -442,9 +442,6 @@ final class AccountSettingsModel {
         )
         let username = trimmed(draft.username)
         let password = draft.password
-        let previousService = loadedCredentials.service
-        let previousAccount = loadedCredentials.account
-
         guard !credentialsMatchLoaded(
             service: service,
             account: username,
@@ -460,23 +457,12 @@ final class AccountSettingsModel {
             return
         }
 
-        credentialsAreSaving = true
-        credentialSaveGeneration &+= 1
-        let generation = credentialSaveGeneration
-
-        Task { [weak self] in
-            guard let self else { return }
-
-            guard await saveChangedCredentials(
-                password: password,
-                service: service,
-                account: username,
-                previousService: previousService,
-                previousAccount: previousAccount,
-                generation: generation
-            ) else { return }
-
-            commitEnabledAccount(
+        saveCredentialChanges(
+            password: password,
+            service: service,
+            account: username
+        ) { [weak self] in
+            self?.commitEnabledAccount(
                 account,
                 selection: selection,
                 service: service,
@@ -577,13 +563,7 @@ final class AccountSettingsModel {
                 account: account
             )
 
-            guard
-                !Task.isCancelled,
-                self.selection == selection,
-                self.draft.username == account
-            else {
-                return
-            }
+            guard !Task.isCancelled, self.selection == selection else { return }
 
             passwordIsLoading = false
             loadedCredentials = LoadedAccountCredentials(
@@ -592,7 +572,10 @@ final class AccountSettingsModel {
                 password: password
             )
 
-            if draft.password.isEmpty {
+            // A slow Keychain read must not fill a different SIP identity.
+            if draft.password.isEmpty,
+               draft.username == account,
+               credentialService(registrar: draft.registrar, domain: draft.domain) == service {
                 var updatedDraft = draft
                 updatedDraft.password = password
                 applyDraft(updatedDraft)
@@ -619,9 +602,33 @@ final class AccountSettingsModel {
             return
         }
 
+        saveCredentialChanges(
+            password: password,
+            service: service,
+            account: account
+        ) { [weak self] in
+            guard let self, self.selection == selection else { return }
+            self.loadedCredentials = LoadedAccountCredentials(
+                service: service,
+                account: account,
+                password: password
+            )
+            self.credentialsAreDirty = false
+        }
+    }
+
+    /// Serialize Keychain changes for both account enable and ordinary saves.
+    /// Keep editing locked until the previous identity has been retired.
+    private func saveCredentialChanges(
+        password: String,
+        service: String,
+        account: String,
+        onSuccess: @escaping @MainActor () -> Void
+    ) {
+        guard !credentialsAreSaving else { return }
+
         let previousService = loadedCredentials.service
         let previousAccount = loadedCredentials.account
-
         credentialsAreSaving = true
         credentialSaveGeneration &+= 1
         let generation = credentialSaveGeneration
@@ -629,55 +636,30 @@ final class AccountSettingsModel {
         Task { [weak self] in
             guard let self else { return }
 
-            guard await saveChangedCredentials(
-                password: password,
+            let success = await credentials.savePassword(
+                password,
                 service: service,
-                account: account,
+                account: account
+            )
+            guard generation == credentialSaveGeneration else { return }
+
+            guard success else {
+                credentialsAreSaving = false
+                showsCredentialsError = true
+                return
+            }
+
+            await deletePreviousCredentialsIfNeeded(
                 previousService: previousService,
                 previousAccount: previousAccount,
-                generation: generation
-            ) else { return }
-
-            guard self.selection == selection else { return }
-            loadedCredentials = LoadedAccountCredentials(
-                service: service,
-                account: account,
-                password: password
+                newService: service,
+                newAccount: account
             )
-            credentialsAreDirty = false
+            guard generation == credentialSaveGeneration else { return }
+
+            credentialsAreSaving = false
+            onSuccess()
         }
-    }
-
-    /// Save the new Keychain entry before retiring the previous identity.
-    /// Both account-enable and disabled-account autosave share this exact order.
-    private func saveChangedCredentials(
-        password: String,
-        service: String,
-        account: String,
-        previousService: String,
-        previousAccount: String,
-        generation: Int
-    ) async -> Bool {
-        let success = await credentials.savePassword(
-            password,
-            service: service,
-            account: account
-        )
-        guard generation == credentialSaveGeneration else { return false }
-        credentialsAreSaving = false
-
-        guard success else {
-            showsCredentialsError = true
-            return false
-        }
-
-        await deletePreviousCredentialsIfNeeded(
-            previousService: previousService,
-            previousAccount: previousAccount,
-            newService: service,
-            newAccount: account
-        )
-        return true
     }
 
     private func credentialsMatchLoaded(

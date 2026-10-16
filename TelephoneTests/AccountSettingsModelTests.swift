@@ -372,6 +372,86 @@ struct AccountSettingsModelTests {
     }
 
     @Test
+    func keychainCleanupKeepsAccountLockedAndPreventsOverlappingWrites() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
+        )
+        await waitForPasswordLoad(model)
+        await fixture.credentials.holdNextDeletion()
+
+        model.draft.domain = "new.example.com"
+        model.draft.username = "bob"
+        model.draft.password = "replacement"
+        model.setEnabled(true)
+        await fixture.credentials.waitForDeletionStart()
+
+        #expect(model.credentialsAreSaving)
+        #expect(model.accountListInteractionDisabled)
+        #expect(!model.draft.isEnabled)
+        #expect(await fixture.credentials.saveCount() == 1)
+        #expect(await fixture.credentials.deletedCredentials().isEmpty)
+
+        // Programmatic flushes must not launch a second write during cleanup.
+        model.flushPendingChanges()
+        #expect(await fixture.credentials.saveCount() == 1)
+
+        await fixture.credentials.releaseDeletion()
+        await waitUntil { model.draft.isEnabled }
+        #expect(!model.credentialsAreSaving)
+        #expect(!model.accountListInteractionDisabled)
+
+        let saves = await fixture.credentials.savedCredentials()
+        let deletions = await fixture.credentials.deletedCredentials()
+        #expect(saves.count == 1)
+        #expect(saves.first?.service == "SIP: new.example.com")
+        #expect(saves.first?.account == "bob")
+        #expect(deletions == [
+            .init(service: "SIP: old.example.com", account: "alice")
+        ])
+    }
+
+    @Test
+    func slowPasswordReadDoesNotFillEditedSIPIdentityOrBlockNewSave() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+        await fixture.credentials.holdNextPasswordRead()
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
+        )
+        await fixture.credentials.waitForPasswordReadStart()
+        #expect(model.passwordIsLoading)
+
+        // Simulate a programmatic edit while the original identity is loading.
+        model.draft.username = "bob"
+        await fixture.credentials.releasePasswordRead()
+        await waitForPasswordLoad(model)
+        #expect(model.draft.username == "bob")
+        #expect(model.draft.password.isEmpty)
+
+        model.draft.password = "new-password"
+        model.flushPendingChanges()
+        await waitForCredentialSave(fixture.credentials)
+        await waitUntil { !model.credentialsAreSaving }
+
+        let saves = await fixture.credentials.savedCredentials()
+        let deletions = await fixture.credentials.deletedCredentials()
+        #expect(saves.count == 1)
+        #expect(saves[0].account == "bob")
+        #expect(saves[0].password == "new-password")
+        #expect(deletions == [
+            .init(service: "SIP: old.example.com", account: "alice")
+        ])
+    }
+
+    @Test
     func failedCredentialSaveDoesNotEnableAccount() async {
         let fixture = makeFixture(saveSucceeds: false)
         defer { fixture.cleanup() }
@@ -392,6 +472,7 @@ struct AccountSettingsModelTests {
 
         #expect(!model.draft.isEnabled)
         #expect(model.showsCredentialsError)
+        #expect(await fixture.credentials.deletedCredentials().isEmpty)
 
         let stored = storedAccounts(in: fixture.defaults)
         #expect(
@@ -498,6 +579,12 @@ private actor CredentialsStoreFake: CredentialsStoring {
     private let saveSucceeds: Bool
     private var saves: [SavedCredential] = []
     private var deletions: [CredentialIdentity] = []
+    private var holdPasswordRead = false
+    private var pendingPasswordRead: CheckedContinuation<String, Never>?
+    private var passwordReadStarted: CheckedContinuation<Void, Never>?
+    private var holdDeletion = false
+    private var pendingDeletion: CheckedContinuation<Void, Never>?
+    private var deletionStarted: CheckedContinuation<Void, Never>?
 
     init(
         password: String,
@@ -511,7 +598,25 @@ private actor CredentialsStoreFake: CredentialsStoring {
         service: String,
         account: String
     ) async -> String {
-        loadedPassword
+        guard holdPasswordRead else { return loadedPassword }
+        holdPasswordRead = false
+        return await withCheckedContinuation { continuation in
+            pendingPasswordRead = continuation
+            passwordReadStarted?.resume()
+            passwordReadStarted = nil
+        }
+    }
+
+    func holdNextPasswordRead() { holdPasswordRead = true }
+
+    func waitForPasswordReadStart() async {
+        if pendingPasswordRead != nil { return }
+        await withCheckedContinuation { passwordReadStarted = $0 }
+    }
+
+    func releasePasswordRead() {
+        pendingPasswordRead?.resume(returning: loadedPassword)
+        pendingPasswordRead = nil
     }
 
     func savePassword(
@@ -533,6 +638,14 @@ private actor CredentialsStoreFake: CredentialsStoring {
         service: String,
         account: String
     ) async -> Bool {
+        if holdDeletion {
+            holdDeletion = false
+            await withCheckedContinuation { continuation in
+                pendingDeletion = continuation
+                deletionStarted?.resume()
+                deletionStarted = nil
+            }
+        }
         deletions.append(
             CredentialIdentity(
                 service: service,
@@ -540,6 +653,18 @@ private actor CredentialsStoreFake: CredentialsStoring {
             )
         )
         return true
+    }
+
+    func holdNextDeletion() { holdDeletion = true }
+
+    func waitForDeletionStart() async {
+        if pendingDeletion != nil { return }
+        await withCheckedContinuation { deletionStarted = $0 }
+    }
+
+    func releaseDeletion() {
+        pendingDeletion?.resume()
+        pendingDeletion = nil
     }
 
     func saveCount() -> Int {

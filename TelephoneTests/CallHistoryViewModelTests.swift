@@ -166,23 +166,46 @@ struct CallHistoryAnswerTests {
             startedAt: Date(timeIntervalSince1970: 1_791_968_400), callerNumber: "84951234567",
             durationSeconds: durationSeconds)
     }
-    @Test func allVisibleIncomingCallsUseRawCallerAndKeepLocalMissedFlag() async throws {
+    @Test func onlyVisibleIncomingCallsNotAnsweredHereUseATSAttribution() async throws {
         let provider = HistoryAnswerProvider()
         let model = CallHistoryViewModel(gatewaySettings: try await settings(), answerProvider: provider)
-        let call = record()
-        model.show([call, record(id: "outgoing", incoming: false),
-                    record(id: "accepted", missed: false, durationSeconds: 25)])
-        for id in ["local-call", "outgoing", "accepted"] { model.setAnswerRecordVisible(id, visible: true) }
-        #expect(Set(model.answerContext.calls.map(\.id)) == ["local-call", "accepted"])
+        let missed = record()
+        let declined = record(id: "declined", missed: false, durationSeconds: 0)
+        let accepted = record(id: "accepted", missed: false, durationSeconds: 25)
+        model.show([missed, record(id: "outgoing", incoming: false), accepted, declined])
+        for id in ["local-call", "outgoing", "accepted", "declined"] {
+            model.setAnswerRecordVisible(id, visible: true)
+        }
+        #expect(Set(model.answerContext.calls.map(\.id)) == ["local-call", "declined"])
         #expect(model.answerContext.calls.first?.phoneNumber == "+74951234567")
         #expect(model.answerContext.calls.first?.startedAt == "2026-10-14T09:00:00.000Z")
         await model.refreshCallAnswers()
-        #expect(model.callAnswers[call.id]?.answeredBy?.displayName == "Synthetic Employee")
+        #expect(model.callAnswers[missed.id]?.answeredBy?.displayName == "Synthetic Employee")
+        #expect(model.callAnswers[declined.id]?.answeredBy?.displayName == "Synthetic Employee")
+        #expect(model.callAnswers[accepted.id] == nil)
+        #expect(await provider.requestCount == 1)
         #expect(model.allRecords.first?.isMissed == true)
         model.filter = .missed
-        #expect(model.records.contains(where: { $0.id == call.id }))
-        model.setAnswerRecordVisible(call.id, visible: false)
+        #expect(model.records.contains(where: { $0.id == missed.id }))
+        model.setAnswerRecordVisible(missed.id, visible: false)
         #expect(model.answerContext.calls.isEmpty)
+    }
+
+    @Test func locallyAnsweredTransferredCallDoesNotReportATSTimeMismatch() async throws {
+        let provider = HistoryAnswerProvider(status: .unknown)
+        let model = CallHistoryViewModel(gatewaySettings: try await settings(), answerProvider: provider)
+        // A transferred call's original ATS leg can begin before the SIP leg
+        // answered on this Mac. The local positive duration is authoritative.
+        let answeredHere = record(id: "transferred-to-me", missed: false, durationSeconds: 14 * 60 + 50)
+        model.show([answeredHere])
+        model.setAnswerRecordVisible(answeredHere.id, visible: true)
+
+        #expect(!answeredHere.wasNotAnsweredHere)
+        #expect(model.answerContext.calls.isEmpty)
+        await model.refreshCallAnswers()
+        #expect(await provider.requestCount == 0)
+        #expect(model.callAnswers[answeredHere.id] == nil)
+        #expect(model.records.first?.durationSeconds == 890)
     }
     @Test func aDeclinedZeroSecondCallWithoutMissedFlagCanShowWhoAnsweredElsewhere() async throws {
         let model = CallHistoryViewModel(gatewaySettings: try await settings(),

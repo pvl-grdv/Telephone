@@ -95,8 +95,10 @@ final class CallHistoryViewModel {
         var calls: [CRMIncomingCallRequest] = []
         if gatewaySettings?.enabled == true {
             calls = records.compactMap { record in
-                // ATS can establish who answered even if this Mac declined.
-                guard record.isIncoming,
+                // Ask ATS only when this Mac did not answer the call.
+                // A transferred call can start earlier in the PBX, while
+                // the locally answered SIP leg has its own start and duration.
+                guard record.wasNotAnsweredHere,
                       visibleAnswerRecords.contains(record.id),
                       let date = record.startedAt,
                       let raw = record.callerNumber,

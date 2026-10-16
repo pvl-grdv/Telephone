@@ -28,6 +28,12 @@ struct PresentationCallHistoryRecord: Identifiable, Hashable {
 
     var id: String { identifier }
 
+    /// Local SIP evidence takes priority over a remote ATS record that may
+    /// describe an earlier leg of a transferred call.
+    var wasNotAnsweredHere: Bool {
+        isIncoming && (isMissed || durationSeconds == 0)
+    }
+
     var name: String {
         contact.title.isEmpty ? date : "\(contact.title), \(date)"
     }

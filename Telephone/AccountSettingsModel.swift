@@ -216,9 +216,7 @@ final class AccountSettingsModel {
         hasUnsavedDraft = false
 
         var stored = storedAccounts()
-        guard let index = stored.firstIndex(where: {
-            stringValue($0[AKSIPAccountKeys.uuid]) == identifier
-        }) else {
+        guard let index = storedAccountIndex(for: identifier, in: stored) else {
             reload()
             return
         }
@@ -283,14 +281,9 @@ final class AccountSettingsModel {
             return
         }
 
-        let moving = stored[source]
-        stored.insert(moving, at: destination)
-
-        if source < destination {
-            stored.remove(at: source)
-        } else {
-            stored.remove(at: source + 1)
-        }
+        let moving = stored.remove(at: source)
+        let insertionIndex = source < destination ? destination - 1 : destination
+        stored.insert(moving, at: insertionIndex)
 
         defaults.set(stored, forKey: UserDefaultsKeys.accounts)
         accounts = summaries(from: stored)
@@ -375,9 +368,7 @@ final class AccountSettingsModel {
 
         if hasUnsavedDraft {
             var stored = storedAccounts()
-            guard let index = stored.firstIndex(where: {
-                stringValue($0[AKSIPAccountKeys.uuid]) == selection
-            }) else {
+            guard let index = storedAccountIndex(for: selection, in: stored) else {
                 return
             }
 
@@ -412,9 +403,7 @@ final class AccountSettingsModel {
         guard let selection else { return }
 
         var stored = storedAccounts()
-        guard let index = stored.firstIndex(where: {
-            stringValue($0[AKSIPAccountKeys.uuid]) == selection
-        }) else {
+        guard let index = storedAccountIndex(for: selection, in: stored) else {
             return
         }
 
@@ -445,9 +434,7 @@ final class AccountSettingsModel {
         autosaveTask = nil
 
         let stored = storedAccounts()
-        guard let index = stored.firstIndex(where: {
-            stringValue($0[AKSIPAccountKeys.uuid]) == selection
-        }) else {
+        guard let index = storedAccountIndex(for: selection, in: stored) else {
             return
         }
 
@@ -524,9 +511,7 @@ final class AccountSettingsModel {
         password: String
     ) {
         var stored = storedAccounts()
-        guard let index = stored.firstIndex(where: {
-            stringValue($0[AKSIPAccountKeys.uuid]) == selection
-        }) else {
+        guard let index = storedAccountIndex(for: selection, in: stored) else {
             deleteCredentials(service: service, account: username)
             return
         }
@@ -785,6 +770,15 @@ final class AccountSettingsModel {
                 title: title,
                 isEnabled: boolValue(account[UserDefaultsKeys.accountEnabled])
             )
+        }
+    }
+
+    private func storedAccountIndex(
+        for identifier: String,
+        in stored: [[String: Any]]
+    ) -> Int? {
+        stored.firstIndex {
+            stringValue($0[AKSIPAccountKeys.uuid]) == identifier
         }
     }
 

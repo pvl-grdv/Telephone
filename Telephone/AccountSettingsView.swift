@@ -16,13 +16,13 @@ extension AccountSettingsModel {
 }
 
 struct AccountSettingsView: View {
-    @Bindable var model: AccountSettingsModel
+    let model: AccountSettingsModel
 
     var body: some View {
         HStack(spacing: 0) {
-            accountList
+            AccountSettingsList(model: model)
             Divider()
-            editor
+            AccountSettingsEditor(model: model)
         }
         .alert(model.removalAlertTitle, isPresented: removalPresented) {
             Button(NSLocalizedString("Delete", comment: "Delete button."), role: .destructive) {
@@ -50,7 +50,33 @@ struct AccountSettingsView: View {
         }
     }
 
-    private var accountList: some View {
+    private var credentialsErrorPresented: Binding<Bool> {
+        Binding(
+            get: { model.showsCredentialsError },
+            set: { isPresented in
+                if !isPresented {
+                    model.dismissCredentialsError()
+                }
+            }
+        )
+    }
+
+    private var removalPresented: Binding<Bool> {
+        Binding(
+            get: { model.pendingRemovalID != nil },
+            set: { isPresented in
+                if !isPresented {
+                    model.cancelRemoval()
+                }
+            }
+        )
+    }
+}
+
+private struct AccountSettingsList: View {
+    @Bindable var model: AccountSettingsModel
+
+    var body: some View {
         VStack(spacing: 0) {
             List(selection: $model.selection) {
                 ForEach(model.accounts) { account in
@@ -113,8 +139,12 @@ struct AccountSettingsView: View {
         .frame(width: 205)
     }
 
-    @ViewBuilder
-    private var editor: some View {
+}
+
+private struct AccountSettingsEditor: View {
+    @Bindable var model: AccountSettingsModel
+
+    var body: some View {
         if model.hasSelection {
             Form {
                 Section(NSLocalizedString("Account Information", comment: "Account settings section.")) {
@@ -161,11 +191,7 @@ struct AccountSettingsView: View {
                             SecureField("", text: $model.draft.password)
                         }
                     }
-                    .disabled(
-                        model.draft.isEnabled
-                            || model.passwordIsLoading
-                            || model.credentialsAreSaving
-                    )
+                    .disabled(editingIsDisabled)
                 }
 
                 Section(NSLocalizedString("Network", comment: "Account settings section.")) {
@@ -239,11 +265,7 @@ struct AccountSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
-                .disabled(
-                        model.draft.isEnabled
-                            || model.passwordIsLoading
-                            || model.credentialsAreSaving
-                    )
+                .disabled(editingIsDisabled)
 
                 Section(NSLocalizedString("Advanced", comment: "Account settings section.")) {
                     LabeledContent(NSLocalizedString("SIP Address", comment: "Account settings label.")) {
@@ -286,11 +308,7 @@ struct AccountSettingsView: View {
                             .disabled(!model.draft.substitutesPlusCharacter)
                     }
                 }
-                .disabled(
-                        model.draft.isEnabled
-                            || model.passwordIsLoading
-                            || model.credentialsAreSaving
-                    )
+                .disabled(editingIsDisabled)
             }
             .formStyle(.grouped)
             .textFieldStyle(.roundedBorder)
@@ -313,6 +331,12 @@ struct AccountSettingsView: View {
         }
     }
 
+    private var editingIsDisabled: Bool {
+        model.draft.isEnabled
+            || model.passwordIsLoading
+            || model.credentialsAreSaving
+    }
+
     private var enabled: Binding<Bool> {
         Binding(
             get: { model.draft.isEnabled },
@@ -320,25 +344,4 @@ struct AccountSettingsView: View {
         )
     }
 
-    private var credentialsErrorPresented: Binding<Bool> {
-        Binding(
-            get: { model.showsCredentialsError },
-            set: { isPresented in
-                if !isPresented {
-                    model.dismissCredentialsError()
-                }
-            }
-        )
-    }
-
-    private var removalPresented: Binding<Bool> {
-        Binding(
-            get: { model.pendingRemovalID != nil },
-            set: { isPresented in
-                if !isPresented {
-                    model.cancelRemoval()
-                }
-            }
-        )
-    }
 }

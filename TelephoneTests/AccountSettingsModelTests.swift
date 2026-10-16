@@ -189,6 +189,40 @@ struct AccountSettingsModelTests {
     }
 
     @Test
+    func movingAccountsInEitherDirectionPreservesTheirUUIDsAndSelection() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+
+        let extra: [[String: Any]] = [
+            [AKSIPAccountKeys.uuid: "second", AKSIPAccountKeys.domain: "b.example", AKSIPAccountKeys.username: "bob"],
+            [AKSIPAccountKeys.uuid: "third", AKSIPAccountKeys.domain: "c.example", AKSIPAccountKeys.username: "carol"]
+        ]
+        fixture.defaults.set(
+            storedAccounts(in: fixture.defaults) + extra,
+            forKey: UserDefaultsKeys.accounts
+        )
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials
+        )
+        await waitForPasswordLoad(model)
+
+        model.moveAccounts(from: IndexSet(integer: 0), to: 3)
+        #expect(storedAccounts(in: fixture.defaults).compactMap {
+            $0[AKSIPAccountKeys.uuid] as? String
+        } == ["second", "third", "account-id"])
+        #expect(model.selection == "account-id")
+
+        model.moveAccounts(from: IndexSet(integer: 2), to: 0)
+        #expect(storedAccounts(in: fixture.defaults).compactMap {
+            $0[AKSIPAccountKeys.uuid] as? String
+        } == ["account-id", "second", "third"])
+        #expect(model.accounts.map(\.id) == ["account-id", "second", "third"])
+        #expect(model.selection == "account-id")
+    }
+
+    @Test
     func invalidProxyPortDoesNotEnableAccount() async {
         let fixture = makeFixture()
         defer { fixture.cleanup() }

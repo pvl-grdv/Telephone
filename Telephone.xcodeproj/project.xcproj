@@ -116,14 +116,6 @@
           "kind": "group",
           "name": "Call History",
           "children": [
-            {
-              "path": "CallHistoryView.swift",
-              "encoding": "utf8",
-              "target-membership": [
-                "Telephone/compile-sources",
-                "TelephoneTests/compile-sources",
-              ],
-            },
             { "path": "CallHistoryModel.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "CallHistoryPresenter.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "CallHistoryScreen.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
@@ -142,7 +134,6 @@
               "kind": "group",
               "name": "CallHistoryViewEventTargetFactory",
               "children": [
-                { "path": "AsyncCallHistoryViewEventTargetFactory.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
                 { "path": "CallHistoryViewEventTargetFactory.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
               ],
             }, {
@@ -689,7 +680,6 @@
       "path": "TelephoneTests",
       "children": [
         { "path": "ApplicationDataLocationsFake.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
-        { "path": "CallHistoryViewSpy.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "ClipboardSpy.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "FileBrowserSpy.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "NullSettingsMigration.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },

@@ -6,7 +6,7 @@
 import SwiftUI
 
 @MainActor
-final class CallHistoryPresenter: CallHistoryView {
+final class CallHistoryPresenter {
     weak var target: CallHistoryViewEventTarget? {
         didSet {
             target?.shouldReloadData()

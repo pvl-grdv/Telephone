@@ -29,7 +29,7 @@ final class CompositionRoot {
     let settingsMigration: ProgressiveSettingsMigration
     let orphanLogFileRemoval: OrphanLogFileRemoval
     let workstationSleepStatus: WorkspaceSleepStatus
-    let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
+    let callHistoryViewEventTargetFactory: CallHistoryViewEventTargetFactory
     let logFileURL: LogFileURL
     let defaultAppSettings: DefaultAppSettings
     let helpMenuActionTarget: HelpMenuActionTarget
@@ -203,15 +203,13 @@ final class CompositionRoot {
         let dayChangeEventTargets = DayChangeEventTargets()
         dayChangeEventSource = NSCalendarDayChangeEventSource(center: NotificationCenter.default, target: dayChangeEventTargets)
 
-        callHistoryViewEventTargetFactory = AsyncCallHistoryViewEventTargetFactory(
-            origin: CallHistoryViewEventTargetFactory(
-                histories: callHistories,
-                index: contactMatchingIndex,
-                settings: contactMatchingSettings,
-                dateFormatter: ShortRelativeDateTimeFormatter(),
-                durationFormatter: DurationFormatter(),
-                dayChangeEventTargets: dayChangeEventTargets
-            )
+        callHistoryViewEventTargetFactory = CallHistoryViewEventTargetFactory(
+            histories: callHistories,
+            index: contactMatchingIndex,
+            settings: contactMatchingSettings,
+            dateFormatter: ShortRelativeDateTimeFormatter(),
+            durationFormatter: DurationFormatter(),
+            dayChangeEventTargets: dayChangeEventTargets
         )
 
         logFileURL = LogFileURL(locations: applicationDataLocations, filename: "Telephone.log")

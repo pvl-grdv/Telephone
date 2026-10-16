@@ -39,7 +39,10 @@ final class CallHistoryViewEventTargetFactory {
         self.dayChangeEventTargets = dayChangeEventTargets
     }
 
-    func make(account: CallMakingAccount, view: CallHistoryView) async -> CallHistoryViewEventTarget {
+    func make(
+        account: CallMakingAccount,
+        showRecords: @escaping @MainActor ([PresentationCallHistoryRecord]) -> Void
+    ) async -> CallHistoryViewEventTarget {
         let history = await histories.history(withUUID: account.uuid)
         let factory = FallingBackMatchedContactFactory(
             matching: IndexedContactMatching(
@@ -54,7 +57,7 @@ final class CallHistoryViewEventTargetFactory {
                 output: ContactCallHistoryRecordGetAllUseCase(
                     factory: factory,
                     output: CallHistoryViewPresenter(
-                        view: view,
+                        showRecords: showRecords,
                         dateFormatter: dateFormatter,
                         durationFormatter: durationFormatter
                     )

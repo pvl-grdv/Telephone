@@ -26,7 +26,7 @@ final class AccountPresentationCoordinator {
     private let windowKey: String
     private let callDestinationComposer: CallDestinationComposer
     private let callHistoryPresenter: CallHistoryPresenter
-    private let callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory
+    private let callHistoryViewEventTargetFactory: CallHistoryViewEventTargetFactory
     private let account: any CallMakingAccount
     private let authenticationFailureController: AuthenticationFailureController
     private weak var accountDelegate: AccountPresentationCoordinatorDelegate?
@@ -35,12 +35,13 @@ final class AccountPresentationCoordinator {
 
     private var callHistoryViewEventTarget: CallHistoryViewEventTarget?
     private var callHistoryConfigured = false
+    private var callHistorySetupTask: Task<Void, Never>?
 
     init(
         accountDescription: String,
         accountController: AccountController,
         userAgent: AKSIPUserAgent,
-        callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
+        callHistoryViewEventTargetFactory: CallHistoryViewEventTargetFactory,
         account: any CallMakingAccount,
         session: AccountSession,
         delegate: AccountPresentationCoordinatorDelegate
@@ -132,6 +133,8 @@ final class AccountPresentationCoordinator {
     }
 
     func invalidate() {
+        callHistorySetupTask?.cancel()
+        callHistorySetupTask = nil
         dismissAuthenticationFailure()
         callHistoryPresenter.target = nil
         callHistoryViewEventTarget = nil
@@ -142,13 +145,17 @@ final class AccountPresentationCoordinator {
         guard !callHistoryConfigured else { return }
         callHistoryConfigured = true
 
-        callHistoryViewEventTargetFactory.make(
-            account: account,
-            view: callHistoryPresenter
-        ) { [weak self] target in
-            guard let self else { return }
+        let factory = callHistoryViewEventTargetFactory
+        let account = account
+        let presenter = callHistoryPresenter
+        callHistorySetupTask = Task { [weak self, weak presenter] in
+            let target = await factory.make(account: account) { [weak presenter] records in
+                presenter?.show(records)
+            }
+            guard !Task.isCancelled, let self else { return }
             self.callHistoryViewEventTarget = target
             self.callHistoryPresenter.target = target
+            self.callHistorySetupTask = nil
         }
     }
 

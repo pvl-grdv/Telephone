@@ -96,7 +96,7 @@ final class AccountController:
         ringtonePlayback: any RingtonePlaybackUseCase,
         sleepStatus: WorkspaceSleepStatus,
         incomingCallContactResolver: IncomingCallContactResolver,
-        callHistoryViewEventTargetFactory: AsyncCallHistoryViewEventTargetFactory,
+        callHistoryViewEventTargetFactory: CallHistoryViewEventTargetFactory,
         crmGatewaySettings: CRMGatewaySettings = CRMGatewaySettings(),
         crmKeyLookupProvider: any CRMKeyLookupProvider = CRMGatewayClient(),
         crmPhoneAppendRegistry: CRMPhoneAppendRegistry = CRMPhoneAppendRegistry(),

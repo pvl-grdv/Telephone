@@ -30,12 +30,13 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         let contact2 = makeContact(number: 2)
         let didCallShow = expectation(description: "Did call show on view")
         var invokedRecords: [PresentationCallHistoryRecord]?
-        let view = CallHistoryViewSpy { records in
-            invokedRecords = records
-            didCallShow.fulfill()
-        }
         let sut = CallHistoryViewPresenter(
-            view: view, dateFormatter: ShortRelativeDateTimeFormatter(), durationFormatter: DurationFormatter()
+            showRecords: { records in
+                invokedRecords = records
+                didCallShow.fulfill()
+            },
+            dateFormatter: ShortRelativeDateTimeFormatter(),
+            durationFormatter: DurationFormatter()
         )
         let expected1 = makePresentationCallHistoryRecord(contact: contact1, record: record1)
         let expected2 = makePresentationCallHistoryRecord(contact: contact2, record: record2)
@@ -62,12 +63,13 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         let contact = makeContact(number: 1)
         let didCallShow = expectation(description: "Did call show on view")
         var invokedRecords: [PresentationCallHistoryRecord]?
-        let view = CallHistoryViewSpy { records in
-            invokedRecords = records
-            didCallShow.fulfill()
-        }
         let sut = CallHistoryViewPresenter(
-            view: view, dateFormatter: ShortRelativeDateTimeFormatter(), durationFormatter: DurationFormatter()
+            showRecords: { records in
+                invokedRecords = records
+                didCallShow.fulfill()
+            },
+            dateFormatter: ShortRelativeDateTimeFormatter(),
+            durationFormatter: DurationFormatter()
         )
 
         await sut.update(records: [ContactCallHistoryRecord(origin: record, contact: contact)])
@@ -86,12 +88,13 @@ final class CallHistoryViewPresenterTests: XCTestCase {
         let contact2 = MatchedContact(name: "", address: .phone(number: number, label: "any-label-2"))
         let didCallShow = expectation(description: "Did call show on view")
         var invokedRecords: [PresentationCallHistoryRecord]?
-        let view = CallHistoryViewSpy { records in
-            invokedRecords = records
-            didCallShow.fulfill()
-        }
         let sut = CallHistoryViewPresenter(
-            view: view, dateFormatter: ShortRelativeDateTimeFormatter(), durationFormatter: DurationFormatter()
+            showRecords: { records in
+                invokedRecords = records
+                didCallShow.fulfill()
+            },
+            dateFormatter: ShortRelativeDateTimeFormatter(),
+            durationFormatter: DurationFormatter()
         )
 
         await sut.update(

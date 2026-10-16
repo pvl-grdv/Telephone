@@ -195,6 +195,36 @@ struct CRMKeyLookupModelTests {
         #expect(model.state == .idle)
     }
 
+    @Test func resetClearsThreeManualQueriesAndRejectsLateResponse() async throws {
+        let fixture = try await makeFixture()
+        let model = fixture.model
+        model.keyNumber = "76543"
+        model.email = "test@example.invalid"
+        model.organizationCode = "98765432"
+        model.search()
+        await fixture.provider.waitForRequest(76543)
+
+        model.resetContext()
+        #expect(model.keyNumber.isEmpty)
+        #expect(model.email.isEmpty)
+        #expect(model.organizationCode.isEmpty)
+        #expect(model.state == .idle)
+        try await fixture.provider.finish(76543, with: response())
+        await allowTaskToFinish()
+        #expect(model.state == .idle)
+
+        model.keyNumber = "76544"
+        model.search()
+        await fixture.provider.waitForRequest(76544)
+        try await fixture.provider.finish(76544, with: response())
+        await waitUntilFinished(model)
+        guard case .loaded = model.state else {
+            Issue.record("A fresh manual lookup should work after reset")
+            return
+        }
+        #expect(model.keyNumber == "76544")
+    }
+
     @Test func changedSettingsRejectAlreadyPendingResultsEvenBeforeViewUpdates() async throws {
         let fixture = try await makeFixture()
         fixture.model.keyNumber = "76543"

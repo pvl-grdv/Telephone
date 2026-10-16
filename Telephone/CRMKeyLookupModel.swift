@@ -33,13 +33,13 @@ struct CRMPhoneLinkConfirmation: Equatable, Identifiable, Sendable {
 final class CRMKeyLookupModel {
     let settings: CRMGatewaySettings
     var keyNumber = "" {
-        didSet { if oldValue != keyNumber { cancel() } }
+        didSet { if oldValue != keyNumber && !isClearingSearchFields { cancel() } }
     }
     var email = "" {
-        didSet { if oldValue != email { cancel() } }
+        didSet { if oldValue != email && !isClearingSearchFields { cancel() } }
     }
     var organizationCode = "" {
-        didSet { if oldValue != organizationCode { cancel() } }
+        didSet { if oldValue != organizationCode && !isClearingSearchFields { cancel() } }
     }
     private(set) var callerPhone: String?
     private(set) var state: CRMKeyLookupState = .idle
@@ -60,6 +60,8 @@ final class CRMKeyLookupModel {
     @ObservationIgnored private var presentedSettingsGeneration: Int
     @ObservationIgnored private var isContextActive = true
     @ObservationIgnored private var automaticLookupAttempted = false
+    // Clearing all search fields is one context transition, not three edits.
+    @ObservationIgnored private var isClearingSearchFields = false
     @ObservationIgnored private var lookupIdentity: LiveCRMQuery?
 
     init(
@@ -195,8 +197,7 @@ final class CRMKeyLookupModel {
         lookupIdentity = .email(email)
         beginLookup { provider, configuration in
             let result = try await provider.customer(forEmail: email, companyID: companyID, configuration: configuration)
-            if result.data != nil { return .loaded(CRMKeyLookupResponse(data: result.data, meta: result.meta)) }
-            return result.matches.isEmpty ? .notFound : .choosing(result.matches)
+            return result.lookupState
         }
     }
 
@@ -209,10 +210,7 @@ final class CRMKeyLookupModel {
             let result = try await provider.customer(
                 forPhoneNumber: phone, companyID: companyID, configuration: configuration
             )
-            if result.data != nil {
-                return .loaded(CRMKeyLookupResponse(data: result.data, meta: result.meta))
-            }
-            return result.matches.isEmpty ? .notFound : .choosing(result.matches)
+            return result.lookupState
         }
     }
 
@@ -318,6 +316,8 @@ final class CRMKeyLookupModel {
     func resetContext() {
         contextGeneration &+= 1
         cancel()
+        isClearingSearchFields = true
+        defer { isClearingSearchFields = false }
         keyNumber = ""
         email = ""
         organizationCode = ""
@@ -394,6 +394,15 @@ final class CRMKeyLookupModel {
                 self?.observeSettings()
             }
         }
+    }
+}
+
+private extension CRMPhoneLookupResponse {
+    var lookupState: CRMKeyLookupState {
+        if let data {
+            return .loaded(CRMKeyLookupResponse(data: data, meta: meta))
+        }
+        return matches.isEmpty ? .notFound : .choosing(matches)
     }
 }
 

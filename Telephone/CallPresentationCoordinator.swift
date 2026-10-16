@@ -24,7 +24,7 @@ final class CallPresentationCoordinator: Identifiable {
     private var redialEnableTask: Task<Void, Never>?
     private var autoCloseTask: Task<Void, Never>?
     private var intermediateStatusTask: Task<Void, Never>?
-    private var enteredDTMF = NSMutableString()
+    private var enteredDTMF = ""
     private var closeNotificationGate = CallWindowCloseNotificationGate()
     private var activeCallInterval: OSSignpostIntervalState?
 
@@ -171,11 +171,8 @@ final class CallPresentationCoordinator: Identifiable {
         transferCoordinator.discardSourceTransferSession()
         session.setCall(call)
         updateCRMCallerPhone()
-        enteredDTMF = NSMutableString()
+        enteredDTMF = ""
         model.usesDTMFDisplay = false
-
-        if call != nil {
-        }
     }
 
     func setDisplayedName(_ value: String) {
@@ -228,7 +225,7 @@ final class CallPresentationCoordinator: Identifiable {
     func setHangUpEnabled(_ enabled: Bool) {
         session.hangUpEnabled = enabled
         if model.isTransfer {
-            transferCoordinator.setCancelEnabled(enabled)
+            model.transferCancelEnabled = enabled
         }
     }
 
@@ -241,11 +238,11 @@ final class CallPresentationCoordinator: Identifiable {
     }
 
     func setTransferActionEnabled(_ enabled: Bool) {
-        transferCoordinator.setActionEnabled(enabled)
+        model.transferActionEnabled = enabled
     }
 
     func setTransferCancelEnabled(_ enabled: Bool) {
-        transferCoordinator.setCancelEnabled(enabled)
+        model.transferCancelEnabled = enabled
     }
 
     func focusAnswer() {
@@ -267,7 +264,7 @@ final class CallPresentationCoordinator: Identifiable {
         }
 
         if model.isTransfer {
-            transferCoordinator.setActionEnabled(session.holdEnabled)
+            model.transferActionEnabled = session.holdEnabled
         }
     }
 
@@ -496,13 +493,13 @@ final class CallPresentationCoordinator: Identifiable {
             return
         }
 
-        if enteredDTMF.length == 0 {
+        if enteredDTMF.isEmpty {
             setWindowTitle(callController.displayedName ?? "")
             model.usesDTMFDisplay = true
         }
 
         enteredDTMF.append(text)
-        callController.displayedName = enteredDTMF as String
+        callController.displayedName = enteredDTMF
         call.sendDTMF(text)
     }
 

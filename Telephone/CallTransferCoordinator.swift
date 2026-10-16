@@ -42,14 +42,6 @@ final class CallTransferCoordinator {
         destinationComposer?.focus()
     }
 
-    func setActionEnabled(_ enabled: Bool) {
-        model.transferActionEnabled = enabled
-    }
-
-    func setCancelEnabled(_ enabled: Bool) {
-        model.transferCancelEnabled = enabled
-    }
-
     func focusDestination() {
         destinationComposer?.focus()
     }
@@ -122,22 +114,10 @@ final class CallTransferCoordinator {
     }
 
     func closeSheet() {
-        guard
-            let transferController = callController as? CallTransferController
-        else {
-            return
-        }
-
-        transferController.closeSheet(nil)
+        (callController as? CallTransferController)?.closeSheet(nil)
     }
 
     func cancel() {
-        guard
-            let transferController = callController as? CallTransferController
-        else {
-            return
-        }
-
-        transferController.showInitialState(nil)
+        (callController as? CallTransferController)?.showInitialState(nil)
     }
 }

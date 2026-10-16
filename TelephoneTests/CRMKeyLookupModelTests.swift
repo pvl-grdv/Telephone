@@ -227,6 +227,34 @@ struct CRMKeyLookupModelTests {
         #expect(fixture.model.state == .idle)
     }
 
+    @Test func organizationNumberLookupLoadsInventoryAndNeverAllowsPhoneAppend() async throws {
+        let settings = CRMGatewaySettings(defaults: freshDefaults(), tokenStore: GatewayTokenStoreFake())
+        try await settings.save(
+            enabled: true, origin: "https://gateway.example", newToken: "fictional-test-token"
+        )
+        let sample = String(decoding: GatewayFixture.customer, as: UTF8.self)
+            .replacingOccurrences(of: "\"sourceKeyId\":76543", with: "\"sourceKeyId\":null")
+        let client = CRMGatewayClient(transport: GatewayTransportFake(data: Data(sample.utf8)))
+        let model = CRMKeyLookupModel(settings: settings, provider: client)
+
+        model.organizationCode = "98765432"
+        #expect(model.canSearchOrganizationCode)
+        model.searchOrganizationCode()
+        await waitUntilFinished(model)
+
+        guard case .loaded(let result) = model.state else {
+            Issue.record("Expected matching registration-number inventory")
+            return
+        }
+        #expect(result.data?.company.formattedCode == "98-76-5432")
+        #expect(model.organizationCode == "98765432")
+        #expect(!model.canLinkPhone)
+
+        model.resetContext()
+        #expect(model.organizationCode.isEmpty)
+        #expect(model.state == .idle)
+    }
+
     @Test func displaysNotFoundSeparatelyFromUnavailable() async throws {
         let fixture = try await makeFixture()
         fixture.model.keyNumber = "76543"

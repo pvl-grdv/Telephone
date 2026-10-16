@@ -35,12 +35,17 @@ private struct CallDetailsIdentityHeader: View {
                  ? NSLocalizedString("Client details", comment: "Live client details title.")
                  : model.displayedName)
                 .font(.headline)
-                .lineLimit(1)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
             let identity = phone ?? model.identityDetail
-            if !identity.isEmpty {
+            let displayedPhone = CRMPhoneNumber.normalize(model.displayedName)
+            let identityPhone = CRMPhoneNumber.normalize(identity)
+            if !identity.isEmpty,
+               displayedPhone == nil || identityPhone == nil || displayedPhone != identityPhone {
                 Text(identity)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.middle)
                     .textSelection(.enabled)
             }
             Spacer(minLength: 8)

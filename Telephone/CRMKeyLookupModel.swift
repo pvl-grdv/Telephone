@@ -38,6 +38,9 @@ final class CRMKeyLookupModel {
     var email = "" {
         didSet { if oldValue != email { cancel() } }
     }
+    var organizationCode = "" {
+        didSet { if oldValue != organizationCode { cancel() } }
+    }
     private(set) var callerPhone: String?
     private(set) var state: CRMKeyLookupState = .idle
     private var appendOperation = CRMPhoneAppendOperation()
@@ -78,6 +81,12 @@ final class CRMKeyLookupModel {
 
     var canSearchEmail: Bool {
         settings.enabled && isContextActive && CRMEmailAddress.normalize(email) != nil
+            && state != .loading && phoneLinkState != .saving
+    }
+
+    var canSearchOrganizationCode: Bool {
+        settings.enabled && isContextActive
+            && CRMOrganizationCode.normalize(organizationCode) != nil
             && state != .loading && phoneLinkState != .saving
     }
 
@@ -134,6 +143,23 @@ final class CRMKeyLookupModel {
         }
         lookupIdentity = .key(number)
         loadedFromKey = true
+    }
+
+    func searchOrganizationCode() {
+        guard isContextActive, phoneLinkState != .saving else { return }
+        guard let code = CRMOrganizationCode.normalize(organizationCode) else {
+            state = .failed(.invalidOrganizationCode)
+            return
+        }
+        loadedFromKey = false
+        lookupIdentity = .organizationCode(code)
+        beginLookup { provider, configuration in
+            let result = try await provider.customer(
+                forOrganizationCode: code,
+                configuration: configuration
+            )
+            return result.data == nil ? .notFound : .loaded(result)
+        }
     }
 
     func searchEmail(companyID: Int? = nil) {
@@ -271,6 +297,7 @@ final class CRMKeyLookupModel {
         cancel()
         keyNumber = ""
         email = ""
+        organizationCode = ""
         callerPhone = nil
         appendOperation = CRMPhoneAppendOperation()
         automaticLookupAttempted = false
@@ -351,4 +378,5 @@ private enum LiveCRMQuery: Sendable {
     case phone(String)
     case key(Int)
     case email(String)
+    case organizationCode(String)
 }

@@ -96,6 +96,63 @@ struct CRMGatewayClientTests {
         #expect(json == ["keyNumber": 76543])
     }
 
+    @Test func organizationCodePreservesLeadingZeroesAndRejectsUnsafeInputs() {
+        #expect(CRMOrganizationCode.normalize(" 00-01-0048 ") == "00-01-0048")
+        #expect(CRMOrganizationCode.normalize("00010048") == "00-01-0048")
+        for invalid in [
+            "", "12-3-5678", "12--34-5678", "12-34-5678; DROP",
+            "12/34/5678", "1234567", "123456781", "１２-３４-５６７８",
+            "12-34-5678\\n", "12-34-56+8",
+        ] {
+            #expect(CRMOrganizationCode.normalize(invalid) == nil)
+        }
+    }
+
+    @Test func organizationCodeLookupUsesOnlyNewGatewayRouteAndValidatesIdentity() async throws {
+        let sample = String(decoding: GatewayFixture.customer, as: UTF8.self)
+            .replacingOccurrences(of: "\"sourceKeyId\":76543", with: "\"sourceKeyId\":null")
+        let transport = GatewayTransportFake(data: Data(sample.utf8))
+        let sut = CRMGatewayClient(transport: transport)
+
+        let result = try await sut.customer(
+            forOrganizationCode: "98765432", configuration: configuration()
+        )
+        #expect(result.data?.company.formattedCode == "98-76-5432")
+        #expect(result.data?.sourceKeyId == nil)
+        #expect(result.data?.keys[0].programs.map(\.release) == ["0006", "0010"])
+
+        let request = try #require(await transport.requests.first)
+        #expect(request.url?.absoluteString == "https://gateway.example/v1/customer-by-organization-code/filter")
+        #expect(request.httpMethod == "POST")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer fictional-test-token")
+        let body = try #require(request.httpBody)
+        let payload = try #require(JSONSerialization.jsonObject(with: body) as? [String: String])
+        #expect(payload == ["organizationCode": "98-76-5432"])
+
+        let missing = CRMGatewayClient(transport: GatewayTransportFake(data: GatewayFixture.notFound))
+        #expect(try await missing.customer(
+            forOrganizationCode: "98-76-5432", configuration: configuration()
+        ).data == nil)
+
+        let unsupported = CRMGatewayClient(transport: GatewayTransportFake(status: 404, data: Data()))
+        await expectError(.organizationCodeUnsupported) {
+            try await unsupported.customer(forOrganizationCode: "98-76-5432", configuration: configuration())
+        }
+        let wrongCode = sample.replacingOccurrences(of: "\"formattedCode\":\"98-76-5432\"",
+            with: "\"formattedCode\":\"98-76-5433\"")
+        for data in [GatewayFixture.customer, Data(wrongCode.utf8)] {
+            let invalid = CRMGatewayClient(transport: GatewayTransportFake(data: data))
+            await expectError(.invalidResponse) {
+                try await invalid.customer(forOrganizationCode: "98-76-5432", configuration: configuration())
+            }
+        }
+
+        let invalid = CRMGatewayClient(transport: GatewayTransportFake(data: GatewayFixture.notFound))
+        await expectError(.invalidOrganizationCode) {
+            try await invalid.customer(forOrganizationCode: "12-34<script>", configuration: configuration())
+        }
+    }
+
     @Test func notFoundIsSuccessfulAndDifferentFromAuthorizationFailure() async throws {
         let missing = CRMGatewayClient(transport: GatewayTransportFake(data: GatewayFixture.notFound))
         #expect(try await missing.customer(forKeyNumber: 76543, configuration: configuration()).data == nil)

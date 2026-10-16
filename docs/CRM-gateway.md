@@ -24,8 +24,9 @@ infrastructure settings are managed separately.
    **Apply**. This token is separate from the CRM password and Tailscale login.
 5. During a call, Telephone looks up the actual peer's phone number. One exact
    match shows its organization. Multiple matches require an explicit choice.
-6. If the phone is absent, enter a numeric key number or one email address and
-   select **Find by key** or **Find by email**. Several email matches require a choice.
+6. If the phone is absent, use **Search organization…** to find it by
+   key number, email address, or registration number such as `98-76-5432`.
+   Several email matches require an explicit choice.
 7. After manual key lookup, **Link number to organization** offers a confirmation
    showing the phone and organization. This needs a token with append permission.
 
@@ -146,6 +147,33 @@ inventory has `sourceKeyId:null` and a required `company.emails` canonical,
 unique array containing the searched address. Other lookup responses may omit
 `emails`. Email lookup never automatically adds the caller's number to CRM and
 does not offer the phone-append operation.
+
+### Manual organization registration number lookup
+
+The generic macOS client supports this **optional gateway capability**.
+A gateway must implement the route below before Telephone can use it.
+Until then, HTTP 404 produces an explicit update-gateway message rather than
+silently falling back to searching by key or internal organization ID.
+
+```http
+POST /v1/customer-by-organization-code/filter
+```
+
+```json
+{"organizationCode":"98-76-5432"}
+```
+
+Telephone accepts a displayed `NN-NN-NNNN` registration number or eight ASCII
+digits, and transmits only the canonical **string** (including leading zeroes).
+It never derives an internal `company.id`, key number or portal URL from it.
+The gateway is responsible for authorization and an exact, unambiguous match
+against its authoritative organization registration number. A unique match
+returns the existing `CRMKeyLookupResponse` shape with the **complete**
+`data` inventory, `sourceKeyId: null`, and `meta`. No match returns
+`data: null`. Ambiguous values must fail rather than returning an arbitrary
+organization. Telephone checks that `data.company.formattedCode` matches the
+requested registration number and validates the usual inventory/URL invariants.
+The endpoint is read-only and does not grant phone-append permissions.
 
 ## Inventory response
 

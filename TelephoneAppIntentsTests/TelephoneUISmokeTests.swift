@@ -221,9 +221,13 @@ final class TelephoneUISmokeTests: XCTestCase {
         XCTAssertFalse(app.textFields["Reference keys"].exists)
         XCTAssertFalse(app.textFields["Email addresses"].exists)
 
-        let otherSearch = app.buttons["Search by key or email…"]
+        let otherSearch = app.buttons["Search organization…"]
         XCTAssertTrue(otherSearch.waitForExistence(timeout: 3), app.debugDescription)
         otherSearch.click()
+        XCTAssertTrue(
+            element("customer.crm.lookupKind", in: app).waitForExistence(timeout: 3),
+            "Manual CRM lookup must offer a search-method picker."
+        )
         let key = element("customer.crm.keyNumber", in: app)
         XCTAssertTrue(key.waitForExistence(timeout: 3), app.debugDescription)
         key.click()

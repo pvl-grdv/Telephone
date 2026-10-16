@@ -12,6 +12,8 @@ enum CRMGatewayError: String, Error, Equatable, Sendable, Codable {
     case invalidKeyNumber
     case invalidPhoneNumber
     case invalidEmail
+    case invalidOrganizationCode
+    case organizationCodeUnsupported
     case forbidden
     case conflict
     case phoneWriteUnconfirmed
@@ -218,6 +220,30 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
     }
 
     func customer(
+        forOrganizationCode input: String,
+        configuration: CRMGatewayConfiguration
+    ) async throws -> CRMKeyLookupResponse {
+        guard let code = CRMOrganizationCode.normalize(input) else {
+            throw CRMGatewayError.invalidOrganizationCode
+        }
+        let result: CRMKeyLookupResponse = try await send(
+            route: .organizationCodeLookup,
+            body: OrganizationCodeRequest(organizationCode: code),
+            configuration: configuration
+        )
+        try Self.validateMetadata(result.meta)
+        if let customer = result.data {
+            // A registration number is not a key number or an internal company ID.
+            guard customer.sourceKeyId == nil,
+                  CRMOrganizationCode.normalize(customer.company.formattedCode) == code else {
+                throw CRMGatewayError.invalidResponse
+            }
+            try Self.validateCustomer(customer)
+        }
+        return result
+    }
+
+    func customer(
         forKeyNumber keyNumber: Int,
         configuration: CRMGatewayConfiguration
     ) async throws -> CRMKeyLookupResponse {
@@ -352,6 +378,7 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
         case 403: throw route == .phoneAppend ? CRMGatewayError.forbidden : .unauthorized
         case 409: throw route == .phoneAppend ? CRMGatewayError.conflict : .invalidResponse
         case 404 where route == .status: throw CRMGatewayError.statusUnsupported
+        case 404 where route == .organizationCodeLookup: throw CRMGatewayError.organizationCodeUnsupported
         case 404 where route == .incomingCallAnswers: throw CRMGatewayError.callAnswersUnsupported
         case 429: throw CRMGatewayError.rateLimited
         case 500...599:
@@ -435,6 +462,10 @@ private struct KeyNumberRequest: Encodable {
     let keyNumber: Int
 }
 
+private struct OrganizationCodeRequest: Encodable {
+    let organizationCode: String
+}
+
 private struct PhoneNumberRequest: Encodable {
     let phoneNumber: String
     let companyId: Int?
@@ -457,6 +488,7 @@ private struct EmptyStatusRequest: Encodable {}
 private enum GatewayRoute: String {
     case status = "v1/status"
     case keyLookup = "v1/customer-by-key/filter"
+    case organizationCodeLookup = "v1/customer-by-organization-code/filter"
     case phoneLookup = "v1/customer-by-phone/filter"
     case emailLookup = "v1/customer-by-email/filter"
     case phoneAppend = "v1/customer-phone/append"
@@ -498,5 +530,37 @@ enum CRMKeyNumber {
         guard !value.isEmpty, value.utf8.allSatisfy({ (48...57).contains($0) }),
               let number = Int(value), isValid(number) else { return nil }
         return number
+    }
+}
+
+/// User-entered registration number is text, not a CRM primary key. Preserve
+/// leading zeroes; accept either the displayed 2-2-4 form or eight ASCII digits.
+enum CRMOrganizationCode {
+    static func normalize(_ input: String) -> String? {
+        // Trim ordinary padding, but never accept control characters from a
+        // pasted query (including a trailing newline).
+        guard !input.utf8.contains(where: { $0 < 32 || $0 == 127 }) else {
+            return nil
+        }
+        let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        let groups = value.split(separator: "-", omittingEmptySubsequences: false)
+
+        let digits: String
+        if groups.count == 3 {
+            guard groups[0].utf8.count == 2,
+                  groups[1].utf8.count == 2,
+                  groups[2].utf8.count == 4 else { return nil }
+            digits = groups.joined()
+        } else if groups.count == 1 {
+            digits = value
+        } else {
+            return nil
+        }
+
+        guard digits.utf8.count == 8,
+              digits.utf8.allSatisfy({ (48...57).contains($0) }) else {
+            return nil
+        }
+        return "\(digits.prefix(2))-\(digits.dropFirst(2).prefix(2))-\(digits.suffix(4))"
     }
 }

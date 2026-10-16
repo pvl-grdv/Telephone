@@ -1,6 +1,29 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%ld of %ld records": {
+      "comment": "Visible CRM records after filtering.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld of %ld records"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld von %ld Datensätzen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld из %ld записей"
+          }
+        }
+      }
+    },
     "About Telephone": {
       "comment": "Fork identity, validation, and modern call-history UI.",
       "localizations": {
@@ -1783,6 +1806,29 @@
         }
       }
     },
+    "Enter an organization number like 12-34-5678.": {
+      "comment": "CRM registration number validation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an organization number like 12-34-5678."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrierungsnummer wie 12-34-5678 eingeben."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите рег. номер организации, например 12-34-5678."
+          }
+        }
+      }
+    },
     "Error %ld": {
       "comment": "Error #.",
       "localizations": {
@@ -2512,6 +2558,29 @@
         }
       }
     },
+    "No organization found. Search by key, email or registration number.": {
+      "comment": "CRM no exact lookup match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No organization found. Search by key, email or registration number."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Organisation gefunden. Nach Schlüsselnummer, E-Mail oder Registrierungsnummer suchen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Организация не найдена. Поищите по номеру ключа, email или регномеру."
+          }
+        }
+      }
+    },
     "No Results": {
       "comment": "Call history search has no matches title.",
       "localizations": {
@@ -3192,6 +3261,29 @@
         }
       }
     },
+    "Registration number": {
+      "comment": "Organization registration number label.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registration number"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrierungsnummer"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рег. номер организации"
+          }
+        }
+      }
+    },
     "Registry Server": {
       "comment": "Account settings label.",
       "localizations": {
@@ -3533,6 +3625,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Поиск в истории звонков"
+          }
+        }
+      }
+    },
+    "Search organization": {
+      "comment": "Manual CRM lookup heading.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search organization"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organisation suchen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск организации"
+          }
+        }
+      }
+    },
+    "Search organization…": {
+      "comment": "Open manual CRM organization lookup.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search organization…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organisation suchen…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти организацию…"
           }
         }
       }
@@ -4480,6 +4618,29 @@
         }
       }
     },
+    "Update CRM Gateway to search by registration number.": {
+      "comment": "Gateway registration number lookup is unavailable.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update CRM Gateway to search by registration number."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRM Gateway aktualisieren, um nach Registrierungsnummern zu suchen."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновите CRM Gateway для поиска по рег. номеру организации."
+          }
+        }
+      }
+    },
     "Update IP address": {
       "comment": "Account settings label.",
       "localizations": {
@@ -5232,6 +5393,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Поиск в CRM по ключу"
+          }
+        }
+      }
+    },
+    "Key": {
+      "comment": "Compact inventory key column.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüssel"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ"
           }
         }
       }

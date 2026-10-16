@@ -8,24 +8,55 @@ import SwiftUI
 struct CRMKeyLookupView: View {
     @Bindable var model: CRMKeyLookupModel
     @State private var showsManualSearch = false
+    @State private var searchKind: ManualSearchKind = .key
+
+    private enum ManualSearchKind: Hashable, CaseIterable {
+        case key
+        case email
+        case organizationCode
+
+        var title: String {
+            switch self {
+            case .key:
+                NSLocalizedString("Key number", comment: "CRM numeric key input.")
+            case .email:
+                NSLocalizedString("Email address", comment: "Manual CRM email input.")
+            case .organizationCode:
+                NSLocalizedString("Registration number", comment: "CRM organization registration number input.")
+            }
+        }
+
+        var fieldIdentifier: String {
+            switch self {
+            case .key: "customer.crm.keyNumber"
+            case .email: "customer.crm.email"
+            case .organizationCode: "customer.crm.organizationCode"
+            }
+        }
+
+        var actionIdentifier: String {
+            switch self {
+            case .key: "customer.crm.search"
+            case .email: "customer.crm.searchEmail"
+            case .organizationCode: "customer.crm.searchOrganizationCode"
+            }
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 if let phone = model.callerPhone {
-                    Text(phone)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
                     Button(NSLocalizedString("Find by phone", comment: "Retry caller phone CRM lookup.")) {
                         model.searchCallerPhone()
                     }
                     .controlSize(.small)
                     .disabled(model.state == .loading || model.phoneLinkState == .saving)
+                    .help(phone)
                 }
 
                 Spacer(minLength: 8)
-                Button(NSLocalizedString("Search by key or email…", comment: "Manual CRM lookup actions.")) {
+                Button(NSLocalizedString("Search organization…", comment: "Open manual CRM organization lookup.")) {
                     showsManualSearch = true
                 }
                 .controlSize(.small)
@@ -64,51 +95,62 @@ struct CRMKeyLookupView: View {
 
     private var manualSearch: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                TextField(
-                    NSLocalizedString("Key number", comment: "CRM numeric key input."),
-                    text: $model.keyNumber
-                )
-                .textFieldStyle(.roundedBorder)
-                .accessibilityIdentifier("customer.crm.keyNumber")
-                .disabled(model.phoneLinkState == .saving)
-                .onSubmit {
-                    guard model.canSearch else { return }
-                    model.search()
-                    showsManualSearch = false
-                }
-                Button(NSLocalizedString("Find by key", comment: "CRM key search button.")) {
-                    model.search()
-                    showsManualSearch = false
-                }
-                .disabled(!model.canSearch)
-                .accessibilityIdentifier("customer.crm.search")
-            }
+            Text(NSLocalizedString("Search organization", comment: "Manual CRM lookup heading."))
+                .font(.headline)
 
             HStack(spacing: 8) {
-                TextField(
-                    NSLocalizedString("Email address", comment: "Manual CRM email input."),
-                    text: $model.email
-                )
-                .textFieldStyle(.roundedBorder)
-                .accessibilityIdentifier("customer.crm.email")
-                .disabled(model.phoneLinkState == .saving)
-                .onSubmit {
-                    guard model.canSearchEmail else { return }
-                    model.searchEmail()
-                    showsManualSearch = false
+                Picker(NSLocalizedString("Search by", comment: "CRM manual lookup kind."),
+                       selection: $searchKind) {
+                    ForEach(ManualSearchKind.allCases, id: \.self) { kind in
+                        Text(kind.title).tag(kind)
+                    }
                 }
-                Button(NSLocalizedString("Find by email", comment: "Manual CRM email search.")) {
-                    model.searchEmail()
-                    showsManualSearch = false
+                .labelsHidden()
+                .frame(width: 160)
+                .accessibilityIdentifier("customer.crm.lookupKind")
+
+                TextField(searchKind.title, text: manualQuery)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier(searchKind.fieldIdentifier)
+                    .disabled(model.phoneLinkState == .saving)
+                    .onSubmit { runManualSearch() }
+
+                Button(NSLocalizedString("Find", comment: "Run manual CRM lookup.")) {
+                    runManualSearch()
                 }
-                .disabled(!model.canSearchEmail)
-                .accessibilityIdentifier("customer.crm.searchEmail")
+                .disabled(!canRunManualSearch)
+                .accessibilityIdentifier(searchKind.actionIdentifier)
             }
+            .controlSize(.small)
         }
-        .controlSize(.small)
         .padding(14)
-        .frame(width: 420)
+        .frame(width: 500)
+    }
+
+    private var manualQuery: Binding<String> {
+        switch searchKind {
+        case .key: $model.keyNumber
+        case .email: $model.email
+        case .organizationCode: $model.organizationCode
+        }
+    }
+
+    private var canRunManualSearch: Bool {
+        switch searchKind {
+        case .key: model.canSearch
+        case .email: model.canSearchEmail
+        case .organizationCode: model.canSearchOrganizationCode
+        }
+    }
+
+    private func runManualSearch() {
+        guard canRunManualSearch else { return }
+        switch searchKind {
+        case .key: model.search()
+        case .email: model.searchEmail()
+        case .organizationCode: model.searchOrganizationCode()
+        }
+        showsManualSearch = false
     }
 
     @ViewBuilder
@@ -127,7 +169,7 @@ struct CRMKeyLookupView: View {
                     .controlSize(.small)
             }
         case .notFound:
-            Text(NSLocalizedString("No organization found. Search by key number or email.", comment: "CRM no exact lookup match."))
+            Text(NSLocalizedString("No organization found. Search by key, email or registration number.", comment: "CRM no exact lookup match."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         case .choosing(let matches):

@@ -139,6 +139,11 @@ protocol CRMKeyLookupProvider: Sendable {
     ) async throws -> CRMPhoneLookupResponse
 
     func customer(
+        forOrganizationCode code: String,
+        configuration: CRMGatewayConfiguration
+    ) async throws -> CRMKeyLookupResponse
+
+    func customer(
         forKeyNumber keyNumber: Int,
         configuration: CRMGatewayConfiguration
     ) async throws -> CRMKeyLookupResponse
@@ -159,6 +164,13 @@ protocol CRMKeyLookupProvider: Sendable {
 }
 
 extension CRMKeyLookupProvider {
+    func customer(
+        forOrganizationCode code: String,
+        configuration: CRMGatewayConfiguration
+    ) async throws -> CRMKeyLookupResponse {
+        throw CRMGatewayError.organizationCodeUnsupported
+    }
+
     func customer(
         forEmail email: String,
         companyID: Int?,

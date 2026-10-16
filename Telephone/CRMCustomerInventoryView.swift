@@ -54,6 +54,18 @@ private struct CRMInventoryBrowserView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 10) {
                 companyHeader
+                Text(selectedKey == 0 && !inventory.isFiltered
+                     ? String(
+                         format: NSLocalizedString("%ld keys · %ld programs · %ld records", comment: "Inventory counts."),
+                         inventory.visibleKeyCount, inventory.visibleProgramGroupCount, inventory.visibleRecordCount
+                     )
+                     : String(
+                         format: NSLocalizedString("%ld of %ld records", comment: "Visible CRM records after filtering."),
+                         rows.count, inventory.totalRecordCount
+                     ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("crm.inventory.counts")
 
                 HStack(spacing: 10) {
                     Picker(
@@ -79,7 +91,7 @@ private struct CRMInventoryBrowserView: View {
                     .textFieldStyle(.roundedBorder)
                     .focused($searchFocused)
                     .accessibilityIdentifier("crm.inventory.search")
-                    .frame(maxWidth: 300)
+                    .frame(maxWidth: .infinity)
 
                     if isFiltering {
                         ProgressView()
@@ -88,14 +100,6 @@ private struct CRMInventoryBrowserView: View {
                                 NSLocalizedString("Searching CRM…", comment: "CRM lookup loading status.")
                             )
                     }
-                    Spacer(minLength: 4)
-                    Text(String(
-                        format: NSLocalizedString("%ld keys · %ld programs · %ld records", comment: "Inventory counts."),
-                        inventory.visibleKeyCount, inventory.visibleProgramGroupCount, inventory.visibleRecordCount
-                    ))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("crm.inventory.counts")
                 }
                 programTable(rows)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -151,16 +155,21 @@ private struct CRMInventoryBrowserView: View {
 
     private var companyHeader: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
                 Text(DisplayNameText.normalized(customer.company.name))
                     .font(.title3.weight(.semibold))
                     .lineLimit(2)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text(customer.company.formattedCode)
-                    .font(.callout.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text(NSLocalizedString("Registration number", comment: "Organization registration number label."))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text(customer.company.formattedCode)
+                        .font(.callout.monospacedDigit())
+                        .textSelection(.enabled)
+                }
+                .accessibilityElement(children: .combine)
             }
             if let phones = customer.company.phones, !phones.isEmpty {
                 Text(phones.joined(separator: ", "))
@@ -188,16 +197,16 @@ private struct CRMInventoryBrowserView: View {
                 Text(display(row.program.version))
                     .monospacedDigit()
                     .textSelection(.enabled)
-            }.width(92)
+            }.width(min: 72, ideal: 92, max: 130)
             TableColumn(NSLocalizedString("Release", comment: "Inventory release column.")) { row in
                 Text(display(row.program.release))
                     .monospacedDigit()
                     .textSelection(.enabled)
-            }.width(92)
-            TableColumn(NSLocalizedString("Key number", comment: "Inventory key column.")) { row in
+            }.width(min: 72, ideal: 92, max: 130)
+            TableColumn(NSLocalizedString("Key", comment: "Compact inventory key column.")) { row in
                 Link(String(row.key.id), destination: row.key.url)
                     .monospacedDigit()
-            }.width(90)
+            }.width(min: 78, ideal: 90, max: 140)
         }
         .copyable(rows.filter { selectedRows.contains($0.id) }.map { row in
             [String(row.key.id), DisplayNameText.normalized(row.program.name),

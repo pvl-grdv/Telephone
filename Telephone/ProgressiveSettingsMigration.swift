@@ -22,23 +22,32 @@ import UseCases
 @MainActor
 final class ProgressiveSettingsMigration {
     private let settings: KeyValueSettings
-    private let factory: SettingsMigrationFactory
+    private let accountUUID: SettingsMigration
+    private let ipVersion: SettingsMigration
+    private let tcpTransport: SettingsMigration
 
-    init(settings: KeyValueSettings, factory: SettingsMigrationFactory) {
+    init(
+        settings: KeyValueSettings,
+        accountUUID: SettingsMigration,
+        ipVersion: SettingsMigration,
+        tcpTransport: SettingsMigration
+    ) {
         self.settings = settings
-        self.factory = factory
+        self.accountUUID = accountUUID
+        self.ipVersion = ipVersion
+        self.tcpTransport = tcpTransport
     }
 }
 
 extension ProgressiveSettingsMigration: SettingsMigration {
     func execute() {
         if settings.integer(forKey: UserDefaultsKeys.settingsVersion) == 0 {
-            factory.makeAccountUUIDMigration().execute()
+            accountUUID.execute()
             settings.set(1, forKey: UserDefaultsKeys.settingsVersion)
         }
         if settings.integer(forKey: UserDefaultsKeys.settingsVersion) == 1 {
-            factory.makeIPVersionMigration().execute()
-            factory.makeTCPTransportMigration().execute()
+            ipVersion.execute()
+            tcpTransport.execute()
             settings.set(2, forKey: UserDefaultsKeys.settingsVersion)
         }
     }

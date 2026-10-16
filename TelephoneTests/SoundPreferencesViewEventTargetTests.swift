@@ -37,20 +37,11 @@ struct SoundPreferencesViewEventTargetTests {
         )
     }
 
-    @Test func executesSettingsSoundIOLoadUseCaseOnViewDataReload() {
+    @Test func reloadSoundIOExecutesSettingsSoundIOLoadUseCase() {
         let useCase = ThrowingUseCaseSpy()
         factory.stub(withSettingsSoundIOLoad: useCase)
 
-        sut.shouldReloadData(in: SoundPreferencesViewSpy())
-
-        #expect(useCase.didCallExecute)
-    }
-
-    @Test func executesSettingsSoundIOLoadUseCaseOnSoundIOReload() {
-        let useCase = ThrowingUseCaseSpy()
-        factory.stub(withSettingsSoundIOLoad: useCase)
-
-        sut.shouldReloadSoundIO(in: SoundPreferencesViewSpy())
+        sut.reloadSoundIO(in: SoundPreferencesViewSpy())
 
         #expect(useCase.didCallExecute)
     }
@@ -101,7 +92,7 @@ struct SoundPreferencesViewEventTargetTests {
     }
 
     @Test func stopsPlayingRingtoneSoundOnViewWillDisappear() {
-        sut.willDisappear(SoundPreferencesViewSpy())
+        sut.stopRingtonePreview()
 
         #expect(soundPlayback.didCallStop)
     }

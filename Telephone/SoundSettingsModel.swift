@@ -31,15 +31,15 @@ final class SoundSettingsModel {
     func activate() {
         reloadRingtones()
         usesG711Only = userAgent.usesG711Only
-        eventTarget.shouldReloadData(in: self)
+        eventTarget.reloadSoundIO(in: self)
     }
 
     func stopPreview() {
-        eventTarget.willDisappear(self)
+        eventTarget.stopRingtonePreview()
     }
 
     func updateSoundIO() {
-        eventTarget.shouldReloadSoundIO(in: self)
+        eventTarget.reloadSoundIO(in: self)
     }
 
     func selectInput(_ id: String) {

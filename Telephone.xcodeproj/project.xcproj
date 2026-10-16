@@ -152,7 +152,6 @@
                 "TelephoneTests/compile-sources",
               ],
             },
-            { "path": "NotifyingCallHistoryFactory.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             { "path": "TelephoneDatabaseSchema.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "SQLiteSupport.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
             { "path": "SQLiteCallHistory.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
@@ -175,7 +174,6 @@
                 "TelephoneTests/compile-sources",
               ],
             },
-            { "path": "ReversedCallHistoryFactory.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
             {
               "path": "ShortRelativeDateTimeFormatter.swift",
               "encoding": "utf8",
@@ -381,20 +379,6 @@
                   ],
                 },
                 { "path": "<PROJECT>/TelephoneTests/TCPTransportSettingsMigrationTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
-              ],
-            }, {
-              "kind": "group",
-              "name": "SettingsMigrationFactory",
-              "children": [
-                { "path": "DefaultSettingsMigrationFactory.swift", "encoding": "utf8", "target-membership": [ "Telephone/compile-sources" ] },
-                {
-                  "path": "SettingsMigrationFactory.swift",
-                  "encoding": "utf8",
-                  "target-membership": [
-                    "Telephone/compile-sources",
-                    "TelephoneTests/compile-sources",
-                  ],
-                },
               ],
             },
           ],
@@ -674,8 +658,6 @@
         { "path": "ApplicationDataLocationsFake.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "ClipboardSpy.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "FileBrowserSpy.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
-        { "path": "NullSettingsMigration.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
-        { "path": "SettingsMigrationFactoryStub.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "SettingsMigrationSpy.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "SoundIOPreferencesSpy.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "SoundPreferencesViewSpy.swift", "encoding": "utf8", "target-membership": [ "TelephoneTests/compile-sources" ] },

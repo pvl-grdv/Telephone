@@ -109,7 +109,10 @@ final class CompositionRoot {
         )
 
         settingsMigration = ProgressiveSettingsMigration(
-            settings: defaults, factory: DefaultSettingsMigrationFactory(settings: defaults)
+            settings: defaults,
+            accountUUID: AccountUUIDSettingsMigration(settings: defaults),
+            ipVersion: IPVersionSettingsMigration(settings: defaults),
+            tcpTransport: TCPTransportSettingsMigration(settings: defaults)
         )
 
         let applicationDataLocations = DirectoryCreatingApplicationDataLocations(
@@ -149,11 +152,7 @@ final class CompositionRoot {
         )
 
         let callHistories = DefaultCallHistories(
-            factory: NotifyingCallHistoryFactory(
-                origin: ReversedCallHistoryFactory(
-                    origin: SQLiteCallHistoryFactory(locations: applicationDataLocations)
-                )
-            )
+            factory: SQLiteCallHistoryFactory(locations: applicationDataLocations)
         )
 
         callHistoryRecorder = CallHistoryCallEventTarget(histories: callHistories)

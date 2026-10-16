@@ -25,131 +25,34 @@ final class ProgressiveSettingsMigrationTests {
     private let settings = SettingsFake()
     private var actions = ""
 
-    // MARK: - AccountUUIDSettingsMigration
-
-    @Test func executesAccountsUUIDMigrationWhenSettingsDoNotHaveVersion() {
-        let migration = SettingsMigrationSpy()
-        let factory = SettingsMigrationFactoryStub()
-        factory.stub(withAccountUUIDMigration: migration)
-        let sut = ProgressiveSettingsMigration(settings: SettingsFake(), factory: factory)
-
-        sut.execute()
-
-        #expect(migration.didCallExecute)
-    }
-
-    @Test func doesNotExecuteAccountUUIDMigrationWhenSettingsVersionIsEqualToOne() {
-        let migration = SettingsMigrationSpy()
-        let factory = SettingsMigrationFactoryStub()
-        factory.stub(withAccountUUIDMigration: migration)
+    @Test(arguments: [0, 1, 2, 3])
+    func runsOnlyMigrationsNeededForSavedVersion(_ version: Int) {
         let settings = SettingsFake()
-        settings.set(1, forKey: UserDefaultsKeys.settingsVersion)
-        let sut = ProgressiveSettingsMigration(settings: settings, factory: factory)
+        settings.set(version, forKey: UserDefaultsKeys.settingsVersion)
+        let accountUUID = SettingsMigrationSpy()
+        let ipVersion = SettingsMigrationSpy()
+        let tcpTransport = SettingsMigrationSpy()
 
-        sut.execute()
+        ProgressiveSettingsMigration(
+            settings: settings,
+            accountUUID: accountUUID,
+            ipVersion: ipVersion,
+            tcpTransport: tcpTransport
+        ).execute()
 
-        #expect(!migration.didCallExecute)
+        #expect(accountUUID.didCallExecute == (version == 0))
+        #expect(ipVersion.didCallExecute == (version <= 1))
+        #expect(tcpTransport.didCallExecute == (version <= 1))
+        #expect(settings.integer(forKey: UserDefaultsKeys.settingsVersion) == max(2, version))
     }
 
-    @Test func doesNotExecuteAccountUUIDMigrationWhenSettingsVersionIsGreaterThanOne() {
-        let migration = SettingsMigrationSpy()
-        let factory = SettingsMigrationFactoryStub()
-        factory.stub(withAccountUUIDMigration: migration)
-        let settings = SettingsFake()
-        settings.set(2, forKey: UserDefaultsKeys.settingsVersion)
-        let sut = ProgressiveSettingsMigration(settings: settings, factory: factory)
-
-        sut.execute()
-
-        #expect(!migration.didCallExecute)
-    }
-
-    // MARK: - IPVersionSettingsMigration
-
-    @Test func executesIPVersionMigrationWhenSettingsVersionIsEqualToOne() {
-        let migration = SettingsMigrationSpy()
-        let factory = SettingsMigrationFactoryStub()
-        factory.stub(withIPVersionMigration: migration)
-        let settings = SettingsFake()
-        settings.set(1, forKey: UserDefaultsKeys.settingsVersion)
-        let sut = ProgressiveSettingsMigration(settings: settings, factory: factory)
-
-        sut.execute()
-
-        #expect(migration.didCallExecute)
-    }
-
-    @Test func doesNotExecuteIPVersionMigrationWhenSettingsVersionIsEqualToTwo() {
-        let migration = SettingsMigrationSpy()
-        let factory = SettingsMigrationFactoryStub()
-        factory.stub(withIPVersionMigration: migration)
-        let settings = SettingsFake()
-        settings.set(2, forKey: UserDefaultsKeys.settingsVersion)
-        let sut = ProgressiveSettingsMigration(settings: settings, factory: factory)
-
-        sut.execute()
-
-        #expect(!migration.didCallExecute)
-    }
-
-    @Test func doesNotExecuteIPVersionMigrationWhenSettingsVersionIsGreaterThanTwo() {
-        let migration = SettingsMigrationSpy()
-        let factory = SettingsMigrationFactoryStub()
-        factory.stub(withIPVersionMigration: migration)
-        let settings = SettingsFake()
-        settings.set(3, forKey: UserDefaultsKeys.settingsVersion)
-        let sut = ProgressiveSettingsMigration(settings: settings, factory: factory)
-
-        sut.execute()
-
-        #expect(!migration.didCallExecute)
-    }
-
-    // MARK: - TCPTransportSettingsMigration
-
-    @Test func executesTCPTransportMigrationWhenSettingsVersionIsEqualToOne() {
-        let migration = SettingsMigrationSpy()
-        let factory = SettingsMigrationFactoryStub()
-        factory.stub(withTCPTransportMigration: migration)
-        let settings = SettingsFake()
-        settings.set(1, forKey: UserDefaultsKeys.settingsVersion)
-        let sut = ProgressiveSettingsMigration(settings: settings, factory: factory)
-
-        sut.execute()
-
-        #expect(migration.didCallExecute)
-    }
-
-    @Test func doesNotExecuteTCPTransportMigrationWhenSettingsVersionIsEqualToTwo() {
-        let migration = SettingsMigrationSpy()
-        let factory = SettingsMigrationFactoryStub()
-        factory.stub(withTCPTransportMigration: migration)
-        let settings = SettingsFake()
-        settings.set(2, forKey: UserDefaultsKeys.settingsVersion)
-        let sut = ProgressiveSettingsMigration(settings: settings, factory: factory)
-
-        sut.execute()
-
-        #expect(!migration.didCallExecute)
-    }
-
-    @Test func doesNotExecuteTCPTransportMigrationWhenSettingsVersionIsGreaterThanTwo() {
-        let migration = SettingsMigrationSpy()
-        let factory = SettingsMigrationFactoryStub()
-        factory.stub(withTCPTransportMigration: migration)
-        let settings = SettingsFake()
-        settings.set(3, forKey: UserDefaultsKeys.settingsVersion)
-        let sut = ProgressiveSettingsMigration(settings: settings, factory: factory)
-
-        sut.execute()
-
-        #expect(!migration.didCallExecute)
-    }
-
-    // MARK: - Migration sequence
-
-    @Test func migrationSequence() {
-        ProgressiveSettingsMigration(settings: self, factory: self).execute()
+    @Test func updatesVersionOnlyAfterEachMigrationStep() {
+        ProgressiveSettingsMigration(
+            settings: self,
+            accountUUID: RecordedMigration { self.actions.append("Mau") },
+            ipVersion: RecordedMigration { self.actions.append("Miv") },
+            tcpTransport: RecordedMigration { self.actions.append("Mtt") }
+        ).execute()
 
         #expect(actions == "MauSv1MivMttSv2")
     }
@@ -174,19 +77,16 @@ extension ProgressiveSettingsMigrationTests: KeyValueSettings {
     func register(defaults: [String : Any]) { settings.register(defaults: defaults) }
 }
 
-extension ProgressiveSettingsMigrationTests: SettingsMigrationFactory {
-    func makeAccountUUIDMigration() -> SettingsMigration {
-        actions.append("Mau")
-        return NullSettingsMigration()
+
+@MainActor
+private final class RecordedMigration: SettingsMigration {
+    private let action: () -> Void
+
+    init(_ action: @escaping () -> Void) {
+        self.action = action
     }
 
-    func makeIPVersionMigration() -> SettingsMigration {
-        actions.append("Miv")
-        return NullSettingsMigration()
-    }
-
-    func makeTCPTransportMigration() -> SettingsMigration {
-        actions.append("Mtt")
-        return NullSettingsMigration()
+    func execute() {
+        action()
     }
 }

@@ -34,6 +34,7 @@ final class SQLiteCallHistoryFactory: CallHistoryFactory {
         history.migrateLegacyPropertyList(
             at: locations.callHistories().appendingPathComponent("\(uuid).plist")
         )
-        return history
+        // Keep newest-first records and change notifications without extra factory wrappers.
+        return NotifyingCallHistory(origin: ReversedCallHistory(origin: history))
     }
 }

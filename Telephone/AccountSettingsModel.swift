@@ -64,9 +64,6 @@ final class AccountSettingsModel {
     private var autosaveTask: Task<Void, Never>?
 
     @ObservationIgnored
-    private var credentialSaveGeneration = 0
-
-    @ObservationIgnored
     private var isApplyingDraft = false
 
     @ObservationIgnored
@@ -630,8 +627,6 @@ final class AccountSettingsModel {
         let previousService = loadedCredentials.service
         let previousAccount = loadedCredentials.account
         credentialsAreSaving = true
-        credentialSaveGeneration &+= 1
-        let generation = credentialSaveGeneration
 
         Task { [weak self] in
             guard let self else { return }
@@ -641,23 +636,24 @@ final class AccountSettingsModel {
                 service: service,
                 account: account
             )
-            guard generation == credentialSaveGeneration else { return }
-
             guard success else {
                 credentialsAreSaving = false
                 showsCredentialsError = true
                 return
             }
 
-            await deletePreviousCredentialsIfNeeded(
+            let removedPrevious = await deletePreviousCredentialsIfNeeded(
                 previousService: previousService,
                 previousAccount: previousAccount,
                 newService: service,
                 newAccount: account
             )
-            guard generation == credentialSaveGeneration else { return }
-
             credentialsAreSaving = false
+            guard removedPrevious else {
+                showsCredentialsError = true
+                return
+            }
+
             onSuccess()
         }
     }
@@ -712,16 +708,16 @@ final class AccountSettingsModel {
         previousAccount: String,
         newService: String,
         newAccount: String
-    ) async {
+    ) async -> Bool {
         guard
             !previousService.isEmpty,
             !previousAccount.isEmpty,
             previousService != newService || previousAccount != newAccount
         else {
-            return
+            return true
         }
 
-        _ = await credentials.deletePassword(
+        return await credentials.deletePassword(
             service: previousService,
             account: previousAccount
         )

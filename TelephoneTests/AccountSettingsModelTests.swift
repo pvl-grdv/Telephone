@@ -452,6 +452,99 @@ struct AccountSettingsModelTests {
     }
 
     @Test
+    func switchingAccountsDuringKeychainCleanupCannotChangeTheNewDraft() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+
+        var stored = storedAccounts(in: fixture.defaults)
+        stored.append([
+            UserDefaultsKeys.accountEnabled: false,
+            AKSIPAccountKeys.uuid: "second-account",
+            AKSIPAccountKeys.domain: "other.example.com",
+            AKSIPAccountKeys.username: "carol",
+        ])
+        fixture.defaults.set(stored, forKey: UserDefaultsKeys.accounts)
+
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
+        )
+        await waitForPasswordLoad(model)
+        await fixture.credentials.holdNextDeletion()
+
+        model.draft.domain = "new.example.com"
+        model.draft.username = "bob"
+        model.draft.password = "replacement"
+        model.flushPendingChanges()
+        await fixture.credentials.waitForDeletionStart()
+        #expect(model.credentialsAreSaving)
+
+        // Simulate a programmatic selection change while the list is locked.
+        model.selection = "second-account"
+        await fixture.credentials.releaseDeletion()
+        await waitForPasswordLoad(model)
+        await waitUntil { !model.credentialsAreSaving }
+
+        #expect(model.selection == "second-account")
+        #expect(model.draft.domain == "other.example.com")
+        #expect(model.draft.username == "carol")
+        #expect(model.draft.password == "secret")
+        #expect(await fixture.credentials.saveCount() == 1)
+        #expect(await fixture.credentials.deletedCredentials() == [
+            .init(service: "SIP: old.example.com", account: "alice")
+        ])
+    }
+
+    @Test
+    func failedOldKeychainDeletionKeepsAccountDisabledAndAllowsRetry() async {
+        let fixture = makeFixture()
+        defer { fixture.cleanup() }
+        let model = AccountSettingsModel(
+            preferencesController: nil,
+            defaults: fixture.defaults,
+            credentials: fixture.credentials,
+            notificationCenter: fixture.notificationCenter
+        )
+        await waitForPasswordLoad(model)
+        await fixture.credentials.setDeletionSucceeds(false)
+
+        model.draft.registrar = "new.example.com"
+        model.draft.username = "bob"
+        model.draft.password = "replacement"
+        model.setEnabled(true)
+
+        await waitForCredentialSave(fixture.credentials)
+        await waitUntil { !model.credentialsAreSaving }
+        #expect(!model.draft.isEnabled)
+        #expect(model.showsCredentialsError)
+        #expect(await fixture.credentials.saveCount() == 1)
+        #expect(await fixture.credentials.deletedCredentials() == [
+            .init(service: "SIP: old.example.com", account: "alice")
+        ])
+        #expect((storedAccounts(in: fixture.defaults).first?[
+            UserDefaultsKeys.accountEnabled
+        ] as? NSNumber)?.boolValue == false)
+
+        await fixture.credentials.setDeletionSucceeds(true)
+        model.dismissCredentialsError()
+        model.setEnabled(true)
+        await waitUntil { model.draft.isEnabled }
+
+        #expect(!model.showsCredentialsError)
+        #expect(!model.credentialsAreSaving)
+        #expect(await fixture.credentials.saveCount() == 2)
+        #expect(await fixture.credentials.deletedCredentials() == [
+            .init(service: "SIP: old.example.com", account: "alice"),
+            .init(service: "SIP: old.example.com", account: "alice")
+        ])
+        #expect((storedAccounts(in: fixture.defaults).first?[
+            UserDefaultsKeys.accountEnabled
+        ] as? NSNumber)?.boolValue == true)
+    }
+
+    @Test
     func failedCredentialSaveDoesNotEnableAccount() async {
         let fixture = makeFixture(saveSucceeds: false)
         defer { fixture.cleanup() }
@@ -577,6 +670,7 @@ private actor CredentialsStoreFake: CredentialsStoring {
 
     private let loadedPassword: String
     private let saveSucceeds: Bool
+    private var deletionSucceeds = true
     private var saves: [SavedCredential] = []
     private var deletions: [CredentialIdentity] = []
     private var holdPasswordRead = false
@@ -652,8 +746,10 @@ private actor CredentialsStoreFake: CredentialsStoring {
                 account: account
             )
         )
-        return true
+        return deletionSucceeds
     }
+
+    func setDeletionSucceeds(_ value: Bool) { deletionSucceeds = value }
 
     func holdNextDeletion() { holdDeletion = true }
 

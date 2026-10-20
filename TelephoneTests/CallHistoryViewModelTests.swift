@@ -220,6 +220,32 @@ struct CallHistoryAnswerTests {
         #expect(model.answerContext.calls.isEmpty)
     }
 
+    @Test func cachedATSAnswersSurviveVisibilityChangesUntilManualRefresh() async throws {
+        let provider = HistoryAnswerProvider()
+        let model = CallHistoryViewModel(gatewaySettings: try await settings(), answerProvider: provider)
+        let first = record(id: "first")
+        let second = record(id: "second")
+
+        model.show([first])
+        model.setAnswerRecordVisible(first.id, visible: true)
+        await model.refreshCallAnswers()
+        #expect(await provider.requestedBatches == [["first"]])
+
+        model.show([first, second])
+        model.setAnswerRecordVisible(second.id, visible: true)
+        await model.refreshCallAnswers()
+        #expect(await provider.requestedBatches == [["first"], ["second"]])
+
+        await model.refreshCallAnswers()
+        #expect(await provider.requestCount == 2)
+
+        model.answerRefreshRequest &+= 1
+        #expect(model.callAnswers.isEmpty)
+        await model.refreshCallAnswers()
+        #expect(await provider.requestedBatches == [["first"], ["second"], ["first", "second"]])
+        #expect(model.callAnswers.count == 2)
+    }
+
     @Test func locallyAnsweredTransferredCallDoesNotReportATSTimeMismatch() async throws {
         let provider = HistoryAnswerProvider(status: .unknown)
         let model = CallHistoryViewModel(gatewaySettings: try await settings(), answerProvider: provider)
@@ -259,6 +285,7 @@ struct CallHistoryAnswerTests {
         await model.refreshCallAnswers()
         #expect(model.callAnswers["local-call"] != nil)
         await provider.fail()
+        model.answerRefreshRequest &+= 1
         await model.refreshCallAnswers()
         #expect(model.callAnswers.isEmpty)
         #expect(model.answerLookupFailed)
@@ -339,6 +366,7 @@ private actor HistoryAnswerProvider: CRMCallAnswerProvider {
     private let status: CRMIncomingCallAnswer.Status
     private var continuation: CheckedContinuation<Void, Never>?
     private(set) var requestCount = 0
+    private(set) var requestedBatches: [[String]] = []
     var waiting: Bool { continuation != nil }
     init(held: Bool = false, status: CRMIncomingCallAnswer.Status = .answered) {
         self.held = held
@@ -348,6 +376,7 @@ private actor HistoryAnswerProvider: CRMCallAnswerProvider {
     func release() { continuation?.resume(); continuation = nil }
     func incomingCallAnswers(calls: [CRMIncomingCallRequest], configuration: CRMGatewayConfiguration) async throws -> [CRMIncomingCallAnswer] {
         requestCount += 1
+        requestedBatches.append(calls.map(\.id))
         if held { await withCheckedContinuation { continuation = $0 } }
         if let failure { throw failure }
         return calls.map { call in

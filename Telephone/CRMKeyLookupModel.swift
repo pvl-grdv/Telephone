@@ -75,9 +75,12 @@ final class CRMKeyLookupModel {
         observeSettings()
     }
 
+    private var canPerformManualLookup: Bool {
+        settings.enabled && isContextActive && phoneLinkState != .saving
+    }
+
     private var canStartManualSearch: Bool {
-        settings.enabled && isContextActive
-            && state != .loading && phoneLinkState != .saving
+        canPerformManualLookup && state != .loading
     }
 
     var canSearch: Bool {
@@ -159,7 +162,7 @@ final class CRMKeyLookupModel {
     }
 
     func search() {
-        guard isContextActive, phoneLinkState != .saving else { return }
+        guard canPerformManualLookup else { return }
         guard let number = CRMKeyNumber.parse(keyNumber) else {
             state = .failed(.invalidKeyNumber)
             return
@@ -172,7 +175,7 @@ final class CRMKeyLookupModel {
     }
 
     func searchOrganizationCode() {
-        guard isContextActive, phoneLinkState != .saving else { return }
+        guard canPerformManualLookup else { return }
         guard let code = CRMOrganizationCode.normalize(organizationCode) else {
             state = .failed(.invalidOrganizationCode)
             return
@@ -188,7 +191,7 @@ final class CRMKeyLookupModel {
     }
 
     func searchEmail(companyID: Int? = nil) {
-        guard settings.enabled, isContextActive, phoneLinkState != .saving else { return }
+        guard canPerformManualLookup else { return }
         guard let email = CRMEmailAddress.normalize(email) else {
             cancel()
             state = .failed(.invalidEmail)

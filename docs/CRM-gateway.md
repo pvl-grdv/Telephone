@@ -67,6 +67,41 @@ All requests use `POST`, `Content-Type: application/json`,
 There is no configurable route, general proxy, arbitrary query or CRM editor.
 The application never calls upstream CRM endpoints directly.
 
+### Gateway status (no CRM session)
+
+```http
+POST /v1/status
+```
+
+```json
+{}
+```
+
+The authenticated **Settings → CRM → Check connection** action verifies
+gateway access without contacting upstream CRM. Example HTTP 200 response:
+
+```json
+{
+  "runtime": {
+    "build": {
+      "version": "1.4.0",
+      "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "builtAt": "2026-10-08T00:00:00.000Z",
+      "integrity": "verified"
+    },
+    "startedAt": "2026-10-08T01:00:00.000Z",
+    "processId": 123
+  }
+}
+```
+
+For `integrity: "verified"`, the gateway supplies a nonblank version,
+a lowercase 40-hex commit and valid build timestamp. For
+`integrity: "unknown"`, version, commit and build time are all explicitly
+`null`. `startedAt` must be ISO 8601 and `processId` positive.
+The status probe times out after 10 seconds; HTTP 404 means this optional
+route is unsupported.
+
 ### Automatic phone lookup
 
 ```http
@@ -176,6 +211,76 @@ organization. Telephone checks that `data.company.formattedCode` matches the
 requested registration number and validates the usual inventory/URL invariants.
 The endpoint is read-only and does not grant phone-append permissions.
 
+### Incoming-call answer lookup (ATS)
+
+This read-only route provides answering-employee attribution for local
+call history. It is **not** the removed post-call CRM verification feature.
+
+```http
+POST /v1/incoming-call/answers
+```
+
+```json
+{
+  "calls": [{
+    "id": "synthetic-call-1",
+    "phoneNumber": "+12025550100",
+    "startedAt": "2026-10-14T09:00:00.000Z"
+  }]
+}
+```
+
+Each request contains 1–25 entries with distinct local call IDs, canonical
+phone numbers and ISO 8601 SIP start times. The app batches by UTC date
+and never asks for a locally answered incoming call with positive duration.
+A declined incoming call with zero connected seconds remains eligible.
+Example HTTP 200 response:
+
+```json
+{
+  "data": [{
+    "id": "synthetic-call-1",
+    "phoneNumber": "+12025550100",
+    "startedAt": "2026-10-14T09:00:00.000Z",
+    "status": "answered",
+    "reason": null,
+    "answeredBy": {"displayName": "Example Employee", "source": "ats"},
+    "match": {
+      "method": "phone-and-time",
+      "confidence": "correlated",
+      "startedAt": "2026-10-14T09:00:05.000Z"
+    }
+  }],
+  "meta": {
+    "requestId": "synthetic-answer",
+    "fetchedAt": "2026-10-14T09:00:06.000Z",
+    "complete": true,
+    "fromCache": false
+  }
+}
+```
+
+The response must contain exactly one entry per submitted ID, with identical
+`phoneNumber` and `startedAt`, valid complete metadata and `fromCache: false`.
+The client validates three mutually exclusive outcomes:
+
+- `answered`: `reason: null`, a nonblank employee name with
+  `source: "ats"`, and a `match` with `method: "phone-and-time"`,
+  `confidence: "correlated"` and a start time within **±10 seconds** of SIP.
+- `unanswered`: `reason: null` and `answeredBy: null`, with the same
+  verified time correlation in `match`.
+- `unknown`: both `answeredBy` and `match` are `null`, with `reason`
+  equal to `not-found`, `time-mismatch`, `ambiguous`, `transferred`,
+  `not-confirmed` or `identity-unavailable`.
+
+An unknown result must not become evidence that nobody answered.
+HTTP 404 indicates an older gateway without the route. Authorization,
+network and validation errors remain explicit rather than being presented
+as missed calls. Telephone does not store ATS or employee data. Successful
+answers for unchanged history records can be reused while scrolling;
+the refresh control requests them again. A changed SIP record or gateway
+settings invalidates the applicable cached answer.
+
 ## Inventory response
 
 HTTP status is **200**. All names, phones and IDs in these examples are fictional.
@@ -224,7 +329,7 @@ ignores additional upstream fields.
 Telephone passes it back as `expectedPhone` without interpreting CRM storage.
 Old read-only gateways may omit it; lookup still works, but linking is unavailable
 until a fresh response includes this field. It is not the destination for a new
-phone number and is excluded from saved history snapshots.
+phone number; CRM data is not saved in local call history.
 
 `company.phones` is the gateway's canonical, deduplicated phone array, combining
 all supported phone sources. Parsing existing phone lists, interpreting local
@@ -267,14 +372,13 @@ inventory for both live-call Client details and the standalone CRM window:
   program keeps its complete version history visible. Clearing search restores
   the full inventory. Filtering sends no additional gateway request.
 
-The SwiftUI browser uses one native `Table` with a key `Picker`; the
-`.searchable` field lives in the window toolbar. Expensive filtering runs
+The SwiftUI browser uses one native `Table` with a key `Picker` and a
+search `TextField` beside it. Expensive filtering runs
 off the main actor after a short debounce. There is no sidebar or alternate
 compact rendering path; no records are removed to simplify the view.
 
-Displayed totals distinguish keys, program groups and individual records. The
-gateway response and persisted history data retain the original records and
-order; presentation sorting does not discard or rewrite them.
+Displayed totals distinguish keys, program groups and individual records. The gateway response retains all original records and their order;
+presentation sorting does not discard or rewrite them.
 
 ## Explicit phone association
 
@@ -347,6 +451,7 @@ finish on the server after the window closes.
 | `401`, or lookup `403` | Token rejected; update local settings |
 | Append `403` | Phone append permission missing |
 | Append `409` | Refresh organization before another append |
+| `404` on status, registration-number or ATS answer lookup | Optional gateway capability unsupported |
 | `429` | Retry shortly |
 | `500`–`599`, network/TLS failure | Gateway/CRM unavailable; explicit retry |
 | `300`–`399` | Redirect refused; token is not forwarded |
@@ -393,9 +498,11 @@ The Mac no longer persists any CRM inventory or local client-card data.
   Every redirect is refused.
 - Lookup state tracks request, call context and settings generations. Late
   responses are ignored. Phone confirmation carries the same scope and snapshot.
-- Live-call results are transient UI data and are not persisted as CRM
-  snapshots. They do not replace SIP caller identity. The only CRM change
+- Live-call and standalone CRM results are transient UI data, not persisted
+  CRM snapshots. They do not replace SIP caller identity. The only CRM change
   is the explicitly confirmed phone append through the gateway.
+- Call-history ATS attribution is read-only and does not store employee
+  records or restore retired post-call CRM verification.
 - Non-secret settings use local UserDefaults; gateway tokens use Keychain.
   Requests, tokens and customer responses are not logged by the client.
 - Production origins/tokens, upstream credentials, real customers and captured
@@ -420,8 +527,9 @@ Run the standard commands on a Mac:
 ./script/build.sh Debug
 ```
 
-Tests cover route/body restrictions, HTTPS and redirects, decoding/completeness,
-safe links, old records and release strings, not-found/error distinctions,
+Tests cover status and ATS answer routes, route/body restrictions, HTTPS and
+redirects, decoding/completeness, safe links, old records and release strings,
+not-found/error distinctions,
 token origin scoping, phone normalization, ambiguous choices, confirmation,
 append permission/conflict handling and context/settings/cancellation races.
 SQLite migration tests verify obsolete customer/CRM tables and notes are

@@ -71,7 +71,14 @@ final class CallHistoryViewModel {
     private(set) var callAnswers: [String: CRMIncomingCallAnswer] = [:]
     private(set) var answerLookupError: CRMGatewayError?
     var answerLookupFailed: Bool { answerLookupError != nil }
-    var answerRefreshRequest = 0
+    var answerRefreshRequest = 0 {
+        didSet {
+            guard oldValue != answerRefreshRequest else { return }
+            // A manual refresh explicitly invalidates cached ATS answers.
+            callAnswers.removeAll()
+            answerLookupError = nil
+        }
+    }
     @ObservationIgnored private var answerGeneration = -1
 
     // Shared on the main actor; creating a formatter for every view update is unnecessary.
@@ -133,6 +140,10 @@ final class CallHistoryViewModel {
             }
             return
         }
+        // Scrolling and filtering may change the visible set without changing
+        // answers already fetched for the same local SIP records.
+        let pendingCalls = context.calls.filter { callAnswers[$0.id] == nil }
+        guard !pendingCalls.isEmpty else { return }
         do {
             // Collect rows appearing in one scrolling/layout pass into bounded batches.
             try await Task.sleep(for: .milliseconds(350))
@@ -142,7 +153,7 @@ final class CallHistoryViewModel {
             answerLookupError = nil
             // One UTC day spans at most two upstream calendar days. Keeping batches
             // within it avoids a request per row and handles arbitrary history dates.
-            let groups = Dictionary(grouping: context.calls) { String($0.startedAt.prefix(10)) }
+            let groups = Dictionary(grouping: pendingCalls) { String($0.startedAt.prefix(10)) }
             for day in groups.keys.sorted() {
                 let calls = groups[day] ?? []
                 for start in stride(from: 0, to: calls.count, by: 25) {

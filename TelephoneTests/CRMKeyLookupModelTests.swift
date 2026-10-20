@@ -284,6 +284,28 @@ struct CRMKeyLookupModelTests {
         #expect(model.canSearchOrganizationCode)
     }
 
+    @Test func disabledCRMRejectsDirectManualSearchRequests() async throws {
+        let settings = CRMGatewaySettings(defaults: freshDefaults(), tokenStore: GatewayTokenStoreFake())
+        let transport = GatewayTransportFake(data: GatewayFixture.customer)
+        let model = CRMKeyLookupModel(settings: settings, provider: CRMGatewayClient(transport: transport))
+        model.keyNumber = "76543"
+        model.email = "alice@example.com"
+        model.organizationCode = "98765432"
+
+        #expect(!model.canSearch)
+        #expect(!model.canSearchEmail)
+        #expect(!model.canSearchOrganizationCode)
+
+        // Direct calls must follow the same rules as the disabled UI buttons.
+        model.search()
+        model.searchEmail()
+        model.searchOrganizationCode()
+        await allowTaskToFinish()
+
+        #expect(model.state == .idle)
+        #expect(await transport.requests.isEmpty)
+    }
+
     @Test func organizationNumberLookupLoadsInventoryAndNeverAllowsPhoneAppend() async throws {
         let settings = CRMGatewaySettings(defaults: freshDefaults(), tokenStore: GatewayTokenStoreFake())
         try await settings.save(

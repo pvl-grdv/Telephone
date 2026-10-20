@@ -27,8 +27,9 @@ infrastructure settings are managed separately.
 6. If the phone is absent, use **Search organization…** to find it by
    key number, email address, or registration number such as `98-76-5432`.
    Several email matches require an explicit choice.
-7. After manual key lookup, **Link number to organization** offers a confirmation
-   showing the phone and organization. This needs a token with append permission.
+7. During an eligible call, a verified phone lookup or manual key lookup may
+   offer **Link number to organization**. A confirmation shows the phone and
+   organization, and the token needs append permission.
 
 The feature is disabled by default. **How to connect to the gateway** in CRM
 settings explains the local setup, token creation and Telephone connection.
@@ -253,7 +254,7 @@ ID order. This transport order does not identify the latest version. Each
 versions; the response does not establish which record is active or licensed.
 
 `CRMInventoryPresentation` prepares a display-only view of that complete
-inventory for live-call CRM only:
+inventory for both live-call Client details and the standalone CRM window:
 
 - The manually searched key appears first; other keys use ascending key number.
 - Programs are grouped by `programId`. Records without that ID use their
@@ -387,7 +388,7 @@ The Mac no longer persists any CRM inventory or local client-card data.
   not parse upstream CRM responses or choose upstream endpoints.
 - `CompositionRoot` creates one provider/settings store and passes them through
   account controllers to each call window.
-- `CRMGatewayClient` is an actor with four fixed typed requests and an ephemeral
+- `CRMGatewayClient` is an actor with fixed typed gateway routes and an ephemeral
   URLSession. Cookies, URL credential storage and HTTP caching are disabled.
   Every redirect is refused.
 - Lookup state tracks request, call context and settings generations. Late
@@ -423,7 +424,7 @@ Tests cover route/body restrictions, HTTPS and redirects, decoding/completeness,
 safe links, old records and release strings, not-found/error distinctions,
 token origin scoping, phone normalization, ambiguous choices, confirmation,
 append permission/conflict handling and context/settings/cancellation races.
-SQLite migration tests verify obsolete tables are removed while calls, local
-customer details and manually saved notes remain intact.
+SQLite migration tests verify obsolete customer/CRM tables and notes are
+removed while calls and prior legacy-import markers remain intact.
 Localization smoke tests verify English, German and Russian UI strings.
 Real integration checks require a separately configured gateway and credentials.

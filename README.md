@@ -33,9 +33,9 @@ PJSIP, Opus, and LibreSSL remain external C dependencies. Telephone does not
 rewrite those libraries; it keeps their unsafe/C details at the lowest practical
 boundary of the application.
 
-## Current direction
+## What this fork includes
 
-Telephone 2 now includes:
+Telephone 2 currently includes:
 
 - a Swift 6.4 application layer with complete strict-concurrency checking;
 - native SwiftUI scenes for calls, accounts, settings, transfer, and call
@@ -43,6 +43,8 @@ Telephone 2 now includes:
 - a Swift SIP runtime and Swift PJSIP callbacks, with one narrow C callback
   header at the library boundary;
 - SQLite-backed call history (no duplicate local customer database);
+- optional gateway-backed CRM lookup during live calls and in a separate window;
+- an explicit, permission-checked way to associate a caller's number with ATS;
 - App Intents and Shortcuts for calling, settings, and account status;
 - hardened CoreAudio selection, account credentials, and SIP network
   validation;
@@ -53,13 +55,10 @@ clearly identifying itself as independently maintained in the README and About
 window. Product behavior and documentation in this repository should be treated
 as authoritative for this fork when they differ from upstream.
 
-The 2.0.1 update reviews the native presentation against
-[WWDC25 concurrency guidance](https://developer.apple.com/videos/play/wwdc2025/266/)
-and [WWDC26 SwiftUI guidance](https://developer.apple.com/videos/play/wwdc2026/269/).
-It retains the existing Observation models and native scenes, checks cancellation
-after asynchronous token reads, and adopts `ContentBuilder` and the current
-button menu style in call history. Its native tests cover actual row visibility,
-refreshing, and the separate answered, unanswered and unknown outcomes.
+Recent incremental changes focus on simpler state transitions, reusable CRM
+validation, independently cancellable call-window tasks, and serialized SIP
+Keychain updates. The goal is to make behavior easier to follow without
+rewriting the underlying SIP and audio integrations.
 
 ATS answering-employee lookup is read-only and covers visible incoming
 calls, including those declined locally with zero connected seconds. A
@@ -77,6 +76,24 @@ The personal fork currently targets:
 
 - Apple silicon
 - macOS 26 or newer
+
+## First launch and everyday use
+
+Telephone needs a SIP account to make and receive calls; a CRM gateway is
+optional. On first launch, add an account when prompted. Later, use
+**Settings → Accounts** to manage SIP accounts. Each enabled account has a
+window with a dialer and its call history. The dialer accepts telephone
+numbers and SIP addresses, and can suggest macOS Contacts after permission is
+granted.
+
+Call windows behave like normal macOS windows by default. If you want them
+to stay above other windows, turn on **Call → Keep on Top**. This is an
+optional, saved setting; Telephone does not force floating windows.
+
+To inspect CRM keys and programs without placing a call, use
+**CRM → Search organization…** (`Shift-Command-K`) after configuring
+**Settings → CRM**. See [CRM lookup](#optional-crm-lookup-through-a-gateway)
+for the difference between read-only searches and explicit phone linking.
 
 ## Installing a local update
 
@@ -100,7 +117,8 @@ private backup. If present, also copy
 `~/Library/Application Support/com.tlphn.Telephone` and
 `~/Library/Preferences/com.tlphn.Telephone.plist`. This retains the SQLite
 database together with its accompanying files. Schema v6 preserves the call log and prior legacy-history import markers but
-**deletes Telephone-only customer profiles, keys, email addresses, and notes**.
+**deletes obsolete Telephone-only customer profiles, keys, email addresses,
+and notes**.
 Back up the database together with its WAL/SHM files before starting the new
 version if any of those local records are valuable. Only live CRM data remains
 available in the client; CRM credentials and tokens are unaffected.
@@ -140,6 +158,10 @@ Build Telephone:
 Build and run the local app:
 
     $ ./script/build_and_run.sh
+
+Run the unit and presentation tests:
+
+    $ ./script/test.sh
 
 CI stamps packaged builds with the GitHub Actions run number as
 `CFBundleVersion` and embeds the source commit shown in the About window.
@@ -193,8 +215,9 @@ without delaying ringing:
 1. the formatted SIP caller address is available immediately;
 2. a meaningful SIP display name can replace the raw number;
 3. macOS Contacts can add a person's name, organization, and phone label;
-4. a configured CRM provider can promote the company name and return reference
-   keys, programs associated with those keys, and email addresses.
+4. when CRM is enabled, a separate customer summary and details view can
+   display the matching company, its keys, programs, and email addresses.
+   CRM lookup does not replace the SIP caller identity.
 
 The CRM interface uses the separately deployed gateway. If CRM is disabled,
 Telephone still makes and receives calls and records history; it does not show
@@ -202,42 +225,72 @@ a separate local client-card editor.
 
 ### Optional CRM lookup through a gateway
 
-Settings → CRM enables automatic lookup by the actual caller's phone number,
-with a **numeric key number or email address** as a manual fallback in the call
-window's client details section. One exact match shows its organization; multiple matches
-require an explicit choice. Arbitrary SIP usernames are not treated as phones.
-The result shows the owning organization, its code, all keys and all program
-records, including older versions. Key and program links open the key's
-personal account page.
+CRM is **off by default** and is not needed for SIP calling or call history.
+In **Settings → CRM**, configure a separately deployed gateway with an HTTPS
+origin and a device token. Telephone stores that token in macOS Keychain,
+scoped to the gateway origin; upstream CRM passwords stay on the gateway
+computer. An opt-in Tailscale HTTP connection is supported only under the
+restrictions described in [gateway setup](docs/CRM-gateway.md).
 
-The feature is disabled by default. Configure an HTTPS gateway origin and an
-independent gateway token locally. The token is stored in macOS Keychain,
-scoped to that origin; CRM credentials stay on the gateway computer. No
-deployment addresses, customer data, or credentials are bundled with the app.
+#### Lookup during a call
 
-Telephone calls the gateway's fixed phone/key/email lookup routes. Email lookup
-is case-insensitive and requires a plain, exact address; it never appends the
-caller number to CRM. After manual key
-lookup, **Link number to organization** can append the caller's phone to that
-organization, with a confirmation showing the phone and organization. Existing
-phone values are preserved and duplicates are avoided. The gateway token must
-have separate permission for this operation; no general CRM editing is exposed.
+Telephone can look up the actual caller's eligible phone number automatically.
+One exact company match loads its inventory; several matches require you to
+choose the company. Arbitrary SIP usernames and display names are not treated
+as phone numbers.
 
-The client rejects redirects, incomplete responses, and unexpected portal links. Searches
-are asynchronous and can be cancelled; changing the call, input, or saved CRM
-settings invalidates pending results. Existing SIP/audio behavior is unchanged.
+Open **Client details → Search organization…** to search manually by
+**key number, email address, or organization registration number**
+(for example, `98-76-5432`). Registration-number lookup requires a gateway
+that supports that route; older gateways report an explicit unsupported
+feature instead of guessing an organization.
 
-See [the public gateway contract and setup guide](docs/CRM-gateway.md).
+#### CRM without an active call
 
-**Client details** is now a CRM-only, single-pane macOS browser using a native
-`Table`, a key filter, and a single searchable toolbar. Manual lookup by key
-or email lives in a compact popover. Search projection runs off the main actor
-and is cancelled when superseded; it does not contact CRM again.
+Use **CRM → Search organization…** (`Shift-Command-K`) for a separate
+window with the same manual key, email, and registration-number searches.
+This window is independent of SIP calls and allows you to browse keys and
+programs without calling anyone. It has no caller phone to associate and
+does not offer phone linking.
 
-The old post-call CRM window and all local customer details/notes were
-removed. SQLite schema v6 retains calls and the legacy import marker while
-deleting obsolete customer/CRM tables. An archive requires a data backup made
-before launching the upgraded app.
+#### Keys, programs, and search
+
+The result is a read-only, single-pane table of all returned keys and
+program records, including older versions. Filter by key and search keys,
+programs, versions, or releases. **Searching or clearing the text preserves
+your selected key**; searching the inventory does not make another CRM
+network request. Version order is for display and does not establish whether
+a license is active. Links to the personal key portal come from the gateway
+and are checked before they can be opened.
+
+#### Explicitly linking a caller phone to ATS
+
+During a live call, **Link number to organization** may be available after
+a verified caller-phone or manual key lookup. If the caller's phone exists
+only in the organization's legacy phone field and is absent from the separate
+ATS list (`company.atsPhones`), the button can offer to add it to ATS.
+The legacy field remains unchanged. Telephone uses a verified key belonging
+to that company; **no manual key search is required for a verified phone
+lookup**, but an organization with no keys cannot use the protected append
+route. Older gateways without `company.atsPhones` cannot offer that
+phone-lookup shortcut.
+
+Linking requires a gateway token with append permission **and an explicit
+confirmation** identifying the phone and organization. Nothing is written
+when you search, open the confirmation, or dismiss it. The gateway
+rechecks key ownership and the current phone value before accepting the
+single write. Email and registration-number lookups do not grant phone
+linking. After an uncertain or failed write, refresh the organization
+before another attempt; the app never retries a write automatically.
+
+The app rejects redirects, unsafe key links, and incomplete responses.
+Changing a call, search input, or CRM settings invalidates stale lookup
+results. CRM inventories and phone associations are not stored in the
+local call-history database. The retired **post-call history verification**
+window is gone; it is distinct from the current standalone CRM search window.
+
+For complete route, permission, and privacy details, see the
+[CRM gateway contract and setup guide](docs/CRM-gateway.md).
 
 For diagnosing a PBX integration, Telephone captures a small allowlist of
 identity and routing headers from the original incoming SIP INVITE, including

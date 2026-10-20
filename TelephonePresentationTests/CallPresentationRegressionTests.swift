@@ -3,6 +3,7 @@
 //  TelephonePresentationTests
 //
 
+import Foundation
 import Testing
 
 @MainActor
@@ -39,6 +40,18 @@ struct CallPresentationRegressionTests {
                 isCallSurfaceFocused: true
             )
         )
+    }
+
+    @Test
+    func outgoingStatusSupportsUnlabeledAndLabeledCalls() {
+        // Initial calls, redial and transfer destinations share this text.
+        #expect(CallWindowModel.outgoingStatus(phoneLabel: "") ==
+            NSLocalizedString("calling...", comment: "Outgoing call in progress."))
+        #expect(CallWindowModel.outgoingStatus(phoneLabel: "work") ==
+            String(
+                format: NSLocalizedString("calling %@...", comment: "Outgoing call in progress."),
+                "work"
+            ))
     }
 
     @Test

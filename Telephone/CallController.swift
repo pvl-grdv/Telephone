@@ -244,27 +244,16 @@ class CallController: AKSIPCallDelegate {
         }
 
         prepareForCall()
+        startOutgoingCall(to: redialURI)
+    }
 
-        if let phoneLabelFromAddressBook,
-           !phoneLabelFromAddressBook.isEmpty
-        {
-            status = String(
-                format: NSLocalizedString(
-                    "calling %@...",
-                    comment: "Outgoing call in progress."
-                ),
-                phoneLabelFromAddressBook
-            )
-        } else {
-            status = NSLocalizedString(
-                "calling...",
-                comment: "Outgoing call in progress."
-            )
-        }
-
-        accountController?.account.makeCall(
-            to: redialURI
-        ) { [weak self] call in
+    /// The initial call, redial and transfer destination use the same
+    /// outgoing status and SIP completion handling.
+    func startOutgoingCall(to destinationURI: AKSIPURI) {
+        status = CallWindowModel.outgoingStatus(
+            phoneLabel: phoneLabelFromAddressBook ?? ""
+        )
+        accountController?.account.makeCall(to: destinationURI) { [weak self] call in
             Task { @MainActor in
                 guard let self else { return }
 
@@ -619,9 +608,12 @@ class CallController: AKSIPCallDelegate {
                 return enteredCallDestination
             }
 
-            return AKTelephoneNumberFormatter().string(
-                for: enteredCallDestination
-            ) ?? enteredCallDestination
+            let formatter = AKTelephoneNumberFormatter()
+            formatter.splitsLastFourDigits = defaults.bool(
+                forKey: UserDefaultsKeys.telephoneNumberFormatterSplitsLastFourDigits
+            )
+            return formatter.string(for: enteredCallDestination)
+                ?? enteredCallDestination
         }
 
         let formatter = AKSIPURIFormatter()
@@ -637,11 +629,3 @@ class CallController: AKSIPCallDelegate {
     }
 }
 
-private func isTelephoneNumber(_ value: String) -> Bool {
-    let digits = value.first == "+"
-        ? value.dropFirst()
-        : Substring(value)
-
-    return !digits.isEmpty
-        && digits.allSatisfy { $0 >= "0" && $0 <= "9" }
-}

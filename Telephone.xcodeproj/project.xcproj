@@ -484,8 +484,8 @@
         { "path": "CredentialsStoring.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "CredentialsStore.swift", "target-membership": [ "Telephone/compile-sources" ] },
         { "path": "AKNetworkReachability.swift", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "AKSIPURIFormatter.swift", "target-membership": [ "Telephone/compile-sources" ] },
-        { "path": "AKTelephoneNumberFormatter.swift", "target-membership": [ "Telephone/compile-sources" ] },
+        { "path": "AKSIPURIFormatter.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
+        { "path": "AKTelephoneNumberFormatter.swift", "target-membership": [ "Telephone/compile-sources", "TelephoneTests/compile-sources" ] },
         { "path": "ApplicationUserAttentionRequest.swift", "target-membership": [ "Telephone/compile-sources" ] },
         {
           "path": "ArrayDifference.swift",
@@ -675,6 +675,7 @@
         { "path": "AccountSettingsModelTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "CallHistoryViewModelTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "CallerIdentityPresentationTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
+        { "path": "AKTelephoneNumberFormatterTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "CompactCallTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "LiveCallPresentationTestStub.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },
         { "path": "SIPPortValidationTests.swift", "target-membership": [ "TelephoneTests/compile-sources" ] },

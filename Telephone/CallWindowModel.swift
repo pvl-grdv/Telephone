@@ -188,6 +188,17 @@ final class CallWindowModel {
     var identityDetail = ""
     var contactOrganization = ""
     var status = ""
+
+    static func outgoingStatus(phoneLabel: String) -> String {
+        guard !phoneLabel.isEmpty else {
+            return NSLocalizedString("calling...", comment: "Outgoing call in progress.")
+        }
+        return String(
+            format: NSLocalizedString("calling %@...", comment: "Outgoing call in progress."),
+            phoneLabel
+        )
+    }
+
     var windowTitle = NSLocalizedString("Call Window Title", comment: "Call window title.")
     var windowDismissEnabled = true
 

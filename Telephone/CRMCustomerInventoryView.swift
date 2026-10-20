@@ -56,8 +56,7 @@ private struct CRMInventoryBrowserView: View {
     var body: some View {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         let isFiltering = !query.isEmpty && searchResult?.query != searchText
-        let inventory = query.isEmpty ? preparedInventory :
-            (searchResult?.query == searchText ? (searchResult?.inventory ?? preparedInventory) : preparedInventory)
+        let inventory = displayedInventory
         let rows = inventory.rows(for: selectedKey == 0 ? nil : selectedKey)
 
         NavigationStack {
@@ -157,6 +156,14 @@ private struct CRMInventoryBrowserView: View {
         .onChange(of: selectedKey) {
             selectedRows.removeAll()
         }
+    }
+
+    private var displayedInventory: CRMInventoryPresentation {
+        guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let searchResult, searchResult.query == searchText else {
+            return preparedInventory
+        }
+        return searchResult.inventory
     }
 
     private var companyHeader: some View {

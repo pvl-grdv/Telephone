@@ -52,6 +52,12 @@ final class AKTelephoneNumberFormatter: Formatter {
     }
 }
 
+/// A dialing identity: ASCII digits with at most one leading plus.
+func isTelephoneNumber(_ value: String) -> Bool {
+    let digits = value.first == "+" ? value.dropFirst() : Substring(value)
+    return !digits.isEmpty && digits.allSatisfy(isASCIIDigit)
+}
+
 private func isPlainDigitNumber(_ value: String) -> Bool {
     !value.isEmpty && value.allSatisfy(isASCIIDigit)
 }

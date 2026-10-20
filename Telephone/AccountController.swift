@@ -273,41 +273,13 @@ final class AccountController:
         controller.redialURI = destinationURI
         controller.prepareForCall()
 
-        if phoneLabel.isEmpty {
-            controller.status = NSLocalizedString(
-                "calling...",
-                comment: "Outgoing call in progress."
-            )
-        } else {
-            controller.status = String(
-                format: NSLocalizedString(
-                    "calling %@...",
-                    comment: "Outgoing call in progress."
-                ),
-                phoneLabel
-            )
-        }
-
         if callTransferController == nil {
             controller.showWindow(self)
         }
 
-        account.makeCall(to: destinationURI) { [weak controller] call in
-            Task { @MainActor in
-                guard let controller else { return }
-
-                if let call {
-                    controller.call = call
-                } else {
-                    controller.showEndedCallView()
-                    controller.status = NSLocalizedString(
-                        "Call Failed",
-                        comment: "Call failed."
-                    )
-                }
-            }
-        }
+        controller.startOutgoingCall(to: destinationURI)
     }
+
 
     func makeCall(
         to destinationURI: AKSIPURI,
@@ -625,19 +597,20 @@ final class AccountController:
         formatter: AKTelephoneNumberFormatter,
         defaults: UserDefaults
     ) {
+        // Both title and caller label follow the same formatting preference.
+        let displayedDestination: String?
+        if isTelephoneNumber(enteredDestination),
+           defaults.bool(forKey: UserDefaultsKeys.formatTelephoneNumbers)
+        {
+            displayedDestination = formatter.string(for: enteredDestination)
+        } else {
+            displayedDestination = enteredDestination
+        }
+
         if !destinationURI.host.isEmpty {
             controller.title = destinationURI.sipAddress
         } else if !containsASCIILetter(enteredDestination) {
-            if isTelephoneNumber(enteredDestination),
-               defaults.bool(
-                    forKey: UserDefaultsKeys.formatTelephoneNumbers
-               )
-            {
-                controller.title =
-                    formatter.string(for: enteredDestination)
-            } else {
-                controller.title = enteredDestination
-            }
+            controller.title = displayedDestination
         } else {
             controller.title = SIPAddress(
                 user: destinationURI.user,
@@ -649,15 +622,8 @@ final class AccountController:
             controller.displayedName = destinationURI.displayName
         } else if !destinationURI.host.isEmpty {
             controller.displayedName = destinationURI.sipAddress
-        } else if isTelephoneNumber(enteredDestination),
-                  defaults.bool(
-                    forKey: UserDefaultsKeys.formatTelephoneNumbers
-                  )
-        {
-            controller.displayedName =
-                formatter.string(for: enteredDestination)
         } else {
-            controller.displayedName = enteredDestination
+            controller.displayedName = displayedDestination
         }
     }
 
@@ -862,14 +828,6 @@ private func containsASCIILetter(_ value: String) -> Bool {
 }
 
 
-private func isTelephoneNumber(_ value: String) -> Bool {
-    let digits = value.first == "+"
-        ? value.dropFirst()
-        : Substring(value)
-
-    return !digits.isEmpty
-        && digits.allSatisfy { $0 >= "0" && $0 <= "9" }
-}
 
 /// Weak event adapter keeps registration ownership outside window presentation.
 @MainActor

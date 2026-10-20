@@ -52,15 +52,6 @@ final class AKSIPURIFormatter: Formatter {
     }
 }
 
-private func isTelephoneNumber(_ value: String) -> Bool {
-    let digits = value.first == "+"
-        ? value.dropFirst()
-        : Substring(value)
-
-    return !digits.isEmpty
-        && digits.allSatisfy { $0 >= "0" && $0 <= "9" }
-}
-
 private func parsedDestination(from input: String) -> AKSIPURI {
     if let uri = AKSIPURI(string: input) {
         return uri

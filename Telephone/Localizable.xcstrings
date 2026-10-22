@@ -1,6 +1,259 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Program Catalog": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Program Catalog"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programmkatalog"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Справочник программ"
+          }
+        }
+      }
+    },
+    "Program Catalog…": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Program Catalog…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programmkatalog…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Справочник программ…"
+          }
+        }
+      }
+    },
+    "Available for new supply": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available for new supply"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für neue Lieferung verfügbar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступны для новой поставки"
+          }
+        }
+      }
+    },
+    "Unavailable for new supply": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable for new supply"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für neue Lieferung nicht verfügbar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Недоступно для новой поставки"
+          }
+        }
+      }
+    },
+    "Protection": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protection"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schutz"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Защита"
+          }
+        }
+      }
+    },
+    "Distribution directory": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distribution directory"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distributionsverzeichnis"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каталог дистрибутива"
+          }
+        }
+      }
+    },
+    "Unable to load the program catalog. Check CRM settings and update Gateway if necessary.": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to load the program catalog. Check CRM settings and update Gateway if necessary."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Programmkatalog konnte nicht geladen werden. Prüfen Sie die CRM-Einstellungen und aktualisieren Sie bei Bedarf das Gateway."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось загрузить справочник. Проверьте настройки CRM и при необходимости обновите Gateway."
+          }
+        }
+      }
+    },
+    "No programs found": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No programs found"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Programme gefunden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Программы не найдены"
+          }
+        }
+      }
+    },
+    "Availability applies to new supply; customers keep manufactured older versions.": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Availability applies to new supply; customers keep manufactured older versions."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verfügbarkeit gilt für neue Lieferungen; hergestellte ältere Versionen bleiben beim Kunden."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступность относится к новой поставке; изготовленные старые версии остаются у клиента."
+          }
+        }
+      }
+    },
+    "Name, ID, version or directory": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name, ID, version or directory"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name, ID, Version oder Verzeichnis"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Название, ID, версия или каталог"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "comment": "Program catalogue window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновить"
+          }
+        }
+      }
+    },
     "%ld of %ld records": {
       "comment": "Visible CRM records after filtering.",
       "localizations": {

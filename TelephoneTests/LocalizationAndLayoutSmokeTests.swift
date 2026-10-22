@@ -36,6 +36,7 @@ struct LocalizationAndLayoutSmokeTests {
             "Telephone/CRMGatewayError+Message.swift",
             "Telephone/CRMKeyLookupView.swift",
             "Telephone/CRMWorkspaceScene.swift",
+            "Telephone/CRMProgramCatalogScene.swift",
             "Telephone/CRMManualSearchView.swift",
             "Telephone/CRMCustomerInventoryView.swift",
             "Telephone/GeneralSettingsView.swift",

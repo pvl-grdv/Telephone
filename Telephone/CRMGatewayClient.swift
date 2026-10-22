@@ -135,7 +135,7 @@ final class CRMGatewayURLSessionTransport: CRMGatewayHTTPTransport {
     }
 }
 
-actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
+actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider, CRMProgramCatalogProvider {
     private let transport: any CRMGatewayHTTPTransport
 
     init(transport: any CRMGatewayHTTPTransport = CRMGatewayURLSessionTransport()) {
@@ -146,6 +146,20 @@ actor CRMGatewayClient: CRMKeyLookupProvider, CRMGatewayStatusProvider {
         let response: CRMGatewayStatusResponse = try await send(route: .status, body: EmptyStatusRequest(), configuration: configuration)
         try response.runtime.validate()
         return response.runtime
+    }
+
+    func programCatalog(configuration: CRMGatewayConfiguration) async throws -> CRMProgramCatalogResponse {
+        let result: CRMProgramCatalogResponse = try await send(route: .programCatalog, body: EmptyStatusRequest(), configuration: configuration)
+        try Self.validateMetadata(result.meta)
+        guard !result.meta.fromCache, result.data.count <= 5000,
+              Set(result.data.map(\.id)).count == result.data.count,
+              result.data.allSatisfy({ row in
+                  CRMKeyNumber.isValid(row.id) && !row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    && row.name.count <= 2000
+                    && [row.signVersion, row.signRelease, row.signDirectory, row.stealthVersion, row.stealthRelease, row.stealthDirectory]
+                        .compactMap { $0 }.allSatisfy { $0.count <= 1000 }
+              }) else { throw CRMGatewayError.invalidResponse }
+        return result
     }
 
     func incomingCallAnswers(calls: [CRMIncomingCallRequest], configuration: CRMGatewayConfiguration) async throws -> [CRMIncomingCallAnswer] {
@@ -495,6 +509,7 @@ private struct PhoneAppendRequest: Encodable {
 private struct EmptyStatusRequest: Encodable {}
 
 private enum GatewayRoute: String {
+    case programCatalog = "v1/programs/filter"
     case status = "v1/status"
     case keyLookup = "v1/customer-by-key/filter"
     case organizationCodeLookup = "v1/customer-by-organization-code/filter"

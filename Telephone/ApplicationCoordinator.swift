@@ -146,6 +146,10 @@ final class ApplicationCoordinator:
         )
     }
 
+    func makeCRMProgramCatalogModel() -> CRMProgramCatalogModel {
+        CRMProgramCatalogModel(settings: compositionRoot.crmGatewaySettings, provider: CRMGatewayClient())
+    }
+
     func showSettings() {
         preferencesController.showSettings()
     }

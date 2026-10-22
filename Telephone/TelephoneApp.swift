@@ -54,6 +54,10 @@ struct TelephoneApp: App {
                     SceneRouter.shared.openWindow(id: CRMWorkspaceScene.id)
                 }
                 .keyboardShortcut("k", modifiers: [.command, .shift])
+                Button(NSLocalizedString("Program Catalog…", comment: "Open program catalogue.")) {
+                    SceneRouter.shared.openWindow(id: CRMProgramCatalogScene.id)
+                }
+                .keyboardShortcut("p", modifiers: [.command, .shift])
             }
 
             CommandGroup(after: .help) {
@@ -105,6 +109,10 @@ struct TelephoneApp: App {
 
         CRMWorkspaceScene(makeModel: {
             appController.coordinator.makeCRMWorkspaceModel()
+        })
+
+        CRMProgramCatalogScene(makeModel: {
+            appController.coordinator.makeCRMProgramCatalogModel()
         })
 
         AccountSetupHostedScene()

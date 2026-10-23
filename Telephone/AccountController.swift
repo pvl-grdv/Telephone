@@ -671,6 +671,9 @@ final class AccountController:
         controller.redialURI = call.remoteURI
         controller.showIncomingCallView()
         controller.showWindow(nil)
+        // A new incoming call should be visible even while another app is active.
+        // Keep the window's normal level; "Keep on Top" remains opt-in.
+        MacApplication.activate()
 
         startPlayingRingtoneOrLogError()
         call.sendRingingNotification()

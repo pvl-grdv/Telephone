@@ -95,6 +95,36 @@ final class CRMKeyLookupModel {
         canStartManualSearch && CRMOrganizationCode.normalize(organizationCode) != nil
     }
 
+    // Preserve the exact lookup source and selected organization for retries.
+    // Edited fields clear the identity through cancel(), so stale queries cannot recur.
+    var canRetryLookup: Bool {
+        guard canPerformManualLookup, state != .loading, let lookupIdentity else { return false }
+        switch lookupIdentity {
+        case .phone(let phone, _):
+            return phone == callerPhone
+        case .key(let number):
+            return CRMKeyNumber.parse(keyNumber) == number
+        case .email(let email, _):
+            return CRMEmailAddress.normalize(self.email) == email
+        case .organizationCode(let code):
+            return CRMOrganizationCode.normalize(organizationCode) == code
+        }
+    }
+
+    func retryCurrentSearch() {
+        guard canRetryLookup, let lookupIdentity else { return }
+        switch lookupIdentity {
+        case .phone(_, let companyID):
+            searchCallerPhone(companyID: companyID)
+        case .key:
+            search()
+        case .email(_, let companyID):
+            searchEmail(companyID: companyID)
+        case .organizationCode:
+            searchOrganizationCode()
+        }
+    }
+
     private var phoneAppendSourceKeyID: Int? {
         guard case .loaded(let response) = state, let customer = response.data else {
             return nil
@@ -102,7 +132,7 @@ final class CRMKeyLookupModel {
         switch lookupIdentity {
         case .key:
             return customer.sourceKeyId
-        case .phone(let phone) where phone == callerPhone:
+        case .phone(let phone, _) where phone == callerPhone:
             // A verified phone response includes this company's keys.
             // The gateway checks ownership again before the ATS write.
             guard customer.company.atsPhones != nil else { return nil }
@@ -197,7 +227,7 @@ final class CRMKeyLookupModel {
             state = .failed(.invalidEmail)
             return
         }
-        lookupIdentity = .email(email)
+        lookupIdentity = .email(email, companyID: companyID)
         beginLookup { provider, configuration in
             let result = try await provider.customer(forEmail: email, companyID: companyID, configuration: configuration)
             return result.lookupState
@@ -208,7 +238,7 @@ final class CRMKeyLookupModel {
         guard settings.enabled, isContextActive, phoneLinkState != .saving,
               let phone = callerPhone else { return }
         automaticLookupAttempted = true
-        lookupIdentity = .phone(phone)
+        lookupIdentity = .phone(phone, companyID: companyID)
         beginLookup { provider, configuration in
             let result = try await provider.customer(
                 forPhoneNumber: phone, companyID: companyID, configuration: configuration
@@ -410,8 +440,8 @@ private extension CRMPhoneLookupResponse {
 }
 
 private enum LiveCRMQuery: Sendable {
-    case phone(String)
+    case phone(String, companyID: Int?)
     case key(Int)
-    case email(String)
+    case email(String, companyID: Int?)
     case organizationCode(String)
 }

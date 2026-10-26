@@ -24,10 +24,12 @@ infrastructure settings are managed separately.
    **Apply**. This token is separate from the CRM password and Tailscale login.
 5. During a call, Telephone looks up the actual peer's phone number. One exact
    match shows its organization. Multiple matches require an explicit choice.
-6. If the phone is absent, use **Search organization…**. Enter a numeric key
-   ID directly in **Key number** and click **Find** (or press Return). Separate
-   fields also allow email address and registration number searches, such as
-   `98-76-5432`. Several email matches require an explicit choice.
+6. If the phone is absent, use **Search organization…**. The key-number,
+   email-address and registration-number fields are equally available, each with
+   its own **Find** button (Return in the field also searches). Invalid input
+   is explained after leaving a field or submitting it. Several email matches
+   require an explicit choice. A failed search can be retried without changing
+   its source or the selected organization.
 7. During an eligible call, a verified phone lookup or manual key lookup may
    offer **Link number to organization**. A confirmation shows the phone and
    organization, and the token needs append permission.

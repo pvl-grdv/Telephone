@@ -8055,6 +8055,98 @@
           }
         }
       }
+    },
+    "Enter a key number, email address or registration number to search.": {
+      "comment": "Initial CRM search guidance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a key number, email address or registration number to search."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie zum Suchen eine Schlüsselnummer, E-Mail-Adresse oder Registrierungsnummer ein."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите номер ключа, адрес электронной почты или регистрационный номер для поиска."
+          }
+        }
+      }
+    },
+    "No organization found": {
+      "comment": "CRM no matching organization title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No organization found"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Organisation gefunden"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Организация не найдена"
+          }
+        }
+      }
+    },
+    "Try a different key number, email address or registration number.": {
+      "comment": "CRM no matching organization guidance.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a different key number, email address or registration number."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versuchen Sie es mit einer anderen Schlüsselnummer, E-Mail-Adresse oder Registrierungsnummer."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Попробуйте другой номер ключа, адрес электронной почты или регистрационный номер."
+          }
+        }
+      }
+    },
+    "Search failed": {
+      "comment": "CRM lookup failure title.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search failed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche fehlgeschlagen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка поиска"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

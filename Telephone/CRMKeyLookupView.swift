@@ -71,7 +71,17 @@ struct CRMKeyLookupView: View {
     private var lookupContent: some View {
         switch model.state {
         case .idle:
-            EmptyView()
+            ContentUnavailableView {
+                Label(
+                    NSLocalizedString("Search organization", comment: "Manual CRM lookup heading."),
+                    systemImage: "magnifyingglass"
+                )
+            } description: {
+                Text(NSLocalizedString(
+                    "Enter a key number, email address or registration number to search.",
+                    comment: "Initial CRM search guidance."
+                ))
+            }
         case .loading:
             HStack {
                 ProgressView().controlSize(.mini)
@@ -83,9 +93,17 @@ struct CRMKeyLookupView: View {
                     .controlSize(.small)
             }
         case .notFound:
-            Text(NSLocalizedString("No organization found. Search by key, email or registration number.", comment: "CRM no exact lookup match."))
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            ContentUnavailableView {
+                Label(
+                    NSLocalizedString("No organization found", comment: "CRM no matching organization title."),
+                    systemImage: "magnifyingglass"
+                )
+            } description: {
+                Text(NSLocalizedString(
+                    "Try a different key number, email address or registration number.",
+                    comment: "CRM no matching organization guidance."
+                ))
+            }
         case .choosing(let matches):
             ScrollView {
                 VStack(alignment: .leading, spacing: 6) {
@@ -103,9 +121,21 @@ struct CRMKeyLookupView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         case .failed(let error):
-            Label(error.crmMessage, systemImage: "exclamationmark.triangle")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            ContentUnavailableView {
+                Label(
+                    NSLocalizedString("Search failed", comment: "CRM lookup failure title."),
+                    systemImage: "exclamationmark.triangle"
+                )
+            } description: {
+                Text(error.crmMessage)
+            } actions: {
+                if model.canRetryLookup {
+                    Button(NSLocalizedString("Retry", comment: "Retry CRM lookup.")) {
+                        model.retryCurrentSearch()
+                    }
+                    .accessibilityIdentifier("customer.crm.retry")
+                }
+            }
         case .loaded(let response):
             if let customer = response.data {
                 CRMCustomerInventoryView(customer: customer)
@@ -151,9 +181,10 @@ struct CRMKeyLookupView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Button(NSLocalizedString("Refresh organization", comment: "Reload current company before retrying append.")) {
-                model.search()
+                model.retryCurrentSearch()
             }
             .controlSize(.small)
+            .disabled(!model.canRetryLookup)
         }
     }
 

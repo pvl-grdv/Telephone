@@ -152,6 +152,32 @@ struct CRMPhoneLookupModelTests {
         #expect(await fixture.provider.appendCalls.count == 1)
     }
 
+    @Test func refreshAfterPhoneAppendFailurePreservesSelectedOrganization() async throws {
+        let fixture = try await makeFixture(phoneData: PhoneGatewayFixture.ambiguous())
+        fixture.model.setCallerPhone("70005550101", isActive: true)
+        await waitUntilFinished(fixture.model)
+        guard case .choosing(let matches) = fixture.model.state else {
+            Issue.record("Expected ambiguous phone lookup")
+            return
+        }
+        fixture.model.chooseCompany(matches[0])
+        await waitUntilFinished(fixture.model)
+        #expect(fixture.model.canLinkPhone)
+
+        await fixture.provider.setAppendError(.conflict)
+        fixture.model.preparePhoneLink()
+        let confirmation = try #require(fixture.model.pendingPhoneLink)
+        fixture.model.confirmPhoneLink(confirmation)
+        await waitForWrite(fixture.model)
+        #expect(fixture.model.phoneLinkState == .failed(.conflict))
+
+        #expect(fixture.model.canRetryLookup)
+        fixture.model.retryCurrentSearch()
+        await waitUntilFinished(fixture.model)
+        #expect(await fixture.provider.companyChoices == [nil, 1200456, 1200456])
+        #expect(fixture.model.canLinkPhone)
+    }
+
     @Test func closingContextCancelsAndDoesNotRestartAutomaticLookup() async throws {
         let fixture = try await makeFixture(phoneData: PhoneGatewayFixture.oneMatch())
         fixture.model.setCallerPhone("70005550101", isActive: false)

@@ -210,7 +210,7 @@ final class TelephoneUISmokeTests: XCTestCase {
         app.launch()
         defer { app.terminate() }
 
-        // Key number is the primary field; email and registration search remain visible.
+        // All three search methods remain equally visible.
         let key = element("customer.crm.keyNumber", in: app)
         XCTAssertTrue(key.waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertTrue(element("customer.crm.email", in: app).exists)
@@ -223,6 +223,36 @@ final class TelephoneUISmokeTests: XCTestCase {
         find.click()
         XCTAssertTrue(element("crm.inventory.programs", in: app).waitForExistence(timeout: 5))
         XCTAssertFalse(element("call.end", in: app).exists)
+    }
+
+    func testCRMWorkspaceValidatesEachFieldAfterLeavingIt() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["TELEPHONE_UI_TEST_SCENARIO"] = "crm-workspace"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        defer { app.terminate() }
+
+        let key = element("customer.crm.keyNumber", in: app)
+        XCTAssertTrue(key.waitForExistence(timeout: 5), app.debugDescription)
+        let email = element("customer.crm.email", in: app)
+        let registration = element("customer.crm.organizationCode", in: app)
+
+        key.click()
+        key.typeText("not-a-key")
+        XCTAssertFalse(element("customer.crm.search", in: app).isEnabled)
+        email.click()
+        XCTAssertTrue(element("customer.crm.keyNumber.validation", in: app).waitForExistence(timeout: 2))
+
+        email.typeText("not-an-email")
+        XCTAssertFalse(element("customer.crm.searchEmail", in: app).isEnabled)
+        registration.click()
+        XCTAssertTrue(element("customer.crm.email.validation", in: app).waitForExistence(timeout: 2))
+
+        registration.typeText("12-34")
+        XCTAssertFalse(element("customer.crm.searchOrganizationCode", in: app).isEnabled)
+        key.click()
+        XCTAssertTrue(element("customer.crm.organizationCode.validation", in: app).waitForExistence(timeout: 2))
+        XCTAssertTrue(element("customer.crm.searchEmail", in: app).label.contains("Email address"))
     }
 
     func testCRMWorkspaceSearchesByEmailWithoutAnActiveCall() throws {

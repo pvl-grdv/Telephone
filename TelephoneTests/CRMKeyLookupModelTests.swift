@@ -313,7 +313,8 @@ struct CRMKeyLookupModelTests {
         )
         let sample = String(decoding: GatewayFixture.customer, as: UTF8.self)
             .replacingOccurrences(of: "\"sourceKeyId\":76543", with: "\"sourceKeyId\":null")
-        let client = CRMGatewayClient(transport: GatewayTransportFake(data: Data(sample.utf8)))
+        let transport = GatewayTransportFake(data: Data(sample.utf8))
+        let client = CRMGatewayClient(transport: transport)
         let model = CRMKeyLookupModel(settings: settings, provider: client)
 
         model.organizationCode = "98765432"
@@ -328,9 +329,41 @@ struct CRMKeyLookupModelTests {
         #expect(result.data?.company.formattedCode == "98-76-5432")
         #expect(model.organizationCode == "98765432")
         #expect(!model.canLinkPhone)
+        #expect(model.canRetryLookup)
+        model.retryCurrentSearch()
+        await waitUntilFinished(model)
+        #expect(await transport.requests.count == 2)
 
         model.resetContext()
         #expect(model.organizationCode.isEmpty)
+        #expect(model.state == .idle)
+    }
+
+    @Test func retryUsesOriginalKeyAndRejectsStaleEditedFields() async throws {
+        let fixture = try await makeFixture()
+        let model = fixture.model
+        model.keyNumber = "76543"
+        #expect(!model.canRetryLookup)
+
+        model.search()
+        await fixture.provider.waitForRequest(76543)
+        await fixture.provider.fail(76543, with: .unavailable)
+        await waitUntilFinished(model)
+
+        #expect(model.state == .failed(.unavailable))
+        #expect(model.canRetryLookup)
+        model.retryCurrentSearch()
+        await fixture.provider.waitForRequest(76543)
+        try await fixture.provider.finish(76543, with: response())
+        await waitUntilFinished(model)
+
+        guard case .loaded = model.state else {
+            Issue.record("Retry should load the same key")
+            return
+        }
+        model.keyNumber = "invalid"
+        #expect(!model.canRetryLookup)
+        model.retryCurrentSearch()
         #expect(model.state == .idle)
     }
 

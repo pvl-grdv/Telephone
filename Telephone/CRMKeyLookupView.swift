@@ -8,13 +8,12 @@ import SwiftUI
 struct CRMKeyLookupView: View {
     @Bindable var model: CRMKeyLookupModel
     @State private var showsManualSearch = false
-    @State private var searchKind: CRMManualSearchKind = .key
     var showsInlineSearch = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if showsInlineSearch {
-                CRMManualSearchView(model: model, searchKind: $searchKind)
+                CRMManualSearchView(model: model)
             } else {
                 HStack(spacing: 8) {
                     if let phone = model.callerPhone {
@@ -34,7 +33,6 @@ struct CRMKeyLookupView: View {
                     .popover(isPresented: $showsManualSearch, arrowEdge: .bottom) {
                         CRMManualSearchView(
                             model: model,
-                            searchKind: $searchKind,
                             dismiss: { showsManualSearch = false }
                         )
                     }

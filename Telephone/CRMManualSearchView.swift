@@ -42,7 +42,7 @@ enum CRMManualSearchKind: Hashable, CaseIterable {
 
 struct CRMManualSearchView: View {
     @Bindable var model: CRMKeyLookupModel
-    @Binding var searchKind: CRMManualSearchKind
+    @FocusState private var focusedSearch: CRMManualSearchKind?
     var dismiss: (() -> Void)? = nil
 
     var body: some View {
@@ -50,54 +50,57 @@ struct CRMManualSearchView: View {
             Text(NSLocalizedString("Search organization", comment: "Manual CRM lookup heading."))
                 .font(.headline)
 
-            HStack(spacing: 8) {
-                Picker(NSLocalizedString("Search by", comment: "CRM manual lookup kind."),
-                       selection: $searchKind) {
-                    ForEach(CRMManualSearchKind.allCases, id: \.self) { kind in
-                        Text(kind.title).tag(kind)
-                    }
+            // A key number can be entered directly, without first switching search mode.
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(CRMManualSearchKind.allCases, id: \.self) { kind in
+                    searchRow(for: kind)
                 }
-                .labelsHidden()
-                .frame(width: 160)
-                .accessibilityIdentifier("customer.crm.lookupKind")
-
-                TextField(searchKind.title, text: manualQuery)
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityIdentifier(searchKind.fieldIdentifier)
-                    .disabled(model.phoneLinkState == .saving)
-                    .onSubmit { runManualSearch() }
-
-                Button(NSLocalizedString("Find", comment: "Run manual CRM lookup.")) {
-                    runManualSearch()
-                }
-                .disabled(!canRunManualSearch)
-                .accessibilityIdentifier(searchKind.actionIdentifier)
             }
             .controlSize(.small)
         }
         .padding(14)
         .frame(width: 500)
+        .onAppear { focusedSearch = .key }
     }
 
-    private var manualQuery: Binding<String> {
-        switch searchKind {
+    private func searchRow(for kind: CRMManualSearchKind) -> some View {
+        HStack(spacing: 8) {
+            Text(kind.title)
+                .frame(width: 155, alignment: .leading)
+            TextField(kind.title, text: manualQuery(for: kind))
+                .textFieldStyle(.roundedBorder)
+                .focused($focusedSearch, equals: kind)
+                .accessibilityIdentifier(kind.fieldIdentifier)
+                .disabled(model.phoneLinkState == .saving)
+                .onSubmit { runManualSearch(for: kind) }
+
+            Button(NSLocalizedString("Find", comment: "Run manual CRM lookup.")) {
+                runManualSearch(for: kind)
+            }
+            .disabled(!canRunManualSearch(for: kind))
+            .accessibilityIdentifier(kind.actionIdentifier)
+        }
+    }
+
+    private func manualQuery(for kind: CRMManualSearchKind) -> Binding<String> {
+        switch kind {
         case .key: $model.keyNumber
         case .email: $model.email
         case .organizationCode: $model.organizationCode
         }
     }
 
-    private var canRunManualSearch: Bool {
-        switch searchKind {
+    private func canRunManualSearch(for kind: CRMManualSearchKind) -> Bool {
+        switch kind {
         case .key: model.canSearch
         case .email: model.canSearchEmail
         case .organizationCode: model.canSearchOrganizationCode
         }
     }
 
-    private func runManualSearch() {
-        guard canRunManualSearch else { return }
-        switch searchKind {
+    private func runManualSearch(for kind: CRMManualSearchKind) {
+        guard canRunManualSearch(for: kind) else { return }
+        switch kind {
         case .key: model.search()
         case .email: model.searchEmail()
         case .organizationCode: model.searchOrganizationCode()

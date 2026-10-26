@@ -24,9 +24,10 @@ infrastructure settings are managed separately.
    **Apply**. This token is separate from the CRM password and Tailscale login.
 5. During a call, Telephone looks up the actual peer's phone number. One exact
    match shows its organization. Multiple matches require an explicit choice.
-6. If the phone is absent, use **Search organization…** to find it by
-   key number, email address, or registration number such as `98-76-5432`.
-   Several email matches require an explicit choice.
+6. If the phone is absent, use **Search organization…**. Enter a numeric key
+   ID directly in **Key number** and click **Find** (or press Return). Separate
+   fields also allow email address and registration number searches, such as
+   `98-76-5432`. Several email matches require an explicit choice.
 7. During an eligible call, a verified phone lookup or manual key lookup may
    offer **Link number to organization**. A confirmation shows the phone and
    organization, and the token needs append permission.
@@ -472,8 +473,9 @@ cancelled. There is no automatic retry or upstream authentication on macOS.
 ### Retired history lookup and SQLite cleanup
 
 Live-call **Client details** and the separate CRM window initiate CRM lookup.
-The standalone window supports key, email and registration-number searches
-without an active call. Neither path stores CRM customer data locally.
+The standalone window always shows distinct key-number, email and
+registration-number fields without an active call. Each field searches
+independently. Neither path stores CRM customer data locally.
 The separate CRM verification window for old calls, manual history lookup,
 post-call phone association and local CRM result snapshots have been removed.
 Telephone does not run automatic CRM checks when calls end.

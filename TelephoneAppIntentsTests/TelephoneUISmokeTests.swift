@@ -203,6 +203,28 @@ final class TelephoneUISmokeTests: XCTestCase {
         call.terminate()
     }
 
+    func testCRMWorkspaceSearchesByKeyWithoutAnActiveCall() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["TELEPHONE_UI_TEST_SCENARIO"] = "crm-workspace"
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        defer { app.terminate() }
+
+        // Key number is the primary field; email and registration search remain visible.
+        let key = element("customer.crm.keyNumber", in: app)
+        XCTAssertTrue(key.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(element("customer.crm.email", in: app).exists)
+        XCTAssertTrue(element("customer.crm.organizationCode", in: app).exists)
+
+        key.click()
+        key.typeText("1")
+        let find = element("customer.crm.search", in: app)
+        XCTAssertTrue(find.isEnabled)
+        find.click()
+        XCTAssertTrue(element("crm.inventory.programs", in: app).waitForExistence(timeout: 5))
+        XCTAssertFalse(element("call.end", in: app).exists)
+    }
+
     func testCRMWorkspaceSearchesByEmailWithoutAnActiveCall() throws {
         let app = XCUIApplication()
         app.launchEnvironment["TELEPHONE_UI_TEST_SCENARIO"] = "crm-workspace"
@@ -210,12 +232,9 @@ final class TelephoneUISmokeTests: XCTestCase {
         app.launch()
         defer { app.terminate() }
 
-        let lookupKind = element("customer.crm.lookupKind", in: app)
-        XCTAssertTrue(lookupKind.waitForExistence(timeout: 5), app.debugDescription)
-        lookupKind.click()
-        let emailKind = app.menuItems["Email address"]
-        XCTAssertTrue(emailKind.waitForExistence(timeout: 3), app.debugDescription)
-        emailKind.click()
+        // All manual search fields must be available without switching modes.
+        XCTAssertTrue(element("customer.crm.keyNumber", in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(element("customer.crm.organizationCode", in: app).exists)
 
         let email = element("customer.crm.email", in: app)
         XCTAssertTrue(email.waitForExistence(timeout: 3), app.debugDescription)
@@ -251,10 +270,8 @@ final class TelephoneUISmokeTests: XCTestCase {
         let otherSearch = app.buttons["Search organization…"]
         XCTAssertTrue(otherSearch.waitForExistence(timeout: 3), app.debugDescription)
         otherSearch.click()
-        XCTAssertTrue(
-            element("customer.crm.lookupKind", in: app).waitForExistence(timeout: 3),
-            "Manual CRM lookup must offer a search-method picker."
-        )
+        XCTAssertTrue(element("customer.crm.email", in: app).waitForExistence(timeout: 3))
+        XCTAssertTrue(element("customer.crm.organizationCode", in: app).exists)
         let key = element("customer.crm.keyNumber", in: app)
         XCTAssertTrue(key.waitForExistence(timeout: 3), app.debugDescription)
         key.click()
